@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.common.config;
+package org.swyp.dessertbee.config;
 
 public class SecurityConfig {
 }
