@@ -1,27 +1,36 @@
 spring:
   application:
     name: dessertBee
+
   jpa:
     properties:
-      hibernate.dialect: org.hibernate.dialect.MySQLDialect
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
 
   devtools:
-    restart: # 자동 재시작 활성화
-      enabled: true
-    livereload: # 브라우저 자동 새로고침
-      enabled: true
+    restart:
+      enabled: true   # 자동 재시작 활성화
+    livereload:
+      enabled: true   # 브라우저 자동 새로고침
 
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${DEV_DB_URL}
-    username: ${DEV_DB_USERNAME}
-    password: ${DEV_DB_PASSWORD}
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE}
 
 logging:
   level:
     org:
       hibernate:
-        SQL: debug                       # hibernate SQL 로깅
-        orm.jdbc.bind: trace            # SQL 파라미터 로깅 (최신 하이버네이트 버전)
+        SQL: debug                  # Hibernate SQL 로깅
+        orm:
+          jdbc:
+            bind: trace            # SQL 파라미터 로깅 (최신 Hibernate 버전)
     com:
-      dessertbee: debug                  # 프로젝트 패키지 로깅
+      dessertbee: debug             # 프로젝트 패키지 로깅
+
+springdoc:
+  api-docs:
+    path: /api-docs                 # 기본 OpenAPI 문서 경로 변경
+  swagger-ui:
+    path: /swagger-ui               # Swagger UI 경로 변경
+    enabled: true                    # Swagger UI 활성화
+
