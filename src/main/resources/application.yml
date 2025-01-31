@@ -3,6 +3,9 @@ spring:
     name: dessertBee
 
   jpa:
+    database: mysql
+    hibernate:
+      ddl-auto: update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
