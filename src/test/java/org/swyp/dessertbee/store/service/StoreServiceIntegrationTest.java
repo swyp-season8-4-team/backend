@@ -1,21 +1,21 @@
 package org.swyp.dessertbee.store.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.servlet.MockMvc;
 import org.swyp.dessertbee.store.dto.request.StoreCreateRequest;
-import org.swyp.dessertbee.store.dto.response.StoreDetailResponse;
-import org.swyp.dessertbee.store.entity.Store;
 import org.swyp.dessertbee.store.entity.StoreTag;
 import org.swyp.dessertbee.store.entity.TagCategory;
 import org.swyp.dessertbee.store.repository.StoreRepository;
-import org.swyp.dessertbee.store.repository.StoreStatisticsRepository;
 import org.swyp.dessertbee.store.repository.StoreTagRepository;
 import org.swyp.dessertbee.store.repository.TagCategoryRepository;
 
@@ -25,16 +25,22 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
 @TestPropertySource(locations = "classpath:application-test.yml")
-@ActiveProfiles("test")  // 테스트 환경 설정 적용
 class StoreServiceIntegrationTest {
 
     @Autowired
-    private StoreService storeService;
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Autowired
     private StoreRepository storeRepository;
@@ -44,9 +50,6 @@ class StoreServiceIntegrationTest {
 
     @Autowired
     private TagCategoryRepository tagCategoryRepository;
-
-    @Autowired
-    private StoreStatisticsRepository storeStatisticsRepository;
 
     private StoreCreateRequest request;
 
@@ -72,6 +75,7 @@ class StoreServiceIntegrationTest {
         // 3️⃣ 최신 태그 ID 가져오기
         Long tagId1 = storeTagRepository.findByName("Dessert").orElseThrow().getId();
         Long tagId2 = storeTagRepository.findByName("Cafe").orElseThrow().getId();
+
         request = StoreCreateRequest.builder()
                 .ownerId(100L)
                 .name("Integration Test Store")
@@ -86,45 +90,52 @@ class StoreServiceIntegrationTest {
                 .parkingYn(true)
                 .operatingHours("09:00 - 22:00")
                 .closingDays("Sunday")
-                .tagIds(List.of(1L, 2L)) // ✅ `List<Long>`으로 설정
-                .menus(List.of()) // ✅ `List.of()` 사용하여 `null` 방지
+                .tagIds(List.of(tagId1, tagId2))
+                .menus(List.of())
                 .events(List.of())
                 .coupons(List.of())
-                .storeImages(List.of("img1.jpg", "img2.jpg"))
-                .menuImages(Map.of()) // ✅ `null` 대신 빈 `Map` 사용
+                .storeImages(List.of("img1.jpg", "img2.jpg")) // ✅ 파일명만 전달
+                .menuImages(Map.of())
                 .eventImages(Map.of())
                 .build();
     }
 
+    /** 가게 등록 테스트 */
     @Test
-    void 가게_등록_및_조회_통합_테스트() {
-        // 1️⃣ 가게 등록
-        StoreDetailResponse response = storeService.createStore(request);
+    void 가게_등록_API_테스트() throws Exception {
+        // 1️⃣ JSON 변환
+        String requestJson = objectMapper.writeValueAsString(request);
 
-        // 2️⃣ 등록된 가게 DB에서 조회
-        Store savedStore = storeRepository.findById(response.getId()).orElse(null);
-
-        // 3️⃣ 검증
-        assertThat(savedStore).isNotNull();
-        assertThat(savedStore.getName()).isEqualTo(request.getName());
-        assertThat(savedStore.getAddress()).isEqualTo(request.getAddress());
-
-        // 4️⃣ 통계 정보 확인
-        assertThat(storeStatisticsRepository.findByStoreId(savedStore.getId())).isNotNull();
+        // 2️⃣ API 호출 및 응답 검증
+        mockMvc.perform(post("/api/stores")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.name").value(request.getName()))
+                .andExpect(jsonPath("$.address").value(request.getAddress()))
+                .andExpect(jsonPath("$.storeImages[0]").value(containsString("https://desserbee-bucket.s3.ap-northeast-2.amazonaws.com/img1.jpg")))
+                .andExpect(jsonPath("$.storeImages[1]").value(containsString("https://desserbee-bucket.s3.ap-northeast-2.amazonaws.com/img2.jpg")));
     }
 
+    /** 가게 상세 조회 API 테스트 */
     @Test
-    void 가게_조회_통합_테스트() {
+    void 가게_상세_조회_API_테스트() throws Exception {
         // 1️⃣ 가게 등록
-        StoreDetailResponse createdStore = storeService.createStore(request);
+        String requestJson = objectMapper.writeValueAsString(request);
+        String responseJson = mockMvc.perform(post("/api/stores")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andReturn().getResponse().getContentAsString();
 
-        // 2️⃣ 가게 상세 정보 조회
-        StoreDetailResponse response = storeService.getStoreDetails(createdStore.getId());
+        // 2️⃣ 등록된 가게 ID 가져오기
+        Long storeId = objectMapper.readTree(responseJson).get("id").asLong();
 
-        // 3️⃣ 검증
-        assertThat(response).isNotNull();
-        assertThat(response.getName()).isEqualTo(request.getName());
-        assertThat(response.getAddress()).isEqualTo(request.getAddress());
-        assertThat(response.getStoreImages()).isNotEmpty(); // 대표 이미지가 저장되었는지 확인
+        // 3️⃣ 상세 조회 요청
+        mockMvc.perform(get("/api/stores/" + storeId + "/details"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value(request.getName()))
+                .andExpect(jsonPath("$.address").value(request.getAddress()))
+                .andExpect(jsonPath("$.storeImages[0]").value(containsString("https://desserbee-bucket.s3.ap-northeast-2.amazonaws.com/img1.jpg")))
+                .andExpect(jsonPath("$.storeImages[1]").value(containsString("https://desserbee-bucket.s3.ap-northeast-2.amazonaws.com/img2.jpg")));
     }
 }

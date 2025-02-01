@@ -12,3 +12,6 @@ spring:
   sql:
     init:
       mode: always
+
+s3:
+  base-url: "https://desserbee-bucket.s3.ap-northeast-2.amazonaws.com/"

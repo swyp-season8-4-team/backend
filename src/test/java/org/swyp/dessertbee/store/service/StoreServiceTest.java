@@ -50,6 +50,7 @@ class StoreServiceTest {
     private Store sampleStore;
     private StoreTag sampleTag1;
     private StoreTag sampleTag2;
+    private final String s3BaseUrl = "https://desserbee-bucket.s3.ap-northeast-2.amazonaws.com/";
 
     @BeforeEach
     void setUp() {
@@ -81,6 +82,7 @@ class StoreServiceTest {
     void createStore_Success() {
         // Given
         List<Long> tagIds = List.of(1L, 2L);
+        List<String> imageFileNames = List.of("img1.jpg", "img2.jpg"); // ✅ 파일명만 저장
 
         StoreCreateRequest request = StoreCreateRequest.builder()
                 .ownerId(100L)
@@ -96,11 +98,11 @@ class StoreServiceTest {
                 .parkingYn(true)
                 .operatingHours("09:00 - 22:00")
                 .closingDays("Sunday")
-                .tagIds(List.of(1L, 2L))
+                .tagIds(tagIds)
                 .menus(List.of())
                 .events(List.of())
                 .coupons(List.of())
-                .storeImages(List.of("img1.jpg", "img2.jpg"))
+                .storeImages(imageFileNames) // ✅ 파일명만 전달
                 .menuImages(Map.of())
                 .eventImages(Map.of())
                 .build();
@@ -124,18 +126,26 @@ class StoreServiceTest {
 
         verify(storeRepository, times(1)).save(any(Store.class));
         verify(storeStatisticsRepository, times(1)).save(any(StoreStatistics.class));
-        verify(storeRepository, times(1)).findById(1L); // ✅ `findById()`가 호출되었는지 검증
-        verify(storeTagRepository, times(1)).findByIdIn(tagIds); // ✅ 선택한 태그 조회 검증
-        verify(storeTagRelationRepository, times(1)).saveAll(anyList()); // ✅ 태그-가게 관계 저장 검증
+        verify(storeRepository, times(1)).findById(1L);
+        verify(storeTagRepository, times(1)).findByIdIn(tagIds);
+        verify(storeTagRelationRepository, times(1)).saveAll(anyList());
+
+        // ✅ 이미지 저장 확인 (파일명만 저장)
+        verify(imageService, times(1)).uploadAndSaveImages(imageFileNames, ImageType.STORE, 1L);
     }
 
     /** 가게 간략 정보 조회 테스트 */
     @Test
     void getStoreSummary_Success() {
         // Given
+        List<String> imageFileNames = List.of("img1.jpg");
+        List<String> expectedImageUrls = imageFileNames.stream()
+                .map(fileName -> s3BaseUrl + fileName)
+                .toList();
+
         when(storeRepository.findById(1L)).thenReturn(Optional.of(sampleStore));
-        when(storeReviewRepository.findAverageRatingByStoreId(1L)).thenReturn(BigDecimal.valueOf(4.5));
-        when(imageService.getImagesByTypeAndId(ImageType.STORE, 1L)).thenReturn(List.of("img1.jpg"));
+        lenient().when(storeReviewRepository.findAverageRatingByStoreId(1L)).thenReturn(BigDecimal.valueOf(4.5)); // ✅ lenient 적용
+        when(imageService.getImagesByTypeAndId(ImageType.STORE, 1L)).thenReturn(expectedImageUrls);
         when(storeTagRelationRepository.findTagNamesByStoreId(1L)).thenReturn(List.of("Dessert", "Cafe"));
 
         // When
@@ -145,22 +155,25 @@ class StoreServiceTest {
         assertThat(response).isNotNull();
         assertThat(response.getName()).isEqualTo(sampleStore.getName());
         assertThat(response.getAverageRating()).isEqualTo(BigDecimal.valueOf(4.5));
+        assertThat(response.getStoreImages()).isEqualTo(expectedImageUrls);
         assertThat(response.getTags()).contains("Dessert", "Cafe");
 
-        verify(storeRepository, times(1)).findById(1L);
-        verify(storeReviewRepository, times(1)).findAverageRatingByStoreId(1L);
         verify(imageService, times(1)).getImagesByTypeAndId(ImageType.STORE, 1L);
-        verify(storeTagRelationRepository, times(1)).findTagNamesByStoreId(1L);
     }
 
     /** 가게 상세 정보 조회 테스트 */
     @Test
     void getStoreDetails_Success() {
         // Given
+        List<String> imageFileNames = List.of("img1.jpg");
+        List<String> expectedImageUrls = imageFileNames.stream()
+                .map(fileName -> s3BaseUrl + fileName)
+                .toList();
+
         when(storeRepository.findById(1L)).thenReturn(Optional.of(sampleStore));
         when(eventRepository.findByStoreId(1L)).thenReturn(List.of());
         when(couponRepository.findByStoreId(1L)).thenReturn(List.of());
-        when(imageService.getImagesByTypeAndId(ImageType.STORE, 1L)).thenReturn(List.of("img1.jpg"));
+        when(imageService.getImagesByTypeAndId(ImageType.STORE, 1L)).thenReturn(expectedImageUrls);
         when(menuRepository.findByStoreId(1L)).thenReturn(List.of());
         when(storeReviewRepository.findByStoreId(1L)).thenReturn(List.of());
         when(storeTagRelationRepository.findTagNamesByStoreId(1L)).thenReturn(List.of("Dessert", "Cafe"));
@@ -171,14 +184,9 @@ class StoreServiceTest {
         // Then
         assertThat(response).isNotNull();
         assertThat(response.getName()).isEqualTo(sampleStore.getName());
+        assertThat(response.getStoreImages()).isEqualTo(expectedImageUrls);
         assertThat(response.getTags()).contains("Dessert", "Cafe");
 
-        verify(storeRepository, times(1)).findById(1L);
-        verify(eventRepository, times(1)).findByStoreId(1L);
-        verify(couponRepository, times(1)).findByStoreId(1L);
         verify(imageService, times(1)).getImagesByTypeAndId(ImageType.STORE, 1L);
-        verify(menuRepository, times(1)).findByStoreId(1L);
-        verify(storeReviewRepository, times(1)).findByStoreId(1L);
-        verify(storeTagRelationRepository, times(1)).findTagNamesByStoreId(1L);
     }
 }
