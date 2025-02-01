@@ -16,11 +16,6 @@ public class UserRoleService {
 
     private final UserRoleRepository userRoleRepository;
 
-    // 유저에게 역할 할당
-    public void assignRoleToUser(UserEntity user, RoleEntity role) {
-        user.addRole(role);
-    }
-
     // 유저의 역할 목록을 리스트로 가져옴
     public List<String> getUserRoles(UserEntity user) {
         return userRoleRepository.findByUserId(user.getId()).stream()
