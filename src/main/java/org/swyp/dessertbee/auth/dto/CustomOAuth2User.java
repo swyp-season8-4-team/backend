@@ -1,20 +1,22 @@
+
 package org.swyp.dessertbee.auth.dto;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 public class CustomOAuth2User implements OAuth2User {
 
-    private final OAuth2Response oAuthResponse;
+    private final OAuth2Response oAuth2Response;
     private final String role;
 
-    public CustomOAuth2User(OAuth2Response oAuthResponse, String role) {
-        this.oAuthResponse = oAuthResponse;
+    public CustomOAuth2User(OAuth2Response oAuth2Response, String role
+    ) {
+        this.oAuth2Response = oAuth2Response;
         this.role = role;
     }
 
@@ -40,10 +42,11 @@ public class CustomOAuth2User implements OAuth2User {
 
     @Override
     public String getName() {
-        return oAuthResponse.getName();
+        return oAuth2Response.getNickname();
     }
 
-    public String getUserName() {
-        return oAuthResponse.getProvider()+ " " + oAuthResponse.getProviderId();
+    public String getUsername() {
+        return oAuth2Response.getProvider()+" "+oAuth2Response.getProviderId();
     }
+
 }
