@@ -4,21 +4,17 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "store_tag")
+@Table(name = "tag_category")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class StoreTag {
+public class TagCategory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // 태그 고유번호
+    private Long id; // 카테고리 고유번호
 
     @Column(nullable = false, unique = true, length = 100)
-    private String name; // 태그명
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
-    private TagCategory category; // 태그 카테고리
+    private String name; // 카테고리명
 }
