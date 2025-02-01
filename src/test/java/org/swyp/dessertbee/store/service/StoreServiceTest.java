@@ -83,6 +83,7 @@ class StoreServiceTest {
         // Given
         List<Long> tagIds = List.of(1L, 2L);
         List<String> imageFileNames = List.of("img1.jpg", "img2.jpg"); // ✅ 파일명만 저장
+        String imagePath = "store/1/"; // ✅ 경로 추가
 
         StoreCreateRequest request = StoreCreateRequest.builder()
                 .ownerId(100L)
@@ -130,7 +131,7 @@ class StoreServiceTest {
         verify(storeTagRepository, times(1)).findByIdIn(tagIds);
         verify(storeTagRelationRepository, times(1)).saveAll(anyList());
 
-        // ✅ 이미지 저장 확인 (파일명만 저장)
+
         verify(imageService, times(1)).uploadAndSaveImages(imageFileNames, ImageType.STORE, 1L);
     }
 
@@ -140,7 +141,7 @@ class StoreServiceTest {
         // Given
         List<String> imageFileNames = List.of("img1.jpg");
         List<String> expectedImageUrls = imageFileNames.stream()
-                .map(fileName -> s3BaseUrl + fileName)
+                .map(fileName -> s3BaseUrl + "store/1/" + fileName)
                 .toList();
 
         when(storeRepository.findById(1L)).thenReturn(Optional.of(sampleStore));
@@ -164,10 +165,9 @@ class StoreServiceTest {
     /** 가게 상세 정보 조회 테스트 */
     @Test
     void getStoreDetails_Success() {
-        // Given
         List<String> imageFileNames = List.of("img1.jpg");
         List<String> expectedImageUrls = imageFileNames.stream()
-                .map(fileName -> s3BaseUrl + fileName)
+                .map(fileName -> s3BaseUrl + "store/1/" + fileName)
                 .toList();
 
         when(storeRepository.findById(1L)).thenReturn(Optional.of(sampleStore));
