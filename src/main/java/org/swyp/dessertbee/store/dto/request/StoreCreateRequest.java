@@ -1,15 +1,19 @@
-package org.swyp.dessertbee.store.dto;
+package org.swyp.dessertbee.store.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.swyp.dessertbee.store.entity.StoreStatus;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
+@Builder
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -32,6 +36,14 @@ public class StoreCreateRequest {
     private Boolean parkingYn;
     private String operatingHours;
     private String closingDays;
+    private List<Long> tagIds;
     private StoreStatus status = StoreStatus.APPROVED;
-    private List<String> tags;
+
+    private List<EventCreateRequest> events;  // 이벤트 리스트
+    private List<CouponCreateRequest> coupons;  // 쿠폰 리스트
+    private List<MenuCreateRequest> menus;  // 메뉴 리스트
+
+    private List<String> storeImages;  // 대표 사진 URL 리스트
+    private Map<String, List<String>> eventImages; // 이벤트 사진 url
+    private Map<String, String> menuImages; // 메뉴 사진 url
 }
