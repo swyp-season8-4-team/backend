@@ -204,12 +204,10 @@ public class StoreService {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 가게입니다."));
 
-        BigDecimal averageRating = storeReviewRepository.findAverageRatingByStoreId(storeId);
-
         List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, storeId);
         List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(storeId);
 
-        return StoreSummaryResponse.fromEntity(store, averageRating, tags, storeImages);
+        return StoreSummaryResponse.fromEntity(store, tags, storeImages);
     }
 
     /** 가게 상세 정보 조회 */
@@ -269,11 +267,10 @@ public class StoreService {
                 .collect(Collectors.toList());
     }
 
-    /** 가게의 평균 평점 업데이트 */
+    /** 가게의 평균 평점 업데이트 (리뷰 등록/삭제 시 호출) */
     @Transactional
     public void updateAverageRating(Long storeId) {
         BigDecimal newAverageRating = storeReviewRepository.findAverageRatingByStoreId(storeId);
-
         storeRepository.updateAverageRating(storeId, newAverageRating);
     }
 }
