@@ -28,12 +28,12 @@ public class StoreSummaryResponse {
     private Boolean tumblerYn;
     private Boolean parkingYn;
 
-    public static StoreSummaryResponse fromEntity(Store store, BigDecimal averageRating, List<String> tags,
+    public static StoreSummaryResponse fromEntity(Store store, List<String> tags,
                                                   List<String> storeImages) {
         return StoreSummaryResponse.builder()
                 .id(store.getId())
                 .name(store.getName())
-                .averageRating(averageRating)
+                .averageRating(store.getAverageRating())
                 .tags(tags)
                 .storeImages(storeImages)
                 .address(store.getAddress())
