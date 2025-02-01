@@ -23,6 +23,6 @@ public class Image {
     @Column(nullable = false)
     private Long refId; // 참조 ID
 
-    @Column(nullable = false, length = 500)
-    private String url;
+    @Column(nullable = false)
+    private String fileName;
 }

@@ -1,6 +1,7 @@
 package org.swyp.dessertbee.common.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.swyp.dessertbee.common.entity.Image;
 import org.swyp.dessertbee.common.entity.ImageType;
@@ -14,6 +15,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ImageService {
 
+    @Value("${s3.base-url}")
+    private String s3BaseUrl;
+
     private final ImageRepository imageRepository;
 
     /** 이미지 URL을 저장하는 메서드 */
@@ -21,15 +25,16 @@ public class ImageService {
         if (imageUrls == null || imageUrls.isEmpty()) return;
 
         List<Image> images = imageUrls.stream()
-                .map(url -> Image.builder()
+                .map(fileName -> Image.builder()
                         .refType(refType)
                         .refId(refId)
-                        .url(url)
+                        .fileName(fileName)  // 파일명만 저장
                         .build())
                 .collect(Collectors.toList());
 
         imageRepository.saveAll(images);
     }
+
 
     /** 여러 개의 이미지 한 번에 저장 */
     public void saveAllImages(List<Image> images) {
@@ -41,7 +46,7 @@ public class ImageService {
     public List<String> getImagesByTypeAndId(ImageType refType, Long refId) {
         return imageRepository.findByRefTypeAndRefId(refType, refId)
                 .stream()
-                .map(Image::getUrl)
+                .map(image -> s3BaseUrl + image.getFileName())
                 .collect(Collectors.toList());
     }
 
@@ -52,8 +57,7 @@ public class ImageService {
         return images.stream()
                 .collect(Collectors.groupingBy(
                         Image::getRefId,
-                        Collectors.mapping(Image::getUrl, Collectors.toList())
+                        Collectors.mapping(image -> s3BaseUrl + image.getFileName(), Collectors.toList())
                 ));
     }
-
 }

@@ -37,3 +37,6 @@ springdoc:
     path: /swagger-ui               # Swagger UI 경로 변경
     enabled: true                    # Swagger UI 활성화
 
+s3:
+  base-url: ${S3_BASE_URL}
+

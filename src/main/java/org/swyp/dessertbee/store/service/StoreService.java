@@ -130,11 +130,11 @@ public class StoreService {
         imageService.saveAllImages(
                 savedMenus.stream()
                         .map(menu -> {
-                            String imageUrl = menuImages.get(menu.getName());
-                            return imageUrl != null ? Image.builder()
+                            String fileName = menuImages.get(menu.getName());
+                            return fileName != null ? Image.builder()
                                     .refType(ImageType.MENU)
                                     .refId(menu.getId())
-                                    .url(imageUrl)
+                                    .fileName(fileName)
                                     .build() : null;
                         })
                         .filter(Objects::nonNull)
@@ -162,12 +162,12 @@ public class StoreService {
         imageService.saveAllImages(
                 savedEvents.stream()
                         .flatMap(event -> {
-                            List<String> images = eventImages.get(event.getTitle());
-                            return images != null ? images.stream()
-                                    .map(url -> Image.builder()
+                            List<String> fileNames = eventImages.get(event.getTitle());
+                            return fileNames != null ? fileNames.stream()
+                                    .map(fileName -> Image.builder()
                                             .refType(ImageType.EVENT)
                                             .refId(event.getId())
-                                            .url(url)
+                                            .fileName(fileName)
                                             .build()) : Stream.empty();
                         })
                         .collect(Collectors.toList())
