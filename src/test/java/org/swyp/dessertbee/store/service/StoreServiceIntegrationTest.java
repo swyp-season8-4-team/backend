@@ -24,8 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -52,6 +50,7 @@ class StoreServiceIntegrationTest {
     private TagCategoryRepository tagCategoryRepository;
 
     private StoreCreateRequest request;
+    private final String s3BaseUrl = "https://desserbee-bucket.s3.ap-northeast-2.amazonaws.com/";
 
     @BeforeEach
     void setUp() {
@@ -94,7 +93,7 @@ class StoreServiceIntegrationTest {
                 .menus(List.of())
                 .events(List.of())
                 .coupons(List.of())
-                .storeImages(List.of("img1.jpg", "img2.jpg")) // ✅ 파일명만 전달
+                .storeImages(List.of("img1.jpg", "img2.jpg")) // ✅ 경로 제거하고 파일명만 저장
                 .menuImages(Map.of())
                 .eventImages(Map.of())
                 .build();
@@ -107,14 +106,26 @@ class StoreServiceIntegrationTest {
         String requestJson = objectMapper.writeValueAsString(request);
 
         // 2️⃣ API 호출 및 응답 검증
-        mockMvc.perform(post("/api/stores")
+        String responseJson = mockMvc.perform(post("/api/stores")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value(request.getName()))
                 .andExpect(jsonPath("$.address").value(request.getAddress()))
-                .andExpect(jsonPath("$.storeImages[0]").value(containsString("https://desserbee-bucket.s3.ap-northeast-2.amazonaws.com/img1.jpg")))
-                .andExpect(jsonPath("$.storeImages[1]").value(containsString("https://desserbee-bucket.s3.ap-northeast-2.amazonaws.com/img2.jpg")));
+                .andReturn().getResponse().getContentAsString();
+
+        // 3️⃣ 가게 ID 추출
+        Long storeId = objectMapper.readTree(responseJson).get("id").asLong();
+
+        // 4️⃣ 예상 이미지 URL
+        String expectedImageUrl1 = s3BaseUrl + "store/" + storeId + "/img1.jpg";
+        String expectedImageUrl2 = s3BaseUrl + "store/" + storeId + "/img2.jpg";
+
+        // 5️⃣ 이미지 검증
+        mockMvc.perform(get("/api/stores/" + storeId + "/details"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.storeImages[0]").value(expectedImageUrl1))
+                .andExpect(jsonPath("$.storeImages[1]").value(expectedImageUrl2));
     }
 
     /** 가게 상세 조회 API 테스트 */
@@ -130,12 +141,16 @@ class StoreServiceIntegrationTest {
         // 2️⃣ 등록된 가게 ID 가져오기
         Long storeId = objectMapper.readTree(responseJson).get("id").asLong();
 
-        // 3️⃣ 상세 조회 요청
+        // 3️⃣ 예상 이미지 URL
+        String expectedImageUrl1 = s3BaseUrl + "store/" + storeId + "/img1.jpg";
+        String expectedImageUrl2 = s3BaseUrl + "store/" + storeId + "/img2.jpg";
+
+        // 4️⃣ 상세 조회 요청 및 검증
         mockMvc.perform(get("/api/stores/" + storeId + "/details"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value(request.getName()))
                 .andExpect(jsonPath("$.address").value(request.getAddress()))
-                .andExpect(jsonPath("$.storeImages[0]").value(containsString("https://desserbee-bucket.s3.ap-northeast-2.amazonaws.com/img1.jpg")))
-                .andExpect(jsonPath("$.storeImages[1]").value(containsString("https://desserbee-bucket.s3.ap-northeast-2.amazonaws.com/img2.jpg")));
+                .andExpect(jsonPath("$.storeImages[0]").value(expectedImageUrl1))
+                .andExpect(jsonPath("$.storeImages[1]").value(expectedImageUrl2));
     }
 }

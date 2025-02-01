@@ -66,11 +66,11 @@ public class StoreService {
                         .build()
         );
 
-        // 태그 저장 (1~3개 선택 가능)
-        saveStoreTags(store, request.getTagIds());
-
         // 가게 대표 사진 저장
         imageService.uploadAndSaveImages(request.getStoreImages(), ImageType.STORE, store.getId());
+
+        // 태그 저장 (1~3개 선택 가능)
+        saveStoreTags(store, request.getTagIds());
 
         // 메뉴 저장 및 이미지 저장
         saveMenus(store, request.getMenus(), request.getMenuImages());
@@ -243,7 +243,7 @@ public class StoreService {
         return StoreDetailResponse.fromEntity(store, events, coupons, storeImages, eventImages, menuImages, storeReviews, tags);
     }
 
-    /** 이미지 경로 조회 */
+    /** 이미지 조회 */
     private <T extends Identifiable> List<String> getImageUrlsForEntities(List<T> entities, ImageType imageType) {
         return entities.stream()
                 .map(entity -> imageService.getImagesByTypeAndId(imageType, entity.getId()))

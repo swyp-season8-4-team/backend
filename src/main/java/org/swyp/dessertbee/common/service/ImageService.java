@@ -24,21 +24,32 @@ public class ImageService {
     public void uploadAndSaveImages(List<String> imageUrls, ImageType refType, Long refId) {
         if (imageUrls == null || imageUrls.isEmpty()) return;
 
+        String path = refType.name().toLowerCase() + "/" + refId + "/"; // refType에 따라 소문자로 path 지정
+
         List<Image> images = imageUrls.stream()
                 .map(fileName -> Image.builder()
                         .refType(refType)
                         .refId(refId)
-                        .fileName(fileName)  // 파일명만 저장
+                        .path(path)
+                        .fileName(fileName)
+                        .url(s3BaseUrl + path + fileName)
                         .build())
                 .collect(Collectors.toList());
 
         imageRepository.saveAll(images);
     }
 
-
     /** 여러 개의 이미지 한 번에 저장 */
     public void saveAllImages(List<Image> images) {
         if (images == null || images.isEmpty()) return;
+
+        // refType에 따라 path 설정
+        images.forEach(image -> {
+            String path = image.getRefType().name().toLowerCase() + "/" + image.getRefId() + "/";
+            image.setPath(path);
+            image.setUrl(s3BaseUrl + path + image.getFileName());
+        });
+
         imageRepository.saveAll(images);
     }
 
@@ -46,7 +57,7 @@ public class ImageService {
     public List<String> getImagesByTypeAndId(ImageType refType, Long refId) {
         return imageRepository.findByRefTypeAndRefId(refType, refId)
                 .stream()
-                .map(image -> s3BaseUrl + image.getFileName())
+                .map(Image::getUrl) // url을 반환
                 .collect(Collectors.toList());
     }
 
@@ -57,7 +68,7 @@ public class ImageService {
         return images.stream()
                 .collect(Collectors.groupingBy(
                         Image::getRefId,
-                        Collectors.mapping(image -> s3BaseUrl + image.getFileName(), Collectors.toList())
+                        Collectors.mapping(Image::getUrl, Collectors.toList())
                 ));
     }
 }

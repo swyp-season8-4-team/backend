@@ -24,5 +24,11 @@ public class Image {
     private Long refId; // 참조 ID
 
     @Column(nullable = false)
+    private String path; // S3 경로 추가
+
+    @Column(nullable = false)
     private String fileName;
+
+    @Column(nullable = false)
+    private String url;
 }
