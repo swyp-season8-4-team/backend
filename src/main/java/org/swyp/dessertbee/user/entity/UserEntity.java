@@ -6,8 +6,12 @@ import org.hibernate.annotations.UuidGenerator;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.swyp.dessertbee.role.entity.RoleEntity;
+import org.swyp.dessertbee.role.entity.UserRoleEntity;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -68,17 +72,24 @@ public class UserEntity {
     @Column(name = "gender", length = 6)
     private Gender gender; // 성별
 
-    @Column(name = "role", length = 10)
-    private String role; // 성별
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserRoleEntity> userRoles = new HashSet<>();
+
+    public void addRole(RoleEntity role) {
+        UserRoleEntity userRole = UserRoleEntity.builder()
+                .user(this)
+                .role(role)
+                .build();
+        this.userRoles.add(userRole);
+    }
+
+    public void removeRole(UserRoleEntity userRole) {
+        this.userRoles.remove(userRole);
+        userRole.setUser(null);
+    }
 
     public enum Gender {
         MALE,
         FEMALE
     }
-
-//    public enum Role {
-//        ROLE_USER,
-//        ROLE_ADMIN,
-//        ROLE_OWNER
-//    }
 }
