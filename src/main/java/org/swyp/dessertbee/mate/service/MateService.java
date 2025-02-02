@@ -52,24 +52,22 @@ public class MateService {
     public MateDetailResponse getMateDetails(Long mateId) {
         Mate mate;
 
-
         Optional<Mate> optionalMate = mateRepository.findById(mateId);
+
 
         if(optionalMate.isPresent()) {
             mate =  optionalMate.get();
         }else {
             throw new IllegalArgumentException("존재하지 않는 디저트메이트입니다.");
-
         }
-
 
         //디저트메이트 사진 조회
         List<String> mateImage = imageService.getImagesByTypeAndId(ImageType.MATE, mateId);
 
+        //mateCategoryId로 name 조회
+        String mateCategory = String.valueOf(mateCategoryRepository.findCategoryNameById( mate.getMateCategoryId()));
 
-        String mateCategory = String.valueOf(mateCategoryRepository.findById( mate.getMateCategoryId()));
-
-        return MateDetailResponse.fromEntity(mate,mateImage, mateCategory);
+        return MateDetailResponse.fromEntity(mate, mateImage, mateCategory);
 
     }
 }
