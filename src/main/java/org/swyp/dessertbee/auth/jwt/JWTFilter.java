@@ -10,6 +10,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.swyp.dessertbee.auth.dto.CustomOAuth2User;
+import org.swyp.dessertbee.auth.dto.TokenResponse;
+import org.swyp.dessertbee.auth.service.AuthService;
 import org.swyp.dessertbee.user.dto.UserDTO;
 
 import java.io.IOException;
@@ -19,69 +21,84 @@ import java.util.List;
  * 사용자의 쿠키에서 JWT를 추출하여 인증을 수행하는 필터이다.
  */
 public class JWTFilter extends OncePerRequestFilter {
-
     private final JWTUtil jwtUtil;
+    private final AuthService authService;
 
-    public JWTFilter(JWTUtil jwtUtil) {
-
+    public JWTFilter(JWTUtil jwtUtil, AuthService authService) {
         this.jwtUtil = jwtUtil;
+        this.authService = authService;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
 
-        //cookie들을 불러온 뒤 Authorization Key에 담긴 쿠키를 찾음
-        String authorization = null;
-        Cookie[] cookies = request.getCookies();
-        for (Cookie cookie : cookies) {
+        String accessToken = extractTokenFromHeader(request);
+        String refreshToken = extractTokenFromCookie(request, "refresh_token");
 
-            System.out.println(cookie.getName());
-            if (cookie.getName().equals("Authorization")) {
-
-                authorization = cookie.getValue();
+        if (accessToken != null && jwtUtil.validateToken(accessToken, true)) {
+            processToken(accessToken, true, request);
+        } else if (refreshToken != null && jwtUtil.validateToken(refreshToken, false)) {
+            // Refresh Token으로 새로운 Access Token 발급
+            TokenResponse newTokens = authService.refreshTokens(refreshToken);
+            if (newTokens != null) {
+                addTokenToResponse(response, newTokens);
+                processToken(newTokens.getAccessToken(), true, request);
             }
         }
 
-        //Authorization 헤더 검증
-        if (authorization == null) {
+        filterChain.doFilter(request, response);
+    }
 
-            System.out.println("token null");
-            filterChain.doFilter(request, response);
-
-            //조건이 해당되면 메소드 종료 (필수)
-            return;
+    private String extractTokenFromHeader(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            return header.substring(7);
         }
+        return null;
+    }
 
-        //토큰
-        String token = authorization;
-
-        //토큰 소멸 시간 검증
-        if (jwtUtil.isExpired(token)) {
-
-            System.out.println("token expired");
-            filterChain.doFilter(request, response);
-
-            //조건이 해당되면 메소드 종료 (필수)
-            return;
+    private String extractTokenFromCookie(HttpServletRequest request, String cookieName) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals(cookieName)) {
+                    return cookie.getValue();
+                }
+            }
         }
+        return null;
+    }
 
-        //토큰에서 username과 role 획득
+    private void processToken(String token, boolean isAccessToken, HttpServletRequest request) {
         String email = jwtUtil.getEmail(token);
-        List <String> roles = jwtUtil.getRoles(token);
+        List<String> roles = jwtUtil.getRoles(token);
 
-        //userDTO를 생성하여 값 set
         UserDTO userDTO = new UserDTO();
         userDTO.setEmail(email);
         userDTO.setRoles(roles);
 
-        //UserDetails에 회원 정보 객체 담기
         CustomOAuth2User customOAuth2User = new CustomOAuth2User(userDTO);
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                customOAuth2User, null, customOAuth2User.getAuthorities()
+        );
+        SecurityContextHolder.getContext().setAuthentication(auth);
+    }
 
-        //스프링 시큐리티 인증 토큰 생성
-        Authentication authToken = new UsernamePasswordAuthenticationToken(customOAuth2User, null, customOAuth2User.getAuthorities());
-        //세션에 사용자 등록
-        SecurityContextHolder.getContext().setAuthentication(authToken);
+    private void addTokenToResponse(HttpServletResponse response, TokenResponse tokens) {
+        // Access Token을 Authorization 헤더에 추가
+        response.setHeader("Authorization", "Bearer " + tokens.getAccessToken());
 
-        filterChain.doFilter(request, response);
+        // Refresh Token을 HttpOnly 쿠키로 설정
+        Cookie refreshTokenCookie = new Cookie("refresh_token", tokens.getRefreshToken());
+        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setSecure(true); // HTTPS만 사용
+        refreshTokenCookie.setPath("/api"); // API 경로에서만 사용 가능
+        refreshTokenCookie.setMaxAge(14 * 24 * 60 * 60); // 14일
+        response.addCookie(refreshTokenCookie);
+
+        // CORS 헤더 설정
+        response.setHeader("Access-Control-Expose-Headers", "Authorization");
+        response.setHeader("Access-Control-Allow-Credentials", "true");
     }
 }

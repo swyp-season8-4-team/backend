@@ -14,13 +14,19 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 @Entity
-@Table(name = "user")
+@Table(
+        name = "user",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_user_email", columnNames = "email"),
+                @UniqueConstraint(name = "uk_user_nickname", columnNames = "nickname")
+        }
+)
 @Getter
 @Setter
-@NoArgsConstructor // Lombok 어노테이션: 기본 생성자를 자동으로 생성
-@AllArgsConstructor // Lombok 어노테이션: 모든 필드를 포함한 생성자를 자동으로 생성
-@Builder // Lombok 어노테이션: 빌더 패턴으로 객체를 생성할 수 있게 함
-@EntityListeners(AuditingEntityListener.class) // JPA Auditing 기능을 활성화하여 생성일/수정일 필드를 자동 관리
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@EntityListeners(AuditingEntityListener.class)
 public class UserEntity {
 
     @Id
@@ -31,45 +37,44 @@ public class UserEntity {
     private Long imageId;
 
     @Column(name = "user_uuid", nullable = false, unique = true, updatable = false)
-    @UuidGenerator // Hibernate 어노테이션: UUID를 자동으로 생성하여 필드에 할당
+    @UuidGenerator
     private UUID userUuid;
 
-    @Column(nullable = false, unique = true, length = 320)
+    @Column(nullable = false, length = 320)
     private String email;
 
     @Column(length = 255)
     private String password;
 
     @Column(length = 50)
-    private String name; // 실제이름
+    private String name;
 
-    @Column(unique = true, length = 50)
+    @Column(length = 50)
     private String nickname;
 
     @Column(columnDefinition = "JSON")
-    private String preferences; // 선호 데이터(JSON)
+    private String preferences;
 
-    @CreatedDate // JPA Auditing 어노테이션: 엔티티가 처음 저장될 때 현재 시간을 자동으로 설정
-    @Column(name = "created_at", nullable = false, updatable = false) // 수정 불가
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @LastModifiedDate // JPA Auditing 어노테이션: 엔티티가 수정될 때 현재 시간을 자동으로 설정
+    @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @Column(name = "deleted_at") // "deleted_at" 컬럼에 매핑됩니다.
+    @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
     @Column(name = "phone_number", length = 20)
     private String phoneNumber;
 
     @Column(name = "address", length = 255)
-    // "address" 컬럼에 매핑되며, 최대 길이 255자로 제한합니다.
-    private String address; // 주소
+    private String address;
 
-    @Enumerated(EnumType.STRING) // gender 컬럼에 매핑되며, Enum 값을 문자열(String)로 저장
+    @Enumerated(EnumType.STRING)
     @Column(name = "gender", length = 6)
-    private Gender gender; // 성별
+    private Gender gender;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserRoleEntity> userRoles = new HashSet<>();
