@@ -15,3 +15,10 @@ spring:
 
 s3:
   base-url: "https://desserbee-bucket.s3.ap-northeast-2.amazonaws.com/"
+
+aws:
+  s3:
+    bucket-name: desserbee-bucket
+    region: ap-northeast-2
+    access-key: AKIAQKPIMHTFMEJJFZQF
+    secret-key: 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
