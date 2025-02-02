@@ -8,64 +8,121 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
 @Component
 public class JWTUtil {
+    private final SecretKey accessTokenSecretKey;
+    private final SecretKey refreshTokenSecretKey;
 
-    private final SecretKey secretKey;
-
-    public JWTUtil(@Value("${spring.jwt.secret}") String secret) {
-        this.secretKey = new SecretKeySpec(
-                secret.getBytes(StandardCharsets.UTF_8),
+    public JWTUtil(
+            @Value("${spring.jwt.secret.access}") String accessSecret,
+            @Value("${spring.jwt.secret.refresh}") String refreshSecret
+    ) {
+        this.accessTokenSecretKey = new SecretKeySpec(
+                accessSecret.getBytes(StandardCharsets.UTF_8),
+                Jwts.SIG.HS256.key().build().getAlgorithm()
+        );
+        this.refreshTokenSecretKey = new SecretKeySpec(
+                refreshSecret.getBytes(StandardCharsets.UTF_8),
                 Jwts.SIG.HS256.key().build().getAlgorithm()
         );
     }
 
-    /**
-     * JWT 토큰 생성 (이메일과 여러 역할 포함)
-     */
-    public String createJwt(String email, List<String> roles, Long expiredMs) {
+    public String createAccessToken(String email, List<String> roles) {
+        return createToken(email, roles, accessTokenSecretKey, 30 * 60 * 1000L); // 30분
+    }
+
+    public String createRefreshToken(String email, List<String> roles) {
+        return createToken(email, roles, refreshTokenSecretKey, 14 * 24 * 60 * 60 * 1000L); // 14일
+    }
+
+    private String createToken(String email, List<String> roles, SecretKey secretKey, Long expiredMs) {
         return Jwts.builder()
                 .claim("email", email)
-                .claim("roles", roles) // 리스트 형태로 저장
+                .claim("roles", roles)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expiredMs))
                 .signWith(secretKey)
                 .compact();
     }
 
-    /**
-     * 이메일(email) 추출
-     */
+    // 토큰 검증 메소드 추가
+    public boolean validateToken(String token, boolean isAccessToken) {
+        try {
+            SecretKey key = isAccessToken ? accessTokenSecretKey : refreshTokenSecretKey;
+            Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // JWT에서 이메일 추출
     public String getEmail(String token) {
-        return parseTokenPayload(token).get("email", String.class);
+        try {
+            Claims claims = parseClaims(token);
+            return claims.get("email", String.class);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
-    /**
-     * 역할(role) 리스트 추출
-     */
-    public List<String> getRoles(String jwtToken) {
-        List<?> rawRoles = parseTokenPayload(jwtToken).get("roles", List.class);
-        return rawRoles != null ? rawRoles.stream().map(Object::toString).toList() : List.of();
+    // JWT에서 권한(roles) 추출
+    @SuppressWarnings("unchecked")
+    public List<String> getRoles(String token) {
+        try {
+            Claims claims = parseClaims(token);
+            return claims.get("roles", List.class);
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
     }
 
-    /**
-     * JWT 페이로드(Claims) 파싱
-     */
-    private Claims parseTokenPayload(String jwtToken) {
+    // JWT 파싱 유틸리티 메서드
+    private Claims parseClaims(String token) {
         return Jwts.parser()
-                .verifyWith(secretKey)
+                .verifyWith(accessTokenSecretKey) // 기본적으로 access token용 키 사용
                 .build()
-                .parseSignedClaims(jwtToken)
+                .parseSignedClaims(token)
                 .getPayload();
     }
 
-    /**
-     * 토큰 만료 여부 확인
-     */
-    public Boolean isExpired(String token) {
-        return parseTokenPayload(token).getExpiration().before(new Date());
+    // Refresh 토큰 파싱을 위한 별도 메서드
+    private Claims parseRefreshTokenClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(refreshTokenSecretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
+
+    // 토큰 타입에 따라 Claims 파싱
+    public Claims getClaims(String token, boolean isAccessToken) {
+        return isAccessToken ? parseClaims(token) : parseRefreshTokenClaims(token);
+    }
+
+    // 토큰 타입에 따른 이메일 추출
+    public String getEmail(String token, boolean isAccessToken) {
+        try {
+            Claims claims = getClaims(token, isAccessToken);
+            return claims.get("email", String.class);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    // 토큰 타입에 따른 권한 추출
+    @SuppressWarnings("unchecked")
+    public List<String> getRoles(String token, boolean isAccessToken) {
+        try {
+            Claims claims = getClaims(token, isAccessToken);
+            return claims.get("roles", List.class);
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
 }
