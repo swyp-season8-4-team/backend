@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.store.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -18,10 +20,10 @@ import org.swyp.dessertbee.store.entity.TagCategory;
 import org.swyp.dessertbee.store.repository.StoreRepository;
 import org.swyp.dessertbee.store.repository.StoreTagRepository;
 import org.swyp.dessertbee.store.repository.TagCategoryRepository;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -49,18 +51,19 @@ class StoreServiceIntegrationTest {
     @Autowired
     private TagCategoryRepository tagCategoryRepository;
 
-    private StoreCreateRequest request;
+    private MockMultipartFile file1;
+    private MockMultipartFile file2;
     private final String s3BaseUrl = "https://desserbee-bucket.s3.ap-northeast-2.amazonaws.com/";
 
     @BeforeEach
     void setUp() {
-        // 1️⃣ 태그 카테고리 존재 여부 확인 후 저장
+        // ✅ 1️⃣ 태그 카테고리 확인 후 저장
         Optional<TagCategory> categoryOptional = tagCategoryRepository.findByName("Food");
         TagCategory category = categoryOptional.orElseGet(() -> tagCategoryRepository.save(
                 TagCategory.builder().name("Food").build()
         ));
 
-        // 2️⃣ StoreTag 존재 여부 확인 후 저장
+        // ✅ 2️⃣ StoreTag 확인 후 저장
         Optional<StoreTag> tag1 = storeTagRepository.findByName("Dessert");
         Optional<StoreTag> tag2 = storeTagRepository.findByName("Cafe");
 
@@ -71,86 +74,121 @@ class StoreServiceIntegrationTest {
             ));
         }
 
-        // 3️⃣ 최신 태그 ID 가져오기
+        // ✅ 3️⃣ 최신 태그 ID 가져오기
         Long tagId1 = storeTagRepository.findByName("Dessert").orElseThrow().getId();
         Long tagId2 = storeTagRepository.findByName("Cafe").orElseThrow().getId();
 
-        request = StoreCreateRequest.builder()
-                .ownerId(100L)
-                .name("Integration Test Store")
-                .phone("010-5678-1234")
-                .address("Seoul, Korea")
-                .storeLink("http://test.com")
-                .latitude(BigDecimal.valueOf(37.5665))
-                .longitude(BigDecimal.valueOf(126.9780))
-                .description("Test description")
-                .animalYn(true)
-                .tumblerYn(true)
-                .parkingYn(true)
-                .operatingHours("09:00 - 22:00")
-                .closingDays("Sunday")
-                .tagIds(List.of(tagId1, tagId2))
-                .menus(List.of())
-                .events(List.of())
-                .coupons(List.of())
-                .storeImages(List.of("img1.jpg", "img2.jpg")) // ✅ 경로 제거하고 파일명만 저장
-                .menuImages(Map.of())
-                .eventImages(Map.of())
-                .build();
+        // ✅ 4️⃣ MockMultipartFile 생성
+        file1 = new MockMultipartFile("storeImageFiles", "img1.jpg", MediaType.IMAGE_JPEG_VALUE, "test-image-1".getBytes());
+        file2 = new MockMultipartFile("storeImageFiles", "img2.jpg", MediaType.IMAGE_JPEG_VALUE, "test-image-2".getBytes());
     }
 
-    /** 가게 등록 테스트 */
     @Test
     void 가게_등록_API_테스트() throws Exception {
-        // 1️⃣ JSON 변환
-        String requestJson = objectMapper.writeValueAsString(request);
+        String requestJson = objectMapper.writeValueAsString(
+                StoreCreateRequest.builder()
+                        .ownerId(100L)
+                        .name("Integration Test Store")
+                        .phone("010-5678-1234")
+                        .address("Seoul, Korea")
+                        .storeLink("http://test.com")
+                        .latitude(BigDecimal.valueOf(37.5665))
+                        .longitude(BigDecimal.valueOf(126.9780))
+                        .description("Test description")
+                        .animalYn(true)
+                        .tumblerYn(true)
+                        .parkingYn(true)
+                        .operatingHours("09:00 - 22:00")
+                        .closingDays("Sunday")
+                        .tagIds(List.of(1L, 2L))
+                        .menus(List.of())
+                        .events(List.of())
+                        .coupons(List.of())
+                        .build()
+        );
 
-        // 2️⃣ API 호출 및 응답 검증
-        String responseJson = mockMvc.perform(post("/api/stores")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
+        MockMultipartFile jsonRequest = new MockMultipartFile(
+                "request", "", MediaType.APPLICATION_JSON_VALUE, requestJson.getBytes()
+        );
+
+        // ✅ API 호출 및 응답 검증
+        String responseJson = mockMvc.perform(multipart("/api/stores")
+                        .file(file1)
+                        .file(file2)
+                        .file(jsonRequest)
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value(request.getName()))
-                .andExpect(jsonPath("$.address").value(request.getAddress()))
+                .andExpect(jsonPath("$.name").value("Integration Test Store"))
+                .andExpect(jsonPath("$.address").value("Seoul, Korea"))
                 .andReturn().getResponse().getContentAsString();
 
-        // 3️⃣ 가게 ID 추출
+        // ✅ 가게 ID 추출
         Long storeId = objectMapper.readTree(responseJson).get("id").asLong();
 
-        // 4️⃣ 예상 이미지 URL
-        String expectedImageUrl1 = s3BaseUrl + "store/" + storeId + "/img1.jpg";
-        String expectedImageUrl2 = s3BaseUrl + "store/" + storeId + "/img2.jpg";
-
-        // 5️⃣ 이미지 검증
-        mockMvc.perform(get("/api/stores/" + storeId + "/details"))
+        // ✅ 상세 조회 요청 및 검증
+        String detailsResponseJson = mockMvc.perform(get("/api/stores/" + storeId + "/details"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.storeImages[0]").value(expectedImageUrl1))
-                .andExpect(jsonPath("$.storeImages[1]").value(expectedImageUrl2));
+                .andReturn().getResponse().getContentAsString();
+
+        // ✅ 실제 응답에서 이미지 URL 가져오기
+        JsonNode responseNode = objectMapper.readTree(detailsResponseJson);
+        String actualImageUrl1 = responseNode.get("storeImages").get(0).asText();
+        String actualImageUrl2 = responseNode.get("storeImages").get(1).asText();
+
+        // ✅ 예상된 UUID 포함된 이미지 URL 형식 검증
+        assertThat(actualImageUrl1).matches("^" + s3BaseUrl + "store/" + storeId + "/[a-f0-9\\-]+-img1\\.jpg$");
+        assertThat(actualImageUrl2).matches("^" + s3BaseUrl + "store/" + storeId + "/[a-f0-9\\-]+-img2\\.jpg$");
     }
 
-    /** 가게 상세 조회 API 테스트 */
     @Test
     void 가게_상세_조회_API_테스트() throws Exception {
-        // 1️⃣ 가게 등록
-        String requestJson = objectMapper.writeValueAsString(request);
-        String responseJson = mockMvc.perform(post("/api/stores")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
+        // ✅ 먼저 가게 등록 API 호출
+        String createResponseJson = mockMvc.perform(multipart("/api/stores")
+                        .file(file1)
+                        .file(file2)
+                        .file(new MockMultipartFile(
+                                "request", "", MediaType.APPLICATION_JSON_VALUE,
+                                objectMapper.writeValueAsString(
+                                        StoreCreateRequest.builder()
+                                                .ownerId(100L)
+                                                .name("Integration Test Store")
+                                                .phone("010-5678-1234")
+                                                .address("Seoul, Korea")
+                                                .storeLink("http://test.com")
+                                                .latitude(BigDecimal.valueOf(37.5665))
+                                                .longitude(BigDecimal.valueOf(126.9780))
+                                                .description("Test description")
+                                                .animalYn(true)
+                                                .tumblerYn(true)
+                                                .parkingYn(true)
+                                                .operatingHours("09:00 - 22:00")
+                                                .closingDays("Sunday")
+                                                .tagIds(List.of(1L, 2L))
+                                                .menus(List.of())
+                                                .events(List.of())
+                                                .coupons(List.of())
+                                                .build()
+                                ).getBytes()
+                        ))
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 
-        // 2️⃣ 등록된 가게 ID 가져오기
-        Long storeId = objectMapper.readTree(responseJson).get("id").asLong();
+        // ✅ 생성된 storeId 가져오기
+        Long storeId = objectMapper.readTree(createResponseJson).get("id").asLong();
 
-        // 3️⃣ 예상 이미지 URL
-        String expectedImageUrl1 = s3BaseUrl + "store/" + storeId + "/img1.jpg";
-        String expectedImageUrl2 = s3BaseUrl + "store/" + storeId + "/img2.jpg";
-
-        // 4️⃣ 상세 조회 요청 및 검증
-        mockMvc.perform(get("/api/stores/" + storeId + "/details"))
+        // ✅ 가게 상세 조회 API 호출 및 검증
+        String responseJson = mockMvc.perform(get("/api/stores/" + storeId + "/details"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value(request.getName()))
-                .andExpect(jsonPath("$.address").value(request.getAddress()))
-                .andExpect(jsonPath("$.storeImages[0]").value(expectedImageUrl1))
-                .andExpect(jsonPath("$.storeImages[1]").value(expectedImageUrl2));
+                .andReturn().getResponse().getContentAsString();
+
+        // ✅ JSON 파싱하여 storeImages 검증
+        JsonNode responseNode = objectMapper.readTree(responseJson);
+        String actualImageUrl1 = responseNode.get("storeImages").get(0).asText();
+        String actualImageUrl2 = responseNode.get("storeImages").get(1).asText();
+
+        // ✅ 예상된 UUID 포함된 이미지 URL 형식 검증
+        assertThat(actualImageUrl1).matches("^" + s3BaseUrl + "store/" + storeId + "/[a-f0-9\\-]+-img1\\.jpg$");
+        assertThat(actualImageUrl2).matches("^" + s3BaseUrl + "store/" + storeId + "/[a-f0-9\\-]+-img2\\.jpg$");
     }
 }
