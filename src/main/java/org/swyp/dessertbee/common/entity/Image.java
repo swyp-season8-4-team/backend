@@ -17,16 +17,16 @@ public class Image {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "ref_type", nullable = false)
     private ImageType refType; // 'STORE', 'MENU', 'EVENT', 'REVIEW', 'PROFILE', 'MATE', 'SHORT'
 
-    @Column(nullable = false)
+    @Column(name = "ref_id", nullable = false)
     private Long refId; // 참조 ID
 
     @Column(nullable = false)
     private String path; // S3 경로 추가
 
-    @Column(nullable = false)
+    @Column(name = "file_name", nullable = false)
     private String fileName;
 
     @Column(nullable = false)
