@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "store")
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -48,10 +49,12 @@ public class Store {
     private String closingDays;
 
     @Column(precision = 3, scale = 2)
+    @Builder.Default
     private BigDecimal averageRating = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Builder.Default
     private StoreStatus status = StoreStatus.APPROVED;
 
     private LocalDateTime deletedAt;
