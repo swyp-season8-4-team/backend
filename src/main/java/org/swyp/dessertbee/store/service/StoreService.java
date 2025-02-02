@@ -3,10 +3,12 @@ package org.swyp.dessertbee.store.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.Image;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.model.Identifiable;
 import org.swyp.dessertbee.common.service.ImageService;
+import org.swyp.dessertbee.common.service.S3Service;
 import org.swyp.dessertbee.store.dto.request.CouponCreateRequest;
 import org.swyp.dessertbee.store.dto.request.EventCreateRequest;
 import org.swyp.dessertbee.store.dto.request.MenuCreateRequest;
@@ -34,9 +36,10 @@ public class StoreService {
     private final CouponRepository couponRepository;
     private final StoreStatisticsRepository storeStatisticsRepository;
     private final ImageService imageService;
+    private final S3Service s3Service;
 
     /** 가게 등록 (이벤트, 쿠폰, 메뉴 + 이미지 포함) */
-    public StoreDetailResponse createStore(StoreCreateRequest request) {
+    public StoreDetailResponse createStore(StoreCreateRequest request, List<MultipartFile> storeImageFiles) {
         // 가게 정보 저장
         Store store = storeRepository.save(
                 Store.builder()
@@ -66,17 +69,20 @@ public class StoreService {
                         .build()
         );
 
-        // 가게 대표 사진 저장
-        imageService.uploadAndSaveImages(request.getStoreImages(), ImageType.STORE, store.getId());
+        // 가게 대표 사진 S3 업로드 및 저장
+        if (storeImageFiles != null && !storeImageFiles.isEmpty()) {
+            String folder = "store/" + store.getId();
+            imageService.uploadAndSaveImages(storeImageFiles, ImageType.STORE, store.getId(), folder);
+        }
 
-        // 태그 저장 (1~3개 선택 가능)
+        // 태그 저장
         saveStoreTags(store, request.getTagIds());
 
-        // 메뉴 저장 및 이미지 저장
-        saveMenus(store, request.getMenus(), request.getMenuImages());
+        // 메뉴 저장 및 이미지 업로드
+        saveMenus(store, request.getMenus(), request.getMenuImageFiles());
 
-        // 이벤트 저장 및 이미지 저장
-        saveEvents(store, request.getEvents(), request.getEventImages());
+        // 이벤트 저장 및 이미지 업로드
+        saveEvents(store, request.getEvents(), request.getEventImageFiles());
 
         // 쿠폰 저장
         saveCoupons(store, request.getCoupons());
@@ -110,7 +116,7 @@ public class StoreService {
     }
 
     /** 메뉴 저장 */
-    private void saveMenus(Store store, List<MenuCreateRequest> menus, Map<String, String> menuImages) {
+    private void saveMenus(Store store, List<MenuCreateRequest> menus, Map<String, MultipartFile> menuImageFiles) {
         if (menus == null || menus.isEmpty()) return;
 
         // 메뉴 저장
@@ -126,24 +132,29 @@ public class StoreService {
                         .collect(Collectors.toList())
         );
 
-        // 메뉴 이미지 저장
-        imageService.saveAllImages(
-                savedMenus.stream()
-                        .map(menu -> {
-                            String fileName = menuImages.get(menu.getName());
-                            return fileName != null ? Image.builder()
-                                    .refType(ImageType.MENU)
-                                    .refId(menu.getId())
-                                    .fileName(fileName)
-                                    .build() : null;
-                        })
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toList())
-        );
+        // 메뉴 이미지 S3 업로드 후 저장
+        List<Image> menuImages = savedMenus.stream()
+                .map(menu -> {
+                    MultipartFile file = menuImageFiles.get(menu.getName());
+                    if (file != null) {
+                        String url = s3Service.uploadFile(file, "menu/" + menu.getId()); // S3 업로드
+                        return Image.builder()
+                                .refType(ImageType.MENU)
+                                .refId(menu.getId())
+                                .fileName(file.getOriginalFilename())
+                                .url(url)
+                                .build();
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        imageService.saveAllImages(menuImages);
     }
 
     /** 이벤트 저장 */
-    private void saveEvents(Store store, List<EventCreateRequest> events, Map<String, List<String>> eventImages) {
+    private void saveEvents(Store store, List<EventCreateRequest> events, Map<String, List<MultipartFile>> eventImageFiles) {
         if (events == null || events.isEmpty()) return;
 
         List<Event> savedEvents = eventRepository.saveAll(
@@ -158,20 +169,24 @@ public class StoreService {
                         .collect(Collectors.toList())
         );
 
-        // 이벤트 이미지 저장
-        imageService.saveAllImages(
-                savedEvents.stream()
-                        .flatMap(event -> {
-                            List<String> fileNames = eventImages.get(event.getTitle());
-                            return fileNames != null ? fileNames.stream()
-                                    .map(fileName -> Image.builder()
-                                            .refType(ImageType.EVENT)
-                                            .refId(event.getId())
-                                            .fileName(fileName)
-                                            .build()) : Stream.empty();
-                        })
-                        .collect(Collectors.toList())
-        );
+        // 이벤트 이미지 S3 업로드 후 저장
+        List<Image> eventImages = savedEvents.stream()
+                .flatMap(event -> {
+                    List<MultipartFile> files = eventImageFiles.get(event.getTitle());
+                    return files != null ? files.stream()
+                            .map(file -> {
+                                String url = s3Service.uploadFile(file, "event/" + event.getId()); // S3 업로드
+                                return Image.builder()
+                                        .refType(ImageType.EVENT)
+                                        .refId(event.getId())
+                                        .fileName(file.getOriginalFilename())
+                                        .url(url)
+                                        .build();
+                            }) : Stream.empty();
+                })
+                .collect(Collectors.toList());
+
+        imageService.saveAllImages(eventImages);
     }
 
     /** 쿠폰 저장 */
