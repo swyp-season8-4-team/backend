@@ -7,6 +7,7 @@ import org.swyp.dessertbee.common.model.Identifiable;
 import org.swyp.dessertbee.store.entity.Menu;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @Builder
@@ -17,13 +18,21 @@ public class MenuResponse implements Identifiable {
     private BigDecimal price;
     private Boolean isPopular;
     private String description;
+    private List<String> images;
 
     @Override
     public Long getId() {
         return id;
     }
 
-    public static MenuResponse fromEntity(Menu menu) {
-        return new MenuResponse(menu.getId(), menu.getName(), menu.getPrice(), menu.getIsPopular(), menu.getDescription());
+    public static MenuResponse fromEntity(Menu menu, List<String> images) {
+        return new MenuResponse(
+                menu.getId(),
+                menu.getName(),
+                menu.getPrice(),
+                menu.getIsPopular(),
+                menu.getDescription(),
+                images
+        );
     }
 }

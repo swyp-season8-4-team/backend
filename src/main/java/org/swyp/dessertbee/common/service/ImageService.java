@@ -66,4 +66,42 @@ public class ImageService {
                         Collectors.mapping(Image::getUrl, Collectors.toList())
                 ));
     }
+
+    /** 특정 refType과 refId를 가진 모든 이미지 삭제 (S3 + DB) */
+    public void deleteImagesByRefId(ImageType refType, Long refId) {
+        List<Image> images = imageRepository.findByRefTypeAndRefId(refType, refId);
+
+        if (images.isEmpty()) {
+            return; // 삭제할 이미지가 없으면 종료
+        }
+
+        // S3에서 이미지 삭제
+        for (Image image : images) {
+            s3Service.deleteFile(image.getPath(), image.getFileName());
+        }
+
+        // DB에서 이미지 삭제
+        imageRepository.deleteAll(images);
+    }
+
+    /** 특정 이미지 1개 삭제 */
+    public void deleteImageById(Long imageId) {
+        Image image = imageRepository.findById(imageId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이미지입니다."));
+
+        // S3에서 삭제
+        s3Service.deleteFile(image.getPath(), image.getFileName());
+
+        // DB에서 삭제
+        imageRepository.delete(image);
+    }
+
+    /** 기존 이미지 삭제 후 새 이미지 업로드 (update) */
+    public void updateImages(List<MultipartFile> files, ImageType refType, Long refId, String folder) {
+        // 기존 이미지 삭제
+        deleteImagesByRefId(refType, refId);
+
+        // 새 이미지 업로드
+        uploadAndSaveImages(files, refType, refId, folder);
+    }
 }
