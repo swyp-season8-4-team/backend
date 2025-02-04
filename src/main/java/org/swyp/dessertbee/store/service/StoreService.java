@@ -37,6 +37,8 @@ public class StoreService {
     private final StoreStatisticsRepository storeStatisticsRepository;
     private final ImageService imageService;
     private final S3Service s3Service;
+    private final MenuService menuService;
+    private final EventService eventService;
 
     /** 가게 등록 (이벤트, 쿠폰, 메뉴 + 이미지 포함) */
     public StoreDetailResponse createStore(StoreCreateRequest request, List<MultipartFile> storeImageFiles) {
@@ -78,11 +80,11 @@ public class StoreService {
         // 태그 저장
         saveStoreTags(store, request.getTagIds());
 
-        // 메뉴 저장 및 이미지 업로드
-        saveMenus(store, request.getMenus(), request.getMenuImageFiles());
+        // 메뉴 저장
+        menuService.addMenus(store.getId(), request.getMenus(), request.getMenuImageFiles());
 
-        // 이벤트 저장 및 이미지 업로드
-        saveEvents(store, request.getEvents(), request.getEventImageFiles());
+        // 이벤트 저장
+        eventService.addEvents(store.getId(), request.getEvents(), request.getEventImageFiles());
 
         // 쿠폰 저장
         saveCoupons(store, request.getCoupons());
@@ -115,78 +117,12 @@ public class StoreService {
         storeTagRelationRepository.saveAll(tagRelations);
     }
 
-    /** 메뉴 저장 */
-    private void saveMenus(Store store, List<MenuCreateRequest> menus, Map<String, MultipartFile> menuImageFiles) {
-        if (menus == null || menus.isEmpty()) return;
-
-        // 메뉴 저장
-        List<Menu> savedMenus = menuRepository.saveAll(
-                menus.stream()
-                        .map(menu -> Menu.builder()
-                                .storeId(store.getId())
-                                .name(menu.getName())
-                                .price(menu.getPrice())
-                                .isPopular(menu.getIsPopular())
-                                .description(menu.getDescription())
-                                .build())
-                        .collect(Collectors.toList())
-        );
-
-        // 메뉴 이미지 S3 업로드 후 저장
-        List<Image> menuImages = savedMenus.stream()
-                .map(menu -> {
-                    MultipartFile file = menuImageFiles.get(menu.getName());
-                    if (file != null) {
-                        String url = s3Service.uploadFile(file, "menu/" + menu.getId()); // S3 업로드
-                        return Image.builder()
-                                .refType(ImageType.MENU)
-                                .refId(menu.getId())
-                                .fileName(file.getOriginalFilename())
-                                .url(url)
-                                .build();
-                    }
-                    return null;
-                })
-                .filter(Objects::nonNull)
+    /** 특정 가게의 쿠폰 목록 조회 */
+    public List<CouponResponse> getCouponsByStore(Long storeId) {
+        return couponRepository.findByStoreId(storeId)
+                .stream()
+                .map(CouponResponse::fromEntity)
                 .collect(Collectors.toList());
-
-        imageService.saveAllImages(menuImages);
-    }
-
-    /** 이벤트 저장 */
-    private void saveEvents(Store store, List<EventCreateRequest> events, Map<String, List<MultipartFile>> eventImageFiles) {
-        if (events == null || events.isEmpty()) return;
-
-        List<Event> savedEvents = eventRepository.saveAll(
-                events.stream()
-                        .map(event -> Event.builder()
-                                .storeId(store.getId())
-                                .title(event.getTitle())
-                                .description(event.getDescription())
-                                .startDate(event.getStartDate())
-                                .endDate(event.getEndDate())
-                                .build())
-                        .collect(Collectors.toList())
-        );
-
-        // 이벤트 이미지 S3 업로드 후 저장
-        List<Image> eventImages = savedEvents.stream()
-                .flatMap(event -> {
-                    List<MultipartFile> files = eventImageFiles.get(event.getTitle());
-                    return files != null ? files.stream()
-                            .map(file -> {
-                                String url = s3Service.uploadFile(file, "event/" + event.getId()); // S3 업로드
-                                return Image.builder()
-                                        .refType(ImageType.EVENT)
-                                        .refId(event.getId())
-                                        .fileName(file.getOriginalFilename())
-                                        .url(url)
-                                        .build();
-                            }) : Stream.empty();
-                })
-                .collect(Collectors.toList());
-
-        imageService.saveAllImages(eventImages);
     }
 
     /** 쿠폰 저장 */
@@ -230,33 +166,25 @@ public class StoreService {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 가게입니다."));
 
-        // 가게 대표 사진 조회
         List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, storeId);
+        List<EventResponse> events = eventService.getEventsByStore(storeId);
+        List<MenuResponse> menus = menuService.getMenusByStore(storeId);
+        List<CouponResponse> coupons = getCouponsByStore(storeId);  // ✅ 쿠폰 목록 추가
+        // 리뷰 ID 목록을 가져와서 해당 리뷰들의 이미지 URL 매핑
 
-        // 이벤트 조회 및 이벤트별 이미지 가져오기
-        List<EventResponse> events = eventRepository.findByStoreId(storeId)
-                .stream().map(EventResponse::fromEntity).collect(Collectors.toList());
-        List<String> eventImages = getImageUrlsForEntities(events, ImageType.EVENT);
-
-        // 쿠폰 조회
-        List<CouponResponse> coupons = couponRepository.findByStoreId(storeId)
-                .stream().map(CouponResponse::fromEntity).collect(Collectors.toList());
-
-        // 메뉴 조회 및 메뉴별 이미지 가져오기
-        List<MenuResponse> menus = menuRepository.findByStoreId(storeId)
-                .stream().map(MenuResponse::fromEntity).collect(Collectors.toList());
-        List<String> menuImages = getImageUrlsForEntities(menus, ImageType.MENU);
-
-        // 리뷰 조회 및 리뷰별 이미지 가져오기 (N+1 문제 방지)
+        // 리뷰 기능 개발 후 수정할 부분 (미완성)
         List<StoreReview> reviews = storeReviewRepository.findByStoreId(storeId);
-        List<StoreReviewResponse> storeReviews = getStoreReviewResponses(reviews);
-
-        // 태그 조회
+        Map<Long, List<String>> reviewImagesMap = imageService.getImagesByTypeAndIds(ImageType.REVIEW,
+                reviews.stream().map(StoreReview::getId).toList());
+        List<StoreReviewResponse> reviewResponses = reviews.stream()
+                .map(review -> StoreReviewResponse.fromEntity(review, reviewImagesMap.getOrDefault(review.getId(), List.of())))
+                .toList();
+        //
         List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(storeId);
 
-        // 응답 생성
-        return StoreDetailResponse.fromEntity(store, events, coupons, storeImages, eventImages, menuImages, storeReviews, tags);
+        return StoreDetailResponse.fromEntity(store, events, menus, coupons, storeImages, reviewResponses, tags);
     }
+
 
     /** 이미지 조회 */
     private <T extends Identifiable> List<String> getImageUrlsForEntities(List<T> entities, ImageType imageType) {
