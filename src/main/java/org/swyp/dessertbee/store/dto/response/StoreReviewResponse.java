@@ -14,6 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 public class StoreReviewResponse {
     private Long id;
+    private Long storeId; // 가게 ID 추가
     private String content;
     private BigDecimal rating;
     private LocalDateTime createdAt;
@@ -22,6 +23,7 @@ public class StoreReviewResponse {
     public static StoreReviewResponse fromEntity(StoreReview review, List<String> images) {
         return StoreReviewResponse.builder()
                 .id(review.getId())
+                .storeId(review.getStoreId()) // 가게 ID 추가
                 .content(review.getContent())
                 .rating(review.getRating())
                 .createdAt(review.getCreatedAt())
