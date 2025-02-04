@@ -40,4 +40,7 @@ public class Menu {
     private LocalDateTime updatedAt;
 
     private LocalDateTime deletedAt;
+
+    public void update(String name, BigDecimal price, Boolean isPopular, String description) {
+    }
 }

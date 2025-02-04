@@ -35,4 +35,7 @@ public class Event {
     private LocalDateTime updatedAt;
 
     private LocalDateTime deletedAt;
+
+    public void update(String title, String description, LocalDate startDate, LocalDate endDate) {
+    }
 }
