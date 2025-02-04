@@ -4,3 +4,12 @@ spring:
     url: ${PROD_DB_URL}
     username: ${PROD_DB_USERNAME}
     password: ${PROD_DB_PASSWORD}
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            redirect-uri: "http://${SERVER_HOST}:8080/${KAKAO_REDIRECT_URI}"
+  graphql:
+    cors:
+      allowed-origins: "https://desserbee.com,https://www.desserbee.com,http://desserbee.com,http://www.desserbee.com"
