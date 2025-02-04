@@ -1,13 +1,18 @@
 package org.swyp.dessertbee.auth.jwt;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.swyp.dessertbee.auth.dto.CustomOAuth2User;
 import org.swyp.dessertbee.auth.dto.TokenResponse;
@@ -15,90 +20,104 @@ import org.swyp.dessertbee.auth.service.AuthService;
 import org.swyp.dessertbee.user.dto.UserDTO;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
- * 사용자의 쿠키에서 JWT를 추출하여 인증을 수행하는 필터이다.
+ * JWT 토큰을 검증하고 인증을 처리하는 필터
+ * Spring Security Filter Chain에서 사용됨
  */
+@RequiredArgsConstructor
+@Slf4j
 public class JWTFilter extends OncePerRequestFilter {
+
     private final JWTUtil jwtUtil;
     private final AuthService authService;
 
-    public JWTFilter(JWTUtil jwtUtil, AuthService authService) {
-        this.jwtUtil = jwtUtil;
-        this.authService = authService;
-    }
+    private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String BEARER_PREFIX = "Bearer ";
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
 
-        String accessToken = extractTokenFromHeader(request);
-        String refreshToken = extractTokenFromCookie(request, "refresh_token");
+        try {
+            String token = extractTokenFromHeader(request);
 
-        if (accessToken != null && jwtUtil.validateToken(accessToken, true)) {
-            processToken(accessToken, true, request);
-        } else if (refreshToken != null && jwtUtil.validateToken(refreshToken, false)) {
-            // Refresh Token으로 새로운 Access Token 발급
-            TokenResponse newTokens = authService.refreshTokens(refreshToken);
-            if (newTokens != null) {
-                addTokenToResponse(response, newTokens);
-                processToken(newTokens.getAccessToken(), true, request);
+            if (token != null && jwtUtil.validateToken(token, true)) {
+                // 토큰이 유효한 경우 인증 처리
+                Authentication authentication = createAuthentication(token);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                log.debug("Set Authentication to security context for '{}' token",
+                        maskToken(token));
             }
+
+        } catch (ExpiredJwtException e) {
+            log.info("만료된 JWT 토큰입니다.");
+            // 만료된 토큰 처리는 프론트엔드에서 처리하도록 함
+        } catch (Exception e) {
+            log.error("JWT 토큰 처리 중 오류 발생", e);
         }
 
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Request Header에서 토큰 추출
+     */
     private String extractTokenFromHeader(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
-        if (header != null && header.startsWith("Bearer ")) {
-            return header.substring(7);
+        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
+            return bearerToken.substring(BEARER_PREFIX.length());
         }
         return null;
     }
 
-    private String extractTokenFromCookie(HttpServletRequest request, String cookieName) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if (cookie.getName().equals(cookieName)) {
-                    return cookie.getValue();
-                }
-            }
+    /**
+     * JWT 토큰으로부터 인증 객체 생성
+     */
+    private Authentication createAuthentication(String token) {
+        String email = jwtUtil.getEmail(token, true);
+        List<String> roles = jwtUtil.getRoles(token, true);
+
+        List<SimpleGrantedAuthority> authorities = roles.stream()
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                .collect(Collectors.toList());
+
+        UserDTO userDTO = UserDTO.builder()
+                .email(email)
+                .roles(roles)
+                .build();
+
+        CustomOAuth2User principal = new CustomOAuth2User(userDTO, new HashMap<>());
+
+        return new UsernamePasswordAuthenticationToken(principal, null, authorities);
+    }
+
+    /**
+     * 토큰 마스킹 처리 (로깅용)
+     */
+    private String maskToken(String token) {
+        if (token == null || token.length() < 8) {
+            return "***";
         }
-        return null;
+        return token.substring(0, 4) + "..." +
+                token.substring(token.length() - 4);
     }
 
-    private void processToken(String token, boolean isAccessToken, HttpServletRequest request) {
-        String email = jwtUtil.getEmail(token);
-        List<String> roles = jwtUtil.getRoles(token);
-
-        UserDTO userDTO = new UserDTO();
-        userDTO.setEmail(email);
-        userDTO.setRoles(roles);
-
-        CustomOAuth2User customOAuth2User = new CustomOAuth2User(userDTO);
-        Authentication auth = new UsernamePasswordAuthenticationToken(
-                customOAuth2User, null, customOAuth2User.getAuthorities()
-        );
-        SecurityContextHolder.getContext().setAuthentication(auth);
-    }
-
-    private void addTokenToResponse(HttpServletResponse response, TokenResponse tokens) {
-        // Access Token을 Authorization 헤더에 추가
-        response.setHeader("Authorization", "Bearer " + tokens.getAccessToken());
-
-        // Refresh Token을 HttpOnly 쿠키로 설정
-        Cookie refreshTokenCookie = new Cookie("refresh_token", tokens.getRefreshToken());
-        refreshTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setSecure(true); // HTTPS만 사용
-        refreshTokenCookie.setPath("/api"); // API 경로에서만 사용 가능
-        refreshTokenCookie.setMaxAge(14 * 24 * 60 * 60); // 14일
-        response.addCookie(refreshTokenCookie);
-
-        // CORS 헤더 설정
-        response.setHeader("Access-Control-Expose-Headers", "Authorization");
-        response.setHeader("Access-Control-Allow-Credentials", "true");
+    /**
+     * 특정 요청 경로에 대해 필터 스킵
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+        // 인증이 필요없는 경로 설정
+        return path.startsWith("/api/auth/") ||
+                path.startsWith("/api/oauth2/") ||
+                path.startsWith("/api/public/");
     }
 }

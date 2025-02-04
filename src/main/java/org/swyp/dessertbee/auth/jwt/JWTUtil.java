@@ -1,21 +1,31 @@
 package org.swyp.dessertbee.auth.jwt;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * JWT 토큰 생성 및 검증을 담당하는 유틸리티 클래스
+ */
+/**
+ * JWT 토큰 생성 및 검증을 담당하는 유틸리티 클래스
+ */
 @Component
+@Slf4j
 public class JWTUtil {
+
     private final SecretKey accessTokenSecretKey;
     private final SecretKey refreshTokenSecretKey;
+
+    private final long ACCESS_TOKEN_EXPIRE_TIME = 30 * 60 * 1000L;       // 30분
+    private final long REFRESH_TOKEN_EXPIRE_TIME = 14 * 24 * 60 * 60 * 1000L;  // 14일
 
     public JWTUtil(
             @Value("${spring.jwt.secret.access}") String accessSecret,
@@ -31,98 +41,93 @@ public class JWTUtil {
         );
     }
 
+    /**
+     * Access Token 생성
+     */
     public String createAccessToken(String email, List<String> roles) {
-        return createToken(email, roles, accessTokenSecretKey, 30 * 60 * 1000L); // 30분
+        return createToken(email, roles, accessTokenSecretKey, ACCESS_TOKEN_EXPIRE_TIME);
     }
 
+    /**
+     * Refresh Token 생성
+     */
     public String createRefreshToken(String email, List<String> roles) {
-        return createToken(email, roles, refreshTokenSecretKey, 14 * 24 * 60 * 60 * 1000L); // 14일
+        return createToken(email, roles, refreshTokenSecretKey, REFRESH_TOKEN_EXPIRE_TIME);
     }
 
-    private String createToken(String email, List<String> roles, SecretKey secretKey, Long expiredMs) {
+    /**
+     * JWT 토큰 생성 공통 메서드
+     */
+    private String createToken(String email, List<String> roles, SecretKey secretKey, long expireTime) {
         return Jwts.builder()
                 .claim("email", email)
                 .claim("roles", roles)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expiredMs))
+                .expiration(new Date(System.currentTimeMillis() + expireTime))
                 .signWith(secretKey)
                 .compact();
     }
 
-    // 토큰 검증 메소드 추가
+    /**
+     * 토큰 유효성 검증
+     */
     public boolean validateToken(String token, boolean isAccessToken) {
         try {
             SecretKey key = isAccessToken ? accessTokenSecretKey : refreshTokenSecretKey;
             Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
             return true;
-        } catch (Exception e) {
-            return false;
+        } catch (SecurityException | MalformedJwtException e) {
+            log.error("잘못된 JWT 서명입니다.");
+        } catch (ExpiredJwtException e) {
+            log.error("만료된 JWT 토큰입니다.");
+        } catch (UnsupportedJwtException e) {
+            log.error("지원되지 않는 JWT 토큰입니다.");
+        } catch (IllegalArgumentException e) {
+            log.error("JWT 토큰이 잘못되었습니다.");
         }
+        return false;
     }
 
-    // JWT에서 이메일 추출
-    public String getEmail(String token) {
-        try {
-            Claims claims = parseClaims(token);
-            return claims.get("email", String.class);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    // JWT에서 권한(roles) 추출
-    @SuppressWarnings("unchecked")
-    public List<String> getRoles(String token) {
-        try {
-            Claims claims = parseClaims(token);
-            return claims.get("roles", List.class);
-        } catch (Exception e) {
-            return Collections.emptyList();
-        }
-    }
-
-    // JWT 파싱 유틸리티 메서드
-    private Claims parseClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(accessTokenSecretKey) // 기본적으로 access token용 키 사용
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-    }
-
-    // Refresh 토큰 파싱을 위한 별도 메서드
-    private Claims parseRefreshTokenClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(refreshTokenSecretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-    }
-
-    // 토큰 타입에 따라 Claims 파싱
-    public Claims getClaims(String token, boolean isAccessToken) {
-        return isAccessToken ? parseClaims(token) : parseRefreshTokenClaims(token);
-    }
-
-    // 토큰 타입에 따른 이메일 추출
+    /**
+     * 토큰에서 이메일 추출
+     */
     public String getEmail(String token, boolean isAccessToken) {
-        try {
-            Claims claims = getClaims(token, isAccessToken);
-            return claims.get("email", String.class);
-        } catch (Exception e) {
-            return null;
-        }
+        SecretKey key = isAccessToken ? accessTokenSecretKey : refreshTokenSecretKey;
+        return parseClaims(token, key)
+                .get("email", String.class);
     }
 
-    // 토큰 타입에 따른 권한 추출
+    /**
+     * 토큰에서 권한 정보 추출
+     */
     @SuppressWarnings("unchecked")
     public List<String> getRoles(String token, boolean isAccessToken) {
+        SecretKey key = isAccessToken ? accessTokenSecretKey : refreshTokenSecretKey;
+        return (List<String>) parseClaims(token, key)
+                .get("roles", List.class);
+    }
+
+    /**
+     * Claims 파싱
+     */
+    private Claims parseClaims(String token, SecretKey secretKey) {
         try {
-            Claims claims = getClaims(token, isAccessToken);
-            return claims.get("roles", List.class);
-        } catch (Exception e) {
-            return Collections.emptyList();
+            return Jwts.parser()
+                    .verifyWith(secretKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        } catch (ExpiredJwtException e) {
+            return e.getClaims();
         }
     }
 
+    /**
+     * 토큰 만료시간 확인
+     */
+    public long getTokenTimeToLive(String token, boolean isAccessToken) {
+        SecretKey key = isAccessToken ? accessTokenSecretKey : refreshTokenSecretKey;
+        Date expiration = parseClaims(token, key).getExpiration();
+        return expiration.getTime() - System.currentTimeMillis();
+    }
 }
