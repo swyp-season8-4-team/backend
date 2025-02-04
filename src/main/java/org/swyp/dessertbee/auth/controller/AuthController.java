@@ -8,10 +8,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.auth.dto.TokenRequest;
 import org.swyp.dessertbee.auth.dto.TokenResponse;
+import org.swyp.dessertbee.auth.jwt.JWTUtil;
 import org.swyp.dessertbee.auth.service.AuthService;
 import org.swyp.dessertbee.user.dto.UserDTO;
 
@@ -22,9 +25,11 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Slf4j
 public class AuthController {
 
     private final AuthService authService;
+    private final JWTUtil jwtUtil;
 
     @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다.")
     @ApiResponses({
@@ -86,8 +91,22 @@ public class AuthController {
     })
     @PostMapping("/token/refresh")
     public ResponseEntity<TokenResponse> refreshToken(
-            @Valid @RequestBody TokenRequest request) {
-        return ResponseEntity.ok(authService.refreshTokens(request.getRefreshToken()));
+            @RequestHeader("Authorization") String bearerToken) {
+        try {
+            // Bearer 토큰에서 만료된 액세스 토큰 추출
+            String accessToken = bearerToken.substring(7);  // "Bearer " 제거
+
+            // 토큰에서 이메일 추출
+            String email = jwtUtil.getEmail(accessToken, true);
+
+            // 이메일로 새로운 액세스 토큰 발급
+            TokenResponse tokenResponse = authService.refreshAccessToken(email);
+
+            return ResponseEntity.ok(tokenResponse);
+        } catch (Exception e) {
+            log.error("Token refresh failed", e);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
     }
 }
 
