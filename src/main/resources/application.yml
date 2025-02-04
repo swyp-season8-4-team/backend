@@ -1,7 +1,10 @@
 spring:
   application:
     name: dessertBee
-
+  jwt:
+    secret:
+      access: ${JWT_SECRET_ACCESS}
+      refresh: ${JWT_SECRET_REFRESH}
   jpa:
     database: mysql
     hibernate:
@@ -24,6 +27,26 @@ spring:
       enabled: true
       max-file-size: 10MB
       max-request-size: 20MB
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-name: kakao
+            client-id: ${KAKAO_CLIENT_ID}
+            client-secret: ${KAKAO_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            scope:
+              - profile_nickname
+              - profile_image
+              - account_email
+            client-authentication-method: client_secret_post
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
 
 logging:
   level:
