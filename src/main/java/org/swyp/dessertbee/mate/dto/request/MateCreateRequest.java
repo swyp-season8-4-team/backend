@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -29,7 +30,7 @@ public class MateCreateRequest {
     private Boolean recruitYn;
 
 
-    private List<String> mateImage; //모임 대표 이미지
+    private List<MultipartFile> mateImage; //모임 대표 이미지
 
 
 }
