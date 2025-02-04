@@ -42,5 +42,9 @@ public class Menu {
     private LocalDateTime deletedAt;
 
     public void update(String name, BigDecimal price, Boolean isPopular, String description) {
+        this.name = name;
+        this.price = price;
+        this.isPopular = isPopular;
+        this.description = description;
     }
 }

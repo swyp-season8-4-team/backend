@@ -37,5 +37,9 @@ public class Event {
     private LocalDateTime deletedAt;
 
     public void update(String title, String description, LocalDate startDate, LocalDate endDate) {
+        this.title = title;
+        this.description = description;
+        this.startDate = startDate;
+        this.endDate = endDate;
     }
 }
