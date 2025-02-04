@@ -1,6 +1,7 @@
 package org.swyp.dessertbee.config;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -20,6 +21,8 @@ import org.swyp.dessertbee.auth.service.AuthService;
 import org.swyp.dessertbee.auth.service.CustomOAuth2UserService;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
+import java.util.List;
+
 /**
  * 스프링 시큐리티 설정 클래스
  * OAuth2 및 JWT 인증 설정 포함
@@ -34,6 +37,9 @@ public class SecurityConfig {
     private final JWTUtil jwtUtil;
     private final AuthService authService;
 
+    @Value("${spring.graphql.cors.allowed-origins}")
+    private String corsAllowedOrigins;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -44,7 +50,6 @@ public class SecurityConfig {
 //                        // OAuth2 관련 엔드포인트 명확히 지정
 //                        .requestMatchers("/api/oauth2/authorization").permitAll()
 //                        .requestMatchers("/api/oauth2/code").permitAll()
-//                        .requestMatchers("/login/oauth2/code/kakao").permitAll()  // 카카오 콜백 URL
 //                        // 다른 public API 엔드포인트
 //                        .requestMatchers("/api/auth/**").permitAll()
 //                        .requestMatchers("/api/public/**").permitAll()
@@ -52,10 +57,12 @@ public class SecurityConfig {
 //                        .anyRequest().authenticated()
                                 // OAuth2 인증이 필요한 엔드포인트만 지정
                                 .requestMatchers("/api/oauth2/authorization/**").authenticated()
+                                .requestMatchers("/api/oauth2/code/**").authenticated()
                                 // 나머지 모든 요청 허용
                                 .anyRequest().permitAll()
                 )
                 .oauth2Login(oauth2 -> oauth2
+                        .loginProcessingUrl("/api/oauth2/code")
                         .userInfoEndpoint(userInfo ->
                                 userInfo.userService(customOAuth2UserService))
                         .successHandler(customSuccessHandler)
@@ -77,7 +84,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
+        List<String> allowedOrigins = Arrays.asList(corsAllowedOrigins.split(","));
+        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);

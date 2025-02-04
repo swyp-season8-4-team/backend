@@ -7,3 +7,12 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            redirect-uri: "http://localhost:8080/${KAKAO_REDIRECT_URI}"
+  graphql:
+    cors:
+      allowed-origins: "http://localhost:3000"

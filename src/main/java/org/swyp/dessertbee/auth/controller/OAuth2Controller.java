@@ -64,30 +64,4 @@ public class OAuth2Controller {
                 .header(HttpHeaders.LOCATION, authorizationUrl)
                 .build();
     }
-
-    @PostMapping("/code")
-    @Operation(summary = "소셜 로그인 콜백", description = "소셜 로그인 인증 코드를 처리합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "인증 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청"),
-            @ApiResponse(responseCode = "401", description = "인증 실패")
-    })
-    public ResponseEntity<LoginResponse> callback(
-            @Valid @RequestBody OAuth2CallbackRequest request) {
-
-        String provider = request.getProvider().toLowerCase();
-        String code = request.getCode();
-
-        if (!"kakao".equals(provider)) {
-            throw new IllegalArgumentException("Unsupported provider: " + provider);
-        }
-
-        // TODO: OAuth2 인증 처리 로직 구현
-        // 1. 인증 코드로 액세스 토큰 요청
-        // 2. 액세스 토큰으로 사용자 정보 요청
-        // 3. 사용자 정보로 회원가입/로그인 처리
-        // 4. JWT 토큰 생성
-
-        return ResponseEntity.ok().build();
-    }
 }
