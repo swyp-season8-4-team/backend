@@ -45,12 +45,19 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'jakarta.mail:jakarta.mail-api'
+
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     implementation 'io.github.cdimascio:dotenv-java:3.1.0'
 
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.4'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+
+
+
 }
 
 tasks.named('test') {
