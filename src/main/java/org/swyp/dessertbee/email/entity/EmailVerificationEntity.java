@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.auth.entity;
+package org.swyp.dessertbee.email.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
