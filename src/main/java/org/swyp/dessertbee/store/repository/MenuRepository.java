@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface MenuRepository extends JpaRepository<Menu, Long> {
 
     // 특정 가게의 전체 메뉴 조회
-    List<Menu> findByStoreId(Long storeId);
-    Optional<Menu> findByIdAndStoreId(Long menuId, Long storeId);
-    boolean existsByStoreIdAndName(Long storeId, String name);
+    List<Menu> findByStoreIdAndDeletedAtIsNull(Long storeId);
+    Optional<Menu> findByIdAndStoreIdAndDeletedAtIsNull(Long menuId, Long storeId);
+    boolean existsByStoreIdAndNameAndDeletedAtIsNull(Long storeId, String name);
 }

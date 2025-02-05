@@ -42,4 +42,8 @@ public class Event {
         this.startDate = startDate;
         this.endDate = endDate;
     }
+
+    public void softDelete(){
+        this.deletedAt = LocalDateTime.now();
+    }
 }
