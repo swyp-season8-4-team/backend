@@ -23,6 +23,7 @@ import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -81,18 +82,15 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     @Transactional
     protected UserEntity saveOrUpdateUser(OAuth2Response oauth2Response) {
-        UserEntity user = userRepository.findByEmail(oauth2Response.getEmail());
-
-        if (user == null) {
-            // 새 사용자 생성
-            user = UserEntity.builder()
-                    .email(oauth2Response.getEmail())
-                    .nickname(oauth2Response.getNickname())
-                    .build();
-            log.info("새로운 OAuth2 사용자 생성: {}", oauth2Response.getEmail());
-        }
-
-        return userRepository.save(user);
+        return userRepository.findByEmail(oauth2Response.getEmail())
+                .orElseGet(() -> {
+                    UserEntity newUser = UserEntity.builder()
+                            .email(oauth2Response.getEmail())
+                            .nickname(oauth2Response.getNickname())
+                            .build();
+                    log.info("새로운 OAuth2 사용자 생성: {}", oauth2Response.getEmail());
+                    return userRepository.save(newUser);
+                });
     }
 
     private CustomOAuth2User createCustomOAuth2User(UserEntity user, Map<String, Object> attributes) {
