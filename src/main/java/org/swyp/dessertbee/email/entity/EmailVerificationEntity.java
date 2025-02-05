@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.auth.entity;
+package org.swyp.dessertbee.email.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -34,11 +34,14 @@ public class EmailVerificationEntity {
     private boolean verified;
 
     @CreatedDate
-    @Column(nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false, name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "expires_at")
     private LocalDateTime expiresAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;  // soft delete 컬럼 추가
 
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(expiresAt);
