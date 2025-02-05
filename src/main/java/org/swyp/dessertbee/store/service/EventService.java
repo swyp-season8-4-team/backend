@@ -45,23 +45,21 @@ public class EventService {
         return EventResponse.fromEntity(event, images);
     }
 
-    /** 이벤트 추가 */
-    public void addEvent(Long storeId, EventCreateRequest request, List<MultipartFile> files){
-        boolean exists = eventRepository.existsByStoreIdAndTitleAndStartDate(
-                storeId, request.getTitle(), request.getStartDate());
+    /** 단일 이벤트 추가 */
+    public void addEvent(Long storeId, EventCreateRequest request, List<MultipartFile> files) {
+        boolean exists = eventRepository.existsByStoreIdAndTitleAndStartDate(storeId, request.getTitle(), request.getStartDate());
 
         if (exists) {
             throw new IllegalArgumentException("이미 등록된 이벤트입니다.");
         }
 
-        Event event = Event.builder()
+        Event event = eventRepository.save(Event.builder()
                 .storeId(storeId)
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
-                .build();
-        eventRepository.save(event);
+                .build());
 
         if (files != null && !files.isEmpty()) {
             imageService.uploadAndSaveImages(files, ImageType.EVENT, event.getId(), "event/" + event.getId());
@@ -84,6 +82,7 @@ public class EventService {
 
         eventRepository.saveAll(events);
 
+        // 각 이벤트에 이미지 업로드
         events.forEach(event -> {
             List<MultipartFile> files = eventImageFiles.get(event.getTitle());
             if (files != null && !files.isEmpty()) {
@@ -93,20 +92,17 @@ public class EventService {
     }
 
     /** 이벤트 수정 */
-    public void updateEvent(Long storeId, Long eventId, EventCreateRequest request, List<MultipartFile> files){
+    public void updateEvent(Long storeId, Long eventId, EventCreateRequest request, List<Long> deleteImageIds, List<MultipartFile> files) {
         Event event = eventRepository.findByIdAndStoreId(eventId, storeId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이벤트입니다."));
 
         event.update(request.getTitle(), request.getDescription(), request.getStartDate(), request.getEndDate());
 
-        if (files != null && !files.isEmpty()) {
-            imageService.deleteImagesByRefId(ImageType.EVENT, eventId);
-            imageService.uploadAndSaveImages(files, ImageType.EVENT, eventId, "event/" + eventId);
-        }
+        imageService.updatePartialImages(deleteImageIds, files, ImageType.EVENT, eventId, "event/" + eventId);
     }
 
     /** 이벤트 삭제 */
-    public void deleteEvent(Long storeId, Long eventId){
+    public void deleteEvent(Long storeId, Long eventId) {
         Event event = eventRepository.findByIdAndStoreId(eventId, storeId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이벤트입니다."));
 

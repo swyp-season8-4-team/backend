@@ -80,10 +80,10 @@ public class StoreService {
         // 태그 저장
         saveStoreTags(store, request.getTagIds());
 
-        // 메뉴 저장
+        // 메뉴 저장 (한 메뉴당 하나의 이미지만 업로드 가능)
         menuService.addMenus(store.getId(), request.getMenus(), request.getMenuImageFiles());
 
-        // 이벤트 저장
+        // 이벤트 저장 (한 이벤트당 여러 개의 이미지 업로드 가능)
         eventService.addEvents(store.getId(), request.getEvents(), request.getEventImageFiles());
 
         // 쿠폰 저장

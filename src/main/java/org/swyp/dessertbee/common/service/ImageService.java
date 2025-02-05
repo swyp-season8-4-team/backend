@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.common.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -28,11 +29,11 @@ public class ImageService {
 
         List<Image> images = files.stream()
                 .map(file -> {
-                    String url = s3Service.uploadFile(file, folder); // ✅ folder 인자 추가
+                    String url = s3Service.uploadFile(file, folder);
                     return Image.builder()
                             .refType(refType)
                             .refId(refId)
-                            .path(folder) // ✅ 저장되는 경로도 정확하게 설정
+                            .path(folder)
                             .fileName(file.getOriginalFilename())
                             .url(url)
                             .build();
@@ -42,10 +43,20 @@ public class ImageService {
         imageRepository.saveAll(images);
     }
 
-    /** 여러 개의 이미지 한 번에 저장 */
-    public void saveAllImages(List<Image> images) {
-        if (images == null || images.isEmpty()) return;
-        imageRepository.saveAll(images);
+    /** 단일 이미지 업로드 */
+    public void uploadAndSaveImage(MultipartFile file, ImageType refType, Long refId, String folder) {
+        if (file == null) return;
+
+        String url = s3Service.uploadFile(file, folder);
+        Image image = Image.builder()
+                .refType(refType)
+                .refId(refId)
+                .path(folder)
+                .fileName(file.getOriginalFilename())
+                .url(url)
+                .build();
+
+        imageRepository.save(image);
     }
 
     /** 특정 refType과 refId에 해당하는 이미지 조회 */
@@ -68,40 +79,45 @@ public class ImageService {
     }
 
     /** 특정 refType과 refId를 가진 모든 이미지 삭제 (S3 + DB) */
+    @Transactional
     public void deleteImagesByRefId(ImageType refType, Long refId) {
         List<Image> images = imageRepository.findByRefTypeAndRefId(refType, refId);
+        deleteImages(images);
+    }
 
-        if (images.isEmpty()) {
-            return; // 삭제할 이미지가 없으면 종료
-        }
+    /** 여러 개의 이미지 ID를 받아 한 번에 삭제 */
+    @Transactional
+    public void deleteImagesByIds(List<Long> imageIds) {
+        List<Image> images = imageRepository.findAllById(imageIds);
+        deleteImages(images);
+    }
 
-        // S3에서 이미지 삭제
-        for (Image image : images) {
-            s3Service.deleteFile(image.getPath(), image.getFileName());
-        }
+    /** S3 및 DB에서 이미지 삭제 */
+    private void deleteImages(List<Image> images) {
+        if (images.isEmpty()) return;
 
-        // DB에서 이미지 삭제
+        images.forEach(image -> s3Service.deleteFile(image.getPath(), image.getFileName()));
         imageRepository.deleteAll(images);
     }
 
-    /** 특정 이미지 1개 삭제 */
-    public void deleteImageById(Long imageId) {
-        Image image = imageRepository.findById(imageId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이미지입니다."));
-
-        // S3에서 삭제
-        s3Service.deleteFile(image.getPath(), image.getFileName());
-
-        // DB에서 삭제
-        imageRepository.delete(image);
+    /** 기존 이미지 삭제 후 새 이미지 업로드 */
+    @Transactional
+    public void updateImage(ImageType refType, Long refId, MultipartFile newFile, String folder) {
+        deleteImagesByRefId(refType, refId);
+        uploadAndSaveImage(newFile, refType, refId, folder);
     }
 
-    /** 기존 이미지 삭제 후 새 이미지 업로드 (update) */
-    public void updateImages(List<MultipartFile> files, ImageType refType, Long refId, String folder) {
-        // 기존 이미지 삭제
-        deleteImagesByRefId(refType, refId);
+    /** 특정 이미지 ID들만 삭제하고 새 이미지 추가 */
+    @Transactional
+    public void updatePartialImages(List<Long> deleteImageIds, List<MultipartFile> newFiles, ImageType refType, Long refId, String folder) {
+        // 기존 이미지 중 선택한 이미지 삭제
+        if (deleteImageIds != null && !deleteImageIds.isEmpty()) {
+            deleteImagesByIds(deleteImageIds);
+        }
 
-        // 새 이미지 업로드
-        uploadAndSaveImages(files, refType, refId, folder);
+        // 새로운 이미지 업로드
+        if (newFiles != null && !newFiles.isEmpty()) {
+            uploadAndSaveImages(newFiles, refType, refId, folder);
+        }
     }
 }
