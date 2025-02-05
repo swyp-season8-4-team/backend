@@ -17,9 +17,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ImageService {
 
-    @Value("${s3.base-url}")
-    private String s3BaseUrl;
-
     private final ImageRepository imageRepository;
     private final S3Service s3Service;
 
