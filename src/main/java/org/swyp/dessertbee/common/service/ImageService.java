@@ -26,14 +26,13 @@ public class ImageService {
 
         List<Image> images = files.stream()
                 .map(file -> {
-                    String s3FilePath = s3Service.uploadFile(file, folder);
-                    String fullUrl = s3BaseUrl + s3FilePath;
+                    String url = s3Service.uploadFile(file, folder);
                     return Image.builder()
                             .refType(refType)
                             .refId(refId)
                             .path(folder)
                             .fileName(file.getOriginalFilename())
-                            .url(fullUrl)
+                            .url(url)
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -45,14 +44,13 @@ public class ImageService {
     public void uploadAndSaveImage(MultipartFile file, ImageType refType, Long refId, String folder) {
         if (file == null) return;
 
-        String s3FilePath = s3Service.uploadFile(file, folder);
-        String fullUrl = s3BaseUrl + s3FilePath;
+        String url = s3Service.uploadFile(file, folder);
         Image image = Image.builder()
                 .refType(refType)
                 .refId(refId)
                 .path(folder)
                 .fileName(file.getOriginalFilename())
-                .url(fullUrl)
+                .url(url)
                 .build();
 
         imageRepository.save(image);
