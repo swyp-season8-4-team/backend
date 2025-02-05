@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.auth.jwt.JWTUtil;
@@ -44,6 +45,16 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     @Override
     @Transactional
     public EmailVerificationResponseDto sendVerificationEmail(EmailVerificationRequestDto request) {
+
+        // 최근 30분간 요청 횟수 체크
+        LocalDateTime thirtyMinutesAgo = LocalDateTime.now().minusMinutes(30);
+        long recentRequests = emailVerificationRepository
+                .countRecentVerificationRequests(request.getEmail(), thirtyMinutesAgo);
+
+        if (recentRequests >= 10) {
+            throw new InvalidVerificationException("너무 많은 인증 요청이 있었습니다. 잠시 후 다시 시도해주세요.");
+        }
+
         String verificationCode = generateVerificationCode();
 
         // 이메일 인증 정보 저장
@@ -140,9 +151,20 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
         }
     }
 
-public static class InvalidVerificationException extends RuntimeException {
+    public static class InvalidVerificationException extends RuntimeException {
         public InvalidVerificationException(String message) {
             super(message);
         }
+    }
+
+    /**
+     * 배치 작업으로 오래된 데이터 정리
+     */
+    @Scheduled(cron = "0 0 0 * * *")
+    @Transactional
+    public void cleanupOldVerifications() {
+        LocalDateTime threshold = LocalDateTime.now().minusDays(7);  // 7일 이상 지난 데이터
+        emailVerificationRepository.softDeleteOldRecords(threshold);
+        log.info("Cleaned up old email verification records before {}", threshold);
     }
 }
