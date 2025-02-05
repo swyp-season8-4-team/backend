@@ -9,6 +9,7 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
@@ -51,6 +52,22 @@ public class S3Service {
             System.err.println("❌ [S3 업로드 실패] " + file.getOriginalFilename());
             e.printStackTrace();
             throw new RuntimeException("파일 업로드 실패", e);
+        }
+    }
+
+    /** ✅ S3에서 파일 삭제 */
+    public void deleteFile(String folder, String fileName) {
+        String key = folder + "/" + fileName; // S3 버킷 내 경로
+        try {
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(key)
+                    .build());
+
+            System.out.println("🗑 [S3 삭제 성공] " + key);
+        } catch (Exception e) {
+            System.err.println("❌ [S3 삭제 실패] " + key);
+            e.printStackTrace();
         }
     }
 }

@@ -7,6 +7,7 @@ import org.swyp.dessertbee.common.model.Identifiable;
 import org.swyp.dessertbee.store.entity.Event;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @Builder
@@ -17,13 +18,21 @@ public class EventResponse implements Identifiable {
     private String description;
     private LocalDate startDate;
     private LocalDate endDate;
+    private List<String> images;
 
     @Override
     public Long getId() {
         return id;
     }
 
-    public static EventResponse fromEntity(Event event) {
-        return new EventResponse(event.getId(), event.getTitle(), event.getDescription(), event.getStartDate(), event.getEndDate());
+    public static EventResponse fromEntity(Event event, List<String> images) {
+        return new EventResponse(
+                event.getId(),
+                event.getTitle(),
+                event.getDescription(),
+                event.getStartDate(),
+                event.getEndDate(),
+                images
+        );
     }
 }

@@ -27,17 +27,14 @@ public class StoreDetailResponse {
     private List<MenuResponse> menus;
     private List<CouponResponse> coupons;
     private List<String> storeImages;
-    private List<String> eventImages;
-    private List<String> menuImages;
     private List<StoreReviewResponse> storeReviews;
     private List<String> tags;
 
     public static StoreDetailResponse fromEntity(Store store,
                                                  List<EventResponse> events,
+                                                 List<MenuResponse> menus,
                                                  List<CouponResponse> coupons,
                                                  List<String> storeImages,
-                                                 List<String> eventImages,
-                                                 List<String> menuImages,
                                                  List<StoreReviewResponse> storeReviews,
                                                  List<String> tags) {
         return StoreDetailResponse.builder()
@@ -53,10 +50,9 @@ public class StoreDetailResponse {
                 .parkingYn(store.getParkingYn())
                 .averageRating(store.getAverageRating())
                 .events(events)
+                .menus(menus)  // 메뉴 리스트 추가
                 .coupons(coupons)
                 .storeImages(storeImages)
-                .eventImages(eventImages)
-                .menuImages(menuImages)
                 .storeReviews(storeReviews)
                 .tags(tags)
                 .build();

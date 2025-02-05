@@ -38,6 +38,8 @@ public class StoreCreateRequest {
     private String operatingHours;
     private String closingDays;
     private List<Long> tagIds;
+
+    @Builder.Default
     private StoreStatus status = StoreStatus.APPROVED;
 
     private List<EventCreateRequest> events;  // 이벤트 리스트
