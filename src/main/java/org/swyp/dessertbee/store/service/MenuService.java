@@ -25,13 +25,8 @@ public class MenuService {
 
     /** 특정 가게의 메뉴 목록 조회 */
     public List<MenuResponse> getMenusByStore(Long storeId) {
-        List<Menu> menus = menuRepository.findByStoreId(storeId);
-
-        return menus.stream()
-                .map(menu -> {
-                    List<String> images = imageService.getImagesByTypeAndId(ImageType.MENU, menu.getId());
-                    return MenuResponse.fromEntity(menu, images);
-                })
+        return menuRepository.findByStoreId(storeId).stream()
+                .map(menu -> MenuResponse.fromEntity(menu, imageService.getImagesByTypeAndId(ImageType.MENU, menu.getId())))
                 .collect(Collectors.toList());
     }
 
@@ -40,29 +35,25 @@ public class MenuService {
         Menu menu = menuRepository.findByIdAndStoreId(menuId, storeId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 가게에 존재하지 않는 메뉴입니다."));
 
-        List<String> images = imageService.getImagesByTypeAndId(ImageType.MENU, menuId);
-
-        return MenuResponse.fromEntity(menu, images);
+        return MenuResponse.fromEntity(menu, imageService.getImagesByTypeAndId(ImageType.MENU, menuId));
     }
 
     /** 메뉴 추가 */
-    public void addMenu(Long storeId, MenuCreateRequest request, List<MultipartFile> files){
-        boolean exists = menuRepository.existsByStoreIdAndName(storeId, request.getName());
-        if (exists) {
+    public void addMenu(Long storeId, MenuCreateRequest request, MultipartFile file) {
+        if (menuRepository.existsByStoreIdAndName(storeId, request.getName())) {
             throw new IllegalArgumentException("이미 존재하는 메뉴입니다.");
         }
 
-        Menu menu = Menu.builder()
+        Menu menu = menuRepository.save(Menu.builder()
                 .storeId(storeId)
                 .name(request.getName())
                 .price(request.getPrice())
                 .isPopular(request.getIsPopular())
                 .description(request.getDescription())
-                .build();
-        menuRepository.save(menu);
+                .build());
 
-        if (files != null && !files.isEmpty()) {
-            imageService.uploadAndSaveImages(files, ImageType.MENU, menu.getId(), "menu/" + menu.getId());
+        if (file != null) {
+            imageService.uploadAndSaveImage(file, ImageType.MENU, menu.getId(), "menu/" + menu.getId());
         }
     }
 
@@ -70,6 +61,7 @@ public class MenuService {
     public void addMenus(Long storeId, List<MenuCreateRequest> menuRequests, Map<String, MultipartFile> menuImageFiles) {
         if (menuRequests == null || menuRequests.isEmpty()) return;
 
+        // 메뉴 저장
         List<Menu> menus = menuRequests.stream()
                 .map(request -> Menu.builder()
                         .storeId(storeId)
@@ -82,29 +74,31 @@ public class MenuService {
 
         menuRepository.saveAll(menus);
 
+        // 각 메뉴의 이름을 기반으로 이미지 파일 업로드
         menus.forEach(menu -> {
-            MultipartFile file = menuImageFiles.get(menu.getName());
+            MultipartFile file = menuImageFiles.get(menu.getName()); // 수정된 부분 (이름 기반 매핑)
             if (file != null) {
-                imageService.uploadAndSaveImages(List.of(file), ImageType.MENU, menu.getId(), "menu/" + menu.getId());
+                imageService.uploadAndSaveImage(file, ImageType.MENU, menu.getId(), "menu/" + menu.getId());
             }
         });
     }
-    
+
+
     /** 메뉴 수정 */
-    public void updateMenu(Long storeId, Long menuId, MenuCreateRequest request, List<MultipartFile> files){
+    public void updateMenu(Long storeId, Long menuId, MenuCreateRequest request, MultipartFile file) {
         Menu menu = menuRepository.findByIdAndStoreId(menuId, storeId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 메뉴입니다."));
 
         menu.update(request.getName(), request.getPrice(), request.getIsPopular(), request.getDescription());
 
-        if (files != null && !files.isEmpty()) {
-            imageService.deleteImagesByRefId(ImageType.MENU, menuId);
-            imageService.uploadAndSaveImages(files, ImageType.MENU, menuId, "menu/" + menuId);
+        // 기존 이미지 삭제 후 새 이미지 업로드
+        if (file != null) {
+            imageService.updateImage(ImageType.MENU, menuId, file, "menu/" + menuId);
         }
     }
 
     /** 메뉴 삭제 */
-    public void deleteMenu(Long storeId, Long menuId){
+    public void deleteMenu(Long storeId, Long menuId) {
         Menu menu = menuRepository.findByIdAndStoreId(menuId, storeId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 메뉴입니다."));
 

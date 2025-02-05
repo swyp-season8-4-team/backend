@@ -9,6 +9,7 @@ import org.swyp.dessertbee.store.dto.response.MenuResponse;
 import org.swyp.dessertbee.store.service.MenuService;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/stores/{storeId}/menus")
@@ -31,13 +32,23 @@ public class MenuController {
         return ResponseEntity.ok(menuService.getMenuByStore(storeId, menuId));
     }
 
-    /** 메뉴 추가 (파일 업로드 포함) */
+    /** 단일 메뉴 추가 (파일 업로드 포함) */
     @PostMapping
     public ResponseEntity<Void> addMenu(
             @PathVariable Long storeId,
             @RequestPart("request") MenuCreateRequest request,
-            @RequestPart(value = "files", required = false) List<MultipartFile> files) {
-        menuService.addMenu(storeId, request, files);
+            @RequestPart(value = "file", required = false) MultipartFile file) {
+        menuService.addMenu(storeId, request, file);
+        return ResponseEntity.ok().build();
+    }
+
+    /** 여러 개의 메뉴 추가 (파일 업로드 포함) */
+    @PostMapping("/bulk")
+    public ResponseEntity<Void> addMenus(
+            @PathVariable Long storeId,
+            @RequestPart("requests") List<MenuCreateRequest> menuRequests,
+            @RequestPart(value = "menuImages", required = false) Map<String, MultipartFile> menuImageFiles) {
+        menuService.addMenus(storeId, menuRequests, menuImageFiles);
         return ResponseEntity.ok().build();
     }
 
@@ -47,8 +58,8 @@ public class MenuController {
             @PathVariable Long storeId,
             @PathVariable Long menuId,
             @RequestPart("request") MenuCreateRequest request,
-            @RequestPart(value = "files", required = false) List<MultipartFile> files) {
-        menuService.updateMenu(storeId, menuId, request, files);
+            @RequestPart(value = "file", required = false) MultipartFile file) {
+        menuService.updateMenu(storeId, menuId, request, file);
         return ResponseEntity.ok().build();
     }
 

@@ -9,6 +9,7 @@ import org.swyp.dessertbee.store.dto.response.EventResponse;
 import org.swyp.dessertbee.store.service.EventService;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/stores/{storeId}/events")
@@ -41,14 +42,25 @@ public class EventController {
         return ResponseEntity.ok().build();
     }
 
+    /** 여러 개의 이벤트 추가 (파일 업로드 포함) */
+    @PostMapping("/bulk")
+    public ResponseEntity<Void> addEvents(
+            @PathVariable Long storeId,
+            @RequestPart("requests") List<EventCreateRequest> eventRequests,
+            @RequestPart(value = "eventImages", required = false) Map<String, List<MultipartFile>> eventImageFiles) {
+        eventService.addEvents(storeId, eventRequests, eventImageFiles);
+        return ResponseEntity.ok().build();
+    }
+
     /** 이벤트 수정 (파일 업로드 포함) */
     @PutMapping("/{eventId}")
     public ResponseEntity<Void> updateEvent(
             @PathVariable Long storeId,
             @PathVariable Long eventId,
             @RequestPart("request") EventCreateRequest request,
+            @RequestPart(value = "deleteImageIds", required = false) List<Long> deleteImageIds,
             @RequestPart(value = "files", required = false) List<MultipartFile> files) {
-        eventService.updateEvent(storeId, eventId, request, files);
+        eventService.updateEvent(storeId, eventId, request, deleteImageIds, files);
         return ResponseEntity.ok().build();
     }
 
