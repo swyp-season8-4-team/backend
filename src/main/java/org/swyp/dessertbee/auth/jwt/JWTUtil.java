@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+import org.swyp.dessertbee.email.entity.EmailVerificationPurpose;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -27,6 +28,8 @@ public class JWTUtil {
 
     private final long ACCESS_TOKEN_EXPIRE_TIME = 30 * 60 * 1000L;       // 30분
     private final long REFRESH_TOKEN_EXPIRE_TIME = 14 * 24 * 60 * 60 * 1000L;  // 14일
+    private final long EMAIL_VERIFICATION_TOKEN_EXPIRE_TIME = 30 * 60 * 1000L;
+
 
     public JWTUtil(
             @Value("${spring.jwt.secret.access}") String accessSecret,
@@ -130,5 +133,28 @@ public class JWTUtil {
         SecretKey key = isAccessToken ? accessTokenSecretKey : refreshTokenSecretKey;
         Date expiration = parseClaims(token, key).getExpiration();
         return expiration.getTime() - System.currentTimeMillis();
+    }
+
+    /**
+     * 이메일 인증 토큰 생성
+     * @param email 인증된 이메일
+     * @param purpose 인증 목적
+     */
+    public String createEmailVerificationToken(String email, EmailVerificationPurpose purpose) {
+        return Jwts.builder()
+                .claim("email", email)
+                .claim("purpose", purpose.name())
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + EMAIL_VERIFICATION_TOKEN_EXPIRE_TIME))
+                .signWith(accessTokenSecretKey)
+                .compact();
+    }
+
+    /**
+     * 이메일 인증 토큰에서 목적 추출
+     */
+    public EmailVerificationPurpose getVerificationPurpose(String token) {
+        Claims claims = parseClaims(token, accessTokenSecretKey);
+        return EmailVerificationPurpose.valueOf(claims.get("purpose", String.class));
     }
 }
