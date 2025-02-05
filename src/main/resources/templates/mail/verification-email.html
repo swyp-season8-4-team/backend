@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${serviceName} + ' 이메일 인증'">DessertBee 이메일 인증</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;">
+<!-- 전체 컨테이너 -->
+<div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <!-- 헤더 영역: FFB6C1 -> FFD700 (골드 색상) -->
+    <div style="background-color: #FFD700; padding: 20px; text-align: center; border-radius: 10px;">
+        <h1 style="color: #333333; margin: 0;" th:text="${serviceName}">DessertBee</h1>
+    </div>
+
+    <!-- 본문 영역 -->
+    <div style="background-color: #ffffff; padding: 20px; margin-top: 20px; border: 1px solid #dee2e6; border-radius: 10px;">
+        <h2 style="color: #333333;">이메일 인증 코드</h2>
+        <p>안녕하세요. <span th:text="${serviceName}">DessertBee</span>입니다.</p>
+        <p>아래의 인증 코드를 입력해주세요.</p>
+
+        <!-- 인증 코드: FF69B4 -> DAA520 (골든로드 색상) -->
+        <div style="background-color: #FFF8DC; padding: 15px; text-align: center; margin: 20px 0; border-radius: 5px;">
+                <span style="font-size: 32px; font-weight: bold; letter-spacing: 3px; color: #DAA520;"
+                      th:text="${code}">123456</span>
+        </div>
+
+        <!-- 주의사항 -->
+        <p style="color: #666666; font-size: 14px;">
+            인증 코드는 <span th:text="${expirationMinutes}">5</span>분 동안 유효합니다.<br>
+            본인이 요청하지 않은 경우 이 메일을 무시하셔도 됩니다.
+        </p>
+    </div>
+
+    <!-- 푸터 영역 -->
+    <div style="margin-top: 20px; text-align: center; color: #999999; font-size: 12px;">
+        <p>본 메일은 발신전용입니다. 문의사항은 고객센터를 이용해주세요.</p>
+        <p>&copy; 2024 <span th:text="${serviceName}">DessertBee</span>. All rights reserved.</p>
+    </div>
+</div>
+</body>
+</html>
