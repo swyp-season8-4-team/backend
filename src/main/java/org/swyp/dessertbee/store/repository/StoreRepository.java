@@ -15,16 +15,18 @@ import java.util.Optional;
 
 @Repository
 public interface StoreRepository extends JpaRepository<Store, Long> {
-    List<Store> findByStatus(StoreStatus status);
 
     @Transactional
     @Modifying
-    @Query("UPDATE Store s SET s.averageRating = :newAverageRating WHERE s.id = :storeId")
+    @Query("UPDATE Store s SET s.averageRating = :newAverageRating WHERE s.id = :storeId AND s.deletedAt IS NULL")
     void updateAverageRating(@Param("storeId") Long storeId, @Param("newAverageRating") BigDecimal newAverageRating);
 
     @Query(value = """
-        SELECT * FROM store 
+        SELECT * FROM store
         WHERE ST_Distance_Sphere(point(:lng, :lat), point(longitude, latitude)) <= :radius
-        """, nativeQuery = true)
+        AND deleted_at IS NULL
+    """, nativeQuery = true)
     List<Store> findStoresByLocation(@Param("lat") Double lat, @Param("lng") Double lng, @Param("radius") Double radius);
+
+    Optional<Store> findByIdAndDeletedAtIsNull(Long id);
 }

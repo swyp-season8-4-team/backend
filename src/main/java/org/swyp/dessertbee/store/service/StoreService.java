@@ -152,8 +152,8 @@ public class StoreService {
 
     /** 가게 간략 정보 조회 */
     public StoreSummaryResponse getStoreSummary(Long storeId) {
-        Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 가게입니다."));
+        Store store = storeRepository.findByIdAndDeletedAtIsNull(storeId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않거나 삭제된 가게입니다."));
 
         List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, storeId);
         List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(storeId);
@@ -163,8 +163,8 @@ public class StoreService {
 
     /** 가게 상세 정보 조회 */
     public StoreDetailResponse getStoreDetails(Long storeId) {
-        Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 가게입니다."));
+        Store store = storeRepository.findByIdAndDeletedAtIsNull(storeId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않거나 삭제된 가게입니다."));
 
         List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, storeId);
         List<EventResponse> events = eventService.getEventsByStore(storeId);
