@@ -51,4 +51,7 @@ public class Mate {
 
 
 
+    public void softDelete(){
+        this.deletedAt = LocalDateTime.now();
+    }
 }
