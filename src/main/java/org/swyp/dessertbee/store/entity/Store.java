@@ -71,4 +71,8 @@ public class Store {
             this.status = StoreStatus.APPROVED;
         }
     }
+
+    public void softDelete(){
+        this.deletedAt = LocalDateTime.now();
+    }
 }

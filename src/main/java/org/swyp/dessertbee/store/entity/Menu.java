@@ -40,4 +40,15 @@ public class Menu {
     private LocalDateTime updatedAt;
 
     private LocalDateTime deletedAt;
+
+    public void update(String name, BigDecimal price, Boolean isPopular, String description) {
+        this.name = name;
+        this.price = price;
+        this.isPopular = isPopular;
+        this.description = description;
+    }
+
+    public void softDelete(){
+        this.deletedAt = LocalDateTime.now();
+    }
 }

@@ -35,4 +35,8 @@ public class StoreReview {
     private LocalDateTime updatedAt;
 
     private LocalDateTime deletedAt;
+
+    public void softDelete(){
+        this.deletedAt = LocalDateTime.now();
+    }
 }
