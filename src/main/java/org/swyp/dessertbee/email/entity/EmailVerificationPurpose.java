@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.auth.entity;
+package org.swyp.dessertbee.email.entity;
 
 public enum EmailVerificationPurpose {
     SIGNUP("회원가입"),
