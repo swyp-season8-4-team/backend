@@ -47,4 +47,8 @@ public class Menu {
         this.isPopular = isPopular;
         this.description = description;
     }
+
+    public void softDelete(){
+        this.deletedAt = LocalDateTime.now();
+    }
 }

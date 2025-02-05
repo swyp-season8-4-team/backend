@@ -25,7 +25,7 @@ public class EventService {
 
     /** 특정 가게의 이벤트 목록 조회 */
     public List<EventResponse> getEventsByStore(Long storeId) {
-        List<Event> events = eventRepository.findByStoreIdOrderByStartDateAsc(storeId);
+        List<Event> events = eventRepository.findByStoreIdAndDeletedAtIsNullOrderByStartDateAsc(storeId);
 
         return events.stream()
                 .map(event -> {
@@ -37,7 +37,7 @@ public class EventService {
 
     /** 특정 가게의 특정 이벤트 조회 */
     public EventResponse getEventByStore(Long storeId, Long eventId) {
-        Event event = eventRepository.findByIdAndStoreId(eventId, storeId)
+        Event event = eventRepository.findByIdAndStoreIdAndDeletedAtIsNull(eventId, storeId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 가게에 존재하지 않는 이벤트입니다."));
 
         List<String> images = imageService.getImagesByTypeAndId(ImageType.EVENT, eventId);
@@ -47,7 +47,7 @@ public class EventService {
 
     /** 단일 이벤트 추가 */
     public void addEvent(Long storeId, EventCreateRequest request, List<MultipartFile> files) {
-        boolean exists = eventRepository.existsByStoreIdAndTitleAndStartDate(storeId, request.getTitle(), request.getStartDate());
+        boolean exists = eventRepository.existsByStoreIdAndTitleAndStartDateAndDeletedAtIsNull(storeId, request.getTitle(), request.getStartDate());
 
         if (exists) {
             throw new IllegalArgumentException("이미 등록된 이벤트입니다.");
@@ -93,7 +93,7 @@ public class EventService {
 
     /** 이벤트 수정 */
     public void updateEvent(Long storeId, Long eventId, EventCreateRequest request, List<Long> deleteImageIds, List<MultipartFile> files) {
-        Event event = eventRepository.findByIdAndStoreId(eventId, storeId)
+        Event event = eventRepository.findByIdAndStoreIdAndDeletedAtIsNull(eventId, storeId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이벤트입니다."));
 
         event.update(request.getTitle(), request.getDescription(), request.getStartDate(), request.getEndDate());
@@ -103,10 +103,11 @@ public class EventService {
 
     /** 이벤트 삭제 */
     public void deleteEvent(Long storeId, Long eventId) {
-        Event event = eventRepository.findByIdAndStoreId(eventId, storeId)
+        Event event = eventRepository.findByIdAndStoreIdAndDeletedAtIsNull(eventId, storeId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이벤트입니다."));
 
-        eventRepository.delete(event);
+        event.softDelete();
+        eventRepository.save(event);
         imageService.deleteImagesByRefId(ImageType.EVENT, eventId);
     }
 }

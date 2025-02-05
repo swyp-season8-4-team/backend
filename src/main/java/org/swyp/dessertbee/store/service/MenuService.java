@@ -25,14 +25,14 @@ public class MenuService {
 
     /** 특정 가게의 메뉴 목록 조회 */
     public List<MenuResponse> getMenusByStore(Long storeId) {
-        return menuRepository.findByStoreId(storeId).stream()
+        return menuRepository.findByStoreIdAndDeletedAtIsNull(storeId).stream()
                 .map(menu -> MenuResponse.fromEntity(menu, imageService.getImagesByTypeAndId(ImageType.MENU, menu.getId())))
                 .collect(Collectors.toList());
     }
 
     /** 특정 가게의 특정 메뉴 조회 */
     public MenuResponse getMenuByStore(Long storeId, Long menuId) {
-        Menu menu = menuRepository.findByIdAndStoreId(menuId, storeId)
+        Menu menu = menuRepository.findByIdAndStoreIdAndDeletedAtIsNull(menuId, storeId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 가게에 존재하지 않는 메뉴입니다."));
 
         return MenuResponse.fromEntity(menu, imageService.getImagesByTypeAndId(ImageType.MENU, menuId));
@@ -40,7 +40,7 @@ public class MenuService {
 
     /** 메뉴 추가 */
     public void addMenu(Long storeId, MenuCreateRequest request, MultipartFile file) {
-        if (menuRepository.existsByStoreIdAndName(storeId, request.getName())) {
+        if (menuRepository.existsByStoreIdAndNameAndDeletedAtIsNull(storeId, request.getName())) {
             throw new IllegalArgumentException("이미 존재하는 메뉴입니다.");
         }
 
@@ -86,7 +86,7 @@ public class MenuService {
 
     /** 메뉴 수정 */
     public void updateMenu(Long storeId, Long menuId, MenuCreateRequest request, MultipartFile file) {
-        Menu menu = menuRepository.findByIdAndStoreId(menuId, storeId)
+        Menu menu = menuRepository.findByIdAndStoreIdAndDeletedAtIsNull(menuId, storeId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 메뉴입니다."));
 
         menu.update(request.getName(), request.getPrice(), request.getIsPopular(), request.getDescription());
@@ -99,10 +99,11 @@ public class MenuService {
 
     /** 메뉴 삭제 */
     public void deleteMenu(Long storeId, Long menuId) {
-        Menu menu = menuRepository.findByIdAndStoreId(menuId, storeId)
+        Menu menu = menuRepository.findByIdAndStoreIdAndDeletedAtIsNull(menuId, storeId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 메뉴입니다."));
 
-        menuRepository.delete(menu);
+        menu.softDelete();
+        menuRepository.save(menu);
         imageService.deleteImagesByRefId(ImageType.MENU, menuId);
     }
 }

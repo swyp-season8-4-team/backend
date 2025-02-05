@@ -10,8 +10,8 @@ import java.util.Optional;
 
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long> {
-    List<Event> findByStoreId(Long storeId);
-    Optional<Event> findByIdAndStoreId(Long eventId, Long storeId);
-    boolean existsByStoreIdAndTitleAndStartDate(Long storeId, String title, LocalDate startDate);
-    List<Event> findByStoreIdOrderByStartDateAsc(Long storeId);
+    List<Event> findByStoreIdAndDeletedAtIsNull(Long storeId);
+    Optional<Event> findByIdAndStoreIdAndDeletedAtIsNull(Long eventId, Long storeId);
+    boolean existsByStoreIdAndTitleAndStartDateAndDeletedAtIsNull(Long storeId, String title, LocalDate startDate);
+    List<Event> findByStoreIdAndDeletedAtIsNullOrderByStartDateAsc(Long storeId);
 }
