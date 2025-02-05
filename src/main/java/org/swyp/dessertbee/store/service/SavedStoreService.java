@@ -10,6 +10,7 @@ import org.swyp.dessertbee.store.repository.SavedStoreRepository;
 import org.swyp.dessertbee.store.repository.StoreRepository;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,17 +21,21 @@ public class SavedStoreService {
     private final SavedStoreRepository savedStoreRepository;
     private final StoreRepository storeRepository;
 
-    /** 유저가 저장한 가게 목록 조회 */
+    /** 유저가 저장한 가게 목록 조회 (soft delete 반영) */
     public List<SavedStoreResponse> getSavedStoresByUser(Long userId) {
         List<SavedStore> savedStores = savedStoreRepository.findByUserId(userId);
 
         return savedStores.stream()
                 .map(saved -> {
-                    Store store = storeRepository.findById(saved.getStoreId())
-                            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 가게: " + saved.getStoreId()));
+                    Store store = storeRepository.findByIdAndDeletedAtIsNull(saved.getStoreId())
+                            .orElse(null); // 삭제된 가게는 리스트에서 제외
 
+                    if (store == null) {
+                        return null; // 삭제된 가게 필터링
+                    }
                     return SavedStoreResponse.fromEntity(saved, store);
                 })
+                .filter(Objects::nonNull) // 삭제된 가게 제거
                 .collect(Collectors.toList());
     }
 }
