@@ -1,10 +1,12 @@
 package org.swyp.dessertbee.email.service;
 
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.auth.jwt.JWTUtil;
@@ -14,7 +16,9 @@ import org.swyp.dessertbee.email.dto.EmailVerifyRequestDto;
 import org.swyp.dessertbee.email.dto.EmailVerifyResponseDto;
 import org.swyp.dessertbee.email.entity.EmailVerificationEntity;
 import org.swyp.dessertbee.email.repository.EmailVerificationRepository;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 
+import org.thymeleaf.context.Context;
 import java.time.LocalDateTime;
 import java.util.Random;
 
@@ -26,9 +30,13 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     private final JavaMailSender emailSender;
     private final EmailVerificationRepository emailVerificationRepository;
     private final JWTUtil jwtUtil;
+    private final SpringTemplateEngine templateEngine;
+
 
     @Value("${spring.mail.username}")
     private String fromEmail;
+    private final String serviceName = "DesserBee";
+    private final String senderName = "DesserBee 고객센터";
 
     // 인증 코드 만료 시간 (분)
     private static final int VERIFICATION_CODE_EXPIRY_MINUTES = 5;
@@ -104,17 +112,35 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
      * 인증 이메일 발송
      */
     private void sendEmail(String toEmail, String code) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromEmail);
-        message.setTo(toEmail);
-        message.setSubject("이메일 인증 코드");
-        message.setText("인증 코드: " + code + "\n" +
-                "유효시간은 5분입니다.");
+        try {
+            MimeMessage message = emailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-        emailSender.send(message);
+            // 발신자 정보 설정
+            helper.setFrom(new InternetAddress(fromEmail, senderName));
+            helper.setTo(toEmail);
+            helper.setSubject(serviceName + " 이메일 인증");
+
+            // Thymeleaf 컨텍스트 설정
+            Context context = new Context();
+            context.setVariable("code", code);
+            context.setVariable("serviceName", serviceName);
+            context.setVariable("expirationMinutes", VERIFICATION_CODE_EXPIRY_MINUTES);
+
+            // HTML 템플릿 처리
+            String htmlContent = templateEngine.process("verification-email", context);
+            helper.setText(htmlContent, true);
+
+            emailSender.send(message);
+            log.debug("Verification email sent to: {}", toEmail);
+
+        } catch (Exception e) {
+            log.error("Failed to send email to: {}", toEmail, e);
+            throw new RuntimeException("이메일 발송에 실패했습니다.", e);
+        }
     }
 
-    public static class InvalidVerificationException extends RuntimeException {
+public static class InvalidVerificationException extends RuntimeException {
         public InvalidVerificationException(String message) {
             super(message);
         }
