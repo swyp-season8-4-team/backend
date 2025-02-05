@@ -7,6 +7,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.swyp.dessertbee.auth.entity.AuthEntity;
+import org.swyp.dessertbee.preference.entity.UserPreferenceEntity;
 import org.swyp.dessertbee.role.entity.RoleEntity;
 import org.swyp.dessertbee.role.entity.UserRoleEntity;
 
@@ -81,6 +82,9 @@ public class UserEntity {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AuthEntity> auths = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserPreferenceEntity> userPreferences = new HashSet<>();
 
     public void addRole(RoleEntity role) {
         UserRoleEntity userRole = UserRoleEntity.builder()
