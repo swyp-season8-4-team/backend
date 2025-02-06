@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import org.swyp.dessertbee.auth.dto.TokenResponse;
 import org.swyp.dessertbee.auth.dto.login.LoginRequest;
 import org.swyp.dessertbee.auth.dto.login.LoginResponse;
@@ -14,7 +15,6 @@ import org.swyp.dessertbee.auth.dto.logout.LogoutResponse;
 import org.swyp.dessertbee.auth.dto.passwordreset.PasswordResetRequest;
 import org.swyp.dessertbee.auth.dto.signup.SignUpRequest;
 import org.swyp.dessertbee.auth.dto.signup.SignUpResponse;
-import org.swyp.dessertbee.auth.entity.AuthEntity;
 import org.swyp.dessertbee.auth.exception.AuthExceptions.*;
 import org.swyp.dessertbee.auth.jwt.JWTUtil;
 import org.swyp.dessertbee.auth.repository.AuthRepository;
@@ -24,9 +24,7 @@ import org.swyp.dessertbee.role.repository.RoleRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,7 +32,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AuthServiceImpl implements AuthService {
 
-    private final AuthRepository authRepository;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final JWTUtil jwtUtil;

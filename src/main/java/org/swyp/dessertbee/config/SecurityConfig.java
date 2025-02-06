@@ -60,12 +60,14 @@ public class SecurityConfig {
 //                        // 나머지 요청은 인증 필요
 //                        .anyRequest().authenticated()
                                 // OAuth2 인증이 필요한 엔드포인트만 지정
-                                .requestMatchers("/api/oauth2/authorization/**").authenticated()
+                                .requestMatchers("/api/oauth2/authorization").authenticated()
                                 .requestMatchers("/api/oauth2/code/**").authenticated()
                                 // 나머지 모든 요청 허용
                                 .anyRequest().permitAll()
                 )
                 .oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(endpoint ->
+                                endpoint.baseUri("/api/oauth2/authorization"))
                         .loginProcessingUrl("/api/oauth2/code")
                         .userInfoEndpoint(userInfo ->
                                 userInfo.userService(customOAuth2UserService))

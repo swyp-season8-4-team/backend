@@ -39,7 +39,6 @@ import java.util.stream.Collectors;
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
-    private final AuthRepository authRepository;
 
     @Override
     @Transactional
