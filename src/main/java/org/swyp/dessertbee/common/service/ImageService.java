@@ -81,6 +81,13 @@ public class ImageService {
     @Transactional
     public void deleteImagesByRefId(ImageType refType, Long refId) {
         List<Image> images = imageRepository.findByRefTypeAndRefId(refType, refId);
+
+        String result = images.stream()
+                .map(image -> "ID: " + image.getId() + ", URL: " + image.getUrl()) // 원하는 필드 선택
+                .collect(Collectors.joining("\n"));
+
+        System.out.println(result);
+
         deleteImages(images);
     }
 
@@ -95,7 +102,11 @@ public class ImageService {
     private void deleteImages(List<Image> images) {
         if (images.isEmpty()) return;
 
-        images.forEach(image -> s3Service.deleteFile(image.getPath(), image.getFileName()));
+
+
+        //image filename 이 아닌 url 보내주기
+        images.forEach(image -> s3Service.deleteFile(image.getPath(), image.getUrl()));
+
         imageRepository.deleteAll(images);
     }
 
