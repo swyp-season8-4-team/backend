@@ -50,16 +50,8 @@ public class MateService {
 
     /** 메이트 상세 정보 */
     public MateDetailResponse getMateDetails(Long mateId) {
-        Mate mate;
-
-        Optional<Mate> optionalMate = mateRepository.findById(mateId);
-
-
-        if(optionalMate.isPresent()) {
-            mate =  optionalMate.get();
-        }else {
-            throw new IllegalArgumentException("존재하지 않는 디저트메이트입니다.");
-        }
+        Mate mate = mateRepository.findByMateIdAndDeletedAtIsNull(mateId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 디저트메이트입니다."));
 
         //디저트메이트 사진 조회
         List<String> mateImage = imageService.getImagesByTypeAndId(ImageType.MATE, mateId);
@@ -77,6 +69,7 @@ public class MateService {
         public void deleteMate(Long mateId) {
             Mate mate = mateRepository.findByMateIdAndDeletedAtIsNull(mateId)
                     .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 디저트메이트입니다."));
+
 
             try {
                 mate.softDelete();
