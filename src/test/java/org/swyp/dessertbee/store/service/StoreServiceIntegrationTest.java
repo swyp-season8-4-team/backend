@@ -14,12 +14,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.swyp.dessertbee.store.dto.request.StoreCreateRequest;
-import org.swyp.dessertbee.store.entity.StoreTag;
-import org.swyp.dessertbee.store.entity.TagCategory;
-import org.swyp.dessertbee.store.repository.StoreRepository;
-import org.swyp.dessertbee.store.repository.StoreTagRepository;
-import org.swyp.dessertbee.store.repository.TagCategoryRepository;
+import org.swyp.dessertbee.store.store.dto.request.StoreCreateRequest;
+import org.swyp.dessertbee.store.store.entity.StoreTag;
+import org.swyp.dessertbee.store.store.entity.TagCategory;
+import org.swyp.dessertbee.store.store.repository.StoreRepository;
+import org.swyp.dessertbee.store.store.repository.StoreTagRepository;
+import org.swyp.dessertbee.store.store.repository.TagCategoryRepository;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.math.BigDecimal;

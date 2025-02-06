@@ -2,7 +2,6 @@ package org.swyp.dessertbee.mate.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +10,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.mate.dto.request.MateCreateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.mate.service.MateService;
-import org.swyp.dessertbee.store.dto.response.StoreDetailResponse;
 
 import java.util.List;
 
