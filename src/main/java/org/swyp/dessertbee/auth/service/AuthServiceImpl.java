@@ -66,6 +66,10 @@ public class AuthServiceImpl implements AuthService {
             String verifiedEmail = jwtUtil.getEmail(verificationToken, true);
             EmailVerificationPurpose purpose = jwtUtil.getVerificationPurpose(verificationToken);
 
+            if (!jwtUtil.validateToken(verificationToken, true)) {
+                throw new InvalidVerificationTokenException("만료되거나 유효하지 않은 인증 토큰입니다.");
+            }
+
             // 2. 토큰의 이메일과 요청의 이메일이 일치하는지 확인
             if (!verifiedEmail.equals(request.getEmail())) {
                 throw new InvalidVerificationTokenException("인증된 이메일과 요청한 이메일이 일치하지 않습니다.");
