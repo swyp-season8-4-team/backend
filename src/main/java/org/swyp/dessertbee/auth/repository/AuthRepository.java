@@ -7,5 +7,5 @@ import org.swyp.dessertbee.user.entity.UserEntity;
 import java.util.Optional;
 
 public interface AuthRepository extends JpaRepository<AuthEntity, Integer> {
-    Optional<AuthEntity> findByUserAndProvider(UserEntity user, String provider);
+    Optional<AuthEntity> findByUserAndProvider(Optional<UserEntity> user, String provider);
 }

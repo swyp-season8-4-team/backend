@@ -35,10 +35,14 @@ public class SecurityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomSuccessHandler customSuccessHandler;
     private final JWTUtil jwtUtil;
-    private final AuthService authService;
 
     @Value("${spring.graphql.cors.allowed-origins}")
     private String corsAllowedOrigins;
+
+    @Bean
+    public JWTFilter jwtFilter() {
+        return new JWTFilter(jwtUtil);
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -56,21 +60,21 @@ public class SecurityConfig {
 //                        // 나머지 요청은 인증 필요
 //                        .anyRequest().authenticated()
                                 // OAuth2 인증이 필요한 엔드포인트만 지정
-                                .requestMatchers("/api/oauth2/authorization/**").authenticated()
+                                .requestMatchers("/api/oauth2/authorization").authenticated()
                                 .requestMatchers("/api/oauth2/code/**").authenticated()
                                 // 나머지 모든 요청 허용
                                 .anyRequest().permitAll()
                 )
                 .oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(endpoint ->
+                                endpoint.baseUri("/api/oauth2/authorization"))
                         .loginProcessingUrl("/api/oauth2/code")
                         .userInfoEndpoint(userInfo ->
                                 userInfo.userService(customOAuth2UserService))
                         .successHandler(customSuccessHandler)
                 )
-                .addFilterBefore(new JWTFilter(jwtUtil, authService),
-                        UsernamePasswordAuthenticationFilter.class);
-
-        // CORS 설정 추가
+                .addFilterBefore(new JWTFilter(jwtUtil),
+                        UsernamePasswordAuthenticationFilter.class);        // CORS 설정 추가
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
         return http.build();
