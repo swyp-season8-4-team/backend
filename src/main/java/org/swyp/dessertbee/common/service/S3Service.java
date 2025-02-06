@@ -56,9 +56,16 @@ public class S3Service {
     }
 
     /** ✅ S3에서 파일 삭제 */
-    public void deleteFile(String folder, String fileName) {
-        String key = folder + "/" + fileName; // S3 버킷 내 경로
+    public void deleteFile(String folder, String url) {
+
+        //사진 경로가 현재 uuid 를 포함하고 있어서 db에서 받은 url에서 aws 기본 url 삭제
+        String baseUrl = "https://desserbee-bucket.s3.ap-northeast-2.amazonaws.com/";
+        int baseUrlLength = baseUrl.length();
+
+        String key = url.substring(baseUrlLength);
+
         try {
+
             s3Client.deleteObject(DeleteObjectRequest.builder()
                     .bucket(bucketName)
                     .key(key)
