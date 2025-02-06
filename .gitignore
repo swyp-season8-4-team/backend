@@ -41,3 +41,4 @@ src/main/resources/.env*
 
 ### application-test.yml ###
 src/test/resources/application-test.yml
+.DS_Store
