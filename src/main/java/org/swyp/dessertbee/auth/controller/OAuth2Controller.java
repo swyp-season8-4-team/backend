@@ -1,8 +1,5 @@
 package org.swyp.dessertbee.auth.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,9 +8,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.swyp.dessertbee.auth.dto.LoginResponse;
 import org.swyp.dessertbee.auth.dto.OAuth2AuthorizationRequest;
-import org.swyp.dessertbee.auth.dto.OAuth2CallbackRequest;
 
 /**
  * OAuth2 인증 프로세스를 처리하는 컨트롤러

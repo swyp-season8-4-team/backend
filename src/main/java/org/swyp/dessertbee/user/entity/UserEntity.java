@@ -77,6 +77,7 @@ public class UserEntity {
     @Column(name = "gender", length = 6)
     private Gender gender;
 
+    @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserRoleEntity> userRoles = new HashSet<>();
 
