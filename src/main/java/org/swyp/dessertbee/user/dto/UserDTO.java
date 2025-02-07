@@ -47,32 +47,6 @@ public class UserDTO {
                 .build();
     }
 
-    // 회원가입용 DTO
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class SignUpRequest {
-        private String email;
-        private String password;
-        private String nickname;
-        private String name;
-        private String phoneNumber;
-        private String address;
-        private UserEntity.Gender gender;
-    }
-
-    // 로그인용 DTO
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class LoginRequest {
-        private String email;
-        private String password;
-        private boolean rememberMe;
-    }
-
     // 프로필 수정용 DTO
     @Data
     @Builder
@@ -85,15 +59,5 @@ public class UserDTO {
         private String address;
         private String preferences;
         private UserEntity.Gender gender;
-    }
-
-    // 비밀번호 변경용 DTO
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class PasswordChangeRequest {
-        private String currentPassword;
-        private String newPassword;
     }
 }

@@ -26,9 +26,13 @@ public class JWTUtil {
     private final SecretKey accessTokenSecretKey;
     private final SecretKey refreshTokenSecretKey;
 
-    private final long ACCESS_TOKEN_EXPIRE_TIME = 30 * 60 * 1000L;       // 30분
-    private final long REFRESH_TOKEN_EXPIRE_TIME = 14 * 24 * 60 * 60 * 1000L;  // 14일
     private final long EMAIL_VERIFICATION_TOKEN_EXPIRE_TIME = 30 * 60 * 1000L;
+
+    private final long SHORT_ACCESS_TOKEN_EXPIRE = 24 * 30 * 60 * 1000L;       // 1일
+    private final long LONG_ACCESS_TOKEN_EXPIRE = 3 * 24 * 60 * 60 * 1000L;   // 3일
+
+    private final long SHORT_REFRESH_TOKEN_EXPIRE = 10 * 24 * 60 * 60 * 1000L;   // 10일
+    private final long LONG_REFRESH_TOKEN_EXPIRE = 30 * 24 * 60 * 60 * 1000L;   // 30일
 
 
     public JWTUtil(
@@ -48,15 +52,17 @@ public class JWTUtil {
     /**
      * Access Token 생성
      */
-    public String createAccessToken(String email, List<String> roles) {
-        return createToken(email, roles, accessTokenSecretKey, ACCESS_TOKEN_EXPIRE_TIME);
+    public String createAccessToken(String email, List<String> roles, boolean keepLoggedIn) {
+        long expireTime = keepLoggedIn ? LONG_ACCESS_TOKEN_EXPIRE : SHORT_ACCESS_TOKEN_EXPIRE;
+        return createToken(email, roles, accessTokenSecretKey, expireTime);
     }
 
     /**
      * Refresh Token 생성
      */
-    public String createRefreshToken(String email, List<String> roles) {
-        return createToken(email, roles, refreshTokenSecretKey, REFRESH_TOKEN_EXPIRE_TIME);
+    public String createRefreshToken(String email, List<String> roles, boolean keepLoggedIn) {
+        long expireTime = keepLoggedIn ? LONG_REFRESH_TOKEN_EXPIRE : SHORT_REFRESH_TOKEN_EXPIRE;
+        return createToken(email, roles, refreshTokenSecretKey, expireTime);
     }
 
     /**

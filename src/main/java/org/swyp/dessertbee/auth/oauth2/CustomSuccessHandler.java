@@ -1,8 +1,6 @@
 package org.swyp.dessertbee.auth.oauth2;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -14,9 +12,10 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.swyp.dessertbee.auth.dto.CustomOAuth2User;
-import org.swyp.dessertbee.auth.dto.LoginResponse;
+import org.swyp.dessertbee.auth.dto.login.LoginResponse;
 import org.swyp.dessertbee.auth.jwt.JWTUtil;
 import org.swyp.dessertbee.auth.service.AuthService;
+import org.swyp.dessertbee.auth.service.TokenService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -36,7 +35,7 @@ import java.util.stream.Collectors;
 public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final JWTUtil jwtUtil;
-    private final AuthService authService;
+    private final TokenService tokenService;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -73,11 +72,11 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 .collect(Collectors.toList());
 
         // JWT 액세스 토큰 생성
-        String accessToken = jwtUtil.createAccessToken(email, roles);
+        String accessToken = jwtUtil.createAccessToken(email, roles, false);
 
         // 리프레시 토큰 생성 및 저장
-        String refreshToken = jwtUtil.createRefreshToken(email, roles);
-        authService.saveRefreshToken(email, refreshToken);
+        String refreshToken = jwtUtil.createRefreshToken(email, roles, false);
+        tokenService.saveRefreshToken(email, refreshToken);
 
         return LoginResponse.builder()
                 .accessToken(accessToken)
