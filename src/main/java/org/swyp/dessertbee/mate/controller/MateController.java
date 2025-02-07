@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,8 +14,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.mate.dto.request.MateCreateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.mate.service.MateService;
-import org.swyp.dessertbee.store.dto.response.StoreDetailResponse;
-
 import java.util.List;
 
 @Tag(name = "Mate", description = "디저트메이트 관련 API")
@@ -37,8 +34,8 @@ public class MateController {
     })
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MateDetailResponse> createMate(@RequestPart("request") @Valid MateCreateRequest request,
-                                                         @RequestPart(value = "mateImageFiles", required = false) List<MultipartFile> mateImageFiles) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(mateService.createMate(request, mateImageFiles));
+                                                         @RequestPart(value = "mateImage", required = false) List<MultipartFile> mateImage) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(mateService.createMate(request, mateImage));
     }
 
     /**
@@ -55,10 +52,25 @@ public class MateController {
      * 메이트 삭제
      */
     @DeleteMapping("/{mateId}")
+    @Operation(summary = "메이트 삭제", description = "디저트메이트 삭제합니다.")
     public ResponseEntity<String> deleteMate(@PathVariable Long mateId) {
         mateService.deleteMate(mateId);
 
         return ResponseEntity.ok("디저트메이트가 성공적으로 삭제되었습니다.");
     }
 
+    /**
+     * 메이트 수정
+     * */
+    @PatchMapping("/{mateId}")
+    @Operation(summary = "메이트 수정", description = "디저트메이트 수정합니다.")
+    public ResponseEntity<String> updateMate(
+            @PathVariable Long mateId,
+            @RequestPart("request") MateCreateRequest request,
+            @RequestPart(value = "mateImage", required = false) MultipartFile mateImage
+    ){
+
+        mateService.updateMate(mateId, request, mateImage);
+        return ResponseEntity.ok("디저트메이트가 성공적으로 수정되었습니다.");
+    }
 }

@@ -13,7 +13,6 @@ import org.swyp.dessertbee.mate.repository.MateCategoryRepository;
 import org.swyp.dessertbee.mate.repository.MateRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 
 @Service
@@ -27,7 +26,7 @@ public class MateService {
 
 
     /** 가게 등록 */
-    public MateDetailResponse createMate(MateCreateRequest request, List<MultipartFile> mateImageFiles) {
+    public MateDetailResponse createMate(MateCreateRequest request, List<MultipartFile> mateImage) {
 
         Mate mate = mateRepository.save(
                 Mate.builder()
@@ -40,9 +39,9 @@ public class MateService {
         );
 
         // 가게 대표 사진 S3 업로드 및 저장
-        if (mateImageFiles != null && !mateImageFiles.isEmpty()) {
+        if (mateImage != null && !mateImage.isEmpty()) {
             String folder = "mate/" + mate.getMateId();
-            imageService.uploadAndSaveImages(mateImageFiles, ImageType.MATE, mate.getMateId(), folder);
+            imageService.uploadAndSaveImages(mateImage, ImageType.MATE, mate.getMateId(), folder);
         }
         return getMateDetails(mate.getMateId());
     }
@@ -83,5 +82,20 @@ public class MateService {
             }
         }
 
+    /**
+     * 메이트 수정
+     * */
+    public void updateMate(Long mateId, MateCreateRequest request, MultipartFile mateImage) {
+        Mate mate = mateRepository.findByMateIdAndDeletedAtIsNull(mateId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 디저트메이트입니다."));
 
+        mate.update(request.getTitle(), request.getContent(), request.getRecruitYn(), request.getMateCategoryId());
+
+
+        //기존 이미지 삭제 후 새 이미지 업로드
+        if (mateImage != null && !mateImage.isEmpty()) {
+            imageService.updateImage(ImageType.MATE,mateId, mateImage, "mate/" + mateId);
+        }
+
+    }
 }
