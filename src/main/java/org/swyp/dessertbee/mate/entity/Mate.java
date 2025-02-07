@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 import java.time.LocalDateTime;
 
@@ -44,12 +46,22 @@ public class Mate {
 
     @CreationTimestamp
     @Column(name = "created_at")
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
 
+    public void update(String title, String content, Boolean recruitYn, Long mateCategoryId){
+        this.title = title;
+        this.content = content;
+        this.recruitYn = recruitYn;
+        this.mateCategoryId = mateCategoryId;
+    }
 
     public void softDelete(){
         this.deletedAt = LocalDateTime.now();
