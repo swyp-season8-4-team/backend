@@ -50,14 +50,4 @@ public class EmailVerificationController {
                 emailVerificationService.verifyEmail(request);
         return ResponseEntity.ok(response);
     }
-
-    /**
-     * 이메일 인증 관련 예외 처리
-     */
-    @ExceptionHandler(EmailVerificationServiceImpl.InvalidVerificationException.class)
-    public ResponseEntity<Map<String, String>> handleInvalidVerification(EmailVerificationServiceImpl.InvalidVerificationException e) {
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(Collections.singletonMap("message", e.getMessage()));
-    }
 }
