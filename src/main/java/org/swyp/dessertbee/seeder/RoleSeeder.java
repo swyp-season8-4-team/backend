@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.userrole;
+package org.swyp.dessertbee.seeder;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
