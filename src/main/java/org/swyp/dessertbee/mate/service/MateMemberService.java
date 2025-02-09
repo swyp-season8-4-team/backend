@@ -37,7 +37,36 @@ public class MateMemberService {
                         .build()
         );
     }
+    /**
+     * 디저트메이트 삭제 시 멤버 삭제
+     * */
+    public void deleteAllMember(UUID mateUuid) {
 
+        //mateUuid로 mateId 조회
+        Long mateId = mateRepository.findMateIdByMateUuid(mateUuid);
+
+        try {
+
+
+            // mateId로 모든 멤버 조회
+            List<MateMember> members = mateMemberRepository.findAllByMateId(mateId);
+
+            // 각 멤버에 대해 softDelete 처리
+            for (MateMember member : members) {
+                member.softDelete();  // 개별 멤버에 softDelete 적용
+            }
+
+            // 변경된 모든 멤버 저장
+            mateMemberRepository.saveAll(members);
+
+
+
+        }catch (Exception e){
+            System.out.println("❌ 디저트메이트 멤버 삭제 중 오류 발생: " + e.getMessage());
+            throw new RuntimeException("디저트메이트 멤버 삭제 실패: " + e.getMessage(), e);
+        }
+
+    }
 
 
 //    public List<MateMemberResponse> getMemberList(UUID mateUuid) {
