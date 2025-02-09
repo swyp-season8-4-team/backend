@@ -15,12 +15,12 @@ public class MbtiEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "type", length = 4, nullable = false, unique = true)
-    private String type;
+    @Column(name = "mbti_type", length = 4, nullable = false, unique = true)
+    private String mbtiType;
 
-    @Column(name = "name", length = 20, nullable = false)
-    private String name;
+    @Column(name = "mbti_name", length = 20, nullable = false)
+    private String mbtiName;
 
-    @Column(name = "desc", length = 200)
-    private String desc;
+    @Column(name = "mbti_desc", length = 200)
+    private String mbtiDesc;
 }
