@@ -87,6 +87,10 @@ public class UserEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserPreferenceEntity> userPreferences = new HashSet<>();
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mbti_id")
+    private MbtiEntity mbti;
+
     public void addRole(RoleEntity role) {
         UserRoleEntity userRole = UserRoleEntity.builder()
                 .user(this)
