@@ -17,6 +17,9 @@ import org.swyp.dessertbee.auth.dto.signup.SignUpRequest;
 import org.swyp.dessertbee.auth.dto.signup.SignUpResponse;
 import org.swyp.dessertbee.auth.exception.AuthExceptions.*;
 import org.swyp.dessertbee.auth.jwt.JWTUtil;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
+import org.swyp.dessertbee.common.exception.GlobalExceptionHandler;
 import org.swyp.dessertbee.email.entity.EmailVerificationPurpose;
 import org.swyp.dessertbee.role.entity.RoleEntity;
 import org.swyp.dessertbee.role.repository.RoleRepository;
@@ -71,7 +74,12 @@ public class AuthServiceImpl implements AuthService {
 
             // 비밀번호 일치 여부 확인
             if (!request.getPassword().equals(request.getConfirmPassword())) {
-                throw new InvalidPasswordException("비밀번호가 일치하지 않습니다.");
+                throw new PasswordMismatchException("비밀번호가 일치하지 않습니다.");
+            }
+
+            // 닉네임 중복 검사
+            if (userRepository.existsByNickname(request.getNickname())) {
+                throw new DuplicateNicknameException("이미 등록된 닉네임입니다.");
             }
 
             // UserEntity 생성
@@ -96,9 +104,12 @@ public class AuthServiceImpl implements AuthService {
 
             return SignUpResponse.success(request.getEmail());
 
-        } catch (Exception e) {
-            log.error("회원가입 실패 - 이메일: {}, 에러: {}", request.getEmail(), e.getMessage());
+        } catch (BusinessException e) { // 예상하고 정의한 비즈니스 예외
+            log.warn("회원가입 실패 - 이메일: {}, 사유: {}", request.getEmail(), e.getMessage());
             throw e;
+        } catch (Exception e) { // 예상하지 못한 모든 시스템 예외
+            log.error("회원가입 처리 중 오류 발생 - 이메일: {}", request.getEmail(), e);
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -113,11 +124,15 @@ public class AuthServiceImpl implements AuthService {
         try {
             // 1. 사용자 조회
             UserEntity user = userRepository.findByEmail(request.getEmail())
-                    .orElseThrow(() -> new InvalidCredentialsException("이메일 또는 비밀번호가 올바르지 않습니다."));
+                    .orElseThrow(() -> {
+                        log.warn("로그인 실패 - 존재하지 않는 이메일: {}", request.getEmail());
+                        return new InvalidCredentialsException("해당 이메일이 존재하지 않습니다.");
+                    });
 
             // 2. 비밀번호 검증
             if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-                throw new InvalidCredentialsException("이메일 또는 비밀번호가 올바르지 않습니다.");
+                log.warn("로그인 실패 - 비밀번호 불일치: {}", request.getEmail());
+                throw new InvalidCredentialsException("비밀번호가 올바르지 않습니다.");
             }
 
             // 3. 사용자 권한 조회
@@ -156,21 +171,34 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public void resetPassword(PasswordResetRequest request, String verificationToken) {
-        // 토큰 유효성 검사
-        validateEmailVerificationToken(verificationToken, request.getEmail(), EmailVerificationPurpose.PASSWORD_RESET);
+        try {
 
-        // 사용자 조회
-        UserEntity user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+            // 토큰 유효성 검사
+            validateEmailVerificationToken(verificationToken, request.getEmail(), EmailVerificationPurpose.PASSWORD_RESET);
 
-        // 새 비밀번호 암호화 및 저장
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        userRepository.save(user);
+            // 사용자 조회
+            UserEntity user = userRepository.findByEmail(request.getEmail())
+                    .orElseThrow(() -> {
+                        log.warn("비밀번호 재설정 실패 - 존재하지 않는 이메일: {}", request.getEmail());
+                        return new BusinessException(ErrorCode.INVALID_CREDENTIALS, "등록되지 않은 이메일입니다.");
+                    });
 
-        // 로그아웃 처리 (기존 토큰 무효화)
-        revokeRefreshToken(request.getEmail());
+            // 새 비밀번호 암호화 및 저장
+            user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+            userRepository.save(user);
 
-        log.info("비밀번호 재설정 완료 - 이메일: {}", request.getEmail());
+            // 로그아웃 처리 (기존 토큰 무효화)
+            revokeRefreshToken(request.getEmail());
+
+            log.info("비밀번호 재설정 완료 - 이메일: {}", request.getEmail());
+
+        } catch (BusinessException e) {
+            log.warn("비밀번호 재설정 실패 - 이메일: {}, 사유: {}", request.getEmail(), e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("비밀번호 재설정 처리 중 오류 발생 - 이메일: {}", request.getEmail(), e);
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
@@ -186,25 +214,59 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     @Override
     public LogoutResponse logout(String token) {
-        String email = jwtUtil.getEmail(token, true);
-        revokeRefreshToken(email);
-        return LogoutResponse.success();
+        try {
+            String email = jwtUtil.getEmail(token, true);
+
+            if (!userRepository.existsByEmail(email)) {
+                log.warn("로그아웃 실패 - 존재하지 않는 사용자: {}", email);
+                throw new BusinessException(ErrorCode.INVALID_CREDENTIALS, "해당 이메일의 사용자를 찾을 수 없습니다.");
+            }
+            log.info("로그아웃 성공 - 이메일: {}", email);
+            revokeRefreshToken(email);
+
+            return LogoutResponse.success();
+
+        } catch (BusinessException e) {
+            log.warn("로그아웃 실패 - 사유: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("로그아웃 처리 중 알 수 없는 오류 발생 - 토큰: {}", token, e);
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
     }
 
     private void validateEmailVerificationToken(String token, String requestEmail, EmailVerificationPurpose expectedPurpose) {
-        if (!jwtUtil.validateToken(token, true)) {
-            throw new InvalidVerificationTokenException("만료되거나 유효하지 않은 인증 토큰입니다.");
-        }
+        try {
 
-        String verifiedEmail = jwtUtil.getEmail(token, true);
-        EmailVerificationPurpose purpose = jwtUtil.getVerificationPurpose(token);
+            // 토큰 유효성 검사
+            if (!jwtUtil.validateToken(token, true)) {
+                log.warn("토큰 검증 실패 - 만료되거나 유효하지 않은 인증 토큰: {}", token);
+                throw new InvalidVerificationTokenException("만료되었거나 유효하지 않은 인증 토큰입니다.");
+            }
 
-        if (!verifiedEmail.equals(requestEmail)) {
-            throw new InvalidVerificationTokenException("인증된 이메일과 요청한 이메일이 일치하지 않습니다.");
-        }
+            // 토큰에서 이메일 추출
+            String verifiedEmail = jwtUtil.getEmail(token, true);
+            if (!verifiedEmail.equals(requestEmail)) {
+                log.warn("토큰 검증 실패 - 토큰의 이메일({})과 요청한 이메일({}) 불일치", verifiedEmail, requestEmail);
+                throw new InvalidVerificationTokenException("인증된 이메일과 요청한 이메일이 일치하지 않습니다.");
+            }
 
-        if (purpose != expectedPurpose) {
-            throw new InvalidVerificationTokenException("유효하지 않은 인증 토큰입니다.");
+            // 토큰의 용도 확인
+            EmailVerificationPurpose purpose = jwtUtil.getVerificationPurpose(token);
+            if (purpose != expectedPurpose) {
+                log.warn("토큰 검증 실패 - 예상된 목적({})과 토큰의 목적({}) 불일치", expectedPurpose, purpose);
+                throw new InvalidVerificationTokenException("유효하지 않은 인증 토큰입니다.");
+            }
+
+            // 검증 성공 로그 추가
+            log.info("토큰 검증 성공 - 이메일: {}, 용도: {}", verifiedEmail, expectedPurpose);
+
+        } catch (InvalidVerificationTokenException e) {
+            log.warn("이메일 인증 토큰 검증 실패 - 사유: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("이메일 인증 토큰 검증 중 알 수 없는 오류 발생", e);
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 }
