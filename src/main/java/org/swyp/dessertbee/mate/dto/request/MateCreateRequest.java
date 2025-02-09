@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.UUID;
 
 @Builder
 @Data
@@ -16,7 +17,7 @@ import java.util.List;
 public class MateCreateRequest {
 
     @NotNull
-    private Long userId;
+    private UUID userUuid;
 
     @NotNull
     private Long mateCategoryId;
