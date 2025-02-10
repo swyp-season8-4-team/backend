@@ -13,8 +13,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class MateDetailResponse {
 
-    private UUID mateId;
-    private UUID userId;
+    private UUID mateUuid;
+    private UUID userUuid;
     private String title;
     private String content;
     private Boolean recruitYn;
@@ -29,8 +29,8 @@ public class MateDetailResponse {
                                                 UUID userUuid){
 
         return MateDetailResponse.builder()
-                .mateId(mate.getMateUuid())
-                .userId(userUuid)
+                .mateUuid(mate.getMateUuid())
+                .userUuid(userUuid)
                 .title(mate.getTitle())
                 .content(mate.getContent())
                 .recruitYn(mate.getRecruitYn())
