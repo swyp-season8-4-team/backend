@@ -8,8 +8,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name="mate")
@@ -23,6 +25,11 @@ public class Mate {
     @Column(name = "mate_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long mateId;    //메이트 고유 id
+
+    @Column(name = "mate_uuid", nullable = false, unique = true, updatable = false)
+    @UuidGenerator()
+    private UUID mateUuid;
+
 
     @Column(name = "user_id")
     private Long userId;

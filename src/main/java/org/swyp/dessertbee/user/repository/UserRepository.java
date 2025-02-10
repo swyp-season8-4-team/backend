@@ -1,10 +1,12 @@
 package org.swyp.dessertbee.user.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
@@ -28,4 +30,16 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
      * @return boolean
      */
     boolean existsByNickname(String nickname);
+
+    /**
+     * Uuid로 userId 조회
+     * */
+    @Query("SELECT u.id FROM UserEntity u where u.userUuid = :userUuid")
+    Long findIdByUserUuid(UUID userUuid);
+
+    /**
+     * userId로 userUuid 조회
+     * */
+    @Query("SELECT u.userUuid FROM UserEntity u where u.id = :userId")
+    UUID findUserUuidById(Long userId);
 }
