@@ -14,22 +14,22 @@ import java.util.UUID;
 @AllArgsConstructor
 public class MateMemberResponse {
 
-    private UUID mateId;
-    private UUID userId;
+    private UUID mateUuid;
+    private UUID userUUid;
     private String grade;
     private Boolean approvalYn;
     private List<String> userImage;
     private String nickname;
 
     public static MateMemberResponse fromEntity(MateMember member,
-                                                UUID mateId,
-                                                UUID userId,
+                                                UUID mateUuid,
+                                                UUID userUUid,
                                                 List<String> userImage,
                                                 String nickname) {
 
         return MateMemberResponse.builder()
-                .mateId(mateId)
-                .userId(userId)
+                .mateUuid(mateUuid)
+                .userUUid(userUUid)
                 .grade(member.getGrade().toString())
                 .approvalYn(member.getApprovalYn())
                 .userImage(userImage)
