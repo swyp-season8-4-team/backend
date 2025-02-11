@@ -53,9 +53,6 @@ public class UserEntity {
     @Column(length = 50)
     private String nickname;
 
-    @Column(columnDefinition = "JSON")
-    private String preferences;
-
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
