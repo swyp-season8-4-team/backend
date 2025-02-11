@@ -2,6 +2,7 @@ package org.swyp.dessertbee.user.service;
 
 import org.swyp.dessertbee.user.dto.UserDetailResponseDto;
 import org.swyp.dessertbee.user.dto.UserResponseDto;
+import org.swyp.dessertbee.user.dto.UserUpdateRequestDto;
 
 public interface UserService {
     /**
@@ -16,5 +17,12 @@ public interface UserService {
      * @return 사용자 기본 정보 DTO
      */
     UserResponseDto getUserInfo(String userUuid);
+
+
+    /**
+     * 현재 인증된 사용자의 정보를 수정합니다.
+     * @return 사용자 상세 정보 DTO
+     */
+    UserDetailResponseDto updateMyInfo(UserUpdateRequestDto updateRequest);
 }
 
