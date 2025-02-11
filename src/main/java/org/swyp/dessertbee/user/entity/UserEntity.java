@@ -64,7 +64,7 @@ public class UserEntity {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    @Column(name = "phone_number", length = 20)
+    @Column(name = "phone_number", length = 13)
     private String phoneNumber;
 
     @Column(name = "address", length = 255)
@@ -104,5 +104,15 @@ public class UserEntity {
     public enum Gender {
         MALE,
         FEMALE
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        if (phoneNumber != null) {
+            // 하이픈 제거 후 형식 통일
+            String numberOnly = phoneNumber.replaceAll("-", "");
+            this.phoneNumber = numberOnly.replaceFirst("(\\d{3})(\\d{4})(\\d{4})", "$1-$2-$3");
+        } else {
+            this.phoneNumber = null;
+        }
     }
 }
