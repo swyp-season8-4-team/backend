@@ -12,34 +12,37 @@ import java.util.UUID;
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     /**
-     * 이메일로 사용자 조회
+     * 이메일로 사용자 조회 (삭제되지 않은 계정만)
      * @param email 사용자 이메일
      * @return UserEntity
      */
+    @Query("SELECT u FROM UserEntity u WHERE u.email = :email AND u.deletedAt IS NULL")
     Optional<UserEntity> findByEmail(String email);
     /**
-     * 이메일 존재 여부 확인
+     * 이메일 존재 여부 확인 (삭제되지 않은 계정만)
      * @param email 사용자 이메일
      * @return boolean
      */
+    @Query("SELECT COUNT(u) > 0 FROM UserEntity u WHERE u.email = :email AND u.deletedAt IS NULL")
     boolean existsByEmail(String email);
 
     /**
-     * 닉네임 존재 여부 확인
+     * 닉네임 존재 여부 확인 (삭제되지 않은 계정만)
      * @param nickname 사용자 닉네임
      * @return boolean
      */
+    @Query("SELECT COUNT(u) > 0 FROM UserEntity u WHERE u.nickname = :nickname AND u.deletedAt IS NULL")
     boolean existsByNickname(String nickname);
 
     /**
-     * Uuid로 userId 조회
+     * Uuid로 userId 조회 (삭제되지 않은 계정만)
      * */
-    @Query("SELECT u.id FROM UserEntity u where u.userUuid = :userUuid")
+    @Query("SELECT u.id FROM UserEntity u WHERE u.userUuid = :userUuid AND u.deletedAt IS NULL")
     Long findIdByUserUuid(UUID userUuid);
 
     /**
-     * userId로 userUuid 조회
+     * userId로 userUuid 조회 (삭제되지 않은 계정만)
      * */
-    @Query("SELECT u.userUuid FROM UserEntity u where u.id = :userId")
+    @Query("SELECT u.userUuid FROM UserEntity u WHERE u.id = :userId AND u.deletedAt IS NULL")
     UUID findUserUuidById(Long userId);
 }

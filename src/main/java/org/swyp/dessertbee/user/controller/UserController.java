@@ -51,4 +51,14 @@ public class UserController {
         UserDetailResponseDto response = userService.updateMyInfo(updateRequest);
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * 회원 탈퇴 처리
+     */
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteMyAccount() {
+        log.debug("유저 소프트 삭제를 진행합니다.");
+        userService.deleteMyAccount();
+        return ResponseEntity.noContent().build();
+    }
 }

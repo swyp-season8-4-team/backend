@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.swyp.dessertbee.auth.entity.AuthEntity;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.preference.entity.PreferenceEntity;
@@ -19,6 +20,7 @@ import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.MbtiRepository;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -247,14 +249,19 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * 전화번호 형식을 통일하는 메서드
-     * 모든 입력을 010-1234-5678 형식으로 변환
+     * 현재 인증된 사용자의 계정을 비활성화합니다.
      */
-    private String formatPhoneNumber(String phone) {
-        // 기존 하이픈 제거
-        String numberOnly = phone.replaceAll("-", "");
+    @Override
+    @Transactional
+    public void deleteMyAccount() {
+        UserEntity user = getCurrentUser();
+        user.setDeletedAt(LocalDateTime.now());
+        userRepository.save(user);
 
-        // xxx-xxxx-xxxx 형식으로 변환
-        return numberOnly.replaceFirst("(\\d{3})(\\d{4})(\\d{4})", "$1-$2-$3");
+        // 연관된 인증 정보도 비활성화
+        user.getAuths().forEach(AuthEntity::deactivate);
+
+        log.info("해당 유저의 계정이 비활성화 처리 되었습니다 : {}", user.getEmail());
     }
+
 }
