@@ -5,7 +5,7 @@ import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.swyp.dessertbee.user.dto.UserDTO;
+import org.swyp.dessertbee.user.dto.UserOAuthDto;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -22,12 +22,12 @@ public class CustomOAuth2User implements OAuth2User {
     private final Collection<? extends GrantedAuthority> authorities;
     private final Map<String, Object> attributes;
 
-    public CustomOAuth2User(UserDTO userDTO, Map<String, Object> attributes) {
-        this.email = userDTO.getEmail();
-        this.nickname = userDTO.getNickname();
-        this.userUuid = userDTO.getUserUuid();
+    public CustomOAuth2User(UserOAuthDto userOAuthDto, Map<String, Object> attributes) {
+        this.email = userOAuthDto.getEmail();
+        this.nickname = userOAuthDto.getNickname();
+        this.userUuid = userOAuthDto.getUserUuid();
         this.attributes = attributes;
-        this.authorities = userDTO.getRoles().stream()
+        this.authorities = userOAuthDto.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                 .collect(Collectors.toList());
     }
