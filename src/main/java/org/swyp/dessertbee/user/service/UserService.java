@@ -24,5 +24,11 @@ public interface UserService {
      * @return 사용자 상세 정보 DTO
      */
     UserDetailResponseDto updateMyInfo(UserUpdateRequestDto updateRequest);
+
+    /**
+     * 현재 인증된 사용자의 계정을 비활성화(소프트 삭제)합니다.
+     */
+    void deleteMyAccount();
+
 }
 
