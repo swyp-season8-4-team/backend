@@ -8,12 +8,13 @@ import org.swyp.dessertbee.store.event.entity.Event;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @Builder
 @AllArgsConstructor
 public class EventResponse implements Identifiable {
-    private Long id;
+    private UUID eventUuid;
     private String title;
     private String description;
     private LocalDate startDate;
@@ -21,13 +22,13 @@ public class EventResponse implements Identifiable {
     private List<String> images;
 
     @Override
-    public Long getId() {
-        return id;
+    public UUID getUuid() {
+        return eventUuid;
     }
 
     public static EventResponse fromEntity(Event event, List<String> images) {
         return new EventResponse(
-                event.getId(),
+                event.getEventUuid(),
                 event.getTitle(),
                 event.getDescription(),
                 event.getStartDate(),

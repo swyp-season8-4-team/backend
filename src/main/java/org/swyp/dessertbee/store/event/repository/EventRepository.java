@@ -7,11 +7,11 @@ import org.swyp.dessertbee.store.event.entity.Event;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long> {
-    List<Event> findByStoreIdAndDeletedAtIsNull(Long storeId);
-    Optional<Event> findByIdAndStoreIdAndDeletedAtIsNull(Long eventId, Long storeId);
-    boolean existsByStoreIdAndTitleAndStartDateAndDeletedAtIsNull(Long storeId, String title, LocalDate startDate);
+    Optional<Event> findByEventIdAndStoreIdAndDeletedAtIsNull(Long eventId, Long storeId);
     List<Event> findByStoreIdAndDeletedAtIsNullOrderByStartDateAsc(Long storeId);
+    Long findEventIdByEventUuid(UUID eventUuid);
 }
