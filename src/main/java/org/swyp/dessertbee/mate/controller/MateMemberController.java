@@ -27,6 +27,15 @@ public class MateMemberController {
         return ResponseEntity.ok(memberService.getMemberList(mateUuid));
     }
 
+    /**
+     * 디저트 메이트 멤버 신청 api
+     * */
+    @PostMapping("/apply")
+    public ResponseEntity<String> applyMate(@PathVariable UUID mateUuid, UUID userUuid) {
+
+        memberService.applyMate(mateUuid,userUuid);
+        return ResponseEntity.ok("디저트메이트에 성공적으로 신청되었습니다.");
+    }
 
 
 }

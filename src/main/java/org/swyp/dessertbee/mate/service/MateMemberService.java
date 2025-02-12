@@ -123,4 +123,33 @@ public class MateMemberService {
                 .toList();
     }
 
+    /**
+     * 디저트메이트 신청 api
+     * */
+    public void applyMate(UUID mateUuid, UUID userUuid) {
+        //mateUuid로 mateId 조회
+        Long mateId = mateRepository.findMateIdByMateUuid(mateUuid);
+
+        //mateId 존재 여부 확인
+        mateRepository.findByMateIdAndDeletedAtIsNull(mateId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 디저트메이트입니다."));
+
+        //userUuid로 userId 조회
+        Long userId = userRepository.findIdByUserUuid(userUuid);
+
+        //userId 존재 여부 확인
+        if (userId == null) {
+            throw new IllegalArgumentException("존재하지 않는 유저입니다.");
+        }
+
+        //mateMember 테이블에 신청자 등록
+        mateMemberRepository.save(
+                MateMember.builder()
+                        .mateId(mateId)
+                        .userId(userId)
+                        .grade(MateMemberGrade.NORMAL)
+                        .approvalYn(false)
+                        .build()
+        );
+    }
 }
