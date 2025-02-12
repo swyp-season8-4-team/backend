@@ -3,6 +3,7 @@ package org.swyp.dessertbee.user.service;
 import org.swyp.dessertbee.user.dto.UserDetailResponseDto;
 import org.swyp.dessertbee.user.dto.UserResponseDto;
 import org.swyp.dessertbee.user.dto.UserUpdateRequestDto;
+import org.swyp.dessertbee.user.entity.NicknameValidationPurpose;
 
 public interface UserService {
     /**
@@ -30,5 +31,10 @@ public interface UserService {
      */
     void deleteMyAccount();
 
+    /**
+     * 닉네임 중복 여부를 확인합니다.
+     * @param nickname 검사할 닉네임
+     * @return 사용 가능 여부
+     */
+    boolean checkNicknameAvailability(String nickname, NicknameValidationPurpose purpose);
 }
-

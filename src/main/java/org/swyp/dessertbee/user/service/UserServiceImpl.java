@@ -16,6 +16,7 @@ import org.swyp.dessertbee.user.dto.UserDetailResponseDto;
 import org.swyp.dessertbee.user.dto.UserResponseDto;
 import org.swyp.dessertbee.user.dto.UserUpdateRequestDto;
 import org.swyp.dessertbee.user.entity.MbtiEntity;
+import org.swyp.dessertbee.user.entity.NicknameValidationPurpose;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.MbtiRepository;
 import org.swyp.dessertbee.user.repository.UserRepository;
@@ -264,4 +265,17 @@ public class UserServiceImpl implements UserService {
         log.info("해당 유저의 계정이 비활성화 처리 되었습니다 : {}", user.getEmail());
     }
 
+    @Override
+    public boolean checkNicknameAvailability(String nickname, NicknameValidationPurpose purpose) {
+        // 프로필 수정의 경우 인증 확인
+        if (purpose == NicknameValidationPurpose.PROFILE_UPDATE) {
+            UserEntity currentUser = getCurrentUser();
+            // 현재 사용자의 닉네임과 동일한 경우 true 반환
+            if (currentUser.getNickname().equals(nickname)) {
+                return true;
+            }
+        }
+
+        return !userRepository.existsByNickname(nickname);
+    }
 }
