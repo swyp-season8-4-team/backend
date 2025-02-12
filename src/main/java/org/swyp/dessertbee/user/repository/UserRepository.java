@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -42,4 +43,11 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
      * */
     @Query("SELECT u.userUuid FROM UserEntity u where u.id = :userId")
     UUID findUserUuidById(Long userId);
+
+
+    /**
+     * userId로 userUuid와 nickname 전체 조회
+     * */
+    @Query("SELECT u FROM UserEntity  u WHERE u.id = :userId")
+    List<UserEntity> findAllUserUuidAndNicknameById(Long userId);
 }

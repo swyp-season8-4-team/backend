@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import org.swyp.dessertbee.mate.entity.MateMember;
+import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.util.List;
 import java.util.UUID;
@@ -23,17 +24,15 @@ public class MateMemberResponse {
 
     public static MateMemberResponse fromEntity(MateMember member,
                                                 UUID mateUuid,
-                                                UUID userUUid,
-                                                List<String> userImage,
-                                                String nickname) {
-
+                                                UserEntity user,
+                                                List<String> userImage) {
         return MateMemberResponse.builder()
                 .mateUuid(mateUuid)
-                .userUUid(userUUid)
+                .userUUid(user.getUserUuid())
                 .grade(member.getGrade().toString())
                 .approvalYn(member.getApprovalYn())
                 .userImage(userImage)
-                .nickname(nickname)
+                .nickname(user.getNickname())
                 .build();
     }
 }
