@@ -50,4 +50,18 @@ public class EmailVerificationEntity {
     public void verify() {
         this.verified = true;
     }
+
+    /**
+     * 만료 시간을 설정
+     */
+    public void updateExpiresAt(LocalDateTime expiresAt) {
+        this.expiresAt = expiresAt;
+    }
+
+    /**
+     * 삭제 시간을 설정
+     */
+    public void updateDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
 }
