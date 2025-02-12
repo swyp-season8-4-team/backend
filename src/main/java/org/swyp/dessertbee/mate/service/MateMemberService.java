@@ -4,13 +4,21 @@ package org.swyp.dessertbee.mate.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.swyp.dessertbee.common.entity.ImageType;
+import org.swyp.dessertbee.common.service.ImageService;
+import org.swyp.dessertbee.mate.dto.response.MateMemberResponse;
+import org.swyp.dessertbee.mate.entity.Mate;
 import org.swyp.dessertbee.mate.entity.MateMember;
 import org.swyp.dessertbee.mate.entity.MateMemberGrade;
 import org.swyp.dessertbee.mate.repository.MateMemberRepository;
 import org.swyp.dessertbee.mate.repository.MateRepository;
+import org.swyp.dessertbee.user.entity.UserEntity;
+import org.swyp.dessertbee.user.repository.UserRepository;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -20,8 +28,14 @@ public class MateMemberService {
 
     private final MateMemberRepository mateMemberRepository;
     private final MateRepository mateRepository;
-    private MateMember mateMember;
+    private final UserRepository userRepository;
+    private final ImageService imageService;
+
+
+
     /**
+     *
+     *
      * 디저트 메이트 생성 시 생성자 등록
      * */
     public void addCreatorAsMember(UUID mateUuid, Long userId) {
@@ -49,7 +63,7 @@ public class MateMemberService {
 
 
             // mateId로 모든 멤버 조회
-            List<MateMember> members = mateMemberRepository.findAllByMateId(mateId);
+            List<MateMember> members = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndApprovalYnTrue(mateId);
 
             // 각 멤버에 대해 softDelete 처리
             for (MateMember member : members) {
@@ -69,12 +83,44 @@ public class MateMemberService {
     }
 
 
-//    public List<MateMemberResponse> getMemberList(UUID mateUuid) {
-//
-//        //프론트에서 받아온 mateUuid로 mateId 조회
-//        Long mateId = mateRepository.findMateIdByMateUuid(mateUuid);
-//
-//
-//         return mateMemberRepository.findMateMemberByMateId()
-//    }
+    /**
+     * 디저트 메이트 멤버 전체 조회
+     * */
+    public List<MateMemberResponse> getMemberList(UUID mateUuid) {
+
+        //mateUuid로 mateId 조회
+        Long mateId = mateRepository.findMateIdByMateUuid(mateUuid);
+
+        //mateId 존재 여부 확인
+        mateRepository.findByMateIdAndDeletedAtIsNull(mateId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 디저트메이트입니다."));
+
+        List<MateMember> mateMembers = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndApprovalYnTrue(mateId);
+
+        //userId로 userUuid 조회
+        List<UserEntity> users = mateMembers.stream()
+                .flatMap(mateMember ->
+                        userRepository.findAllUserUuidAndNicknameById(mateMember.getUserId()).stream()
+                )
+                .toList();
+
+
+        // MateMember와 UserEntity를 매칭하여 MateMemberResponse 생성
+        return mateMembers.stream()
+                .map(mateMember -> {
+                    // 사용자 정보 찾기
+                    UserEntity user = users.stream()
+                            .filter(u -> u.getId().equals(mateMember.getUserId()))
+                            .findFirst()
+                            .orElseThrow(() -> new IllegalArgumentException("사용자 정보를 찾을 수 없습니다."));
+
+                    // 사용자별 프로필 이미지 조회
+                    List<String> userImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
+
+                    // MateMemberResponse 생성
+                    return MateMemberResponse.fromEntity(mateMember, mateUuid, user, userImages);
+                })
+                .toList();
+    }
+
 }
