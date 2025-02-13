@@ -7,13 +7,15 @@ import org.swyp.dessertbee.store.store.entity.SavedStore;
 import org.swyp.dessertbee.store.store.entity.Store;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @Builder
 @AllArgsConstructor
 public class SavedStoreResponse {
-    private Long id;
+    private Long savedStoreId;
     private Long storeId;
+    private UUID storeUuid;
     private String storeName;
     private String address;
     private String storeLink;
@@ -21,8 +23,9 @@ public class SavedStoreResponse {
 
     public static SavedStoreResponse fromEntity(SavedStore savedStore, Store store) {
         return SavedStoreResponse.builder()
-                .id(savedStore.getId())
-                .storeId(store.getId())
+                .savedStoreId(savedStore.getSavedStoreId())
+                .storeId(store.getStoreId())
+                .storeUuid(store.getStoreUuid())
                 .storeName(store.getName())
                 .address(store.getAddress())
                 .storeLink(store.getStoreLink())

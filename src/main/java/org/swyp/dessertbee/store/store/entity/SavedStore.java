@@ -3,8 +3,10 @@ package org.swyp.dessertbee.store.store.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -17,9 +19,12 @@ public class SavedStore {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long savedStoreId;
 
+    @Column(name = "store_id")
     private Long storeId;
+
+    @Column(name = "user_id")
     private Long userId;
 
     @CreationTimestamp

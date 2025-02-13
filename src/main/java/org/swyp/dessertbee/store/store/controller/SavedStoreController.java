@@ -9,6 +9,7 @@ import org.swyp.dessertbee.store.store.dto.response.SavedStoreResponse;
 import org.swyp.dessertbee.store.store.service.SavedStoreService;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/users")
@@ -18,8 +19,8 @@ public class SavedStoreController {
     private final SavedStoreService savedStoreService;
 
     /** 유저별 저장된 가게 조회 */
-    @GetMapping("/{userId}/saved-stores")
-    public List<SavedStoreResponse> getSavedStoresByUser(@PathVariable Long userId) {
-        return savedStoreService.getSavedStoresByUser(userId);
+    @GetMapping("/{userUuid}/saved-stores")
+    public List<SavedStoreResponse> getSavedStoresByUser(@PathVariable UUID userUuid) {
+        return savedStoreService.getSavedStoresByUser(userUuid);
     }
 }

@@ -8,9 +8,11 @@ import org.swyp.dessertbee.store.store.entity.SavedStore;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.SavedStoreRepository;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
+import org.swyp.dessertbee.user.repository.UserRepository;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,14 +22,16 @@ public class SavedStoreService {
 
     private final SavedStoreRepository savedStoreRepository;
     private final StoreRepository storeRepository;
+    private final UserRepository userRepository;
 
     /** 유저가 저장한 가게 목록 조회 (soft delete 반영) */
-    public List<SavedStoreResponse> getSavedStoresByUser(Long userId) {
+    public List<SavedStoreResponse> getSavedStoresByUser(UUID userUuid) {
+        Long userId = userRepository.findIdByUserUuid(userUuid);
         List<SavedStore> savedStores = savedStoreRepository.findByUserId(userId);
 
         return savedStores.stream()
                 .map(saved -> {
-                    Store store = storeRepository.findByIdAndDeletedAtIsNull(saved.getStoreId())
+                    Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(saved.getStoreId())
                             .orElse(null); // 삭제된 가게는 리스트에서 제외
 
                     if (store == null) {
