@@ -8,22 +8,27 @@ import org.swyp.dessertbee.store.review.entity.StoreReview;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @Builder
 @AllArgsConstructor
 public class StoreReviewResponse {
-    private Long id;
-    private Long storeId; // 가게 ID 추가
+    private UUID reviewUuid;
+    private Long storeId;
     private String content;
     private BigDecimal rating;
     private LocalDateTime createdAt;
     private List<String> images;
 
     public static StoreReviewResponse fromEntity(StoreReview review, List<String> images) {
+        if (review.getReviewUuid() == null) {
+            throw new IllegalStateException("reviewUuid가 null입니다. 리뷰가 정상적으로 저장되었는지 확인해주세요.");
+        }
+
         return StoreReviewResponse.builder()
-                .id(review.getId())
-                .storeId(review.getStoreId()) // 가게 ID 추가
+                .reviewUuid(review.getReviewUuid())
+                .storeId(review.getStoreId())
                 .content(review.getContent())
                 .rating(review.getRating())
                 .createdAt(review.getCreatedAt())

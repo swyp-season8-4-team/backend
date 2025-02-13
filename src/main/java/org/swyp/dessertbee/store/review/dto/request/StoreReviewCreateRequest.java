@@ -6,14 +6,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class StoreReviewCreateRequest {
-
-    @NotNull(message = "가게 ID는 필수입니다.")
-    private Long storeId;
 
     @NotNull(message = "유저 ID는 필수입니다.")
     private Long userId;
