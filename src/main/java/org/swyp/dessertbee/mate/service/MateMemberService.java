@@ -86,7 +86,7 @@ public class MateMemberService {
     /**
      * 디저트 메이트 멤버 전체 조회
      * */
-    public List<MateMemberResponse> getMemberList(UUID mateUuid) {
+    public List<MateMemberResponse> getMembers(UUID mateUuid) {
 
         //mateUuid로 mateId 조회
         Long mateId = mateRepository.findMateIdByMateUuid(mateUuid);

@@ -82,4 +82,23 @@ public class MateController {
         mateService.updateMate(mateUuid, request, mateImage);
         return ResponseEntity.ok("디저트메이트가 성공적으로 수정되었습니다.");
     }
+
+
+    /**
+     * 디저트메이트 전체 조회
+     * */
+    @GetMapping
+    @Operation(summary = "메이트 전체 조회", description = "디저트메이트 전체 조회합니다.")
+    public ResponseEntity<List<MateDetailResponse>> getMates(
+            @RequestParam int from,
+            @RequestParam int to
+    ) {
+
+        if (from >= to) {
+            throw new IllegalArgumentException("잘못된 범위 설정");
+        }
+
+
+        return ResponseEntity.ok(mateService.getMates(from, to));
+    }
 }
