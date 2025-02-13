@@ -46,8 +46,8 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
 
     /**
-     * userId로 userUuid와 nickname 전체 조회
+     * userId로 user 데이터 전체 조회
      * */
     @Query("SELECT u FROM UserEntity  u WHERE u.id = :userId")
-    List<UserEntity> findAllUserUuidAndNicknameById(Long userId);
+    List<UserEntity> findAllById(Long userId);
 }

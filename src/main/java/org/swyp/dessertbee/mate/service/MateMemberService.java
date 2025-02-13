@@ -100,7 +100,7 @@ public class MateMemberService {
         //userId로 userUuid 조회
         List<UserEntity> users = mateMembers.stream()
                 .flatMap(mateMember ->
-                        userRepository.findAllUserUuidAndNicknameById(mateMember.getUserId()).stream()
+                        userRepository.findAllById(mateMember.getUserId()).stream()
                 )
                 .toList();
 
