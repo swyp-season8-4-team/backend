@@ -4,10 +4,11 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.swyp.dessertbee.common.model.Identifiable;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -20,8 +21,13 @@ public class Menu {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long menuId;
 
+    @Column(name = "menu_uuid", nullable = false, unique = true, updatable = false)
+    @UuidGenerator
+    private UUID menuUuid;
+
+    @Column(name = "store_id")
     private Long storeId;
     private String name;
 

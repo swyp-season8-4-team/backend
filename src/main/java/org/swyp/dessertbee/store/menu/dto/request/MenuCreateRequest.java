@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class MenuCreateRequest {
+public class    MenuCreateRequest {
 
     @NotBlank
     private String name; // 메뉴 이름
