@@ -14,14 +14,13 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDTO {
+public class UserOAuthDto {
     private Long id;
     private Long imageId;
     private UUID userUuid;
     private String email;
     private String nickname;
     private String name;
-    private String preferences;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String phoneNumber;
@@ -29,15 +28,14 @@ public class UserDTO {
     private UserEntity.Gender gender;
     private List<String> roles;
 
-    public static UserDTO fromEntity(UserEntity entity, List<String> roles) {
-        return UserDTO.builder()
+    public static UserOAuthDto fromEntity(UserEntity entity, List<String> roles) {
+        return UserOAuthDto.builder()
                 .id(entity.getId())
                 .imageId(entity.getImageId())
                 .userUuid(entity.getUserUuid())
                 .email(entity.getEmail())
                 .nickname(entity.getNickname())
                 .name(entity.getName())
-                .preferences(entity.getPreferences())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .phoneNumber(entity.getPhoneNumber())
@@ -45,19 +43,5 @@ public class UserDTO {
                 .gender(entity.getGender())
                 .roles(roles)
                 .build();
-    }
-
-    // 프로필 수정용 DTO
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class UpdateRequest {
-        private String nickname;
-        private String name;
-        private String phoneNumber;
-        private String address;
-        private String preferences;
-        private UserEntity.Gender gender;
     }
 }

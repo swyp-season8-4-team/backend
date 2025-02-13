@@ -9,6 +9,7 @@ import org.swyp.dessertbee.email.entity.EmailVerificationEntity;
 import org.swyp.dessertbee.email.entity.EmailVerificationPurpose;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -54,4 +55,13 @@ public interface EmailVerificationRepository extends JpaRepository<EmailVerifica
     @Query("UPDATE EmailVerificationEntity e SET e.deletedAt = CURRENT_TIMESTAMP " +
             "WHERE e.createdAt < :before AND e.deletedAt IS NULL")
     void softDeleteOldRecords(@Param("before") LocalDateTime before);
+
+    /**
+     * 인증되지 않고 삭제되지 않은 이메일 인증 정보 조회
+     */
+    List<EmailVerificationEntity> findByEmailAndPurposeAndVerifiedFalseAndDeletedAtIsNull(
+            String email,
+            EmailVerificationPurpose purpose
+    );
+
 }

@@ -12,18 +12,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.auth.dto.CustomOAuth2User;
 import org.swyp.dessertbee.auth.dto.KakaoResponse;
 import org.swyp.dessertbee.auth.dto.OAuth2Response;
-import org.swyp.dessertbee.auth.entity.AuthEntity;
-import org.swyp.dessertbee.auth.jwt.JWTUtil;
-import org.swyp.dessertbee.auth.repository.AuthRepository;
-import org.swyp.dessertbee.role.entity.RoleEntity;
-import org.swyp.dessertbee.role.repository.RoleRepository;
-import org.swyp.dessertbee.role.service.UserRoleService;
-import org.swyp.dessertbee.user.dto.UserDTO;
+import org.swyp.dessertbee.user.dto.UserOAuthDto;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -93,7 +86,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     private CustomOAuth2User createCustomOAuth2User(UserEntity user, Map<String, Object> attributes) {
-        UserDTO userDTO = UserDTO.builder()
+        UserOAuthDto userOAuthDto = UserOAuthDto.builder()
                 .email(user.getEmail())
                 .nickname(user.getNickname())
                 .userUuid(user.getUserUuid())
@@ -102,6 +95,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                         .collect(Collectors.toList()))
                 .build();
 
-        return new CustomOAuth2User(userDTO, attributes);
+        return new CustomOAuth2User(userOAuthDto, attributes);
     }
 }
