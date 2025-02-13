@@ -152,4 +152,18 @@ public class MateMemberService {
                         .build()
         );
     }
+
+    public void acceptMember(UUID mateUuid, UUID userUuid) {
+        //mateUuid로 mateId 조회
+        Long mateId = mateRepository.findMateIdByMateUuid(mateUuid);
+
+        //mateId 존재 여부 확인
+        mateRepository.findByMateIdAndDeletedAtIsNull(mateId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 디저트메이트입니다."));
+
+        //userUuid로 userId 조회
+        Long userId = userRepository.findIdByUserUuid(userUuid);
+
+        mateMemberRepository.updateApprovalYn(mateId, userId);
+    }
 }

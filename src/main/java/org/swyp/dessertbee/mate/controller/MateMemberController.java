@@ -37,5 +37,15 @@ public class MateMemberController {
         return ResponseEntity.ok("디저트메이트에 성공적으로 신청되었습니다.");
     }
 
+    /**
+     * 디저트 메이트 멤버 수락 api
+     * */
+    @PatchMapping("/apply")
+    public ResponseEntity<String> acceptMemeber(@PathVariable UUID mateUuid, UUID userUuid) {
+
+        memberService.acceptMember(mateUuid, userUuid);
+        return ResponseEntity.ok("팀원이 되었습니다~!");
+    }
+
 
 }
