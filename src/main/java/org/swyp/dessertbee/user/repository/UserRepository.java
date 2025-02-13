@@ -50,4 +50,11 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
      * */
     @Query("SELECT u FROM UserEntity  u WHERE u.id = :userId")
     List<UserEntity> findAllById(Long userId);
+
+
+    /**
+     * 삭제된 계정 중 이메일로 조회
+     */
+    @Query("SELECT u FROM UserEntity u WHERE u.email = :email AND u.deletedAt IS NOT NULL")
+    Optional<UserEntity> findDeletedAccountByEmail(String email);
 }
