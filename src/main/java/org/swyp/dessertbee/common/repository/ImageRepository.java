@@ -6,6 +6,7 @@ import org.swyp.dessertbee.common.entity.Image;
 import org.swyp.dessertbee.common.entity.ImageType;
 
 import java.util.List;
+import java.util.UUID;
 
 @Repository
 public interface ImageRepository extends JpaRepository<Image, Long> {
