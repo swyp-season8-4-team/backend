@@ -5,6 +5,7 @@ import org.springframework.stereotype.Repository;
 import org.swyp.dessertbee.store.store.entity.StoreStatistics;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface StoreStatisticsRepository extends JpaRepository<StoreStatistics, Long> {

@@ -5,11 +5,14 @@ import lombok.Builder;
 import lombok.Data;
 import org.swyp.dessertbee.store.store.entity.Store;
 
+import java.util.UUID;
+
 @Data
 @Builder
 @AllArgsConstructor
 public class StoreMapResponse {
-    private Long id;
+    private Long storeId;
+    private UUID storeUuid;
     private String name;
     private String address;
     private Double latitude;
@@ -17,7 +20,8 @@ public class StoreMapResponse {
 
     public static StoreMapResponse fromEntity(Store store) {
         return StoreMapResponse.builder()
-                .id(store.getId())
+                .storeId(store.getStoreId())
+                .storeUuid(store.getStoreUuid())
                 .name(store.getName())
                 .address(store.getAddress())
                 .latitude(store.getLatitude().doubleValue())

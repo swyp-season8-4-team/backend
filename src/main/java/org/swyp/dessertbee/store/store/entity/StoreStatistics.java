@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -17,9 +18,11 @@ public class StoreStatistics {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long statisticsId;
 
+    @Column(name = "owner_id")
     private Long storeId;
+
     private Integer views;
     private Integer saves;
     private Integer reviews;

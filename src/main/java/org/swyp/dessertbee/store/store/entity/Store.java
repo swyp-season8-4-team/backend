@@ -4,9 +4,13 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.UuidGenerator;
+import org.swyp.dessertbee.common.util.StringListConverter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "store")
@@ -19,11 +23,16 @@ public class Store {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long storeId;
 
+    @Column(name = "store_uuid", nullable = false, unique = true, updatable = false)
+    @UuidGenerator
+    private UUID storeUuid;
+
+    @Column(name = "owner_id")
     private Long ownerId;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
     private String name;
 
     @Column(length = 20)
@@ -38,13 +47,11 @@ public class Store {
     @Column(precision = 11, scale = 8)
     private BigDecimal longitude;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
-
     private Boolean animalYn;
     private Boolean tumblerYn;
     private Boolean parkingYn;
 
+    private String description;
     private String operatingHours;
     private String closingDays;
 
@@ -64,6 +71,11 @@ public class Store {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    @Convert(converter = StringListConverter.class)
+    private List<String> notice;
 
     @PrePersist
     public void prePersist() {

@@ -3,20 +3,20 @@ package org.swyp.dessertbee.store.store.dto.response;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import org.swyp.dessertbee.store.coupon.dto.response.CouponResponse;
-import org.swyp.dessertbee.store.event.dto.response.EventResponse;
 import org.swyp.dessertbee.store.menu.dto.response.MenuResponse;
 import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
 import org.swyp.dessertbee.store.store.entity.Store;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @Builder
 @AllArgsConstructor
 public class StoreDetailResponse {
-    private Long id;
+    private Long storeId;
+    private UUID storeUuid;
     private String name;
     private String address;
     private String operatingHours;
@@ -27,22 +27,19 @@ public class StoreDetailResponse {
     private Boolean tumblerYn;
     private Boolean parkingYn;
     private BigDecimal averageRating;
-    private List<EventResponse> events;
     private List<MenuResponse> menus;
-    private List<CouponResponse> coupons;
     private List<String> storeImages;
     private List<StoreReviewResponse> storeReviews;
     private List<String> tags;
 
     public static StoreDetailResponse fromEntity(Store store,
-                                                 List<EventResponse> events,
                                                  List<MenuResponse> menus,
-                                                 List<CouponResponse> coupons,
                                                  List<String> storeImages,
                                                  List<StoreReviewResponse> storeReviews,
                                                  List<String> tags) {
         return StoreDetailResponse.builder()
-                .id(store.getId())
+                .storeId(store.getStoreId())
+                .storeUuid(store.getStoreUuid())
                 .name(store.getName())
                 .address(store.getAddress())
                 .operatingHours(store.getOperatingHours())
@@ -53,9 +50,7 @@ public class StoreDetailResponse {
                 .tumblerYn(store.getTumblerYn())
                 .parkingYn(store.getParkingYn())
                 .averageRating(store.getAverageRating())
-                .events(events)
                 .menus(menus)  // 메뉴 리스트 추가
-                .coupons(coupons)
                 .storeImages(storeImages)
                 .storeReviews(storeReviews)
                 .tags(tags)

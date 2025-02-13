@@ -5,23 +5,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
-import org.swyp.dessertbee.common.model.Identifiable;
 import org.swyp.dessertbee.common.service.ImageService;
-import org.swyp.dessertbee.common.service.S3Service;
-import org.swyp.dessertbee.store.coupon.dto.request.CouponCreateRequest;
-import org.swyp.dessertbee.store.coupon.dto.response.CouponResponse;
-import org.swyp.dessertbee.store.coupon.entity.Coupon;
-import org.swyp.dessertbee.store.coupon.repository.CouponRepository;
-import org.swyp.dessertbee.store.event.dto.response.EventResponse;
-import org.swyp.dessertbee.store.event.repository.EventRepository;
 import org.swyp.dessertbee.store.menu.dto.response.MenuResponse;
-import org.swyp.dessertbee.store.menu.repository.MenuRepository;
-import org.swyp.dessertbee.store.event.service.EventService;
 import org.swyp.dessertbee.store.menu.service.MenuService;
 import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
 import org.swyp.dessertbee.store.review.entity.StoreReview;
 import org.swyp.dessertbee.store.review.repository.StoreReviewRepository;
-import org.swyp.dessertbee.store.review.service.StoreReviewService;
 import org.swyp.dessertbee.store.store.dto.request.StoreCreateRequest;
 import org.swyp.dessertbee.store.store.dto.response.StoreDetailResponse;
 import org.swyp.dessertbee.store.store.dto.response.StoreMapResponse;
@@ -48,16 +37,19 @@ public class StoreService {
     private final StoreTagRepository storeTagRepository;
     private final StoreTagRelationRepository storeTagRelationRepository;
     private final StoreReviewRepository storeReviewRepository;
-    private final StoreReviewService storeReviewService;
-    private final CouponRepository couponRepository;
     private final StoreStatisticsRepository storeStatisticsRepository;
     private final ImageService imageService;
     private final MenuService menuService;
-    private final EventService eventService;
 
     /** 가게 등록 (이벤트, 쿠폰, 메뉴 + 이미지 포함) */
-    public StoreDetailResponse createStore(StoreCreateRequest request, List<MultipartFile> storeImageFiles) {
-        // 가게 정보 저장
+    public StoreDetailResponse createStore(StoreCreateRequest request,
+                                           List<MultipartFile> storeImageFiles,
+                                           List<MultipartFile> menuImageFiles) {
+
+        if (menuImageFiles == null) {
+            menuImageFiles = Collections.emptyList(); // menuImageFiles가 null이면 빈 리스트로 처리
+        }
+
         Store store = storeRepository.save(
                 Store.builder()
                         .ownerId(request.getOwnerId())
@@ -79,7 +71,7 @@ public class StoreService {
         // 가게 통계 초기화
         storeStatisticsRepository.save(
                 StoreStatistics.builder()
-                        .storeId(store.getId())
+                        .storeId(store.getStoreId())
                         .views(0)
                         .saves(0)
                         .reviews(0)
@@ -88,23 +80,21 @@ public class StoreService {
 
         // 가게 대표 사진 S3 업로드 및 저장
         if (storeImageFiles != null && !storeImageFiles.isEmpty()) {
-            String folder = "store/" + store.getId();
-            imageService.uploadAndSaveImages(storeImageFiles, ImageType.STORE, store.getId(), folder);
+            String folder = "store/" + store.getStoreId();
+            imageService.uploadAndSaveImages(storeImageFiles, ImageType.STORE, store.getStoreId(), folder);
         }
 
         // 태그 저장
         saveStoreTags(store, request.getTagIds());
 
+        // 메뉴 이미지 파일을 Map<String, MultipartFile>로 변환 (이름을 키로 사용)
+        Map<String, MultipartFile> menuImageMap = menuImageFiles.stream()
+                .collect(Collectors.toMap(MultipartFile::getOriginalFilename, file -> file, (a, b) -> b));
+
         // 메뉴 저장 (한 메뉴당 하나의 이미지만 업로드 가능)
-        menuService.addMenus(store.getId(), request.getMenus(), request.getMenuImageFiles());
+        menuService.addMenus(store.getStoreUuid(), request.getMenus(), menuImageMap);
 
-        // 이벤트 저장 (한 이벤트당 여러 개의 이미지 업로드 가능)
-        eventService.addEvents(store.getId(), request.getEvents(), request.getEventImageFiles());
-
-        // 쿠폰 저장
-        saveCoupons(store, request.getCoupons());
-
-        return getStoreDetails(store.getId());
+        return getStoreDetails(store.getStoreUuid());
     }
 
     /** 태그 저장 (1~3개 선택) */
@@ -132,30 +122,6 @@ public class StoreService {
         storeTagRelationRepository.saveAll(tagRelations);
     }
 
-    /** 특정 가게의 쿠폰 목록 조회 */
-    public List<CouponResponse> getCouponsByStore(Long storeId) {
-        return couponRepository.findByStoreId(storeId)
-                .stream()
-                .map(CouponResponse::fromEntity)
-                .collect(Collectors.toList());
-    }
-
-    /** 쿠폰 저장 */
-    private void saveCoupons(Store store, List<CouponCreateRequest> coupons) {
-        if (coupons == null || coupons.isEmpty()) return;
-
-        couponRepository.saveAll(
-                coupons.stream()
-                        .map(coupon -> Coupon.builder()
-                                .storeId(store.getId())
-                                .title(coupon.getTitle())
-                                .description(coupon.getDescription())
-                                .expiryDate(coupon.getExpiryDate())
-                                .build())
-                        .collect(Collectors.toList())
-        );
-    }
-
     /** 반경 내 가게 조회 */
     public List<StoreMapResponse> getStoresByLocation(Double lat, Double lng, Double radius) {
         List<Store> stores = storeRepository.findStoresByLocation(lat, lng, radius);
@@ -166,69 +132,41 @@ public class StoreService {
     }
 
     /** 가게 간략 정보 조회 */
-    public StoreSummaryResponse getStoreSummary(Long storeId) {
-        Store store = storeRepository.findByIdAndDeletedAtIsNull(storeId)
+    public StoreSummaryResponse getStoreSummary(UUID storeUuid) {
+        Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
+        Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않거나 삭제된 가게입니다."));
 
         List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, storeId);
-        List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(storeId);
+        List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(storeUuid);
 
         return StoreSummaryResponse.fromEntity(store, tags, storeImages);
     }
 
     /** 가게 상세 정보 조회 */
-    public StoreDetailResponse getStoreDetails(Long storeId) {
-        Store store = storeRepository.findByIdAndDeletedAtIsNull(storeId)
+    public StoreDetailResponse getStoreDetails(UUID storeUuid) {
+        Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
+        Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않거나 삭제된 가게입니다."));
 
         List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, storeId);
-        List<EventResponse> events = eventService.getEventsByStore(storeId);
-        List<MenuResponse> menus = menuService.getMenusByStore(storeId);
-        List<CouponResponse> coupons = getCouponsByStore(storeId);  // ✅ 쿠폰 목록 추가
+        List<MenuResponse> menus = menuService.getMenusByStore(storeUuid);
 
-        // 특정 가게의 리뷰 목록 조회 (삭제되지 않은 리뷰만)
         List<StoreReview> reviews = storeReviewRepository.findByStoreIdAndDeletedAtIsNull(storeId);
 
-        // 리뷰 ID 목록을 가져와서 해당 리뷰들의 이미지 URL 매핑
         Map<Long, List<String>> reviewImagesMap = imageService.getImagesByTypeAndIds(ImageType.REVIEW,
-                reviews.stream().map(StoreReview::getId).toList());
+                reviews.stream().map(StoreReview::getReviewId).toList());
 
-        // 리뷰 목록을 StoreReviewResponse DTO로 변환
         List<StoreReviewResponse> reviewResponses = reviews.stream()
-                .map(review -> StoreReviewResponse.fromEntity(review, reviewImagesMap.getOrDefault(review.getId(), List.of())))
+                .map(review -> StoreReviewResponse.fromEntity(review, reviewImagesMap.getOrDefault(review.getReviewId(), List.of())))
                 .toList();
 
-        List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(storeId);
+        List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(storeUuid);
 
-        return StoreDetailResponse.fromEntity(store, events, menus, coupons, storeImages, reviewResponses, tags);
+        return StoreDetailResponse.fromEntity(store, menus, storeImages, reviewResponses, tags);
     }
 
-
-    /** 이미지 조회 */
-    private <T extends Identifiable> List<String> getImageUrlsForEntities(List<T> entities, ImageType imageType) {
-        return entities.stream()
-                .map(entity -> imageService.getImagesByTypeAndId(imageType, entity.getId()))
-                .flatMap(List::stream)
-                .collect(Collectors.toList());
-    }
-
-    /** 리뷰 응답 객체 변환 */
-    private List<StoreReviewResponse> getStoreReviewResponses(List<StoreReview> reviews) {
-        if (reviews.isEmpty()) return Collections.emptyList();
-
-        // 리뷰 ID 목록 추출
-        List<Long> reviewIds = reviews.stream().map(StoreReview::getId).collect(Collectors.toList());
-
-        // 리뷰별 이미지 조회
-        Map<Long, List<String>> reviewImagesMap = imageService.getImagesByTypeAndIds(ImageType.SHORT, reviewIds);
-
-        // 리뷰 객체 변환
-        return reviews.stream()
-                .map(review -> StoreReviewResponse.fromEntity(review, reviewImagesMap.getOrDefault(review.getId(), List.of())))
-                .collect(Collectors.toList());
-    }
-
-    /** 가게의 평균 평점 업데이트 (리뷰 등록/삭제 시 호출) */
+    /** 가게의 평균 평점 업데이트 (리뷰 등록,수정,삭제 시 호출) */
     @Transactional
     public void updateAverageRating(Long storeId) {
         BigDecimal newAverageRating = storeReviewRepository.findAverageRatingByStoreId(storeId);

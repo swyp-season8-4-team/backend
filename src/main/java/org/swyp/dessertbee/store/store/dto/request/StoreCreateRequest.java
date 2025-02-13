@@ -7,8 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
-import org.swyp.dessertbee.store.coupon.dto.request.CouponCreateRequest;
-import org.swyp.dessertbee.store.event.dto.request.EventCreateRequest;
 import org.swyp.dessertbee.store.menu.dto.request.MenuCreateRequest;
 import org.swyp.dessertbee.store.store.entity.StoreStatus;
 
@@ -44,11 +42,8 @@ public class StoreCreateRequest {
     @Builder.Default
     private StoreStatus status = StoreStatus.APPROVED;
 
-    private List<EventCreateRequest> events;  // 이벤트 리스트
-    private List<CouponCreateRequest> coupons;  // 쿠폰 리스트
     private List<MenuCreateRequest> menus;  // 메뉴 리스트
 
     private List<MultipartFile> storeImageFiles;
-    private Map<String, List<MultipartFile>> eventImageFiles;
     private Map<String, MultipartFile> menuImageFiles;
 }

@@ -8,6 +8,7 @@ import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.entity.StoreTagRelation;
 
 import java.util.List;
+import java.util.UUID;
 
 @Repository
 public interface StoreTagRelationRepository extends JpaRepository<StoreTagRelation, Long> {
@@ -15,6 +16,7 @@ public interface StoreTagRelationRepository extends JpaRepository<StoreTagRelati
     List<StoreTagRelation> findByStore(Store store);
 
     // 가게 ID를 기반으로 태그 목록 조회
-    @Query("SELECT t.name FROM StoreTagRelation str JOIN str.tag t WHERE str.store.id = :storeId")
-    List<String> findTagNamesByStoreId(@Param("storeId") Long storeId);
+    @Query("SELECT t.name FROM StoreTagRelation str JOIN str.tag t WHERE str.store.storeUuid = :storeUuid")
+    List<String> findTagNamesByStoreId(@Param("storeUuid") UUID storeUuid);
+
 }

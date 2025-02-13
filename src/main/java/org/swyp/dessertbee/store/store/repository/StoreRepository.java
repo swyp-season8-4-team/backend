@@ -11,13 +11,14 @@ import org.swyp.dessertbee.store.store.entity.Store;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface StoreRepository extends JpaRepository<Store, Long> {
 
     @Transactional
     @Modifying
-    @Query("UPDATE Store s SET s.averageRating = :newAverageRating WHERE s.id = :storeId AND s.deletedAt IS NULL")
+    @Query("UPDATE Store s SET s.averageRating = :newAverageRating WHERE s.storeId = :storeId AND s.deletedAt IS NULL")
     void updateAverageRating(@Param("storeId") Long storeId, @Param("newAverageRating") BigDecimal newAverageRating);
 
     @Query(value = """
@@ -27,5 +28,8 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
     """, nativeQuery = true)
     List<Store> findStoresByLocation(@Param("lat") Double lat, @Param("lng") Double lng, @Param("radius") Double radius);
 
-    Optional<Store> findByIdAndDeletedAtIsNull(Long id);
+    Optional<Store> findByStoreIdAndDeletedAtIsNull(Long storeId);
+
+    @Query("SELECT s.storeId FROM Store s WHERE s.storeUuid = :storeUuid")
+    Long findStoreIdByStoreUuid(@Param("storeUuid") UUID storeUuid);
 }

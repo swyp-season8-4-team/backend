@@ -7,12 +7,14 @@ import org.swyp.dessertbee.store.store.entity.Store;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @Builder
 @AllArgsConstructor
 public class StoreSummaryResponse {
-    private Long id;
+    private Long storeId;
+    private UUID storeUuid;
     private String name;
     private BigDecimal averageRating;
     private List<String> tags;
@@ -31,7 +33,8 @@ public class StoreSummaryResponse {
     public static StoreSummaryResponse fromEntity(Store store, List<String> tags,
                                                   List<String> storeImages) {
         return StoreSummaryResponse.builder()
-                .id(store.getId())
+                .storeId(store.getStoreId())
+                .storeUuid(store.getStoreUuid())
                 .name(store.getName())
                 .averageRating(store.getAverageRating())
                 .tags(tags)
