@@ -25,6 +25,8 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import org.thymeleaf.context.Context;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Random;
 
 @Service
@@ -55,6 +57,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
         try {
 
             if (request.getPurpose() == EmailVerificationPurpose.SIGNUP) {
+                validateDeletedAccount(request.getEmail());
                 boolean isRegistered = userRepository.existsByEmail(request.getEmail());
                 if (isRegistered) {
                     log.warn("이메일 인증 요청 실패 - 이미 가입된 이메일: {}", request.getEmail());
@@ -71,6 +74,9 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
                 log.warn("이메일 인증 요청 과다 - 이메일: {}", request.getEmail());
                 throw new BusinessException(ErrorCode.TOO_MANY_VERIFICATION_REQUESTS);
             }
+
+            // 기존 인증 코드 만료 처리
+            expireExistingVerifications(request.getEmail(), request.getPurpose());
 
             String verificationCode = generateVerificationCode();
 
@@ -197,5 +203,46 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
         LocalDateTime threshold = LocalDateTime.now().minusDays(7);  // 7일 이상 지난 데이터
         emailVerificationRepository.softDeleteOldRecords(threshold);
         log.info("Cleaned up old email verification records before {}", threshold);
+    }
+
+    /**
+     * 탈퇴한 계정의 재가입 제한 기간을 검증합니다.
+     * @param email 가입하려는 이메일
+     * @throws BusinessException 재가입 제한 기간인 경우
+     */
+    private void validateDeletedAccount(String email) {
+        userRepository.findDeletedAccountByEmail(email).ifPresent(deletedUser -> {
+            LocalDateTime deletedAt = deletedUser.getDeletedAt();
+            LocalDateTime restrictedUntil = deletedAt.plusMonths(1);
+
+            if (LocalDateTime.now().isBefore(restrictedUntil)) {
+                long daysUntilAvailable = ChronoUnit.DAYS.between(
+                        LocalDateTime.now(),
+                        restrictedUntil
+                );
+                throw new BusinessException(
+                        ErrorCode.SIGNUP_RESTRICTED_DELETED_ACCOUNT,
+                        String.format("탈퇴한 계정은 %d일 후에 재가입이 가능합니다.", daysUntilAvailable)
+                );
+            }
+        });
+    }
+
+    /**
+     * 기존 인증 코드들을 만료 처리합니다.
+     */
+    private void expireExistingVerifications(String email, EmailVerificationPurpose purpose) {
+        List<EmailVerificationEntity> existingVerifications = emailVerificationRepository
+                .findByEmailAndPurposeAndVerifiedFalseAndDeletedAtIsNull(email, purpose);
+
+        if (!existingVerifications.isEmpty()) {
+            LocalDateTime now = LocalDateTime.now();
+            existingVerifications.forEach(verification -> {
+                verification.updateExpiresAt(now);
+                verification.updateDeletedAt(now);
+            });
+            emailVerificationRepository.saveAll(existingVerifications);
+            log.debug("기존 인증 코드 만료 처리 완료 - 이메일: {}, 처리 건수: {}", email, existingVerifications.size());
+        }
     }
 }
