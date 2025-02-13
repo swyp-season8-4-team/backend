@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import org.swyp.dessertbee.mate.entity.Mate;
+import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.util.List;
 import java.util.UUID;
@@ -15,6 +16,7 @@ public class MateDetailResponse {
 
     private UUID mateUuid;
     private UUID userUuid;
+    private String nickname;
     private String title;
     private String content;
     private Boolean recruitYn;
@@ -26,11 +28,12 @@ public class MateDetailResponse {
     public static MateDetailResponse fromEntity(Mate mate,
                                                 List<String> mateImage,
                                                 String category,
-                                                UUID userUuid){
+                                                UserEntity creator){
 
         return MateDetailResponse.builder()
                 .mateUuid(mate.getMateUuid())
-                .userUuid(userUuid)
+                .userUuid(creator.getUserUuid())
+                .nickname(creator.getNickname())
                 .title(mate.getTitle())
                 .content(mate.getContent())
                 .recruitYn(mate.getRecruitYn())

@@ -9,15 +9,15 @@ import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.mate.dto.request.MateCreateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.mate.entity.Mate;
-import org.swyp.dessertbee.mate.entity.MateMember;
-import org.swyp.dessertbee.mate.entity.MateMemberGrade;
 import org.swyp.dessertbee.mate.repository.MateCategoryRepository;
 import org.swyp.dessertbee.mate.repository.MateMemberRepository;
 import org.swyp.dessertbee.mate.repository.MateRepository;
+import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -84,10 +84,11 @@ public class MateService {
         //mateCategoryId로 name 조회
         String mateCategory = String.valueOf(mateCategoryRepository.findCategoryNameById( mate.getMateCategoryId()));
 
-        //userId로 userUuid 조회
-        UUID userUuid = userRepository.findUserUuidById(mate.getUserId());
 
-        return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, userUuid);
+        // 사용자 UUID 조회
+        UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
+
+        return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, creator);
 
     }
 
@@ -134,4 +135,27 @@ public class MateService {
         }
 
     }
+
+    public List<MateDetailResponse> getMates(int from, int to) {
+        int limit = to - from;
+
+
+        return  mateRepository.findAllByDeletedAtIsNull(from, limit)
+                .stream()
+                .map(mate ->{
+                    // 1️⃣ 사진 조회
+                    List<String> mateImages = imageService.getImagesByTypeAndId(ImageType.MATE, mate.getMateId());
+
+                    // 2️⃣ 카테고리 이름 조회
+                    String mateCategory = mateCategoryRepository.findCategoryNameById(mate.getMateCategoryId());
+
+                    // 3️⃣ 사용자 UUID 조회
+                    UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
+
+                    System.out.println(creator);
+                    // 4️⃣ DTO 변환
+                    return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator);
+                })
+                .collect(Collectors.toList());
+        }
 }
