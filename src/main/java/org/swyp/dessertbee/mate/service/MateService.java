@@ -9,15 +9,18 @@ import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.mate.dto.request.MateCreateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.mate.entity.Mate;
-import org.swyp.dessertbee.mate.entity.MateMember;
-import org.swyp.dessertbee.mate.entity.MateMemberGrade;
 import org.swyp.dessertbee.mate.repository.MateCategoryRepository;
 import org.swyp.dessertbee.mate.repository.MateMemberRepository;
 import org.swyp.dessertbee.mate.repository.MateRepository;
+import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -31,6 +34,7 @@ public class MateService {
     private final MateCategoryRepository mateCategoryRepository;
     private final MateMemberService mateMemberService;
     private final ImageService imageService;
+    private static final Logger log = LoggerFactory.getLogger(MateService.class); // Logger 추가
 
 
     /** 메이트 등록 */
@@ -84,10 +88,11 @@ public class MateService {
         //mateCategoryId로 name 조회
         String mateCategory = String.valueOf(mateCategoryRepository.findCategoryNameById( mate.getMateCategoryId()));
 
-        //userId로 userUuid 조회
-        UUID userUuid = userRepository.findUserUuidById(mate.getUserId());
 
-        return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, userUuid);
+        // 사용자 UUID 조회
+        UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
+
+        return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, creator);
 
     }
 
@@ -134,4 +139,25 @@ public class MateService {
         }
 
     }
+
+    public List<MateDetailResponse> getMates(int from, int to) {
+        int limit = to - from;
+
+        try {
+            return mateRepository.findAllByDeletedAtIsNull(from, limit)
+                    .stream()
+                    .map(mate -> {
+                        List<String> mateImages = imageService.getImagesByTypeAndId(ImageType.MATE, mate.getMateId());
+                        String mateCategory = mateCategoryRepository.findCategoryNameById(mate.getMateCategoryId());
+                        UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
+
+                        return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator);
+                    })
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("메이트 목록 조회 실패: from={}, to={}", from, to, e);
+            return Collections.emptyList(); // 전체 실패 시 빈 리스트 반환
+        }
+    }
+
 }

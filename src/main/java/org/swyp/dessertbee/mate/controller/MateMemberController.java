@@ -22,9 +22,9 @@ public class MateMemberController {
      * 디저트 메이트 멤버 전체 조회
      * */
     @GetMapping("/members")
-    public ResponseEntity<List<MateMemberResponse>> getMemberList(@PathVariable UUID mateUuid) {
+    public ResponseEntity<List<MateMemberResponse>> getMembers(@PathVariable UUID mateUuid) {
 
-        return ResponseEntity.ok(memberService.getMemberList(mateUuid));
+        return ResponseEntity.ok(memberService.getMembers(mateUuid));
     }
 
     /**
