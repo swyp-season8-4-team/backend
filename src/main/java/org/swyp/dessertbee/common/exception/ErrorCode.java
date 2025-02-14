@@ -34,12 +34,19 @@ public enum ErrorCode {
     USER_DELETED(HttpStatus.GONE, "U002", "탈퇴한 사용자입니다."),
     INVALID_USER_STATUS(HttpStatus.BAD_REQUEST, "U003", "유효하지 않은 사용자 상태입니다."),
     UNAUTHORIZED_ACCESS(HttpStatus.FORBIDDEN, "U004", "해당 정보에 대한 접근 권한이 없습니다."),
-    INVALID_USER_UUID(HttpStatus.BAD_REQUEST, "U005", "유효하지 않은 사용자 식별자입니다.");
+    INVALID_USER_UUID(HttpStatus.BAD_REQUEST, "U005", "유효하지 않은 사용자 식별자입니다."),
 
     // 사장님 권한
     /**
      * 필요한 에러코드에 대하 추가적으로 더 적으시면 됩니다. - 영민 -
      */
+    // File
+    FILE_UPLOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "F001", "파일 업로드에 실패했습니다."),
+    FILE_UPDATE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "F002", "파일 업데이트에 실패했습니다."),
+    FILE_DELETE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "F003", "파일 삭제에 실패했습니다."),
+    INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "F004", "지원하지 않는 파일 형식입니다."),
+    FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "F005", "파일 크기가 제한을 초과했습니다.");
+
 
     private final HttpStatus httpStatus;
     private final String code;
