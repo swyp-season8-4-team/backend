@@ -11,8 +11,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.auth.dto.TokenResponse;
 import org.swyp.dessertbee.auth.dto.login.LoginRequest;
 import org.swyp.dessertbee.auth.dto.login.LoginResponse;
@@ -40,10 +42,11 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "잘못된 요청"),
             @ApiResponse(responseCode = "409", description = "이미 존재하는 이메일")
     })
-    @PostMapping("/signup")
+    @PostMapping(value = "/signup", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SignUpResponse> signup(
             @RequestHeader("X-Email-Verification-Token") String verificationToken,
-            @Valid @RequestBody SignUpRequest request
+            @Valid @RequestPart(value = "data") SignUpRequest request,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage
     ) throws BadRequestException {
         log.debug("회원가입 요청: {}", request.getEmail());
 
@@ -52,8 +55,8 @@ public class AuthController {
             throw new BadRequestException("비밀번호가 일치하지 않습니다.");
         }
 
-        // 회원가입 처리
-        SignUpResponse response = authService.signup(request, verificationToken);
+        // 회원가입 처리 (프로필 이미지 포함)
+        SignUpResponse response = authService.signup(request, profileImage, verificationToken);
         return ResponseEntity.ok(response);
     }
 

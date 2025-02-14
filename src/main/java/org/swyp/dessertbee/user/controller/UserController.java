@@ -3,8 +3,12 @@ package org.swyp.dessertbee.user.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.user.dto.NicknameValidationRequestDto;
 import org.swyp.dessertbee.user.dto.UserDetailResponseDto;
 import org.swyp.dessertbee.user.dto.UserResponseDto;
@@ -50,9 +54,21 @@ public class UserController {
      * 현재 인증된 사용자의 정보를 수정합니다.
      * @return 사용자 상세 정보
      */
-    @PatchMapping("/me")
-    public ResponseEntity<UserDetailResponseDto> updateMyInfo(@RequestBody @Valid UserUpdateRequestDto updateRequest) {
-        UserDetailResponseDto response = userService.updateMyInfo(updateRequest);
+    @PatchMapping(value="/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UserDetailResponseDto> updateMyInfo(@Valid @RequestPart(value = "data", required = false) UserUpdateRequestDto updateRequest,
+                                                              @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
+
+        // 최소한 하나의 업데이트 데이터가 있는지 검증
+        if (updateRequest == null && (profileImage == null || profileImage.isEmpty())) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "업데이트할 정보가 없습니다.");
+        }
+
+        // null인 경우 빈 DTO 생성
+        if (updateRequest == null) {
+            updateRequest = UserUpdateRequestDto.builder().build();
+        }
+
+        UserDetailResponseDto response = userService.updateMyInfo(updateRequest, profileImage);
         return ResponseEntity.ok(response);
     }
 
