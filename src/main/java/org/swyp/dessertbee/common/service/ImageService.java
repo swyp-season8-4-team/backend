@@ -2,10 +2,13 @@ package org.swyp.dessertbee.common.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.Image;
 import org.swyp.dessertbee.common.entity.ImageType;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.repository.ImageRepository;
 
 import java.util.List;
@@ -14,6 +17,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ImageService {
 
     private final ImageRepository imageRepository;
@@ -43,16 +47,22 @@ public class ImageService {
     public void uploadAndSaveImage(MultipartFile file, ImageType refType, Long refId, String folder) {
         if (file == null) return;
 
-        String url = s3Service.uploadFile(file, folder);
-        Image image = Image.builder()
-                .refType(refType)
-                .refId(refId)
-                .path(folder)
-                .fileName(file.getOriginalFilename())
-                .url(url)
-                .build();
+        try {
+            String url = s3Service.uploadFile(file, folder);
+            Image image = Image.builder()
+                    .refType(refType)
+                    .refId(refId)
+                    .path(folder)
+                    .fileName(file.getOriginalFilename())
+                    .url(url)
+                    .build();
 
-        imageRepository.save(image);
+            imageRepository.save(image);
+            log.info("이미지 업로드 성공 - type: {}, refId: {}", refType, refId);
+        } catch (Exception e) {
+            log.error("이미지 업로드 실패 - type: {}, refId: {}", refType, refId, e);
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR);
+        }
     }
 
     /** 특정 refType과 refId에 해당하는 이미지 조회 */
