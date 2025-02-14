@@ -14,7 +14,10 @@ import org.swyp.dessertbee.mate.repository.MateMemberRepository;
 import org.swyp.dessertbee.mate.repository.MateRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -31,6 +34,7 @@ public class MateService {
     private final MateCategoryRepository mateCategoryRepository;
     private final MateMemberService mateMemberService;
     private final ImageService imageService;
+    private static final Logger log = LoggerFactory.getLogger(MateService.class); // Logger 추가
 
 
     /** 메이트 등록 */
@@ -139,23 +143,21 @@ public class MateService {
     public List<MateDetailResponse> getMates(int from, int to) {
         int limit = to - from;
 
+        try {
+            return mateRepository.findAllByDeletedAtIsNull(from, limit)
+                    .stream()
+                    .map(mate -> {
+                        List<String> mateImages = imageService.getImagesByTypeAndId(ImageType.MATE, mate.getMateId());
+                        String mateCategory = mateCategoryRepository.findCategoryNameById(mate.getMateCategoryId());
+                        UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
 
-        return  mateRepository.findAllByDeletedAtIsNull(from, limit)
-                .stream()
-                .map(mate ->{
-                    // 1️⃣ 사진 조회
-                    List<String> mateImages = imageService.getImagesByTypeAndId(ImageType.MATE, mate.getMateId());
-
-                    // 2️⃣ 카테고리 이름 조회
-                    String mateCategory = mateCategoryRepository.findCategoryNameById(mate.getMateCategoryId());
-
-                    // 3️⃣ 사용자 UUID 조회
-                    UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
-
-                    System.out.println(creator);
-                    // 4️⃣ DTO 변환
-                    return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator);
-                })
-                .collect(Collectors.toList());
+                        return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator);
+                    })
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("메이트 목록 조회 실패: from={}, to={}", from, to, e);
+            return Collections.emptyList(); // 전체 실패 시 빈 리스트 반환
         }
+    }
+
 }
