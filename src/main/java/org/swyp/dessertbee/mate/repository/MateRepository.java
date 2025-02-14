@@ -29,5 +29,4 @@ public interface MateRepository extends JpaRepository<Mate, Long> {
     List<Mate> findAllByDeletedAtIsNull(int from, int limit);
 
 
-
 }

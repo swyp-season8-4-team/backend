@@ -57,7 +57,6 @@ public class MateService {
                         .build()
         );
 
-
         // 메이트 대표 사진 S3 업로드 및 저장
         if (mateImage != null && !mateImage.isEmpty()) {
             String folder = "mate/" + mate.getMateId();
@@ -81,13 +80,11 @@ public class MateService {
         Mate mate = mateRepository.findByMateIdAndDeletedAtIsNull(mateId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 디저트메이트입니다."));
 
-
         //디저트메이트 사진 조회
         List<String> mateImage = imageService.getImagesByTypeAndId(ImageType.MATE, mateId);
 
         //mateCategoryId로 name 조회
         String mateCategory = String.valueOf(mateCategoryRepository.findCategoryNameById( mate.getMateCategoryId()));
-
 
         // 사용자 UUID 조회
         UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
@@ -159,5 +156,4 @@ public class MateService {
             return Collections.emptyList(); // 전체 실패 시 빈 리스트 반환
         }
     }
-
 }

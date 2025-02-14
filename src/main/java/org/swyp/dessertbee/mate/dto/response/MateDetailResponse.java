@@ -13,7 +13,6 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 public class MateDetailResponse {
-
     private UUID mateUuid;
     private UUID userUuid;
     private String nickname;

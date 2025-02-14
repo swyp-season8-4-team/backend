@@ -6,9 +6,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.swyp.dessertbee.mate.entity.MateCategory;
 
-import java.util.List;
-import java.util.Optional;
-
 @Repository
 public interface MateCategoryRepository extends JpaRepository<MateCategory, Long> {
 

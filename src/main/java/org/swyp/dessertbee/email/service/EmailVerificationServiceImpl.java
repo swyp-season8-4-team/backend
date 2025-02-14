@@ -41,7 +41,6 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     private final UserRepository userRepository;
 
 
-
     @Value("${spring.mail.username}")
     private String fromEmail;
     private final String serviceName = "DesserBee";

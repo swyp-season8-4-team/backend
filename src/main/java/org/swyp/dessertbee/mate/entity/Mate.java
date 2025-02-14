@@ -30,7 +30,6 @@ public class Mate {
     @UuidGenerator()
     private UUID mateUuid;
 
-
     @Column(name = "user_id")
     private Long userId;
 
@@ -60,7 +59,6 @@ public class Mate {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
-
 
     public void update(String title, String content, Boolean recruitYn, Long mateCategoryId){
         this.title = title;

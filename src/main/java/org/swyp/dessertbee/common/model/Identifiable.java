@@ -1,5 +1,7 @@
 package org.swyp.dessertbee.common.model;
 
+import java.util.UUID;
+
 public interface Identifiable {
-    Long getId();
+    UUID getUuid();
 }

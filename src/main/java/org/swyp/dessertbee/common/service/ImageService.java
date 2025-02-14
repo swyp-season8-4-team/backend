@@ -100,8 +100,6 @@ public class ImageService {
     private void deleteImages(List<Image> images) {
         if (images.isEmpty()) return;
 
-
-
         //image filename 이 아닌 url 보내주기
         images.forEach(image -> s3Service.deleteFile(image.getPath(), image.getUrl()));
 

@@ -65,7 +65,6 @@ public class S3Service {
         String key = url.substring(baseUrlLength);
 
         try {
-
             s3Client.deleteObject(DeleteObjectRequest.builder()
                     .bucket(bucketName)
                     .key(key)

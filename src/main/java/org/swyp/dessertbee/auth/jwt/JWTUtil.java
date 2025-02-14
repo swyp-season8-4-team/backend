@@ -34,7 +34,6 @@ public class JWTUtil {
     private final long SHORT_REFRESH_TOKEN_EXPIRE = 10 * 24 * 60 * 60 * 1000L;   // 10일
     private final long LONG_REFRESH_TOKEN_EXPIRE = 30 * 24 * 60 * 60 * 1000L;   // 30일
 
-
     public JWTUtil(
             @Value("${spring.jwt.secret.access}") String accessSecret,
             @Value("${spring.jwt.secret.refresh}") String refreshSecret
