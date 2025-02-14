@@ -11,16 +11,22 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.auth.jwt.JWTUtil;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.email.dto.EmailVerificationRequestDto;
 import org.swyp.dessertbee.email.dto.EmailVerificationResponseDto;
 import org.swyp.dessertbee.email.dto.EmailVerifyRequestDto;
 import org.swyp.dessertbee.email.dto.EmailVerifyResponseDto;
 import org.swyp.dessertbee.email.entity.EmailVerificationEntity;
+import org.swyp.dessertbee.email.entity.EmailVerificationPurpose;
 import org.swyp.dessertbee.email.repository.EmailVerificationRepository;
+import org.swyp.dessertbee.user.repository.UserRepository;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import org.thymeleaf.context.Context;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Random;
 
 @Service
@@ -32,6 +38,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     private final EmailVerificationRepository emailVerificationRepository;
     private final JWTUtil jwtUtil;
     private final SpringTemplateEngine templateEngine;
+    private final UserRepository userRepository;
 
 
     @Value("${spring.mail.username}")
@@ -46,68 +53,103 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     @Transactional
     public EmailVerificationResponseDto sendVerificationEmail(EmailVerificationRequestDto request) {
 
-        // 최근 30분간 요청 횟수 체크
-        LocalDateTime thirtyMinutesAgo = LocalDateTime.now().minusMinutes(30);
-        long recentRequests = emailVerificationRepository
-                .countRecentVerificationRequests(request.getEmail(), thirtyMinutesAgo);
+        try {
 
-        if (recentRequests >= 10) {
-            throw new InvalidVerificationException("너무 많은 인증 요청이 있었습니다. 잠시 후 다시 시도해주세요.");
-        }
+            if (request.getPurpose() == EmailVerificationPurpose.SIGNUP) {
+                validateDeletedAccount(request.getEmail());
+                boolean isRegistered = userRepository.existsByEmail(request.getEmail());
+                if (isRegistered) {
+                    log.warn("이메일 인증 요청 실패 - 이미 가입된 이메일: {}", request.getEmail());
+                    throw new BusinessException(ErrorCode.DUPLICATE_EMAIL, "이미 가입된 이메일입니다.");
+                }
+            }
 
-        String verificationCode = generateVerificationCode();
+            // 최근 30분간 요청 횟수 체크
+            LocalDateTime thirtyMinutesAgo = LocalDateTime.now().minusMinutes(30);
+            long recentRequests = emailVerificationRepository
+                    .countRecentVerificationRequests(request.getEmail(), thirtyMinutesAgo);
 
-        // 이메일 인증 정보 저장
-        EmailVerificationEntity verification = EmailVerificationEntity.builder()
-                .email(request.getEmail())
-                .code(verificationCode)
-                .purpose(request.getPurpose())
-                .verified(false)
-                .expiresAt(LocalDateTime.now().plusMinutes(5))
-                .build();
+            if (recentRequests >= 10) {
+                log.warn("이메일 인증 요청 과다 - 이메일: {}", request.getEmail());
+                throw new BusinessException(ErrorCode.TOO_MANY_VERIFICATION_REQUESTS);
+            }
 
-        emailVerificationRepository.save(verification);
+            // 기존 인증 코드 만료 처리
+            expireExistingVerifications(request.getEmail(), request.getPurpose());
 
-        // 이메일 발송
-        sendEmail(request.getEmail(), verificationCode);
+            String verificationCode = generateVerificationCode();
 
-        return EmailVerificationResponseDto.builder()
-                .message("인증 코드가 발송되었습니다.")
-                .expirationMinutes(5)
-                .build();
+            // 이메일 인증 정보 저장
+            EmailVerificationEntity verification = EmailVerificationEntity.builder()
+                    .email(request.getEmail())
+                    .code(verificationCode)
+                    .purpose(request.getPurpose())
+                    .verified(false)
+                    .expiresAt(LocalDateTime.now().plusMinutes(5))
+                    .build();
+
+            emailVerificationRepository.save(verification);
+
+            // 이메일 발송
+            sendEmail(request.getEmail(), verificationCode);
+
+            return EmailVerificationResponseDto.builder()
+                    .message("인증 코드가 발송되었습니다.")
+                    .expirationMinutes(5)
+                    .build();
+        } catch (BusinessException e) {
+                log.warn("이메일 인증 요청 실패 - 이메일: {}, 사유: {}", request.getEmail(), e.getMessage());
+                throw e;
+            } catch(Exception e){
+                log.error("이메일 인증 처리 중 오류 발생 - 이메일: {}", request.getEmail(), e);
+                throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+            }
     }
 
     @Override
     @Transactional
     public EmailVerifyResponseDto verifyEmail(EmailVerifyRequestDto request) {
-        // 이메일 검증 정보 조회
-        EmailVerificationEntity verification = emailVerificationRepository
-                .findByEmailAndCodeAndPurpose(request.getEmail(), request.getCode(), request.getPurpose())
-                .orElseThrow(() -> new InvalidVerificationException("유효하지 않은 인증 코드입니다."));
+        try {
+            // 이메일 검증 정보 조회
+            EmailVerificationEntity verification = emailVerificationRepository
+                    .findByEmailAndCodeAndPurpose(request.getEmail(), request.getCode(), request.getPurpose())
+                    .orElseThrow(() -> {
+                        log.warn("이메일 인증 실패 - 유효하지 않은 코드, 이메일: {}", request.getEmail());
+                        return new BusinessException(ErrorCode.INVALID_VERIFICATION_TOKEN);
+                    });
 
-        // 만료 여부 확인
-        if (verification.isExpired()) {
-            throw new InvalidVerificationException("만료된 인증 코드입니다.");
+            // 만료 여부 확인
+            if (verification.isExpired()) {
+                log.warn("이메일 인증 실패 - 만료된 인증 코드, 이메일: {}", request.getEmail());
+                throw new BusinessException(ErrorCode.EXPIRED_VERIFICATION_TOKEN, "만료된 인증 코드입니다.");
+            }
+
+            // 이미 검증된 코드인지 확인
+            if (verification.isVerified()) {
+                log.warn("이메일 인증 실패 - 이미 사용된 코드, 이메일: {}", request.getEmail());
+                throw new BusinessException(ErrorCode.INVALID_VERIFICATION_TOKEN, "이미 사용된 인증 코드입니다.");
+            }
+
+            // 검증 완료 처리
+            verification.verify();
+
+            // 인증 토큰 생성
+            String verificationToken = jwtUtil.createEmailVerificationToken(
+                    request.getEmail(),
+                    request.getPurpose()
+            );
+
+            return EmailVerifyResponseDto.builder()
+                    .isVerified(true)
+                    .verificationToken(verificationToken)
+                    .build();
+        } catch (BusinessException e) {
+            log.warn("이메일 인증 실패 - 이메일: {}, 사유: {}", request.getEmail(), e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("이메일 인증 중 알 수 없는 오류 발생 - 이메일: {}", request.getEmail(), e);
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "이메일 인증 처리 중 오류가 발생했습니다.");
         }
-
-        // 이미 검증된 코드인지 확인
-        if (verification.isVerified()) {
-            throw new InvalidVerificationException("이미 사용된 인증 코드입니다.");
-        }
-
-        // 검증 완료 처리
-        verification.verify();
-
-        // 인증 토큰 생성
-        String verificationToken = jwtUtil.createEmailVerificationToken(
-                request.getEmail(),
-                request.getPurpose()
-        );
-
-        return EmailVerifyResponseDto.builder()
-                .isVerified(true)
-                .verificationToken(verificationToken)
-                .build();
     }
 
 
@@ -146,14 +188,8 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
             log.debug("Verification email sent to: {}", toEmail);
 
         } catch (Exception e) {
-            log.error("Failed to send email to: {}", toEmail, e);
-            throw new RuntimeException("이메일 발송에 실패했습니다.", e);
-        }
-    }
-
-    public static class InvalidVerificationException extends RuntimeException {
-        public InvalidVerificationException(String message) {
-            super(message);
+            log.error("이메일 발송 실패 - 이메일: {}", toEmail, e);
+            throw new BusinessException(ErrorCode.EMAIL_SENDING_FAILED);
         }
     }
 
@@ -166,5 +202,46 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
         LocalDateTime threshold = LocalDateTime.now().minusDays(7);  // 7일 이상 지난 데이터
         emailVerificationRepository.softDeleteOldRecords(threshold);
         log.info("Cleaned up old email verification records before {}", threshold);
+    }
+
+    /**
+     * 탈퇴한 계정의 재가입 제한 기간을 검증합니다.
+     * @param email 가입하려는 이메일
+     * @throws BusinessException 재가입 제한 기간인 경우
+     */
+    private void validateDeletedAccount(String email) {
+        userRepository.findDeletedAccountByEmail(email).ifPresent(deletedUser -> {
+            LocalDateTime deletedAt = deletedUser.getDeletedAt();
+            LocalDateTime restrictedUntil = deletedAt.plusMonths(1);
+
+            if (LocalDateTime.now().isBefore(restrictedUntil)) {
+                long daysUntilAvailable = ChronoUnit.DAYS.between(
+                        LocalDateTime.now(),
+                        restrictedUntil
+                );
+                throw new BusinessException(
+                        ErrorCode.SIGNUP_RESTRICTED_DELETED_ACCOUNT,
+                        String.format("탈퇴한 계정은 %d일 후에 재가입이 가능합니다.", daysUntilAvailable)
+                );
+            }
+        });
+    }
+
+    /**
+     * 기존 인증 코드들을 만료 처리합니다.
+     */
+    private void expireExistingVerifications(String email, EmailVerificationPurpose purpose) {
+        List<EmailVerificationEntity> existingVerifications = emailVerificationRepository
+                .findByEmailAndPurposeAndVerifiedFalseAndDeletedAtIsNull(email, purpose);
+
+        if (!existingVerifications.isEmpty()) {
+            LocalDateTime now = LocalDateTime.now();
+            existingVerifications.forEach(verification -> {
+                verification.updateExpiresAt(now);
+                verification.updateDeletedAt(now);
+            });
+            emailVerificationRepository.saveAll(existingVerifications);
+            log.debug("기존 인증 코드 만료 처리 완료 - 이메일: {}, 처리 건수: {}", email, existingVerifications.size());
+        }
     }
 }

@@ -35,10 +35,14 @@ public class SecurityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomSuccessHandler customSuccessHandler;
     private final JWTUtil jwtUtil;
-    private final AuthService authService;
 
     @Value("${spring.graphql.cors.allowed-origins}")
     private String corsAllowedOrigins;
+
+    @Bean
+    public JWTFilter jwtFilter() {
+        return new JWTFilter(jwtUtil);
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -62,15 +66,15 @@ public class SecurityConfig {
                                 .anyRequest().permitAll()
                 )
                 .oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(endpoint ->
+                                endpoint.baseUri("/api/oauth2/authorization"))
                         .loginProcessingUrl("/api/oauth2/code")
                         .userInfoEndpoint(userInfo ->
                                 userInfo.userService(customOAuth2UserService))
                         .successHandler(customSuccessHandler)
                 )
-                .addFilterBefore(new JWTFilter(jwtUtil, authService),
-                        UsernamePasswordAuthenticationFilter.class);
-
-        // CORS 설정 추가
+                .addFilterBefore(new JWTFilter(jwtUtil),
+                        UsernamePasswordAuthenticationFilter.class);        // CORS 설정 추가
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
         return http.build();

@@ -8,7 +8,6 @@ import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.service.ImageService;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/images")

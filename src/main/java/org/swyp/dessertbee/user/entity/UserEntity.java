@@ -53,9 +53,6 @@ public class UserEntity {
     @Column(length = 50)
     private String nickname;
 
-    @Column(columnDefinition = "JSON")
-    private String preferences;
-
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -67,7 +64,7 @@ public class UserEntity {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    @Column(name = "phone_number", length = 20)
+    @Column(name = "phone_number", length = 13)
     private String phoneNumber;
 
     @Column(name = "address", length = 255)
@@ -77,6 +74,7 @@ public class UserEntity {
     @Column(name = "gender", length = 6)
     private Gender gender;
 
+    @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserRoleEntity> userRoles = new HashSet<>();
 
@@ -85,6 +83,10 @@ public class UserEntity {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserPreferenceEntity> userPreferences = new HashSet<>();
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mbti_id")
+    private MbtiEntity mbti;
 
     public void addRole(RoleEntity role) {
         UserRoleEntity userRole = UserRoleEntity.builder()
@@ -102,5 +104,15 @@ public class UserEntity {
     public enum Gender {
         MALE,
         FEMALE
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        if (phoneNumber != null) {
+            // 하이픈 제거 후 형식 통일
+            String numberOnly = phoneNumber.replaceAll("-", "");
+            this.phoneNumber = numberOnly.replaceFirst("(\\d{3})(\\d{4})(\\d{4})", "$1-$2-$3");
+        } else {
+            this.phoneNumber = null;
+        }
     }
 }

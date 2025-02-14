@@ -2,6 +2,7 @@ package org.swyp.dessertbee.common.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.Image;
@@ -10,7 +11,6 @@ import org.swyp.dessertbee.common.repository.ImageRepository;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -64,9 +64,7 @@ public class ImageService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 여러 refId에 해당하는 이미지 한번에 조회
-     */
+    /** 여러 refId에 해당하는 이미지 한번에 조회 */
     public Map<Long, List<String>> getImagesByTypeAndIds(ImageType type, List<Long> refIds) {
         List<Image> images = imageRepository.findByRefTypeAndRefIdIn(type, refIds);
 
@@ -81,6 +79,13 @@ public class ImageService {
     @Transactional
     public void deleteImagesByRefId(ImageType refType, Long refId) {
         List<Image> images = imageRepository.findByRefTypeAndRefId(refType, refId);
+
+        String result = images.stream()
+                .map(image -> "ID: " + image.getId() + ", URL: " + image.getUrl()) // 원하는 필드 선택
+                .collect(Collectors.joining("\n"));
+
+        System.out.println(result);
+
         deleteImages(images);
     }
 
@@ -95,7 +100,9 @@ public class ImageService {
     private void deleteImages(List<Image> images) {
         if (images.isEmpty()) return;
 
-        images.forEach(image -> s3Service.deleteFile(image.getPath(), image.getFileName()));
+        //image filename 이 아닌 url 보내주기
+        images.forEach(image -> s3Service.deleteFile(image.getPath(), image.getUrl()));
+
         imageRepository.deleteAll(images);
     }
 

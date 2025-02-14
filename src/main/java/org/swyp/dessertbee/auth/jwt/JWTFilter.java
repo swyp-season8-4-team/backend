@@ -3,7 +3,6 @@ package org.swyp.dessertbee.auth.jwt;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -15,9 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.swyp.dessertbee.auth.dto.CustomOAuth2User;
-import org.swyp.dessertbee.auth.dto.TokenResponse;
-import org.swyp.dessertbee.auth.service.AuthService;
-import org.swyp.dessertbee.user.dto.UserDTO;
+import org.swyp.dessertbee.user.dto.UserOAuthDto;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -33,8 +30,6 @@ import java.util.stream.Collectors;
 public class JWTFilter extends OncePerRequestFilter {
 
     private final JWTUtil jwtUtil;
-    private final AuthService authService;
-
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
 
@@ -88,12 +83,12 @@ public class JWTFilter extends OncePerRequestFilter {
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                 .collect(Collectors.toList());
 
-        UserDTO userDTO = UserDTO.builder()
+        UserOAuthDto userOAuthDto = UserOAuthDto.builder()
                 .email(email)
                 .roles(roles)
                 .build();
 
-        CustomOAuth2User principal = new CustomOAuth2User(userDTO, new HashMap<>());
+        CustomOAuth2User principal = new CustomOAuth2User(userOAuthDto, new HashMap<>());
 
         return new UsernamePasswordAuthenticationToken(principal, null, authorities);
     }
