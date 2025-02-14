@@ -38,7 +38,7 @@ public class MateMemberController {
     }
 
     /**
-     * 디저트 메이트 멤버 수락 api
+     * 디저트 메이트 멤버 신청 수락 api
      * */
     @PatchMapping("/apply")
     public ResponseEntity<String> acceptMemeber(@PathVariable UUID mateUuid, UUID userUuid) {
@@ -47,5 +47,15 @@ public class MateMemberController {
         return ResponseEntity.ok("팀원이 되었습니다~!");
     }
 
+    /**
+     * 디저트 메이트 멤버 신청 거절 api
+     * */
+    @DeleteMapping("/apply")
+    public ResponseEntity<String> rejectMemeber(@PathVariable UUID mateUuid, UUID userUuid) {
+
+        memberService.rejectMember(mateUuid, userUuid);
+
+        return ResponseEntity.ok("거절 되었습니다.");
+    }
 
 }
