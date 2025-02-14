@@ -35,7 +35,6 @@ public class MateMemberService {
 
     /**
      *
-     *
      * 디저트 메이트 생성 시 생성자 등록
      * */
     public void addCreatorAsMember(UUID mateUuid, Long userId) {
@@ -142,6 +141,12 @@ public class MateMemberService {
             throw new IllegalArgumentException("존재하지 않는 유저입니다.");
         }
 
+        MateMember mateMember = mateMemberRepository.findByMateIdAndUserId(mateId, userId);
+
+        if(mateMember != null) {
+            throw new IllegalArgumentException("신청한 유저입니다. 신청 불가능합니다.");
+        }
+
         //mateMember 테이블에 신청자 등록
         mateMemberRepository.save(
                 MateMember.builder()
@@ -153,6 +158,9 @@ public class MateMemberService {
         );
     }
 
+    /**
+     * 디저트 메이트 멤버 신청 수락 api
+     * */
     public void acceptMember(UUID mateUuid, UUID userUuid) {
         //mateUuid로 mateId 조회
         Long mateId = mateRepository.findMateIdByMateUuid(mateUuid);
@@ -165,5 +173,41 @@ public class MateMemberService {
         Long userId = userRepository.findIdByUserUuid(userUuid);
 
         mateMemberRepository.updateApprovalYn(mateId, userId);
+    }
+
+    /**
+     * 디저트 메이트 멤버 신청 거절 api
+     * */
+    public void rejectMember(UUID mateUuid, UUID userUuid) {
+
+        //mateUuid로 mateId 조회
+        Long mateId = mateRepository.findMateIdByMateUuid(mateUuid);
+
+
+        //mateId 존재 여부 확인
+        mateRepository.findByMateIdAndDeletedAtIsNull(mateId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 디저트메이트입니다."));
+
+        //userUuid로 userId 조회
+        Long userId = userRepository.findIdByUserUuid(userUuid);
+        if (userId == null) {
+            throw new IllegalArgumentException("해당하는 사용자를 찾을 수 없습니다.");
+        }
+
+        MateMember mateMember = mateMemberRepository.findByMateIdAndUserId(mateId, userId);
+        if (mateMember == null) {
+            throw new IllegalArgumentException("해당하는 멤버가 존재하지 않습니다.");
+        }
+
+        try {
+            mateMember.softDelete();
+
+            // 변경된 모든 멤버 저장
+            mateMemberRepository.save(mateMember);
+
+        }catch (Exception e){
+            System.out.println("❌ 디저트메이트 멤버 삭제 중 오류 발생: " + e.getMessage());
+            throw new RuntimeException("디저트메이트 멤버 삭제 실패: " + e.getMessage(), e);
+        }
     }
 }

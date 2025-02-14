@@ -24,4 +24,6 @@ public interface MateMemberRepository extends JpaRepository<MateMember, Long> {
     @Modifying
     @Query("UPDATE MateMember m SET m.approvalYn = true WHERE m.mateId = :mateId AND m.userId = :userId")
     void updateApprovalYn(Long mateId, Long userId);
+
+    MateMember findByMateIdAndUserId(Long mateId, Long userId);
 }
