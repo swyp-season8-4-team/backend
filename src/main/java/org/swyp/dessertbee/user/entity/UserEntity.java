@@ -34,9 +34,6 @@ public class UserEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "image_id")
-    private Long imageId;
-
     @Column(name = "user_uuid", nullable = false, unique = true, updatable = false)
     @UuidGenerator
     private UUID userUuid;

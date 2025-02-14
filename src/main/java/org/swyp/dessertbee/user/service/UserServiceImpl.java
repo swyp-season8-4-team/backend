@@ -6,9 +6,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.auth.entity.AuthEntity;
+import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
+import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.preference.entity.PreferenceEntity;
 import org.swyp.dessertbee.preference.entity.UserPreferenceEntity;
 import org.swyp.dessertbee.preference.repository.PreferenceRepository;
@@ -37,6 +40,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final MbtiRepository mbtiRepository;
     private final PreferenceRepository preferenceRepository;
+    private final ImageService imageService;
+
 
 
     /**
@@ -85,6 +90,12 @@ public class UserServiceImpl implements UserService {
      * UserEntity를 UserDetailResponseDto로 변환합니다.
      */
     private UserDetailResponseDto convertToDetailResponse(UserEntity user) {
+
+        // 프로필 이미지 URL 조회
+        List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
+        String profileImageUrl = profileImages.isEmpty() ? null : profileImages.get(0);
+
+
         return UserDetailResponseDto.detailBuilder()
                 .userUuid(user.getUserUuid().toString())
                 .email(user.getEmail())
@@ -93,7 +104,7 @@ public class UserServiceImpl implements UserService {
                 .phoneNumber(user.getPhoneNumber())
                 .address(user.getAddress())
                 .gender(user.getGender())
-                .imageId(user.getImageId())
+                .profileImage(profileImageUrl)  // imageId 대신 imageUrl 사용
                 .preferences(convertToPreferenceIds(user.getUserPreferences()))
                 .mbti(user.getMbti() != null ? user.getMbti().getMbtiType() : null)
                 .build();
@@ -103,11 +114,15 @@ public class UserServiceImpl implements UserService {
      * UserEntity를 UserResponseDto로 변환합니다.
      */
     private UserResponseDto convertToResponse(UserEntity user) {
+        // 프로필 이미지 URL 조회
+        List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
+        String profileImageUrl = profileImages.isEmpty() ? null : profileImages.get(0);
+
         return UserResponseDto.builder()
                 .userUuid(user.getUserUuid().toString())
                 .nickname(user.getNickname())
                 .gender(user.getGender())
-                .imageId(user.getImageId())
+                .profileImageUrl(profileImageUrl)  // imageId 대신 imageUrl 사용
                 .preferences(convertToPreferenceIds(user.getUserPreferences()))
                 .mbti(user.getMbti() != null ? user.getMbti().getMbtiType() : null)
                 .build();
@@ -149,7 +164,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserDetailResponseDto updateMyInfo(UserUpdateRequestDto updateRequest) {
+    public UserDetailResponseDto updateMyInfo(UserUpdateRequestDto updateRequest, MultipartFile profileImage) {
         UserEntity user = getCurrentUser();
 
         // 닉네임 중복 검사
@@ -168,9 +183,19 @@ public class UserServiceImpl implements UserService {
             updateMbti(user, updateRequest.getMbti());
         }
 
-        // 프로필 이미지 업데이트
-        if (updateRequest.getImageId() != null) {
-            user.setImageId(updateRequest.getImageId());
+        // 프로필 이미지 처리
+        if (Boolean.TRUE.equals(updateRequest.getRemoveProfileImage())) {
+            // 프로필 이미지 삭제
+            imageService.deleteImagesByRefId(ImageType.PROFILE, user.getId());
+        } else if (profileImage != null && !profileImage.isEmpty()) {
+            // 새 프로필 이미지 업로드 (기존 이미지가 있다면 자동으로 삭제됨)
+            String folder = "profile/" + user.getId();
+            try {
+                imageService.updateImage(ImageType.PROFILE, user.getId(), profileImage, folder);
+            } catch (Exception e) {
+                log.error("프로필 이미지 업데이트 실패", e);
+                throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR);
+            }
         }
 
         userRepository.save(user);

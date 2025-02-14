@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.user.service;
 
+import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.user.dto.UserDetailResponseDto;
 import org.swyp.dessertbee.user.dto.UserResponseDto;
 import org.swyp.dessertbee.user.dto.UserUpdateRequestDto;
@@ -24,7 +25,7 @@ public interface UserService {
      * 현재 인증된 사용자의 정보를 수정합니다.
      * @return 사용자 상세 정보 DTO
      */
-    UserDetailResponseDto updateMyInfo(UserUpdateRequestDto updateRequest);
+    UserDetailResponseDto updateMyInfo(UserUpdateRequestDto updateRequest, MultipartFile profileImage);
 
     /**
      * 현재 인증된 사용자의 계정을 비활성화(소프트 삭제)합니다.
