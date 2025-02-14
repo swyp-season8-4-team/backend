@@ -3,7 +3,6 @@ package org.swyp.dessertbee.auth.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +20,6 @@ import org.swyp.dessertbee.auth.jwt.JWTUtil;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
-import org.swyp.dessertbee.common.exception.GlobalExceptionHandler;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.email.entity.EmailVerificationPurpose;
 import org.swyp.dessertbee.role.entity.RoleEntity;
@@ -29,8 +27,6 @@ import org.swyp.dessertbee.role.repository.RoleRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -164,8 +160,12 @@ public class AuthServiceImpl implements AuthService {
             // 5. Refresh Token 저장
             saveRefreshToken(user.getEmail(), refreshToken);
 
+            // 6. 프로필 이미지
+            List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
+            String profileImageUrl = profileImages.isEmpty() ? null : profileImages.get(0);
+
             // 7. 로그인 응답 생성
-            return LoginResponse.success(accessToken, user);
+            return LoginResponse.success(accessToken, user, profileImageUrl);
 
         } catch (InvalidCredentialsException e) {
             log.warn("로그인 실패 - 이메일: {}, 사유: {}", request.getEmail(), e.getMessage());

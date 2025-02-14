@@ -31,7 +31,6 @@ public class UserOAuthDto {
     public static UserOAuthDto fromEntity(UserEntity entity, List<String> roles) {
         return UserOAuthDto.builder()
                 .id(entity.getId())
-                .imageId(entity.getImageId())
                 .userUuid(entity.getUserUuid())
                 .email(entity.getEmail())
                 .nickname(entity.getNickname())
