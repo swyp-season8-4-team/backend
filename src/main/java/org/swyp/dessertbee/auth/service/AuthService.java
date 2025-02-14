@@ -1,6 +1,7 @@
 package org.swyp.dessertbee.auth.service;
 
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.auth.dto.login.LoginRequest;
 import org.swyp.dessertbee.auth.dto.login.LoginResponse;
 import org.swyp.dessertbee.auth.dto.TokenResponse;
@@ -41,7 +42,7 @@ public interface AuthService {
      * @throws InvalidVerificationTokenException 유효하지 않은 인증 토큰
      * @throws DuplicateEmailException 이메일 중복
      */
-    SignUpResponse signup(SignUpRequest request, String verificationToken);
+    SignUpResponse signup(SignUpRequest request, MultipartFile profileImage, String verificationToken);
 
 
     /**
@@ -57,7 +58,6 @@ public interface AuthService {
      * @param request 비밀번호 재설정 요청
      * @param verificationToken 이메일 인증 토큰
      * @throws InvalidVerificationTokenException 유효하지 않은 인증 토큰
-     * @throws InvalidPasswordException 유효하지 않은 비밀번호
      */
     void resetPassword(PasswordResetRequest request, String verificationToken);
 

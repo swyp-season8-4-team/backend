@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.auth.dto.TokenResponse;
 import org.swyp.dessertbee.auth.dto.login.LoginRequest;
 import org.swyp.dessertbee.auth.dto.login.LoginResponse;
@@ -17,9 +18,11 @@ import org.swyp.dessertbee.auth.dto.signup.SignUpRequest;
 import org.swyp.dessertbee.auth.dto.signup.SignUpResponse;
 import org.swyp.dessertbee.auth.exception.AuthExceptions.*;
 import org.swyp.dessertbee.auth.jwt.JWTUtil;
+import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.exception.GlobalExceptionHandler;
+import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.email.entity.EmailVerificationPurpose;
 import org.swyp.dessertbee.role.entity.RoleEntity;
 import org.swyp.dessertbee.role.repository.RoleRepository;
@@ -40,6 +43,8 @@ public class AuthServiceImpl implements AuthService {
     private final RoleRepository roleRepository;
     private final JWTUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+    private final ImageService imageService;
+
 
     @Autowired
     private TokenService tokenService;
@@ -64,7 +69,7 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     @Transactional
-    public SignUpResponse signup(SignUpRequest request, String verificationToken) {
+    public SignUpResponse signup(SignUpRequest request, MultipartFile profileImage, String verificationToken) {
         try {
             // 메일 인증 토큰 검증
             validateEmailVerificationToken(verificationToken, request.getEmail(), EmailVerificationPurpose.SIGNUP);
@@ -101,7 +106,17 @@ public class AuthServiceImpl implements AuthService {
             user.addRole(userRole);
 
             // 사용자 정보 저장
-            userRepository.save(user);
+            UserEntity savedUser = userRepository.save(user);
+
+            if (profileImage != null && !profileImage.isEmpty()) {
+                imageService.uploadAndSaveImage(
+                        profileImage,
+                        ImageType.PROFILE,
+                        savedUser.getId(),
+                        "profile/" + savedUser.getId()
+                );
+            }
+
             log.info("회원가입 완료 - 이메일: {}", request.getEmail());
 
             return SignUpResponse.success(request.getEmail());
