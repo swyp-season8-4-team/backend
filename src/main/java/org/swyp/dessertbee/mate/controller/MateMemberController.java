@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.mate.dto.response.MateMemberResponse;
 import org.swyp.dessertbee.mate.service.MateMemberService;
+import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,6 +18,7 @@ import java.util.UUID;
 public class MateMemberController {
 
     private final MateMemberService memberService;
+    private final MateMemberService mateMemberService;
 
     /**
      * 디저트 메이트 멤버 전체 조회
@@ -67,5 +69,15 @@ public class MateMemberController {
         memberService.removeMember(mateUuid, creatorUuid, targetUuid);
 
         return ResponseEntity.ok("성공적으로 강퇴 되었습니다.");
+    }
+
+    /**
+     * 디저트 메이트 멤버 탈퇴 api
+     * */
+    @DeleteMapping("/leave")
+    public ResponseEntity<String> leaveMember(@PathVariable UUID mateUuid, UUID userUuid) {
+
+        mateMemberService.leaveMember(mateUuid, userUuid);
+        return ResponseEntity.ok("성공적으로 탈퇴 되었습니다.");
     }
 }
