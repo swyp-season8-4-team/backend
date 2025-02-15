@@ -138,23 +138,67 @@ public class MateMemberService {
         Long userId = userRepository.findIdByUserUuid(userUuid);
 
 
-        Optional<MateMember> mateMember = mateMemberRepository.findByMateIdAndUserId(mateId, userId);
+        MateMember mateMember = mateMemberRepository.findByMateIdAndUserId(mateId, userId)
+                .orElse(null);
+
 
         if(mateMember != null) {
-            throw new IllegalArgumentException("신청한 유저입니다. 신청 불가능합니다.");
+
+            //mateMember가 강퇴 당헸을 때
+            if(mateMember.getRemoveYn()) {
+                throw new IllegalArgumentException("님 강퇴");
+            }else{
+
+                //mateMember 신청 수락 거절 전일 떄
+                //(강퇴 컬럼이 false, approval이 false, deletedAt이 null)
+                if(!mateMember.getApprovalYn() && mateMember.getDeletedAt() == null) {
+                    throw new IllegalArgumentException("기다려주셈");
+                }
+
+
+                //거절 당했을 때
+                //(강퇴 컬럼이 false, approval이 false, deletedAt이 null 아닐때 )
+                if(!mateMember.getApprovalYn() && mateMember.getDeletedAt() != null) {
+                    throw new IllegalArgumentException("님 거절");
+                }
+
+                //재신청(전에 이력 삭제)
+                if(mateMember.getApprovalYn() && mateMember.getDeletedAt() != null) {
+
+                    //전 이력 삭제
+                    mateMemberRepository.delete(mateMember);
+
+                    //mateMember 테이블에 신청자 재등록
+                    mateMemberRepository.save(
+                            MateMember.builder()
+                                    .mateId(mateId)
+                                    .userId(userId)
+                                    .grade(MateMemberGrade.NORMAL)
+                                    .approvalYn(false)
+                                    .removeYn(false)
+                                    .build()
+                    );
+
+                }else{
+                    throw new IllegalArgumentException("팀원이잖아요");
+                }
+
+
+            }
+        }else {
+            //mateMember 테이블에 신청자 등록
+            mateMemberRepository.save(
+                    MateMember.builder()
+                            .mateId(mateId)
+                            .userId(userId)
+                            .grade(MateMemberGrade.NORMAL)
+                            .approvalYn(false)
+                            .removeYn(false)
+                            .build()
+            );
         }
 
-        //mateMember 테이블에 신청자 등록
-        mateMemberRepository.save(
-                MateMember.builder()
-                        .mateId(mateId)
-                        .userId(userId)
-                        .grade(MateMemberGrade.NORMAL)
-                        .approvalYn(false)
-                        .build()
-        );
     }
-
     /**
      * 디저트 메이트 멤버 신청 수락 api
      * */
