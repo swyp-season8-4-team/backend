@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -16,7 +17,6 @@ import org.springframework.stereotype.Component;
 import org.swyp.dessertbee.auth.dto.CustomOAuth2User;
 import org.swyp.dessertbee.auth.dto.login.LoginResponse;
 import org.swyp.dessertbee.auth.jwt.JWTUtil;
-import org.swyp.dessertbee.auth.service.AuthService;
 import org.swyp.dessertbee.auth.service.TokenService;
 
 import java.io.IOException;
@@ -40,6 +40,8 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     private final JWTUtil jwtUtil;
     private final TokenService tokenService;
     private final ObjectMapper objectMapper;
+    @Value("${app.client.redirect-url}")
+    private String clientRedirectUrl;
 
     @Override
     public void onAuthenticationSuccess(
@@ -54,7 +56,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             LoginResponse loginResponse = handleOAuth2Authentication(oauth2User);
 
             addTokenCookie(response, "accessToken", loginResponse.getAccessToken());
-            getRedirectStrategy().sendRedirect(request, response, "http://localhost:3030");
+            response.sendRedirect(clientRedirectUrl);
 
             // 응답 처리
             // writeLoginResponse(response, loginResponse);
@@ -122,16 +124,25 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     }
 
     private void addTokenCookie(HttpServletResponse response, String name, String value) {
-        ResponseCookie cookie = ResponseCookie.from(name, value)
+        ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from(name, value)
                 .path("/")
-                .secure(false)  // localhost 개발 환경이므로 false
-                .sameSite("Lax")  // localhost 개발 환경에서는 Lax 사용
                 .httpOnly(true)
-                .maxAge(Duration.ofHours(1))
-                .domain("localhost")
-                .build();
+                .maxAge(Duration.ofHours(1));
 
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        // HTTPS 환경이면 Secure 적용, HTTP 환경에서는 Secure 해제
+        if (isHttpsEnvironment()) {
+            cookieBuilder.secure(true).sameSite("None");
+        } else {
+            cookieBuilder.secure(false).sameSite("Lax");
+        }
+
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookieBuilder.build().toString());
+    }
+
+    // 현재 서버가 HTTPS 환경인지 확인
+    private boolean isHttpsEnvironment() {
+        return "https".equals(System.getProperty("server.scheme"));
     }
 
 }

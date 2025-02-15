@@ -42,11 +42,10 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "잘못된 요청"),
             @ApiResponse(responseCode = "409", description = "이미 존재하는 이메일")
     })
-    @PostMapping(value = "/signup", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping("/signup")
     public ResponseEntity<SignUpResponse> signup(
             @RequestHeader("X-Email-Verification-Token") String verificationToken,
-            @Valid @RequestPart(value = "data") SignUpRequest request,
-            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage
+            @Valid @RequestBody SignUpRequest request
     ) throws BadRequestException {
         log.debug("회원가입 요청: {}", request.getEmail());
 
@@ -55,10 +54,11 @@ public class AuthController {
             throw new BadRequestException("비밀번호가 일치하지 않습니다.");
         }
 
-        // 회원가입 처리 (프로필 이미지 포함)
-        SignUpResponse response = authService.signup(request, profileImage, verificationToken);
+        // 회원가입 처리
+        SignUpResponse response = authService.signup(request, verificationToken);
         return ResponseEntity.ok(response);
     }
+
 
     @Operation(summary = "로그인", description = "이메일과 비밀번호로 로그인합니다.")
     @ApiResponses({

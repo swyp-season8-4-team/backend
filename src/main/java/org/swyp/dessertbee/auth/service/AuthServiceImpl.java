@@ -65,7 +65,7 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     @Transactional
-    public SignUpResponse signup(SignUpRequest request, MultipartFile profileImage, String verificationToken) {
+    public SignUpResponse signup(SignUpRequest request, String verificationToken) {
         try {
             // 메일 인증 토큰 검증
             validateEmailVerificationToken(verificationToken, request.getEmail(), EmailVerificationPurpose.SIGNUP);
@@ -102,16 +102,7 @@ public class AuthServiceImpl implements AuthService {
             user.addRole(userRole);
 
             // 사용자 정보 저장
-            UserEntity savedUser = userRepository.save(user);
-
-            if (profileImage != null && !profileImage.isEmpty()) {
-                imageService.uploadAndSaveImage(
-                        profileImage,
-                        ImageType.PROFILE,
-                        savedUser.getId(),
-                        "profile/" + savedUser.getId()
-                );
-            }
+            userRepository.save(user);
 
             log.info("회원가입 완료 - 이메일: {}", request.getEmail());
 
