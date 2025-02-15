@@ -1,6 +1,7 @@
 package org.swyp.dessertbee.mate.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -20,4 +21,9 @@ public interface MateMemberRepository extends JpaRepository<MateMember, Long> {
             "WHERE m.mateId = :mateId AND m.grade = 'CREATOR'")
     UserEntity findByMateId(@Param("mateId") Long mateId);
 
+    @Modifying
+    @Query("UPDATE MateMember m SET m.approvalYn = true WHERE m.mateId = :mateId AND m.userId = :userId")
+    void updateApprovalYn(Long mateId, Long userId);
+
+    MateMember findByMateIdAndUserId(Long mateId, Long userId);
 }
