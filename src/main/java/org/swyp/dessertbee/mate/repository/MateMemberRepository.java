@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.swyp.dessertbee.mate.dto.response.MateMemberResponse;
 import org.swyp.dessertbee.mate.entity.MateMember;
+import org.swyp.dessertbee.mate.entity.MateMemberGrade;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.util.List;
@@ -26,4 +27,6 @@ public interface MateMemberRepository extends JpaRepository<MateMember, Long> {
     void updateApprovalYn(Long mateId, Long userId);
 
     MateMember findByMateIdAndUserId(Long mateId, Long userId);
+
+    MateMember findGradeByMateIdAndUserId(Long mateId, Long userId);
 }

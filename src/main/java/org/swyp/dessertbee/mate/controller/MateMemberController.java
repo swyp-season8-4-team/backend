@@ -58,4 +58,14 @@ public class MateMemberController {
         return ResponseEntity.ok("거절 되었습니다.");
     }
 
+    /**
+     * 디저트 메이트 멤버 강퇴 api
+     * */
+    @DeleteMapping("/members")
+    public ResponseEntity<String> removeMember(@PathVariable UUID mateUuid, UUID creatorUuid, UUID targetUuid) {
+
+        memberService.removeMember(mateUuid, creatorUuid, targetUuid);
+
+        return ResponseEntity.ok("성공적으로 강퇴 되었습니다.");
+    }
 }

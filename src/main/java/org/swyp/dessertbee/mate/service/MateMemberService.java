@@ -210,4 +210,45 @@ public class MateMemberService {
             throw new RuntimeException("디저트메이트 멤버 삭제 실패: " + e.getMessage(), e);
         }
     }
+
+    /**
+     * 디저트 메이트 멤버 강퇴 api
+     * */
+    public void removeMember(UUID mateUuid, UUID creatorUuid, UUID targetUuid) {
+
+        //mateUuid로 mateId 조회
+        Long mateId = mateRepository.findMateIdByMateUuid(mateUuid);
+
+
+        //mateId 존재 여부 확인
+        mateRepository.findByMateIdAndDeletedAtIsNull(mateId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 디저트메이트입니다."));
+
+
+        //생성자 권한을 위해 생성자 userId 조회
+        Long creatorId = userRepository.findIdByUserUuid(creatorUuid);
+
+        //mateMember 테이블에서 생성자 조회
+        MateMember creator = mateMemberRepository.findGradeByMateIdAndUserId(mateId, creatorId);
+
+        if (creator.getGrade().equals(MateMemberGrade.CREATOR)) {
+
+            Long targetId = userRepository.findIdByUserUuid(targetUuid);
+
+            MateMember target = mateMemberRepository.findByMateIdAndUserId(mateId, targetId);
+
+            try {
+                target.softDelete();
+
+                // 변경된 모든 멤버 저장
+                mateMemberRepository.save(target);
+
+            } catch (Exception e) {
+                System.out.println("❌ 디저트메이트 멤버 강퇴 중 오류 발생: " + e.getMessage());
+                throw new RuntimeException("디저트메이트 멤버 강퇴 실패: " + e.getMessage(), e);
+            }
+        }else{
+            throw new IllegalArgumentException("관리자 권한이 없습니다.");
+        }
+    }
 }
