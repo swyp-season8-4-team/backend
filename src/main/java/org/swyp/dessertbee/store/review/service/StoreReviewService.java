@@ -117,8 +117,6 @@ public class StoreReviewService {
             throw new IllegalArgumentException("해당 가게의 리뷰가 아닙니다.");
         }
 
-        storeService.updateAverageRating(storeId);
-
         review.softDelete();
         storeService.updateAverageRating(storeId);
     }
