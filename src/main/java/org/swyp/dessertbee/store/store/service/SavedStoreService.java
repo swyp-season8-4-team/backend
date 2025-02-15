@@ -27,7 +27,7 @@ public class SavedStoreService {
 
         return savedStores.stream()
                 .map(saved -> {
-                    Store store = storeRepository.findByIdAndDeletedAtIsNull(saved.getStoreId())
+                    Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(saved.getStoreId())
                             .orElse(null); // 삭제된 가게는 리스트에서 제외
 
                     if (store == null) {

@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 public class SavedStoreResponse {
     private Long id;
     private Long storeId;
+    private Long storeUuid;
     private String storeName;
     private String address;
     private String storeLink;
@@ -22,7 +23,7 @@ public class SavedStoreResponse {
     public static SavedStoreResponse fromEntity(SavedStore savedStore, Store store) {
         return SavedStoreResponse.builder()
                 .id(savedStore.getId())
-                .storeId(store.getId())
+                .storeId(store.getStoreId())
                 .storeName(store.getName())
                 .address(store.getAddress())
                 .storeLink(store.getStoreLink())
