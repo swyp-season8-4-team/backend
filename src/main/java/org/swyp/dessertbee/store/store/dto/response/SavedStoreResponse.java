@@ -7,6 +7,7 @@ import org.swyp.dessertbee.store.store.entity.SavedStore;
 import org.swyp.dessertbee.store.store.entity.Store;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 public class SavedStoreResponse {
     private Long id;
     private Long storeId;
-    private Long storeUuid;
+    private UUID storeUuid;
     private String storeName;
     private String address;
     private String storeLink;
