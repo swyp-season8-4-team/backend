@@ -25,6 +25,7 @@ public class SavedStoreResponse {
         return SavedStoreResponse.builder()
                 .id(savedStore.getId())
                 .storeId(store.getStoreId())
+                .storeUuid(store.getStoreUuid())
                 .storeName(store.getName())
                 .address(store.getAddress())
                 .storeLink(store.getStoreLink())
