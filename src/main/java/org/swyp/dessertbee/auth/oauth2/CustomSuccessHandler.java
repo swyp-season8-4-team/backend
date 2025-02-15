@@ -5,8 +5,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -19,6 +21,7 @@ import org.swyp.dessertbee.auth.service.TokenService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,8 +53,11 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             CustomOAuth2User oauth2User = (CustomOAuth2User) authentication.getPrincipal();
             LoginResponse loginResponse = handleOAuth2Authentication(oauth2User);
 
+            addTokenCookie(response, "accessToken", loginResponse.getAccessToken());
+            getRedirectStrategy().sendRedirect(request, response, "http://localhost:3030");
+
             // 응답 처리
-            writeLoginResponse(response, loginResponse);
+            // writeLoginResponse(response, loginResponse);
 
         } catch (Exception e) {
             log.error("OAuth2 로그인 성공 처리 중 에러 발생", e);
@@ -114,4 +120,18 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String jsonResponse = objectMapper.writeValueAsString(errorResponse);
         response.getWriter().write(jsonResponse);
     }
+
+    private void addTokenCookie(HttpServletResponse response, String name, String value) {
+        ResponseCookie cookie = ResponseCookie.from(name, value)
+                .path("/")
+                .secure(false)  // localhost 개발 환경이므로 false
+                .sameSite("Lax")  // localhost 개발 환경에서는 Lax 사용
+                .httpOnly(true)
+                .maxAge(Duration.ofHours(1))
+                .domain("localhost")
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    }
+
 }
