@@ -21,6 +21,7 @@ import org.swyp.dessertbee.auth.service.AuthService;
 import org.swyp.dessertbee.auth.service.CustomOAuth2UserService;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -88,12 +89,17 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        List<String> allowedOrigins = Arrays.asList(corsAllowedOrigins.split(","));
-        configuration.setAllowedOrigins(allowedOrigins);
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        // allowedOrigins를 yml 설정값에서 가져와서 설정
+        String[] origins = corsAllowedOrigins.split(",");
+        configuration.setAllowedOrigins(Arrays.asList(origins));
+
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowCredentials(true);
-        configuration.setExposedHeaders(Arrays.asList("Authorization"));
+        configuration.setAllowedHeaders(Arrays.asList("Origin", "Content-Type", "Accept", "Authorization"));
+        configuration.setMaxAge(3600L);
+
+        // 노출할 헤더 설정 - Set-Cookie도 포함
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Set-Cookie"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

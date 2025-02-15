@@ -54,21 +54,10 @@ public class UserController {
      * 현재 인증된 사용자의 정보를 수정합니다.
      * @return 사용자 상세 정보
      */
-    @PatchMapping(value="/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<UserDetailResponseDto> updateMyInfo(@Valid @RequestPart(value = "data", required = false) UserUpdateRequestDto updateRequest,
-                                                              @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
+    @PatchMapping(value="/me")
+    public ResponseEntity<UserDetailResponseDto> updateMyInfo(@RequestBody @Valid UserUpdateRequestDto updateRequest) {
 
-        // 최소한 하나의 업데이트 데이터가 있는지 검증
-        if (updateRequest == null && (profileImage == null || profileImage.isEmpty())) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "업데이트할 정보가 없습니다.");
-        }
-
-        // null인 경우 빈 DTO 생성
-        if (updateRequest == null) {
-            updateRequest = UserUpdateRequestDto.builder().build();
-        }
-
-        UserDetailResponseDto response = userService.updateMyInfo(updateRequest, profileImage);
+        UserDetailResponseDto response = userService.updateMyInfo(updateRequest);
         return ResponseEntity.ok(response);
     }
 
@@ -93,6 +82,22 @@ public class UserController {
         Map<String, Boolean> response = new HashMap<>();
         response.put("available", isAvailable);
 
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 프로필 이미지 업데이트
+     * @param image 업로드할 프로필 이미지 파일
+     * @return 업데이트된 사용자 정보
+     */
+    @PostMapping(
+            value = "/me/profile-image",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<UserDetailResponseDto> updateProfileImage(
+            @RequestPart("image") MultipartFile image) {
+        log.info("프로필 이미지 업데이트 요청 - 파일명: {}", image.getOriginalFilename());
+        UserDetailResponseDto response = userService.updateProfileImage(image);
         return ResponseEntity.ok(response);
     }
 }

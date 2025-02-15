@@ -87,6 +87,40 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
+     * 프로필 이미지 업데이트 구현
+     * 기존 코드에 새로 추가되는 메서드입니다.
+     */
+    @Override
+    @Transactional
+    public UserDetailResponseDto updateProfileImage(MultipartFile image) {
+        // 입력값 검증
+        if (image == null || image.isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "이미지 파일이 필요합니다.");
+        }
+
+        // 현재 사용자 조회
+        UserEntity user = getCurrentUser();
+
+        // S3 폴더 경로 설정 - "profile/[userId]" 형식
+        String folder = String.format("profile/%d", user.getId());
+
+        try {
+            // 이미지 서비스를 통해 기존 이미지 교체
+            // updateImage 메서드는 기존 이미지가 있다면 삭제하고 새 이미지를 업로드
+            imageService.updateImage(ImageType.PROFILE, user.getId(), image, folder);
+
+            log.info("프로필 이미지 업데이트 성공 - userId: {}", user.getId());
+
+            // 업데이트된 사용자 정보 반환
+            return convertToDetailResponse(user);
+
+        } catch (Exception e) {
+            log.error("프로필 이미지 업데이트 실패 - userId: {}", user.getId(), e);
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR, "프로필 이미지 업데이트에 실패했습니다.");
+        }
+    }
+
+    /**
      * UserEntity를 UserDetailResponseDto로 변환합니다.
      */
     private UserDetailResponseDto convertToDetailResponse(UserEntity user) {
@@ -122,7 +156,7 @@ public class UserServiceImpl implements UserService {
                 .userUuid(user.getUserUuid().toString())
                 .nickname(user.getNickname())
                 .gender(user.getGender())
-                .profileImageUrl(profileImageUrl)  // imageId 대신 imageUrl 사용
+                .profileImageUrl(profileImageUrl)
                 .preferences(convertToPreferenceIds(user.getUserPreferences()))
                 .mbti(user.getMbti() != null ? user.getMbti().getMbtiType() : null)
                 .build();
@@ -164,7 +198,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserDetailResponseDto updateMyInfo(UserUpdateRequestDto updateRequest, MultipartFile profileImage) {
+    public UserDetailResponseDto updateMyInfo(UserUpdateRequestDto updateRequest) {
         UserEntity user = getCurrentUser();
 
         // 닉네임 중복 검사
@@ -181,21 +215,6 @@ public class UserServiceImpl implements UserService {
         // MBTI 업데이트
         if (updateRequest.getMbti() != null) {
             updateMbti(user, updateRequest.getMbti());
-        }
-
-        // 프로필 이미지 처리
-        if (Boolean.TRUE.equals(updateRequest.getRemoveProfileImage())) {
-            // 프로필 이미지 삭제
-            imageService.deleteImagesByRefId(ImageType.PROFILE, user.getId());
-        } else if (profileImage != null && !profileImage.isEmpty()) {
-            // 새 프로필 이미지 업로드 (기존 이미지가 있다면 자동으로 삭제됨)
-            String folder = "profile/" + user.getId();
-            try {
-                imageService.updateImage(ImageType.PROFILE, user.getId(), profileImage, folder);
-            } catch (Exception e) {
-                log.error("프로필 이미지 업데이트 실패", e);
-                throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR);
-            }
         }
 
         userRepository.save(user);
