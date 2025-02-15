@@ -10,7 +10,6 @@ import org.swyp.dessertbee.common.repository.ImageRepository;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -64,9 +63,7 @@ public class ImageService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 여러 refId에 해당하는 이미지 한번에 조회
-     */
+    /** 여러 refId에 해당하는 이미지 한번에 조회 */
     public Map<Long, List<String>> getImagesByTypeAndIds(ImageType type, List<Long> refIds) {
         List<Image> images = imageRepository.findByRefTypeAndRefIdIn(type, refIds);
 
