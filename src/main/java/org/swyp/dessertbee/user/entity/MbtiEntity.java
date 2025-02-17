@@ -23,8 +23,4 @@ public class MbtiEntity {
 
     @Column(name = "mbti_desc", length = 200)
     private String mbtiDesc;
-
-    @OneToOne(mappedBy = "mbti")
-    private UserEntity user;
-
 }

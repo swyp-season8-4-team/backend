@@ -1,5 +1,8 @@
 package org.swyp.dessertbee.user.entity;
 
+import lombok.Getter;
+
+@Getter
 public enum NicknameValidationPurpose {
     SIGNUP("회원가입"),
     PROFILE_UPDATE("프로필 수정");
@@ -10,7 +13,4 @@ public enum NicknameValidationPurpose {
         this.description = description;
     }
 
-    public String getDescription() {
-        return description;
-    }
 }

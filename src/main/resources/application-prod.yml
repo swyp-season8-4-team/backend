@@ -12,4 +12,7 @@ spring:
             redirect-uri: "http://${SERVER_HOST}:8080/${KAKAO_REDIRECT_URI}"
   graphql:
     cors:
-      allowed-origins: "https://desserbee.com,https://www.desserbee.com,http://desserbee.com,http://www.desserbee.com"
+      allowed-origins: "https://desserbee.com,https://www.desserbee.com,http://desserbee.com,http://www.desserbee.com,https://api.desserbee.com"
+app:    # 추가
+  client:    # 추가
+    redirect-url: "https://desserbee.com"    # 추가

@@ -21,12 +21,12 @@ public class UserUpdateRequestDto {
     private String address;
     private UserEntity.Gender gender;
     private String mbti;
-    private Long imageId;
+    private Boolean removeProfileImage;  // 프로필 이미지 제거 플래그 추가
 
     @Builder
     public UserUpdateRequestDto(String nickname, List<Long> preferences, String name,
                                 String phoneNumber, String address, UserEntity.Gender gender,
-                                String mbti, Long imageId) {
+                                String mbti, Boolean removeProfileImage) {
         this.nickname = nickname;
         this.preferences = preferences;
         this.name = name;
@@ -34,6 +34,6 @@ public class UserUpdateRequestDto {
         this.address = address;
         this.gender = gender;
         this.mbti = mbti;
-        this.imageId = imageId;
+        this.removeProfileImage = removeProfileImage;
     }
 }

@@ -34,9 +34,6 @@ public class UserEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "image_id")
-    private Long imageId;
-
     @Column(name = "user_uuid", nullable = false, unique = true, updatable = false)
     @UuidGenerator
     private UUID userUuid;
@@ -84,8 +81,8 @@ public class UserEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserPreferenceEntity> userPreferences = new HashSet<>();
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "mbti_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mbti_id", nullable = true)
     private MbtiEntity mbti;
 
     public void addRole(RoleEntity role) {

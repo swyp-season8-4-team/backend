@@ -11,8 +11,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.auth.dto.TokenResponse;
 import org.swyp.dessertbee.auth.dto.login.LoginRequest;
 import org.swyp.dessertbee.auth.dto.login.LoginResponse;
@@ -56,6 +58,7 @@ public class AuthController {
         SignUpResponse response = authService.signup(request, verificationToken);
         return ResponseEntity.ok(response);
     }
+
 
     @Operation(summary = "로그인", description = "이메일과 비밀번호로 로그인합니다.")
     @ApiResponses({
