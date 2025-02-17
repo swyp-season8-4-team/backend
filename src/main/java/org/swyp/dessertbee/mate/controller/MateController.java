@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.swyp.dessertbee.mate.exception.MateExceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -63,8 +64,6 @@ public class MateController {
         //디저트메이트 삭제
         mateService.deleteMate(mateUuid);
 
-        //디저트메이트 멤버 삭제
-        mateMemberService.deleteAllMember(mateUuid);
         return ResponseEntity.ok("디저트메이트가 성공적으로 삭제되었습니다.");
     }
 
@@ -76,8 +75,7 @@ public class MateController {
     public ResponseEntity<String> updateMate(
             @PathVariable UUID mateUuid,
             @RequestPart("request") MateCreateRequest request,
-            @RequestPart(value = "mateImage", required = false) MultipartFile mateImage
-    ){
+            @RequestPart(value = "mateImage", required = false) MultipartFile mateImage ){
 
         mateService.updateMate(mateUuid, request, mateImage);
         return ResponseEntity.ok("디저트메이트가 성공적으로 수정되었습니다.");
@@ -93,11 +91,6 @@ public class MateController {
             @RequestParam int from,
             @RequestParam int to
     ) {
-
-        if (from >= to) {
-            throw new IllegalArgumentException("잘못된 범위 설정");
-        }
-
 
         return ResponseEntity.ok(mateService.getMates(from, to));
     }

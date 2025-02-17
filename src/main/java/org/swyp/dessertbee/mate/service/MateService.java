@@ -9,6 +9,7 @@ import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.mate.dto.request.MateCreateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.mate.entity.Mate;
+import org.swyp.dessertbee.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.mate.repository.MateCategoryRepository;
 import org.swyp.dessertbee.mate.repository.MateMemberRepository;
 import org.swyp.dessertbee.mate.repository.MateRepository;
@@ -38,13 +39,13 @@ public class MateService {
 
 
     /** 메이트 등록 */
-    public MateDetailResponse createMate(MateCreateRequest request, List<MultipartFile> mateImage) {
+    public MateDetailResponse createMate(MateCreateRequest request, List<MultipartFile> mateImage){
 
         Long userId = userRepository.findIdByUserUuid(request.getUserUuid());
 
         //userId 존재 여부 확인
         if (userId == null) {
-            throw new IllegalArgumentException("존재하지 않는 유저입니다.");
+            throw new UserNotFoundExcption("존재하지 않는 유저입니다.");
         }
 
         Mate mate = mateRepository.save(
@@ -79,7 +80,7 @@ public class MateService {
 
         //mateId로 디저트메이트 여부 확인
         Mate mate = mateRepository.findByMateIdAndDeletedAtIsNull(mateId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 디저트메이트입니다."));
+                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
 
         //디저트메이트 사진 조회
@@ -105,11 +106,14 @@ public class MateService {
 
         //mateId 존재 여부 확인
         Mate mate = mateRepository.findByMateIdAndDeletedAtIsNull(mateId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 디저트메이트입니다."));
+                .orElseThrow(() -> new MateNotFoundException("존재하지 !않는 디저트메이트입니다."));
 
         try {
                 mate.softDelete();
                 mateRepository.save(mate);
+
+                //디저트메이트 멤버 삭제
+                mateMemberService.deleteAllMember(mateId);
 
                 imageService.deleteImagesByRefId(ImageType.MATE, mateId);
 
@@ -128,7 +132,7 @@ public class MateService {
 
         //mateId 존재 여부 확인
         Mate mate = mateRepository.findByMateIdAndDeletedAtIsNull(mateId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 디저트메이트입니다."));
+                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
         mate.update(request.getTitle(), request.getContent(), request.getRecruitYn(), request.getMateCategoryId());
 
@@ -141,6 +145,12 @@ public class MateService {
     }
 
     public List<MateDetailResponse> getMates(int from, int to) {
+
+
+        if (from >= to) {
+            throw new FromToMateException("잘못된 범위 요청입니다.");
+        }
+
         int limit = to - from;
 
         try {
@@ -155,8 +165,9 @@ public class MateService {
                     })
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            log.error("메이트 목록 조회 실패: from={}, to={}", from, to, e);
+
             return Collections.emptyList(); // 전체 실패 시 빈 리스트 반환
+
         }
     }
 

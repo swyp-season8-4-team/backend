@@ -45,7 +45,13 @@ public enum ErrorCode {
     FILE_UPDATE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "F002", "파일 업데이트에 실패했습니다."),
     FILE_DELETE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "F003", "파일 삭제에 실패했습니다."),
     INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "F004", "지원하지 않는 파일 형식입니다."),
-    FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "F005", "파일 크기가 제한을 초과했습니다.");
+    FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "F005", "파일 크기가 제한을 초과했습니다."),
+
+
+    MATE_NOT_FOUND(HttpStatus.NOT_FOUND,"M001" ,"존재하지 않는 디저트메이트입니다." ),
+    DUPLICATE_APPLY(HttpStatus.CONFLICT, "MOO2", "이미 신청된 아이디입니다."),
+    MATES_NOT_FOUND(HttpStatus.NOT_FOUND, "M003", "해당 범위에서 메이트 데이터를 찾을 수 없습니다."),
+    INVALID_RANGE(HttpStatus.BAD_REQUEST, "M004", "잘못된 범위 요청입니다.");
 
 
     private final HttpStatus httpStatus;

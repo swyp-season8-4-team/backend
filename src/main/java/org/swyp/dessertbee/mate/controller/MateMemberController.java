@@ -2,6 +2,7 @@ package org.swyp.dessertbee.mate.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.mate.dto.response.MateMemberResponse;
@@ -22,7 +23,7 @@ public class MateMemberController {
      * 디저트 메이트 멤버 전체 조회
      * */
     @GetMapping("/members")
-    public ResponseEntity<List<MateMemberResponse>> getMembers(@PathVariable UUID mateUuid) {
+    public ResponseEntity<List<MateMemberResponse>> getMembers(@PathVariable UUID mateUuid) throws BadRequestException {
 
         return ResponseEntity.ok(memberService.getMembers(mateUuid));
     }
@@ -31,7 +32,7 @@ public class MateMemberController {
      * 디저트 메이트 멤버 신청 api
      * */
     @PostMapping("/apply")
-    public ResponseEntity<String> applyMate(@PathVariable UUID mateUuid, UUID userUuid) {
+    public ResponseEntity<String> applyMate(@PathVariable UUID mateUuid, UUID userUuid) throws BadRequestException {
 
         memberService.applyMate(mateUuid,userUuid);
         return ResponseEntity.ok("디저트메이트에 성공적으로 신청되었습니다.");
@@ -41,7 +42,7 @@ public class MateMemberController {
      * 디저트 메이트 멤버 신청 수락 api
      * */
     @PatchMapping("/apply")
-    public ResponseEntity<String> acceptMemeber(@PathVariable UUID mateUuid, UUID userUuid) {
+    public ResponseEntity<String> acceptMemeber(@PathVariable UUID mateUuid, UUID userUuid) throws BadRequestException {
 
         memberService.acceptMember(mateUuid, userUuid);
         return ResponseEntity.ok("팀원이 되었습니다~!");
@@ -51,7 +52,7 @@ public class MateMemberController {
      * 디저트 메이트 멤버 신청 거절 api
      * */
     @DeleteMapping("/apply")
-    public ResponseEntity<String> rejectMemeber(@PathVariable UUID mateUuid, UUID userUuid) {
+    public ResponseEntity<String> rejectMemeber(@PathVariable UUID mateUuid, UUID userUuid) throws BadRequestException {
 
         memberService.rejectMember(mateUuid, userUuid);
 
