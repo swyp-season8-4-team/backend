@@ -15,9 +15,6 @@ public class MbtiController {
 
     private final MbtiService mbtiService;
 
-    /**
-     * 모든 MBTI 정보를 조회하는 API 엔드포인트
-     */
     @GetMapping
     public ResponseEntity<List<MbtiResponseDto>> getAllMbtis() {
         return ResponseEntity.ok(mbtiService.getAllMbtis());
@@ -34,7 +31,6 @@ public class MbtiController {
 
     /**
      * MBTI 유형으로 MBTI 정보를 조회하는 API 엔드포인트
-     *
      * @param mbtiType MBTI 유형 문자열
      */
     @GetMapping("/type/{mbtiType}")
