@@ -18,9 +18,9 @@ public class UserDetailResponseDto extends UserResponseDto {
 
     @Builder(builderMethodName = "detailBuilder")
     public UserDetailResponseDto(String userUuid, String nickname, UserEntity.Gender gender,
-                                 Long imageId, List<Long> preferences, String mbti,
+                                 String profileImage, List<Long> preferences, String mbti,
                                  String email, String name, String phoneNumber, String address) {
-        super(userUuid, nickname, gender, imageId, preferences, mbti);
+        super(userUuid, nickname, gender, profileImage, preferences, mbti);
         this.email = email;
         this.name = name;
         this.phoneNumber = phoneNumber;

@@ -5,8 +5,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -14,11 +17,11 @@ import org.springframework.stereotype.Component;
 import org.swyp.dessertbee.auth.dto.CustomOAuth2User;
 import org.swyp.dessertbee.auth.dto.login.LoginResponse;
 import org.swyp.dessertbee.auth.jwt.JWTUtil;
-import org.swyp.dessertbee.auth.service.AuthService;
 import org.swyp.dessertbee.auth.service.TokenService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +40,8 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     private final JWTUtil jwtUtil;
     private final TokenService tokenService;
     private final ObjectMapper objectMapper;
+    @Value("${app.client.redirect-url}")
+    private String clientRedirectUrl;
 
     @Override
     public void onAuthenticationSuccess(
@@ -50,8 +55,11 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             CustomOAuth2User oauth2User = (CustomOAuth2User) authentication.getPrincipal();
             LoginResponse loginResponse = handleOAuth2Authentication(oauth2User);
 
+            addTokenCookie(response, "accessToken", loginResponse.getAccessToken());
+            response.sendRedirect(clientRedirectUrl);
+
             // 응답 처리
-            writeLoginResponse(response, loginResponse);
+            // writeLoginResponse(response, loginResponse);
 
         } catch (Exception e) {
             log.error("OAuth2 로그인 성공 처리 중 에러 발생", e);
@@ -114,4 +122,27 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String jsonResponse = objectMapper.writeValueAsString(errorResponse);
         response.getWriter().write(jsonResponse);
     }
+
+    private void addTokenCookie(HttpServletResponse response, String name, String value) {
+        ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from(name, value)
+                .path("/")
+                .httpOnly(true)
+                .maxAge(Duration.ofHours(1));
+
+        // HTTPS 환경이면 Secure 적용, HTTP 환경에서는 Secure 해제
+        if (isHttpsEnvironment()) {
+            cookieBuilder.secure(true).sameSite("None");
+        } else {
+            cookieBuilder.secure(false).sameSite("Lax");
+        }
+
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookieBuilder.build().toString());
+    }
+
+    // 현재 서버가 HTTPS 환경인지 확인
+    private boolean isHttpsEnvironment() {
+        return "https".equals(System.getProperty("server.scheme"));
+    }
+
 }

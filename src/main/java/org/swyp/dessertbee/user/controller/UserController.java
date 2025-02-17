@@ -3,8 +3,12 @@ package org.swyp.dessertbee.user.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.user.dto.NicknameValidationRequestDto;
 import org.swyp.dessertbee.user.dto.UserDetailResponseDto;
 import org.swyp.dessertbee.user.dto.UserResponseDto;
@@ -50,8 +54,9 @@ public class UserController {
      * 현재 인증된 사용자의 정보를 수정합니다.
      * @return 사용자 상세 정보
      */
-    @PatchMapping("/me")
+    @PatchMapping(value="/me")
     public ResponseEntity<UserDetailResponseDto> updateMyInfo(@RequestBody @Valid UserUpdateRequestDto updateRequest) {
+
         UserDetailResponseDto response = userService.updateMyInfo(updateRequest);
         return ResponseEntity.ok(response);
     }
@@ -77,6 +82,22 @@ public class UserController {
         Map<String, Boolean> response = new HashMap<>();
         response.put("available", isAvailable);
 
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 프로필 이미지 업데이트
+     * @param image 업로드할 프로필 이미지 파일
+     * @return 업데이트된 사용자 정보
+     */
+    @PostMapping(
+            value = "/me/profile-image",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<UserDetailResponseDto> updateProfileImage(
+            @RequestPart("image") MultipartFile image) {
+        log.info("프로필 이미지 업데이트 요청 - 파일명: {}", image.getOriginalFilename());
+        UserDetailResponseDto response = userService.updateProfileImage(image);
         return ResponseEntity.ok(response);
     }
 }

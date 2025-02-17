@@ -21,6 +21,7 @@ public class LoginResponse {
     private UUID userUuid;          // 사용자 UUID
     private String email;           // 사용자 이메일
     private String nickname;        // 사용자 닉네임
+    private String profileImageUrl; // 프로필 이미지
 
     /**
      * 로그인 성공 응답 생성
@@ -28,12 +29,13 @@ public class LoginResponse {
      * @param user 사용자 엔티티
      * @return 로그인 응답 객체
      */
-    public static LoginResponse success(String token, UserEntity user) {
+    public static LoginResponse success(String token, UserEntity user, String profileImageUrl) {
         return LoginResponse.builder()
                 .accessToken(token)
                 .userUuid(user.getUserUuid())
                 .email(user.getEmail())
                 .nickname(user.getNickname())
+                .profileImageUrl(profileImageUrl)
                 .build();
     }
 

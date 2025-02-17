@@ -6,9 +6,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.auth.entity.AuthEntity;
+import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
+import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.preference.entity.PreferenceEntity;
 import org.swyp.dessertbee.preference.entity.UserPreferenceEntity;
 import org.swyp.dessertbee.preference.repository.PreferenceRepository;
@@ -37,6 +40,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final MbtiRepository mbtiRepository;
     private final PreferenceRepository preferenceRepository;
+    private final ImageService imageService;
+
 
 
     /**
@@ -82,9 +87,49 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
+     * 프로필 이미지 업데이트 구현
+     * 기존 코드에 새로 추가되는 메서드입니다.
+     */
+    @Override
+    @Transactional
+    public UserDetailResponseDto updateProfileImage(MultipartFile image) {
+        // 입력값 검증
+        if (image == null || image.isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "이미지 파일이 필요합니다.");
+        }
+
+        // 현재 사용자 조회
+        UserEntity user = getCurrentUser();
+
+        // S3 폴더 경로 설정 - "profile/[userId]" 형식
+        String folder = String.format("profile/%d", user.getId());
+
+        try {
+            // 이미지 서비스를 통해 기존 이미지 교체
+            // updateImage 메서드는 기존 이미지가 있다면 삭제하고 새 이미지를 업로드
+            imageService.updateImage(ImageType.PROFILE, user.getId(), image, folder);
+
+            log.info("프로필 이미지 업데이트 성공 - userId: {}", user.getId());
+
+            // 업데이트된 사용자 정보 반환
+            return convertToDetailResponse(user);
+
+        } catch (Exception e) {
+            log.error("프로필 이미지 업데이트 실패 - userId: {}", user.getId(), e);
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR, "프로필 이미지 업데이트에 실패했습니다.");
+        }
+    }
+
+    /**
      * UserEntity를 UserDetailResponseDto로 변환합니다.
      */
     private UserDetailResponseDto convertToDetailResponse(UserEntity user) {
+
+        // 프로필 이미지 URL 조회
+        List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
+        String profileImageUrl = profileImages.isEmpty() ? null : profileImages.get(0);
+
+
         return UserDetailResponseDto.detailBuilder()
                 .userUuid(user.getUserUuid().toString())
                 .email(user.getEmail())
@@ -93,7 +138,7 @@ public class UserServiceImpl implements UserService {
                 .phoneNumber(user.getPhoneNumber())
                 .address(user.getAddress())
                 .gender(user.getGender())
-                .imageId(user.getImageId())
+                .profileImage(profileImageUrl)  // imageId 대신 imageUrl 사용
                 .preferences(convertToPreferenceIds(user.getUserPreferences()))
                 .mbti(user.getMbti() != null ? user.getMbti().getMbtiType() : null)
                 .build();
@@ -103,11 +148,15 @@ public class UserServiceImpl implements UserService {
      * UserEntity를 UserResponseDto로 변환합니다.
      */
     private UserResponseDto convertToResponse(UserEntity user) {
+        // 프로필 이미지 URL 조회
+        List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
+        String profileImageUrl = profileImages.isEmpty() ? null : profileImages.get(0);
+
         return UserResponseDto.builder()
                 .userUuid(user.getUserUuid().toString())
                 .nickname(user.getNickname())
                 .gender(user.getGender())
-                .imageId(user.getImageId())
+                .profileImageUrl(profileImageUrl)
                 .preferences(convertToPreferenceIds(user.getUserPreferences()))
                 .mbti(user.getMbti() != null ? user.getMbti().getMbtiType() : null)
                 .build();
@@ -166,11 +215,6 @@ public class UserServiceImpl implements UserService {
         // MBTI 업데이트
         if (updateRequest.getMbti() != null) {
             updateMbti(user, updateRequest.getMbti());
-        }
-
-        // 프로필 이미지 업데이트
-        if (updateRequest.getImageId() != null) {
-            user.setImageId(updateRequest.getImageId());
         }
 
         userRepository.save(user);

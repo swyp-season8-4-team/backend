@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.user.service;
 
+import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.user.dto.UserDetailResponseDto;
 import org.swyp.dessertbee.user.dto.UserResponseDto;
 import org.swyp.dessertbee.user.dto.UserUpdateRequestDto;
@@ -37,4 +38,11 @@ public interface UserService {
      * @return 사용 가능 여부
      */
     boolean checkNicknameAvailability(String nickname, NicknameValidationPurpose purpose);
+
+    /**
+     * @param image 새로운 프로필 이미지 파일
+     * @return 업데이트된 사용자 정보
+     */
+    UserDetailResponseDto updateProfileImage(MultipartFile image);
+
 }
