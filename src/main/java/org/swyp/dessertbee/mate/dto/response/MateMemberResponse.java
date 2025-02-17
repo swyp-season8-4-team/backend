@@ -15,7 +15,9 @@ import java.util.UUID;
 @AllArgsConstructor
 public class MateMemberResponse {
 
+    private Long mateId;
     private UUID mateUuid;
+    private Long userId;
     private UUID userUUid;
     private String grade;
     private Boolean approvalYn;
