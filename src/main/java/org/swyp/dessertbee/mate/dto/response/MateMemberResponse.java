@@ -19,6 +19,7 @@ public class MateMemberResponse {
     private UUID userUUid;
     private String grade;
     private Boolean approvalYn;
+    private Boolean removeYn;
     private List<String> userImage;
     private String nickname;
 
@@ -31,6 +32,7 @@ public class MateMemberResponse {
                 .userUUid(user.getUserUuid())
                 .grade(member.getGrade().toString())
                 .approvalYn(member.getApprovalYn())
+                .removeYn(member.getRemoveYn())
                 .userImage(userImage)
                 .nickname(user.getNickname())
                 .build();

@@ -16,6 +16,7 @@ import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -136,28 +137,68 @@ public class MateMemberService {
         //userUuid로 userId 조회
         Long userId = userRepository.findIdByUserUuid(userUuid);
 
-        //userId 존재 여부 확인
-        if (userId == null) {
-            throw new IllegalArgumentException("존재하지 않는 유저입니다.");
-        }
 
-        MateMember mateMember = mateMemberRepository.findByMateIdAndUserId(mateId, userId);
+        MateMember mateMember = mateMemberRepository.findByMateIdAndUserId(mateId, userId)
+                .orElse(null);
+
 
         if(mateMember != null) {
-            throw new IllegalArgumentException("신청한 유저입니다. 신청 불가능합니다.");
+
+            //mateMember가 강퇴 당헸을 때
+            if(mateMember.getRemoveYn()) {
+                throw new IllegalArgumentException("님 강퇴");
+            }else{
+
+                //mateMember 신청 수락 거절 전일 떄
+                //(강퇴 컬럼이 false, approval이 false, deletedAt이 null)
+                if(!mateMember.getApprovalYn() && mateMember.getDeletedAt() == null) {
+                    throw new IllegalArgumentException("기다려주셈");
+                }
+
+
+                //거절 당했을 때
+                //(강퇴 컬럼이 false, approval이 false, deletedAt이 null 아닐때 )
+                if(!mateMember.getApprovalYn() && mateMember.getDeletedAt() != null) {
+                    throw new IllegalArgumentException("님 거절");
+                }
+
+                //재신청(전에 이력 삭제)
+                if(mateMember.getApprovalYn() && mateMember.getDeletedAt() != null) {
+
+                    //전 이력 삭제
+                    mateMemberRepository.delete(mateMember);
+
+                    //mateMember 테이블에 신청자 재등록
+                    mateMemberRepository.save(
+                            MateMember.builder()
+                                    .mateId(mateId)
+                                    .userId(userId)
+                                    .grade(MateMemberGrade.NORMAL)
+                                    .approvalYn(false)
+                                    .removeYn(false)
+                                    .build()
+                    );
+
+                }else{
+                    throw new IllegalArgumentException("팀원이잖아요");
+                }
+
+
+            }
+        }else {
+            //mateMember 테이블에 신청자 등록
+            mateMemberRepository.save(
+                    MateMember.builder()
+                            .mateId(mateId)
+                            .userId(userId)
+                            .grade(MateMemberGrade.NORMAL)
+                            .approvalYn(false)
+                            .removeYn(false)
+                            .build()
+            );
         }
 
-        //mateMember 테이블에 신청자 등록
-        mateMemberRepository.save(
-                MateMember.builder()
-                        .mateId(mateId)
-                        .userId(userId)
-                        .grade(MateMemberGrade.NORMAL)
-                        .approvalYn(false)
-                        .build()
-        );
     }
-
     /**
      * 디저트 메이트 멤버 신청 수락 api
      * */
@@ -190,14 +231,14 @@ public class MateMemberService {
 
         //userUuid로 userId 조회
         Long userId = userRepository.findIdByUserUuid(userUuid);
+
         if (userId == null) {
             throw new IllegalArgumentException("해당하는 사용자를 찾을 수 없습니다.");
         }
 
-        MateMember mateMember = mateMemberRepository.findByMateIdAndUserId(mateId, userId);
-        if (mateMember == null) {
-            throw new IllegalArgumentException("해당하는 멤버가 존재하지 않습니다.");
-        }
+        MateMember mateMember = mateMemberRepository.findByMateIdAndUserId(mateId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 멤버입니다."));
+
 
         try {
             mateMember.softDelete();
@@ -209,5 +250,78 @@ public class MateMemberService {
             System.out.println("❌ 디저트메이트 멤버 삭제 중 오류 발생: " + e.getMessage());
             throw new RuntimeException("디저트메이트 멤버 삭제 실패: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * 디저트 메이트 멤버 강퇴 api
+     * */
+    public void removeMember(UUID mateUuid, UUID creatorUuid, UUID targetUuid) {
+
+        //mateUuid로 mateId 조회
+        Long mateId = mateRepository.findMateIdByMateUuid(mateUuid);
+
+
+        //mateId 존재 여부 확인
+        mateRepository.findByMateIdAndDeletedAtIsNull(mateId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 디저트메이트입니다."));
+
+
+        //생성자 권한을 위해 생성자 userId 조회
+        Long creatorId = userRepository.findIdByUserUuid(creatorUuid);
+
+        //mateMember 테이블에서 생성자 조회
+        MateMember creator = mateMemberRepository.findGradeByMateIdAndUserId(mateId, creatorId);
+
+        if (creator.getGrade().equals(MateMemberGrade.CREATOR)) {
+
+            Long targetId = userRepository.findIdByUserUuid(targetUuid);
+
+            MateMember target = mateMemberRepository.findByMateIdAndUserId(mateId, targetId)
+                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 멤버입니다."));
+
+            try {
+                target.removeDelete();
+
+                // 변경된 모든 멤버 저장
+                mateMemberRepository.save(target);
+
+            } catch (Exception e) {
+                System.out.println("❌ 디저트메이트 멤버 강퇴 중 오류 발생: " + e.getMessage());
+                throw new RuntimeException("디저트메이트 멤버 강퇴 실패: " + e.getMessage(), e);
+            }
+        }else{
+            throw new IllegalArgumentException("관리자 권한이 없습니다.");
+        }
+    }
+
+    /**
+     * 디저트 메이트 멤버 탈퇴 api
+     * */
+    public void leaveMember(UUID mateUuid, UUID userUuid) {
+
+        //mateUuid로 mateId 조회
+        Long mateId = mateRepository.findMateIdByMateUuid(mateUuid);
+
+
+        //mateId 존재 여부 확인
+        mateRepository.findByMateIdAndDeletedAtIsNull(mateId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 디저트메이트입니다."));
+
+
+        Long userId = userRepository.findIdByUserUuid(userUuid);
+
+        MateMember mateMember = mateMemberRepository.findByMateIdAndUserId(mateId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 멤버입니다."));
+        try {
+            mateMember.softDelete();
+
+            mateMemberRepository.save(mateMember);
+
+        }catch (Exception e){
+            System.out.println("❌ 디저트메이트 멤버 탈퇴 중 오류 발생: " + e.getMessage());
+            throw new RuntimeException("디저트메이트 멤버 탈퇴 실패: " + e.getMessage(), e);
+
+        }
+
     }
 }
