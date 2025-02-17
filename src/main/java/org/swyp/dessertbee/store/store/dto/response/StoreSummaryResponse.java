@@ -21,8 +21,6 @@ public class StoreSummaryResponse {
     private List<String> storeImages;
 
     private String address;
-    private String operatingHours;
-    private String closingDays;
     private String phone;
     private String storeLink;
 
@@ -40,8 +38,6 @@ public class StoreSummaryResponse {
                 .tags(tags)
                 .storeImages(storeImages)
                 .address(store.getAddress())
-                .operatingHours(store.getOperatingHours())
-                .closingDays(store.getClosingDays())
                 .phone(store.getPhone())
                 .storeLink(store.getStoreLink())
                 .animalYn(store.getAnimalYn())
