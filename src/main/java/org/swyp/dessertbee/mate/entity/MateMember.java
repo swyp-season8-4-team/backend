@@ -24,6 +24,7 @@ public class MateMember {
     @Column(name = "user_id")
     private Long userId;
 
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private MateMemberGrade grade;
@@ -31,11 +32,19 @@ public class MateMember {
     @Column(name = "approval_yn")
     private  Boolean approvalYn;
 
+    @Column(name = "remove_yn")
+    private Boolean removeYn;
+
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
 
     public void softDelete(){
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    public void removeDelete(){
+        this.removeYn = Boolean.TRUE;
         this.deletedAt = LocalDateTime.now();
     }
 }

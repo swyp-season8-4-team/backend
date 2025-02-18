@@ -2,6 +2,7 @@ package org.swyp.dessertbee.store.menu.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class MenuService {
 
     private final MenuRepository menuRepository;
@@ -77,7 +79,8 @@ public class MenuService {
         menus.forEach(menu -> {
             MultipartFile file = menuImageFiles.get(menu.getName());
             if (file != null) {
-                imageService.uploadAndSaveImage(file, ImageType.MENU, menu.getMenuId(), "menu/" + menu.getMenuId());
+                String url = imageService.uploadAndSaveImage(file, ImageType.MENU, menu.getMenuId(), "menu/" + menu.getMenuId());
+                log.info(url);
             }
         });
     }

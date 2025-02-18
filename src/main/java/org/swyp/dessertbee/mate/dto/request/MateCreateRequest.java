@@ -20,6 +20,9 @@ public class MateCreateRequest {
     private UUID userUuid;
 
     @NotNull
+    private Long userId;
+
+    @NotNull
     private Long mateCategoryId;
 
     @NotNull

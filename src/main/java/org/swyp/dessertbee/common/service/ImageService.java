@@ -23,7 +23,7 @@ public class ImageService {
     private final ImageRepository imageRepository;
     private final S3Service s3Service;
 
-    /** S3에 업로드 후 DB에 저장 */
+    /** 다중 이미지 업로드 후 URL 반환 */
     public void uploadAndSaveImages(List<MultipartFile> files, ImageType refType, Long refId, String folder) {
         if (files == null || files.isEmpty()) return;
 
@@ -43,9 +43,9 @@ public class ImageService {
         imageRepository.saveAll(images);
     }
 
-    /** 단일 이미지 업로드 */
-    public void uploadAndSaveImage(MultipartFile file, ImageType refType, Long refId, String folder) {
-        if (file == null) return;
+    /** 단일 이미지 업로드 후 URL 반환 */
+    public String uploadAndSaveImage(MultipartFile file, ImageType refType, Long refId, String folder) {
+        if (file == null) return null;
 
         try {
             String url = s3Service.uploadFile(file, folder);
@@ -59,13 +59,14 @@ public class ImageService {
 
             imageRepository.save(image);
             log.info("이미지 업로드 성공 - type: {}, refId: {}", refType, refId);
+            return url;
         } catch (Exception e) {
             log.error("이미지 업로드 실패 - type: {}, refId: {}", refType, refId, e);
             throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR);
         }
     }
 
-    /** 특정 refType과 refId에 해당하는 이미지 조회 */
+    /** 특정 refType과 refId에 해당하는 이미지 조회 (URL 반환) */
     public List<String> getImagesByTypeAndId(ImageType refType, Long refId) {
         return imageRepository.findByRefTypeAndRefId(refType, refId)
                 .stream()
@@ -73,32 +74,41 @@ public class ImageService {
                 .collect(Collectors.toList());
     }
 
-    /** 여러 refId에 해당하는 이미지 한번에 조회 */
+    /** 여러 refId에 해당하는 이미지 조회 */
     public Map<Long, List<String>> getImagesByTypeAndIds(ImageType type, List<Long> refIds) {
         List<Image> images = imageRepository.findByRefTypeAndRefIdIn(type, refIds);
-
         return images.stream()
-                .collect(Collectors.groupingBy(
-                        Image::getRefId,
-                        Collectors.mapping(Image::getUrl, Collectors.toList())
-                ));
+                .collect(Collectors.groupingBy(Image::getRefId,
+                        Collectors.mapping(Image::getUrl, Collectors.toList())));
     }
 
-    /** 특정 refType과 refId를 가진 모든 이미지 삭제 (S3 + DB) */
+    /** 기존 이미지 삭제 후 새 이미지 업로드 */
+    @Transactional
+    public void updateImage(ImageType refType, Long refId, MultipartFile newFile, String folder) {
+        deleteImagesByRefId(refType, refId);
+        uploadAndSaveImage(newFile, refType, refId, folder);
+    }
+
+    /** 기존 이미지 일부 삭제 후 새로운 이미지 추가 */
+    @Transactional
+    public void updatePartialImages(List<Long> deleteImageIds, List<MultipartFile> newFiles, ImageType refType, Long refId, String folder) {
+        if (deleteImageIds != null && !deleteImageIds.isEmpty()) {
+            deleteImagesByIds(deleteImageIds);
+        }
+
+        if (newFiles != null && !newFiles.isEmpty()) {
+            uploadAndSaveImages(newFiles, refType, refId, folder);
+        }
+    }
+
+    /** 특정 refType과 refId를 가진 모든 이미지 삭제 */
     @Transactional
     public void deleteImagesByRefId(ImageType refType, Long refId) {
         List<Image> images = imageRepository.findByRefTypeAndRefId(refType, refId);
-
-        String result = images.stream()
-                .map(image -> "ID: " + image.getId() + ", URL: " + image.getUrl()) // 원하는 필드 선택
-                .collect(Collectors.joining("\n"));
-
-        System.out.println(result);
-
         deleteImages(images);
     }
 
-    /** 여러 개의 이미지 ID를 받아 한 번에 삭제 */
+    /** 여러 개의 이미지 ID 삭제 */
     @Transactional
     public void deleteImagesByIds(List<Long> imageIds) {
         List<Image> images = imageRepository.findAllById(imageIds);
@@ -109,32 +119,8 @@ public class ImageService {
     private void deleteImages(List<Image> images) {
         if (images.isEmpty()) return;
 
-
-
-        //image filename 이 아닌 url 보내주기
-        images.forEach(image -> s3Service.deleteFile(image.getPath(), image.getUrl()));
+        images.forEach(image -> s3Service.deleteFile(image.getUrl()));
 
         imageRepository.deleteAll(images);
-    }
-
-    /** 기존 이미지 삭제 후 새 이미지 업로드 */
-    @Transactional
-    public void updateImage(ImageType refType, Long refId, MultipartFile newFile, String folder) {
-        deleteImagesByRefId(refType, refId);
-        uploadAndSaveImage(newFile, refType, refId, folder);
-    }
-
-    /** 특정 이미지 ID들만 삭제하고 새 이미지 추가 */
-    @Transactional
-    public void updatePartialImages(List<Long> deleteImageIds, List<MultipartFile> newFiles, ImageType refType, Long refId, String folder) {
-        // 기존 이미지 중 선택한 이미지 삭제
-        if (deleteImageIds != null && !deleteImageIds.isEmpty()) {
-            deleteImagesByIds(deleteImageIds);
-        }
-
-        // 새로운 이미지 업로드
-        if (newFiles != null && !newFiles.isEmpty()) {
-            uploadAndSaveImages(newFiles, refType, refId, folder);
-        }
     }
 }
