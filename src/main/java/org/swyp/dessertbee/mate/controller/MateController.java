@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.mate.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -16,6 +17,7 @@ import org.swyp.dessertbee.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.mate.service.MateMemberService;
 import org.swyp.dessertbee.mate.service.MateService;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Tag(name = "Mate", description = "디저트메이트 관련 API")
@@ -26,6 +28,7 @@ public class MateController {
 
     private final MateService mateService;
     private final MateMemberService mateMemberService;
+    private final ObjectMapper objectMapper;
 
     /**
      * 메이트 등록
@@ -36,10 +39,23 @@ public class MateController {
             @ApiResponse(responseCode = "400", description = "잘못된 요청")
     })
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<MateDetailResponse> createMate(@RequestPart("request") @Valid MateCreateRequest request,
+    public ResponseEntity<MateDetailResponse> createMate(@RequestPart("request")  String requestJson,
                                                          @RequestPart(value = "mateImage", required = false) List<MultipartFile> mateImage) {
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(mateService.createMate(request, mateImage));
+        MateCreateRequest request;
+        try {
+
+            //JSON 문자열을 MateCreateRequest 객체로 변환
+            request = objectMapper.readValue(requestJson, MateCreateRequest.class);
+
+
+        }catch (Exception e) {
+            e.printStackTrace();  // 에러 로그 출력
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        MateDetailResponse response = mateService.createMate(request, mateImage);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     /**
@@ -47,10 +63,10 @@ public class MateController {
      */
     @Operation(summary = "메이트 상세 정보 조회", description = "디저트메이트 상세 정보 조회합니다.")
     @GetMapping("/{mateUuid}/details")
-    public MateDetailResponse getMateDetails(@PathVariable UUID mateUuid) {
+    public ResponseEntity<MateDetailResponse> getMateDetails(@PathVariable UUID mateUuid) {
 
-
-        return mateService.getMateDetails(mateUuid);
+        MateDetailResponse mate = mateService.getMateDetails(mateUuid);
+        return ResponseEntity.ok(mate);
     }
 
 
@@ -75,9 +91,23 @@ public class MateController {
     @Operation(summary = "메이트 수정", description = "디저트메이트 수정합니다.")
     public ResponseEntity<String> updateMate(
             @PathVariable UUID mateUuid,
-            @RequestPart("request") MateCreateRequest request,
+            @RequestPart(value = "request") String requestJson,
             @RequestPart(value = "mateImage", required = false) MultipartFile mateImage
     ){
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        MateCreateRequest request;
+
+
+        try {
+
+            //JSON 문자열을 MateCreateRequest 객체로 변환
+            request = objectMapper.readValue(requestJson, MateCreateRequest.class);
+
+        }catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(null);
+        }
 
         mateService.updateMate(mateUuid, request, mateImage);
         return ResponseEntity.ok("디저트메이트가 성공적으로 수정되었습니다.");
@@ -97,7 +127,6 @@ public class MateController {
         if (from >= to) {
             throw new IllegalArgumentException("잘못된 범위 설정");
         }
-
 
         return ResponseEntity.ok(mateService.getMates(from, to));
     }

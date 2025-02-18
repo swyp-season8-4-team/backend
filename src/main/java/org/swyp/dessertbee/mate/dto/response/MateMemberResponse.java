@@ -15,10 +15,13 @@ import java.util.UUID;
 @AllArgsConstructor
 public class MateMemberResponse {
 
+    private Long mateId;
     private UUID mateUuid;
+    private Long userId;
     private UUID userUUid;
     private String grade;
     private Boolean approvalYn;
+    private Boolean removeYn;
     private List<String> userImage;
     private String nickname;
 
@@ -27,10 +30,13 @@ public class MateMemberResponse {
                                                 UserEntity user,
                                                 List<String> userImage) {
         return MateMemberResponse.builder()
+                .mateId(member.getMateId())
                 .mateUuid(mateUuid)
+                .userId(user.getId())
                 .userUUid(user.getUserUuid())
                 .grade(member.getGrade().toString())
                 .approvalYn(member.getApprovalYn())
+                .removeYn(member.getRemoveYn())
                 .userImage(userImage)
                 .nickname(user.getNickname())
                 .build();

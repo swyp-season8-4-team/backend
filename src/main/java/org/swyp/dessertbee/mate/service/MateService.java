@@ -40,16 +40,10 @@ public class MateService {
     /** 메이트 등록 */
     public MateDetailResponse createMate(MateCreateRequest request, List<MultipartFile> mateImage) {
 
-        Long userId = userRepository.findIdByUserUuid(request.getUserUuid());
-
-        //userId 존재 여부 확인
-        if (userId == null) {
-            throw new IllegalArgumentException("존재하지 않는 유저입니다.");
-        }
 
         Mate mate = mateRepository.save(
                 Mate.builder()
-                        .userId(userId)
+                        .userId(request.getUserId())
                         .mateCategoryId(request.getMateCategoryId())
                         .title(request.getTitle())
                         .content(request.getContent())
@@ -65,7 +59,7 @@ public class MateService {
         }
 
         //디저트 메이트 mateId를 가진 member 데이터 생성
-        mateMemberService.addCreatorAsMember(mate.getMateUuid(), userId);
+        mateMemberService.addCreatorAsMember(mate.getMateUuid(), request.getUserId());
 
         return getMateDetails(mate.getMateUuid());
     }

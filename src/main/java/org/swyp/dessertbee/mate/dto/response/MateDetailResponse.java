@@ -14,7 +14,9 @@ import java.util.UUID;
 @AllArgsConstructor
 public class MateDetailResponse {
 
+    private Long mateId;
     private UUID mateUuid;
+    private Long userId;
     private UUID userUuid;
     private String nickname;
     private String title;
@@ -32,6 +34,7 @@ public class MateDetailResponse {
 
         return MateDetailResponse.builder()
                 .mateUuid(mate.getMateUuid())
+                .userId(mate.getUserId())
                 .userUuid(creator.getUserUuid())
                 .nickname(creator.getNickname())
                 .title(mate.getTitle())
