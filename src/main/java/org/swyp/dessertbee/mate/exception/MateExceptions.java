@@ -25,17 +25,6 @@ public class MateExceptions {
         }
     }
 
-    /**
-     * 디저트메이트 신청 중복
-     * */
-    public static class DuplicateApplyException extends BusinessException {
-        public DuplicateApplyException(){super(ErrorCode.DUPLICATE_APPLY);}
-
-        public DuplicateApplyException(String message) {
-            super(ErrorCode.USER_NOT_FOUND,message );
-        }
-
-    }
 
     /**
      * 디저트메이트 목록 조회 예외(잘못된 범위 설정)
@@ -47,4 +36,64 @@ public class MateExceptions {
             super(ErrorCode.INVALID_RANGE, message);
         }
     }
+
+    /**
+     * 디저트메이트 신청 대기 예외
+     * */
+    public static class MateApplyWaitException extends BusinessException {
+        public MateApplyWaitException(){super(ErrorCode.MATE_APPLY_WAIT);}
+
+        public MateApplyWaitException(String message) {
+            super(ErrorCode.MATE_APPLY_WAIT, message);
+        }
+    }
+
+    /**
+     * 디저트메이트 신청 강퇴 예외
+     * */
+    public static class MateApplyBannedException extends BusinessException {
+
+        public MateApplyBannedException(){super(ErrorCode.MATE_APPLY_REJECT);}
+
+        public MateApplyBannedException(String message) {
+            super(ErrorCode.MATE_APPLY_BANNED, message);
+        }
+    }
+
+    /**
+     * 디저트메이트 신청 거절 예외
+     * */
+    public static class MateApplyRejectException extends BusinessException {
+        public MateApplyRejectException(){super(ErrorCode.MATE_APPLY_REJECT);}
+        public MateApplyRejectException(String message) {
+            super(ErrorCode.MATE_APPLY_REJECT, message);
+        }
+    }
+
+    /**
+     * 디저트메이트 신청자가 기존 팀원일 때 예외
+     * */
+    public static class AlreadyTeamMemberException extends BusinessException {
+        public AlreadyTeamMemberException() {
+            super(ErrorCode.ALREADY_TEAM_MEMBER);
+        }
+        public AlreadyTeamMemberException(String message) {
+            super(ErrorCode.ALREADY_TEAM_MEMBER, message);
+        }
+    }
+
+    /**
+     * 관리자 권한 예외
+     * */
+    public static class PermissionDeniedException extends BusinessException {
+        public PermissionDeniedException(){
+            super(ErrorCode.MATE_PERMISSION_DENIED);
+        }
+        public PermissionDeniedException(String message) {
+            super(ErrorCode.MATE_PERMISSION_DENIED,message);
+        }
+    }
+
+
+
 }

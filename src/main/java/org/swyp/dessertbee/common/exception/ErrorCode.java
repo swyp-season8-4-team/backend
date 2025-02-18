@@ -49,9 +49,13 @@ public enum ErrorCode {
 
 
     MATE_NOT_FOUND(HttpStatus.NOT_FOUND,"M001" ,"존재하지 않는 디저트메이트입니다." ),
-    DUPLICATE_APPLY(HttpStatus.CONFLICT, "MOO2", "이미 신청된 아이디입니다."),
-    MATES_NOT_FOUND(HttpStatus.NOT_FOUND, "M003", "해당 범위에서 메이트 데이터를 찾을 수 없습니다."),
-    INVALID_RANGE(HttpStatus.BAD_REQUEST, "M004", "잘못된 범위 요청입니다.");
+    MATES_NOT_FOUND(HttpStatus.NOT_FOUND, "M002", "해당 범위에서 메이트 데이터를 찾을 수 없습니다."),
+    INVALID_RANGE(HttpStatus.BAD_REQUEST, "M003", "잘못된 범위 요청입니다."),
+    MATE_APPLY_WAIT(HttpStatus.CONFLICT, "M004", "메이트 신청 대기 중입니다."),
+    MATE_APPLY_BANNED(HttpStatus.FORBIDDEN, "M005" , "디저트메이트 강퇴 당한 사람입니다. 신청 불가능합니다."),
+    MATE_APPLY_REJECT(HttpStatus.FORBIDDEN, "M006" , "거절 된 메이트입니다. 신청 불가능합니다."),
+    ALREADY_TEAM_MEMBER(HttpStatus.CONFLICT,"M007" , "해당 사용자는 이미 팀원입니다."),
+    MATE_PERMISSION_DENIED(HttpStatus.FORBIDDEN, "M008","메이트 관리자 권한이 없습니다.");
 
 
     private final HttpStatus httpStatus;
