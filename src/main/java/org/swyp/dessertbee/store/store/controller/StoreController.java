@@ -13,6 +13,7 @@ import org.swyp.dessertbee.store.store.dto.response.StoreDetailResponse;
 import org.swyp.dessertbee.store.store.dto.response.StoreMapResponse;
 import org.swyp.dessertbee.store.store.dto.response.StoreSummaryResponse;
 import org.swyp.dessertbee.store.store.service.StoreService;
+import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.util.Collections;
 import java.util.List;
@@ -69,11 +70,11 @@ public class StoreController {
 
     /** 가게 상세 정보 조회 */
     @GetMapping("/{storeUuid}/details")
-    public StoreDetailResponse getStoreDetails(@PathVariable UUID storeUuid) {
+    public StoreDetailResponse getStoreDetails(@PathVariable UUID storeUuid, UserEntity user) {
         if (storeUuid == null) {
             throw new IllegalArgumentException("storeUuid가 요청에서 누락되었습니다.");
         }
-        return storeService.getStoreDetails(storeUuid);
+        return storeService.getStoreDetails(storeUuid, user);
     }
 
 }
