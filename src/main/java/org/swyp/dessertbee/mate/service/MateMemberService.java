@@ -233,6 +233,7 @@ public class MateMemberService {
     /**
      * 디저트 메이트 멤버 강퇴 api
      * */
+    @Transactional
     public void removeMember(UUID mateUuid, UUID creatorUuid, UUID targetUuid) {
 
         //mateUuid로 mateId 조회
@@ -275,6 +276,7 @@ public class MateMemberService {
     /**
      * 디저트 메이트 멤버 탈퇴 api
      * */
+    @Transactional
     public void leaveMember(UUID mateUuid, UUID userUuid) {
 
         //mateUuid로 mateId 조회
