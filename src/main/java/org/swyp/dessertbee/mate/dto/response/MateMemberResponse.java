@@ -30,7 +30,9 @@ public class MateMemberResponse {
                                                 UserEntity user,
                                                 List<String> userImage) {
         return MateMemberResponse.builder()
+                .mateId(member.getMateId())
                 .mateUuid(mateUuid)
+                .userId(user.getId())
                 .userUUid(user.getUserUuid())
                 .grade(member.getGrade().toString())
                 .approvalYn(member.getApprovalYn())
