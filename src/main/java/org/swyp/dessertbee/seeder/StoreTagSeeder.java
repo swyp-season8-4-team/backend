@@ -24,10 +24,10 @@ public class StoreTagSeeder implements CommandLineRunner {
         seedStoreTags();
     }
 
-    @Transactional  // 트랜잭션을 별도로 분리하여 적용
+    @Transactional
     public void seedTagCategories() {
         List<String> categoryNames = List.of(
-                "음식 종류", "음료 종류", "편의 시설", "분위기", "운영 스타일", "특화 서비스"
+                "베이커리", "디저트", "전통 간식", "스페셜/시즌 디저트"
         );
 
         for (String name : categoryNames) {
@@ -39,45 +39,56 @@ public class StoreTagSeeder implements CommandLineRunner {
         }
     }
 
-    @Transactional  // 트랜잭션을 별도로 분리하여 적용
+    @Transactional
     public void seedStoreTags() {
         List<StoreTag> tags = List.of(
-                // 음식 종류
-                new StoreTag(null, "디저트 전문점", findCategory("음식 종류")),
-                new StoreTag(null, "베이커리", findCategory("음식 종류")),
-                new StoreTag(null, "브런치 제공", findCategory("음식 종류")),
-                new StoreTag(null, "비건 옵션 있음", findCategory("음식 종류")),
+                // 베이커리
+                new StoreTag(null, "베이글", findCategory("베이커리")),
+                new StoreTag(null, "샌드위치 / 핫도그", findCategory("베이커리")),
+                new StoreTag(null, "프레첼", findCategory("베이커리")),
+                new StoreTag(null, "도넛", findCategory("베이커리")),
+                new StoreTag(null, "소금빵", findCategory("베이커리")),
+                new StoreTag(null, "타르트", findCategory("베이커리")),
+                new StoreTag(null, "토스트", findCategory("베이커리")),
+                new StoreTag(null, "크루아상", findCategory("베이커리")),
+                new StoreTag(null, "파이", findCategory("베이커리")),
+                new StoreTag(null, "식사빵", findCategory("베이커리")),
 
-                // 음료 종류
-                new StoreTag(null, "스페셜티 커피", findCategory("음료 종류")),
-                new StoreTag(null, "차(Tea) 전문", findCategory("음료 종류")),
-                new StoreTag(null, "수제 음료", findCategory("음료 종류")),
-                new StoreTag(null, "와인 및 칵테일 제공", findCategory("음료 종류")),
+                // 디저트
+                new StoreTag(null, "케이크", findCategory("디저트")),
+                new StoreTag(null, "구움과자", findCategory("디저트")),
+                new StoreTag(null, "마카롱", findCategory("디저트")),
+                new StoreTag(null, "브라우니", findCategory("디저트")),
+                new StoreTag(null, "와플", findCategory("디저트")),
+                new StoreTag(null, "브런치", findCategory("디저트")),
+                new StoreTag(null, "초콜릿", findCategory("디저트")),
+                new StoreTag(null, "푸딩", findCategory("디저트")),
+                new StoreTag(null, "젤리", findCategory("디저트")),
+                new StoreTag(null, "사탕", findCategory("디저트")),
 
-                // 편의 시설
-                new StoreTag(null, "주차 가능", findCategory("편의 시설")),
-                new StoreTag(null, "콘센트 제공", findCategory("편의 시설")),
-                new StoreTag(null, "와이파이 가능", findCategory("편의 시설")),
-                new StoreTag(null, "넓은 좌석", findCategory("편의 시설")),
-                new StoreTag(null, "테라스 좌석 있음", findCategory("편의 시설")),
+                // 전통 간식
+                new StoreTag(null, "붕어빵", findCategory("전통 간식")),
+                new StoreTag(null, "꽈배기", findCategory("전통 간식")),
+                new StoreTag(null, "호두과자", findCategory("전통 간식")),
+                new StoreTag(null, "호떡", findCategory("전통 간식")),
+                new StoreTag(null, "떡", findCategory("전통 간식")),
+                new StoreTag(null, "약과", findCategory("전통 간식")),
+                new StoreTag(null, "오란다", findCategory("전통 간식")),
+                new StoreTag(null, "한과", findCategory("전통 간식")),
+                new StoreTag(null, "개성주악", findCategory("전통 간식")),
+                new StoreTag(null, "정과", findCategory("전통 간식")),
 
-                // 분위기
-                new StoreTag(null, "조용한 분위기", findCategory("분위기")),
-                new StoreTag(null, "활기찬 분위기", findCategory("분위기")),
-                new StoreTag(null, "루프탑 있음", findCategory("분위기")),
-                new StoreTag(null, "감성적인 인테리어", findCategory("분위기")),
-
-                // 운영 스타일
-                new StoreTag(null, "로컬 카페", findCategory("운영 스타일")),
-                new StoreTag(null, "프랜차이즈 카페", findCategory("운영 스타일")),
-                new StoreTag(null, "무인 운영", findCategory("운영 스타일")),
-
-                // 특화 서비스
-                new StoreTag(null, "애완동물 동반 가능", findCategory("특화 서비스")),
-                new StoreTag(null, "도서 구비", findCategory("특화 서비스")),
-                new StoreTag(null, "개인 작업하기 좋음", findCategory("특화 서비스")),
-                new StoreTag(null, "예약 가능", findCategory("특화 서비스")),
-                new StoreTag(null, "배달 및 테이크아웃 가능", findCategory("특화 서비스"))
+                // 스페셜/시즌 디저트
+                new StoreTag(null, "그릭요거트", findCategory("스페셜/시즌 디저트")),
+                new StoreTag(null, "아이스크림", findCategory("스페셜/시즌 디저트")),
+                new StoreTag(null, "빙수", findCategory("스페셜/시즌 디저트")),
+                new StoreTag(null, "파르페", findCategory("스페셜/시즌 디저트")),
+                new StoreTag(null, "퓨전 디저트", findCategory("스페셜/시즌 디저트")),
+                new StoreTag(null, "시즌 디저트", findCategory("스페셜/시즌 디저트")),
+                new StoreTag(null, "건강 디저트", findCategory("스페셜/시즌 디저트")),
+                new StoreTag(null, "월드 디저트", findCategory("스페셜/시즌 디저트")),
+                new StoreTag(null, "커스텀 디저트", findCategory("스페셜/시즌 디저트")),
+                new StoreTag(null, "지역 특산 디저트", findCategory("스페셜/시즌 디저트"))
         );
 
         for (StoreTag tag : tags) {
