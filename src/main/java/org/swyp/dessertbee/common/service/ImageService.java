@@ -24,6 +24,7 @@ public class ImageService {
     private final S3Service s3Service;
 
     /** 다중 이미지 업로드 후 URL 반환 */
+    @Transactional
     public void uploadAndSaveImages(List<MultipartFile> files, ImageType refType, Long refId, String folder) {
         if (files == null || files.isEmpty()) return;
 
@@ -68,6 +69,16 @@ public class ImageService {
 
     /** 특정 refType과 refId에 해당하는 이미지 조회 (URL 반환) */
     public List<String> getImagesByTypeAndId(ImageType refType, Long refId) {
+        if (refId == null) {
+            log.error("이미지 조회 실패 - refId가 null입니다. refType: {}", refType);
+            return List.of();
+        }
+
+        List<Image> images = imageRepository.findByRefTypeAndRefId(refType, refId);
+
+        // 로그 추가
+        log.info("조회된 이미지 개수: {}, refType: {}, refId: {}", images.size(), refType, refId);
+
         return imageRepository.findByRefTypeAndRefId(refType, refId)
                 .stream()
                 .map(Image::getUrl)
