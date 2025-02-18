@@ -52,8 +52,6 @@ public class Store {
     private Boolean parkingYn;
 
     private String description;
-    private String operatingHours;
-    private String closingDays;
 
     @Column(precision = 3, scale = 2)
     @Builder.Default

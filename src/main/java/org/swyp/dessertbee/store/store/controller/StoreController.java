@@ -14,6 +14,7 @@ import org.swyp.dessertbee.store.store.dto.response.StoreMapResponse;
 import org.swyp.dessertbee.store.store.dto.response.StoreSummaryResponse;
 import org.swyp.dessertbee.store.store.service.StoreService;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -31,17 +32,23 @@ public class StoreController {
     public ResponseEntity<StoreDetailResponse> createStore(
             @RequestPart("request") String requestJson,  // JSON 문자열로 받음
             @RequestPart(value = "storeImageFiles", required = false) List<MultipartFile> storeImageFiles,
+            @RequestPart(value = "ownerPickImageFiles", required = false) List<MultipartFile> ownerPickImageFiles,
             @RequestPart(value = "menuImageFiles", required = false) List<MultipartFile> menuImageFiles) {
 
         try {
             // JSON 문자열을 StoreCreateRequest 객체로 변환
             StoreCreateRequest request = objectMapper.readValue(requestJson, StoreCreateRequest.class);
 
-            StoreDetailResponse response = storeService.createStore(request, storeImageFiles, menuImageFiles);
+            storeImageFiles = storeImageFiles != null ? storeImageFiles : Collections.emptyList();
+            ownerPickImageFiles = ownerPickImageFiles != null ? ownerPickImageFiles : Collections.emptyList();
+            menuImageFiles = menuImageFiles != null ? menuImageFiles : Collections.emptyList();
+
+            // 가게 생성
+            StoreDetailResponse response = storeService.createStore(request, storeImageFiles, ownerPickImageFiles, menuImageFiles);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
             e.printStackTrace();  // 에러 로그 출력
-            return ResponseEntity.badRequest().body(null); // JSON 변환 실패 시 예외 처리
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 

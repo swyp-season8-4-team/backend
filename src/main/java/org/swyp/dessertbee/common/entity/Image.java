@@ -18,7 +18,7 @@ public class Image {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "ref_type", nullable = false)
-    private ImageType refType; // 'STORE', 'MENU', 'EVENT', 'REVIEW', 'PROFILE', 'MATE', 'SHORT'
+    private ImageType refType; // 'STORE', 'OWNERPICK', 'MENU', 'EVENT', 'REVIEW', 'PROFILE', 'MATE', 'SHORT'
 
     @Column(name = "ref_id", nullable = false)
     private Long refId; // 참조 ID
