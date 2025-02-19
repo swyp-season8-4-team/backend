@@ -14,7 +14,9 @@ import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -26,6 +28,7 @@ public class TokenService {
     private final AuthRepository authRepository;
     private final UserRepository userRepository;
     private final JWTUtil jwtUtil;
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     /**
      * 리프레시 토큰을 저장하거나 업데이트
@@ -49,6 +52,10 @@ public class TokenService {
 
             long refreshTokenExpireTime = 864000000; // 추후 변경
             auth.updateRefreshToken(refreshToken, LocalDateTime.now().plusSeconds(refreshTokenExpireTime));
+            // JWTUtil의 LONG_REFRESH_TOKEN_EXPIRE 값과 동일하게 설정
+            LocalDateTime expirationTime = LocalDateTime.now(KST)
+                    .plus(Duration.ofMillis(jwtUtil.getLONG_REFRESH_TOKEN_EXPIRE()));
+            auth.updateRefreshToken(refreshToken, expirationTime);
 
             authRepository.save(auth);
 
@@ -114,8 +121,8 @@ public class TokenService {
                         return new BusinessException(ErrorCode.INVALID_CREDENTIALS, "리프레시 토큰이 존재하지 않습니다.");
                     });
 
-            // 리프레시 토큰 만료 여부 확인
-            if (auth.getRefreshTokenExpiresAt().isBefore(LocalDateTime.now())) {
+            // 리프레시 토큰 만료 여부 KST 기준으로 확인
+            if (auth.getRefreshTokenExpiresAt().isBefore(LocalDateTime.now(KST))) {
                 log.warn("리프레시 토큰 검증 실패 - 만료된 토큰: {}", email);
                 throw new BusinessException(ErrorCode.EXPIRED_VERIFICATION_TOKEN, "리프레시 토큰이 만료되었습니다.");
             }
@@ -128,16 +135,12 @@ public class TokenService {
             boolean keepLoggedIn = false; // 로그인 유지 여부 (프론트엔드에서 전달받을 수도 있음)
             String newAccessToken = jwtUtil.createAccessToken(email, roles, keepLoggedIn);
 
-            // 액세스 토큰 만료 시간 가져오기 (추후 추가)
-            long expiresIn = 86400000;
-
-
             log.info("리프레시 토큰 검증 성공 - 새로운 액세스 토큰 발급 완료: {}", email);
 
             return TokenResponse.builder()
                     .accessToken(newAccessToken)
                     .tokenType("Bearer")
-                    .expiresIn(expiresIn)
+                    .expiresIn(jwtUtil.getSHORT_ACCESS_TOKEN_EXPIRE())
                     .build();
         }
         catch (BusinessException e) {
