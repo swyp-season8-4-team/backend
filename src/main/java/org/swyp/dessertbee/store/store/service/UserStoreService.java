@@ -42,15 +42,13 @@ public class UserStoreService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 유저를 찾을 수 없습니다."));
 
         List<UserStoreList> lists = userStoreListRepository.findByUser(user);
-        long totalLists = lists.size();
 
         return lists.stream()
                 .map(list -> new UserStoreListResponse(
                         userUuid,
                         list.getListName(),
                         list.getIconColorId(),
-                        savedStoreRepository.countByUserStoreList(list),
-                        totalLists
+                        savedStoreRepository.countByUserStoreList(list)
                 ))
                 .collect(Collectors.toList());
     }
@@ -77,8 +75,7 @@ public class UserStoreService {
                 userUuid,
                 newList.getListName(),
                 newList.getIconColorId(),
-                0,
-                userStoreListRepository.countByUser(user)
+                0
         );
     }
 
@@ -94,8 +91,7 @@ public class UserStoreService {
                 list.getUser().getUserUuid(),
                 list.getListName(),
                 list.getIconColorId(),
-                savedStoreRepository.countByUserStoreList(list),
-                userStoreListRepository.countByUser(list.getUser())
+                savedStoreRepository.countByUserStoreList(list)
         );
     }
 

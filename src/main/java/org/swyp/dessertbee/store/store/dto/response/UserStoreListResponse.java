@@ -14,5 +14,4 @@ public class UserStoreListResponse {
     private String listName;
     private Long iconColorId;
     private int storeCount;
-    private long totalLists;
 }
