@@ -97,6 +97,13 @@ public class UserStoreService {
 
     /** 저장 리스트 삭제 */
     public void deleteUserStoreList(Long listId) {
+        UserStoreList list = userStoreListRepository.findById(listId)
+                .orElseThrow(() -> new IllegalArgumentException("저장 리스트를 찾을 수 없습니다."));
+
+        // 리스트 내 저장된 가게 삭제
+        savedStoreRepository.deleteByUserStoreList(list);
+
+        // 리스트 삭제
         userStoreListRepository.deleteById(listId);
     }
 

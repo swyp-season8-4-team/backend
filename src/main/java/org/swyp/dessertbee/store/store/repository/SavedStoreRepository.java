@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.store.store.repository;
 
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.swyp.dessertbee.store.store.entity.SavedStore;
@@ -16,4 +17,8 @@ public interface SavedStoreRepository extends JpaRepository<SavedStore, Long> {
 
     /** 특정 저장 리스트에 저장된 가게 개수 반환 */
     int countByUserStoreList(UserStoreList userStoreList);
+
+    /** 특정 리스트에 저장된 가게 삭제 */
+    @Transactional
+    void deleteByUserStoreList(UserStoreList userStoreList);
 }
