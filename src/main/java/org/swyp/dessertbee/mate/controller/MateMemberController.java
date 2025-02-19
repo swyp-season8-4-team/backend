@@ -6,7 +6,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.mate.dto.response.MateMemberResponse;
 import org.swyp.dessertbee.mate.service.MateMemberService;
-import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 import java.util.List;
 import java.util.UUID;
@@ -36,7 +35,7 @@ public class MateMemberController {
     @PostMapping("/apply")
     public ResponseEntity<String> applyMate(@PathVariable UUID mateUuid, Long userId, UUID userUuid) {
 
-        mateMemberService.applyMate(mateUuid, userId ,userUuid);
+        mateMemberService.applyMate(mateUuid ,userUuid);
         return ResponseEntity.ok("디저트메이트에 성공적으로 신청되었습니다.");
     }
 
@@ -46,7 +45,7 @@ public class MateMemberController {
     @PatchMapping("/apply")
     public ResponseEntity<String> acceptMemeber(@PathVariable UUID mateUuid, Long userId, UUID userUuid) {
 
-        mateMemberService.acceptMember(mateUuid, userId, userUuid);
+        mateMemberService.acceptMember(mateUuid, userUuid);
         return ResponseEntity.ok("팀원이 되었습니다~!");
     }
 
