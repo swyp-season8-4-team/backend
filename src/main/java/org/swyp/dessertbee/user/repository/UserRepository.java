@@ -38,6 +38,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     /**
      * Uuid로 userId 조회 (삭제되지 않은 계정만)
      * */
+    /* @Query("SELECT u.id FROM UserEntity u WHERE FUNCTION('UUID_TO_BIN', u.userUuid) = :userUuid AND u.deletedAt IS NULL") */
     @Query("SELECT u.id FROM UserEntity u WHERE u.userUuid = :userUuid AND u.deletedAt IS NULL")
     Long findIdByUserUuid(UUID userUuid);
 
@@ -46,7 +47,6 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
      * */
     @Query("SELECT u.userUuid FROM UserEntity u WHERE u.id = :userId AND u.deletedAt IS NULL")
     UUID findUserUuidById(Long userId);
-
 
     /**
      * userId로 userUuid와 nickname 전체 조회

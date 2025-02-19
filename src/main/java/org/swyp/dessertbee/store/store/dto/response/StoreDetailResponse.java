@@ -8,6 +8,7 @@ import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.entity.StoreHoliday;
 import org.swyp.dessertbee.store.store.entity.StoreOperatingHour;
+import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
@@ -19,6 +20,8 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 public class StoreDetailResponse {
+    private Long userId;
+    private UUID userUuid;
     private Long storeId;
     private UUID storeUuid;
     private String name;
@@ -57,7 +60,7 @@ public class StoreDetailResponse {
         private String reason;
     }
 
-    public static StoreDetailResponse fromEntity(Store store,
+    public static StoreDetailResponse fromEntity(Store store, Long userId, UUID userUuid,
                                                  List<OperatingHourResponse> operatingHours,
                                                  List<HolidayResponse> holidays,
                                                  List<MenuResponse> menus,
@@ -66,6 +69,8 @@ public class StoreDetailResponse {
                                                  List<StoreReviewResponse> storeReviews,
                                                  List<String> tags) {
         return StoreDetailResponse.builder()
+                .userId(userId)
+                .userUuid(userUuid)
                 .storeId(store.getStoreId())
                 .storeUuid(store.getStoreUuid())
                 .name(store.getName())

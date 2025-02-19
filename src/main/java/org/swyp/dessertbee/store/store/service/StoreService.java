@@ -2,6 +2,7 @@ package org.swyp.dessertbee.store.store.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
@@ -17,6 +18,8 @@ import org.swyp.dessertbee.store.store.dto.response.StoreMapResponse;
 import org.swyp.dessertbee.store.store.dto.response.StoreSummaryResponse;
 import org.swyp.dessertbee.store.store.entity.*;
 import org.swyp.dessertbee.store.store.repository.*;
+import org.swyp.dessertbee.user.entity.UserEntity;
+import org.swyp.dessertbee.user.repository.UserRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -37,12 +40,18 @@ public class StoreService {
     private final StoreHolidayRepository storeHolidayRepository;
     private final ImageService imageService;
     private final MenuService menuService;
+    private final UserRepository userRepository;
 
     /** 가게 등록 (이벤트, 쿠폰, 메뉴 + 이미지 포함) */
+    @PreAuthorize("hasRole('ROLE_OWNER')")
     public StoreDetailResponse createStore(StoreCreateRequest request,
                                            List<MultipartFile> storeImageFiles,
                                            List<MultipartFile> ownerPickImageFiles,
                                            List<MultipartFile> menuImageFiles) {
+
+        // ownerId로 UserEntity 조회 (로그인한 사용자 정보)
+        UserEntity user = userRepository.findById(request.getOwnerId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
         if (menuImageFiles == null) {
             menuImageFiles = Collections.emptyList(); // menuImageFiles가 null이면 빈 리스트로 처리
@@ -124,7 +133,7 @@ public class StoreService {
             storeHolidayRepository.saveAll(holidays);
         }
 
-        return getStoreDetails(store.getStoreUuid());
+        return getStoreDetails(store.getStoreUuid(), user);
     }
 
     /** 태그 저장 (1~3개 선택) */
@@ -174,10 +183,14 @@ public class StoreService {
     }
 
     /** 가게 상세 정보 조회 */
-    public StoreDetailResponse getStoreDetails(UUID storeUuid) {
+    public StoreDetailResponse getStoreDetails(UUID storeUuid, UserEntity user) {
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
         Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않거나 삭제된 가게입니다."));
+
+        // 로그인한 사용자인 경우에만 userId, userUuid 포함
+        Long userId = (user != null) ? user.getId() : null;
+        UUID userUuid = (user != null) ? user.getUserUuid() : null;
 
         // 가게 대표 이미지
         List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, storeId);
@@ -225,7 +238,7 @@ public class StoreService {
                 .toList();
 
         // 가게 상세 정보 반환
-        return StoreDetailResponse.fromEntity(store, operatingHourResponses, holidayResponses, menus,
+        return StoreDetailResponse.fromEntity(store, userId, userUuid, operatingHourResponses, holidayResponses, menus,
                 storeImages, ownerPickImages, reviewResponses, tags);
     }
 
