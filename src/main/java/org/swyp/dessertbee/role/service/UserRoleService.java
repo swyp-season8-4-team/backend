@@ -19,7 +19,7 @@ public class UserRoleService {
     // 유저의 역할 목록을 리스트로 가져옴
     public List<String> getUserRoles(UserEntity user) {
         return userRoleRepository.findByUserId(user.getId()).stream()
-                .map(userRole -> userRole.getRole().getName())
+                .map(userRole -> userRole.getRole().getName().getRoleName())
                 .collect(Collectors.toList());
     }
 }

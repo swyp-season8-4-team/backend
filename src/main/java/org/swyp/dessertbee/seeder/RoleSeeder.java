@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.swyp.dessertbee.role.entity.RoleEntity;
+import org.swyp.dessertbee.role.entity.RoleType;
 import org.swyp.dessertbee.role.repository.RoleRepository;
 
 import java.util.List;
@@ -16,12 +17,13 @@ public class RoleSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        List<String> roles = List.of("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER");
-
-        for (String roleName : roles) {
-            if (roleRepository.findByName(roleName).isEmpty()) { // 없다면 추가, 있다면 추가하지 않음
-                roleRepository.save(RoleEntity.builder().name(roleName).build());
-                System.out.println("Seeded Role: " + roleName);
+        // RoleType enum의 모든 값을 순회
+        for (RoleType roleType : RoleType.values()) {
+            if (roleRepository.findByName(roleType).isEmpty()) {
+                roleRepository.save(RoleEntity.builder()
+                        .name(roleType)
+                        .build());
+                System.out.println("Seeded Role: " + roleType.getRoleName());
             }
         }
     }

@@ -23,6 +23,7 @@ import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.email.entity.EmailVerificationPurpose;
 import org.swyp.dessertbee.role.entity.RoleEntity;
+import org.swyp.dessertbee.role.entity.RoleType;
 import org.swyp.dessertbee.role.repository.RoleRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
@@ -96,10 +97,10 @@ public class AuthServiceImpl implements AuthService {
                     .gender(request.getGender())
                     .build();
 
-            // 기본 사용자 권한(ROLE_USER) 설정
-            RoleEntity userRole = roleRepository.findByName("ROLE_USER")
-                    .orElseThrow(() -> new RuntimeException("기본 권한이 설정되어 있지 않습니다."));
-            user.addRole(userRole);
+            // 역할 설정
+            RoleEntity role = roleRepository.findByName(request.getRole())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "유효하지 않은 역할입니다."));
+            user.addRole(role);
 
             // 사용자 정보 저장
             userRepository.save(user);
@@ -108,10 +109,10 @@ public class AuthServiceImpl implements AuthService {
 
             return SignUpResponse.success(request.getEmail());
 
-        } catch (BusinessException e) { // 예상하고 정의한 비즈니스 예외
+        } catch (BusinessException e) {
             log.warn("회원가입 실패 - 이메일: {}, 사유: {}", request.getEmail(), e.getMessage());
             throw e;
-        } catch (Exception e) { // 예상하지 못한 모든 시스템 예외
+        } catch (Exception e) {
             log.error("회원가입 처리 중 오류 발생 - 이메일: {}", request.getEmail(), e);
             throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
@@ -141,7 +142,7 @@ public class AuthServiceImpl implements AuthService {
 
             // 3. 사용자 권한 조회
             List<String> roles = user.getUserRoles().stream()
-                    .map(userRole -> userRole.getRole().getName())
+                    .map(userRole -> userRole.getRole().getName().getRoleName())
                     .collect(Collectors.toList());
 
             // 4. Access Token, Refresh Token 생성

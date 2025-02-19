@@ -91,7 +91,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .nickname(user.getNickname())
                 .userUuid(user.getUserUuid())
                 .roles(user.getUserRoles().stream()
-                        .map(userRole -> userRole.getRole().getName())
+                        .map(userRole -> userRole.getRole().getName().getRoleName())
                         .collect(Collectors.toList()))
                 .build();
 

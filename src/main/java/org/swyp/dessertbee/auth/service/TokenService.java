@@ -122,7 +122,7 @@ public class TokenService {
 
             // 새로운 Access Token 생성
             List<String> roles = user.getUserRoles().stream()
-                    .map(userRole -> userRole.getRole().getName())
+                    .map(userRole -> userRole.getRole().getName().getRoleName())
                     .collect(Collectors.toList());
 
             boolean keepLoggedIn = false; // 로그인 유지 여부 (프론트엔드에서 전달받을 수도 있음)
