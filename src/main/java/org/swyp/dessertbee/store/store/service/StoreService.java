@@ -2,6 +2,7 @@ package org.swyp.dessertbee.store.store.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
@@ -42,6 +43,7 @@ public class StoreService {
     private final UserRepository userRepository;
 
     /** 가게 등록 (이벤트, 쿠폰, 메뉴 + 이미지 포함) */
+    @PreAuthorize("hasRole('ROLE_OWNER')")
     public StoreDetailResponse createStore(StoreCreateRequest request,
                                            List<MultipartFile> storeImageFiles,
                                            List<MultipartFile> ownerPickImageFiles,
@@ -50,11 +52,6 @@ public class StoreService {
         // ownerId로 UserEntity 조회 (로그인한 사용자 정보)
         UserEntity user = userRepository.findById(request.getOwnerId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
-
-        // 사용자가 OWNER 역할을 가지고 있는지 체크
-        if (!user.hasRole("ROLE_OWNER")) {
-            throw new IllegalArgumentException("가게 등록은 사장님만 가능합니다.");
-        }
 
         if (menuImageFiles == null) {
             menuImageFiles = Collections.emptyList(); // menuImageFiles가 null이면 빈 리스트로 처리
