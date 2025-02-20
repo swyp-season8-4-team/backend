@@ -34,7 +34,7 @@ public class UserStoreController {
     }
 
     /** 저장 리스트 수정 */
-    @PutMapping("/lists/{listId}")
+    @PatchMapping("/lists/{listId}")
     public ResponseEntity<UserStoreListResponse> updateUserStoreList(@PathVariable Long listId,
                                                              @RequestParam String newName,
                                                              @RequestParam Long newIconColorId) {
