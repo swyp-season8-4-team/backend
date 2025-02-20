@@ -45,6 +45,7 @@ public class UserStoreService {
 
         return lists.stream()
                 .map(list -> new UserStoreListResponse(
+                        list.getId(),
                         userUuid,
                         list.getListName(),
                         list.getIconColorId(),
@@ -72,6 +73,7 @@ public class UserStoreService {
         );
 
         return new UserStoreListResponse(
+                newList.getId(),
                 userUuid,
                 newList.getListName(),
                 newList.getIconColorId(),
@@ -88,6 +90,7 @@ public class UserStoreService {
         userStoreListRepository.save(list);
 
         return new UserStoreListResponse(
+                list.getId(),
                 list.getUser().getUserUuid(),
                 list.getListName(),
                 list.getIconColorId(),
@@ -131,6 +134,7 @@ public class UserStoreService {
         return new SavedStoreResponse(
                 list.getUser().getUserUuid(),
                 store.getStoreUuid(),
+                list.getId(),
                 list.getListName(),
                 store.getName(),
                 store.getAddress(),
@@ -148,6 +152,7 @@ public class UserStoreService {
                 .map(savedStore -> new SavedStoreResponse(
                         list.getUser().getUserUuid(),
                         savedStore.getStore().getStoreUuid(),
+                        list.getId(),
                         list.getListName(),
                         savedStore.getStore().getName(),
                         savedStore.getStore().getAddress(),
