@@ -111,4 +111,14 @@ public class MateReplyController {
 
     }
 
+    /**
+     * 디저트메이트 댓글 삭제
+     * */
+    @DeleteMapping("{replyId}")
+    public ResponseEntity<String> deleteReply(@PathVariable UUID mateUuid, @PathVariable Long replyId) {
+
+        mateReplyService.deleteReply(mateUuid, replyId);
+
+        return ResponseEntity.ok("댓글이 성공적으로 삭제되었습니다.");
+    }
 }

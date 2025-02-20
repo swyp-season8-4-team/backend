@@ -76,6 +76,7 @@ public class MateReplyService {
     /**
      * 디저트메이트 댓글 전체 조회
      * */
+    @Transactional
     public MateReplyPageResponse getReplies(UUID mateUuid, int from, int to) {
 
         if (from >= to) {
@@ -108,6 +109,7 @@ public class MateReplyService {
     /**
      * 디저트메이트 댓글 수정
      * */
+    @Transactional
     public void updateReply(UUID mateUuid, Long replyId, MateReplyCreateRequest request) {
 
         MateUserIds mateUserIds = validateMate(mateUuid);
@@ -120,6 +122,32 @@ public class MateReplyService {
 
         reply.update(request.getContent());
 
+    }
+
+
+    /**
+     * 디저트메이트 댓글 삭제
+     * */
+    @Transactional
+    public void deleteReply(UUID mateUuid, Long replyId) {
+
+        MateUserIds mateUserIds = validateMate(mateUuid);
+        Long mateId = mateUserIds.getMateId();
+
+        MateReply mateReply = mateReplyRepository.findByMateIdAndMateReplyId(mateId, replyId)
+                .orElseThrow(() -> new MateReplyNotFoundException("존재하지 않는 댓글입니다."));
+
+        try {
+
+            mateReply.softDelete();
+
+            mateReplyRepository.save(mateReply);
+
+        } catch (Exception e) {
+
+            System.out.println("❌ 디저트메이트 멤버 탈퇴 중 오류 발생: " + e.getMessage());
+            throw new RuntimeException("디저트메이트 댓글 삭제 실패: " + e.getMessage(), e);
+        }
     }
 
     /**

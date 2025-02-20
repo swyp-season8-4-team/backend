@@ -19,4 +19,6 @@ public interface MateReplyRepository extends JpaRepository<MateReply, Long> {
     List<MateReply> findAllByDeletedAtIsNull(Long mateId, int from, int limit);
 
     Optional<MateReply> findByMateIdAndDeletedAtIsNull(Long replyId);
+
+    Optional<MateReply> findByMateIdAndMateReplyId(Long mateId, Long replyId);
 }
