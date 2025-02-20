@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "saved_store")
@@ -26,6 +27,11 @@ public class SavedStore {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
+
+    @ElementCollection
+    @CollectionTable(name = "saved_store_preferences", joinColumns = @JoinColumn(name = "saved_store_id"))
+    @Column(name = "preference", nullable = false)
+    private List<String> userPreferences;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

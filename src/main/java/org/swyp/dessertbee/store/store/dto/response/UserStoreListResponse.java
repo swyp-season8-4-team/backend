@@ -10,6 +10,7 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 public class UserStoreListResponse {
+    private Long listId;
     private UUID userUuid;
     private String listName;
     private Long iconColorId;

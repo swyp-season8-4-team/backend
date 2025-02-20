@@ -50,8 +50,8 @@ public class UserStoreController {
 
     /** 리스트에 가게 추가 */
     @PostMapping("/lists/{listId}/stores/{storeUuid}")
-    public ResponseEntity<SavedStoreResponse> addStoreToList(@PathVariable Long listId, @PathVariable UUID storeUuid) {
-        return ResponseEntity.ok(userStoreService.addStoreToList(listId, storeUuid));
+    public ResponseEntity<SavedStoreResponse> addStoreToList(@PathVariable Long listId, @PathVariable UUID storeUuid, @RequestBody List<String> userPreferences) {
+        return ResponseEntity.ok(userStoreService.addStoreToList(listId, storeUuid, userPreferences));
     }
 
     /** 리스트별 저장된 가게 조회 */
