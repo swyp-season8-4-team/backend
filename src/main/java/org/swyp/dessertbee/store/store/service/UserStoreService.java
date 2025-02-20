@@ -108,7 +108,7 @@ public class UserStoreService {
     }
 
     /** 리스트에 가게 추가 */
-    public SavedStoreResponse addStoreToList(Long listId, UUID storeUuid) {
+    public SavedStoreResponse addStoreToList(Long listId, UUID storeUuid, List<String> userPreferences) {
         UserStoreList list = userStoreListRepository.findById(listId)
                 .orElseThrow(() -> new IllegalArgumentException("저장 리스트를 찾을 수 없습니다."));
 
@@ -124,6 +124,7 @@ public class UserStoreService {
                 SavedStore.builder()
                         .userStoreList(list)
                         .store(store)
+                        .userPreferences(userPreferences)
                         .build()
         );
 
@@ -133,7 +134,8 @@ public class UserStoreService {
                 list.getListName(),
                 store.getName(),
                 store.getAddress(),
-                imageService.getImagesByTypeAndId(ImageType.STORE, store.getStoreId())
+                imageService.getImagesByTypeAndId(ImageType.STORE, store.getStoreId()),
+                savedStore.getUserPreferences()
         );
     }
 
@@ -149,7 +151,8 @@ public class UserStoreService {
                         list.getListName(),
                         savedStore.getStore().getName(),
                         savedStore.getStore().getAddress(),
-                        imageService.getImagesByTypeAndId(ImageType.STORE, savedStore.getStore().getStoreId())
+                        imageService.getImagesByTypeAndId(ImageType.STORE, savedStore.getStore().getStoreId()),
+                        savedStore.getUserPreferences()
                 ))
                 .collect(Collectors.toList());
     }

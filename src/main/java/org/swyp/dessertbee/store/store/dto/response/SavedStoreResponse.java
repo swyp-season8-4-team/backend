@@ -17,4 +17,5 @@ public class SavedStoreResponse {
     private String storeName;
     private String storeAddress;
     private List<String> imageUrls;
+    private List<String> userPreferences;
 }
