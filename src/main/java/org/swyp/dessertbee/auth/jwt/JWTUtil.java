@@ -1,6 +1,7 @@
 package org.swyp.dessertbee.auth.jwt;
 
 import io.jsonwebtoken.*;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -10,6 +11,9 @@ import org.swyp.dessertbee.email.entity.EmailVerificationPurpose;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -28,10 +32,14 @@ public class JWTUtil {
 
     private final long EMAIL_VERIFICATION_TOKEN_EXPIRE_TIME = 30 * 60 * 1000L;
 
-    private final long SHORT_ACCESS_TOKEN_EXPIRE = 24 * 30 * 60 * 1000L;       // 1일
+    @Getter
+    private final long SHORT_ACCESS_TOKEN_EXPIRE = 24 * 60 * 60 * 1000L;       // 1일
+    @Getter
     private final long LONG_ACCESS_TOKEN_EXPIRE = 3 * 24 * 60 * 60 * 1000L;   // 3일
 
+    @Getter
     private final long SHORT_REFRESH_TOKEN_EXPIRE = 10 * 24 * 60 * 60 * 1000L;   // 10일
+    @Getter
     private final long LONG_REFRESH_TOKEN_EXPIRE = 30 * 24 * 60 * 60 * 1000L;   // 30일
 
 
@@ -69,11 +77,15 @@ public class JWTUtil {
      * JWT 토큰 생성 공통 메서드
      */
     private String createToken(String email, List<String> roles, SecretKey secretKey, long expireTime) {
+        // 현재 시간을 KST로 가져오기
+        ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
+        ZonedDateTime expirationTime = now.plus(Duration.ofMillis(expireTime));
+
         return Jwts.builder()
                 .claim("email", email)
                 .claim("roles", roles)
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expireTime))
+                .issuedAt(Date.from(now.toInstant()))
+                .expiration(Date.from(expirationTime.toInstant()))
                 .signWith(secretKey)
                 .compact();
     }
@@ -138,7 +150,8 @@ public class JWTUtil {
     public long getTokenTimeToLive(String token, boolean isAccessToken) {
         SecretKey key = isAccessToken ? accessTokenSecretKey : refreshTokenSecretKey;
         Date expiration = parseClaims(token, key).getExpiration();
-        return expiration.getTime() - System.currentTimeMillis();
+        // 현재 시간도 KST 기준으로 가져오기
+        return expiration.getTime() - ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toInstant().toEpochMilli();
     }
 
     /**
@@ -147,11 +160,14 @@ public class JWTUtil {
      * @param purpose 인증 목적
      */
     public String createEmailVerificationToken(String email, EmailVerificationPurpose purpose) {
+        ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
+        ZonedDateTime expirationTime = now.plus(Duration.ofMillis(EMAIL_VERIFICATION_TOKEN_EXPIRE_TIME));
+
         return Jwts.builder()
                 .claim("email", email)
                 .claim("purpose", purpose.name())
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + EMAIL_VERIFICATION_TOKEN_EXPIRE_TIME))
+                .issuedAt(Date.from(now.toInstant()))
+                .expiration(Date.from(expirationTime.toInstant()))
                 .signWith(accessTokenSecretKey)
                 .compact();
     }

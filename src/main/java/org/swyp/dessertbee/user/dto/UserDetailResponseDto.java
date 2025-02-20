@@ -15,6 +15,7 @@ public class UserDetailResponseDto extends UserResponseDto {
     private String name;     // 선택
     private String phoneNumber;  // 선택
     private String address;      // 선택
+    private Boolean isPreferencesSet;
 
     @Builder(builderMethodName = "detailBuilder")
     public UserDetailResponseDto(String userUuid, String nickname, UserEntity.Gender gender,
@@ -25,5 +26,7 @@ public class UserDetailResponseDto extends UserResponseDto {
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.address = address;
+        this.isPreferencesSet = preferences != null && !preferences.isEmpty();
+
     }
 }

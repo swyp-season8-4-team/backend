@@ -66,8 +66,15 @@ public class JWTFilter extends OncePerRequestFilter {
      * Request Header에서 토큰 추출
      */
     private String extractTokenFromHeader(HttpServletRequest request) {
-        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
+        // 대소문자 구분 없이 모든 헤더를 확인
+        String bearerToken = request.getHeader(AUTHORIZATION_HEADER.toLowerCase());
+        if (bearerToken == null) {
+            // 첫 번째 시도가 실패하면 원래 대문자 버전으로 시도
+            bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+        }
+
+        if (StringUtils.hasText(bearerToken) &&
+                bearerToken.toLowerCase().startsWith(BEARER_PREFIX.toLowerCase())) {
             return bearerToken.substring(BEARER_PREFIX.length());
         }
         return null;

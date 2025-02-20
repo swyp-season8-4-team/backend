@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.swyp.dessertbee.role.entity.RoleType;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.util.List;
@@ -51,4 +52,8 @@ public class SignUpRequest {
     private UserEntity.Gender gender; // 성별
 
     private List<Long> preferenceIds; // 선호도 ID 목록
+
+    @Builder.Default
+    private RoleType role = RoleType.ROLE_USER; // 기본값 ROLE_USER 설정
+
 }
