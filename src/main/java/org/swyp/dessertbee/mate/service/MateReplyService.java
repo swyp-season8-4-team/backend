@@ -1,0 +1,113 @@
+package org.swyp.dessertbee.mate.service;
+
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.swyp.dessertbee.mate.dto.MateUserIds;
+import org.swyp.dessertbee.mate.dto.request.MateReplyCreateRequest;
+import org.swyp.dessertbee.mate.dto.response.MateReplyResponse;
+import org.swyp.dessertbee.mate.entity.MateMember;
+import org.swyp.dessertbee.mate.entity.MateReply;
+import org.swyp.dessertbee.mate.repository.MateMemberRepository;
+import org.swyp.dessertbee.mate.repository.MateReplyRepository;
+import org.swyp.dessertbee.mate.repository.MateRepository;
+import org.swyp.dessertbee.user.repository.UserRepository;
+import org.swyp.dessertbee.mate.exception.MateExceptions.*;
+
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class MateReplyService {
+
+    private final MateReplyRepository replyRepository;
+    private final UserRepository userRepository;
+    private final MateReplyRepository mateReplyRepository;
+    private final MateMemberRepository mateMemberRepository;
+    private final MateRepository mateRepository;
+
+    /**
+     * 디저트메이트 댓글 생성
+     * */
+    public MateReplyResponse createReply(UUID mateUuid, MateReplyCreateRequest request) {
+
+        //디저트 메이트 유효성 검사
+        MateUserIds mateUserIds = validateMateAndUser(mateUuid, request.getUserUuid());
+        Long mateId = mateUserIds.getMateId();
+        Long userId = mateUserIds.getUserId();
+
+
+        MateReply mateReply = replyRepository.save(
+                MateReply.builder()
+                        .mateId(mateId)
+                        .userId(userId)
+                        .content(request.getContent())
+                        .report(null)
+                .build()
+        );
+
+        return getReplyDetail(mateUuid, mateReply.getMateReplyId());
+    }
+
+    /**
+     * 디저트메이트 댓글 조회(한개만)
+     * */
+    public MateReplyResponse getReplyDetail(UUID mateUuid, Long replyId) {
+
+        //디저트 메이트 유효성 검사
+        validateMate(mateUuid);
+
+
+        MateReply mateReply = mateReplyRepository.findById(replyId)
+                .orElseThrow(() -> new MateReplyNotFoundException("존재하지 않는 댓글입니다."));
+
+        UUID userUuid = userRepository.findUserUuidById(mateReply.getUserId());
+
+
+        return MateReplyResponse.fromEntity(mateReply, mateUuid, userUuid);
+    }
+
+    /**
+     * Mate와 User 한번에 유효성 검사
+     * */
+    private MateUserIds validateMateAndUser(UUID mateUuid, UUID userUuid) {
+
+        // mateUuid로 mateId 조회
+        Long mateId = mateRepository.findMateIdByMateUuid(mateUuid);
+
+        mateRepository.findByMateIdAndDeletedAtIsNull(mateId)
+                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+
+        // userUuid로 userId 조회
+        Long userId = userRepository.findIdByUserUuid(userUuid);
+        if (userId == null) {
+            throw new UserNotFoundExcption("존재하지 않는 유저입니다.");
+        }
+
+        //디저트 메이트 멤버인지 확인
+        mateMemberRepository.findByMateIdAndUserId(mateId, userId)
+                .orElseThrow(() -> new MateMemberNotFoundExcption("디저트메이트 멤버가 아닙니다."));
+
+
+        return new MateUserIds(mateId, userId);
+    }
+
+    /**
+     * Mate만 유효성 검사
+     * */
+    public MateUserIds validateMate (UUID mateUuid){
+
+
+        // mateUuid로 mateId 조회
+        Long mateId = mateRepository.findMateIdByMateUuid(mateUuid);
+
+
+        mateRepository.findByMateIdAndDeletedAtIsNull(mateId)
+                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+
+
+        return new MateUserIds(mateId, null);
+    }
+
+}

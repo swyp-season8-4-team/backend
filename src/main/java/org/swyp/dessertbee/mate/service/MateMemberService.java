@@ -283,7 +283,7 @@ public class MateMemberService {
         Long userId = validate.getUserId();
 
         MateMember mateMember = mateMemberRepository.findByMateIdAndUserId(mateId, userId)
-                .orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 멤버입니다."));
+                .orElseThrow(() -> new MateMemberNotFoundExcption("존재하지 않는 멤버입니다."));
         try {
             mateMember.softDelete();
 
@@ -347,6 +347,11 @@ public class MateMemberService {
         if (userId == null) {
             throw new UserNotFoundExcption("존재하지 않는 유저입니다.");
         }
+
+        //디저트 메이트 멤버인지 확인
+        mateMemberRepository.findByMateIdAndUserId(mateId, userId)
+                .orElseThrow(() -> new MateMemberNotFoundExcption("디저트메이트 멤버가 아닙니다."));
+
         return new MateUserIds(mateId, userId);
     }
 }

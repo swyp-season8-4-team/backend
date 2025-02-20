@@ -69,12 +69,12 @@ public class MateService {
         //디저트 메이트 mateId를 가진 member 데이터 생성
         mateMemberService.addCreatorAsMember(mate.getMateUuid(), userId);
 
-        return getMateDetails(mate.getMateUuid());
+        return getMateDetail(mate.getMateUuid());
     }
 
 
     /** 메이트 상세 정보 */
-    public MateDetailResponse getMateDetails(UUID mateUuid) {
+    public MateDetailResponse getMateDetail(UUID mateUuid) {
 
         //mateUuid로 mateId 조회
         Long mateId = mateRepository.findMateIdByMateUuid(mateUuid);
@@ -176,5 +176,7 @@ public class MateService {
         return new MatesPageResponse(matesResponses, isLast);
 
     }
+
+
 
 }
