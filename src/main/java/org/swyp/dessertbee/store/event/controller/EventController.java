@@ -63,7 +63,7 @@ public class EventController {
     }
 
     /** 이벤트 수정 */
-    @PutMapping("/{eventUuid}")
+    @PatchMapping("/{eventUuid}")
     public ResponseEntity<Void> updateEvent(
             @PathVariable UUID storeUuid,
             @PathVariable UUID eventUuid,

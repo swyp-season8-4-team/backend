@@ -53,7 +53,7 @@ public class StoreReviewController {
     }
 
     /** 리뷰 수정 */
-    @PutMapping("/{reviewUuid}")
+    @PatchMapping("/{reviewUuid}")
     public ResponseEntity<StoreReviewResponse> updateReview(
             @PathVariable UUID storeUuid,
             @PathVariable UUID reviewUuid,

@@ -75,7 +75,7 @@ public class MenuController {
     }
 
     /** 메뉴 수정 (파일 업로드 포함) */
-    @PutMapping("/{menuUuid}")
+    @PatchMapping("/{menuUuid}")
     public ResponseEntity<Void> updateMenu(
             @PathVariable UUID storeUuid,
             @PathVariable UUID menuUuid,
