@@ -3,6 +3,7 @@ package org.swyp.dessertbee.mate.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -33,9 +34,23 @@ public class MateReply {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
     @Column
     private String report;
+
+    public void update(String content){
+        this.content = content;
+    }
+
+
+    public void softDelete(){
+        this.deletedAt = LocalDateTime.now();
+    }
+
 }

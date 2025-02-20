@@ -7,6 +7,7 @@ import org.swyp.dessertbee.mate.dto.MateUserIds;
 import org.swyp.dessertbee.mate.dto.request.MateReplyCreateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateReplyPageResponse;
 import org.swyp.dessertbee.mate.dto.response.MateReplyResponse;
+import org.swyp.dessertbee.mate.entity.Mate;
 import org.swyp.dessertbee.mate.entity.MateMember;
 import org.swyp.dessertbee.mate.entity.MateReply;
 import org.swyp.dessertbee.mate.repository.MateMemberRepository;
@@ -105,6 +106,23 @@ public class MateReplyService {
 
 
     /**
+     * 디저트메이트 댓글 수정
+     * */
+    public void updateReply(UUID mateUuid, Long replyId, MateReplyCreateRequest request) {
+
+        MateUserIds mateUserIds = validateMate(mateUuid);
+        Long mateId = mateUserIds.getMateId();
+
+        //replyId 존재 여부 확인
+        MateReply reply = mateReplyRepository.findByMateIdAndDeletedAtIsNull(replyId)
+                .orElseThrow(() -> new MateReplyNotFoundException("존재하지 않는 댓글입니다."));
+
+
+        reply.update(request.getContent());
+
+    }
+
+    /**
      * Mate와 User 한번에 유효성 검사
      * */
     private MateUserIds validateMateAndUser(UUID mateUuid, UUID userUuid) {
@@ -145,5 +163,4 @@ public class MateReplyService {
 
         return new MateUserIds(mateId, null);
     }
-
 }

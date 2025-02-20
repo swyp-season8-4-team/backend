@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
+import org.swyp.dessertbee.mate.dto.request.MateCreateRequest;
 import org.swyp.dessertbee.mate.dto.request.MateReplyCreateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateReplyPageResponse;
 import org.swyp.dessertbee.mate.dto.response.MateReplyResponse;
@@ -83,4 +84,31 @@ public class MateReplyController {
 
         return ResponseEntity.ok(mateReplyService.getReplies(mateUuid, from, to));
     }
+
+    /**
+     * 디저트메이트 댓글 수정
+     * */
+    @PatchMapping("/{replyId}")
+    public ResponseEntity<String> updateMate(
+            @PathVariable UUID mateUuid,
+            @PathVariable Long replyId,
+            @RequestPart(value = "request") String requestJson
+    ){
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        MateReplyCreateRequest request;
+
+            //JSON 문자열을 MateCreateRequest 객체로 변환
+        try {
+            request = objectMapper.readValue(requestJson, MateReplyCreateRequest.class);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        mateReplyService.updateReply(mateUuid, replyId, request);
+        return ResponseEntity.ok("댓글이 성공적으로 수정되었습니다.");
+
+    }
+
 }

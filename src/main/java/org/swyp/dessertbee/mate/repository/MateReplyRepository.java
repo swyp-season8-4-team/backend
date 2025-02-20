@@ -7,6 +7,7 @@ import org.swyp.dessertbee.mate.entity.Mate;
 import org.swyp.dessertbee.mate.entity.MateReply;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface MateReplyRepository extends JpaRepository<MateReply, Long> {
@@ -16,4 +17,6 @@ public interface MateReplyRepository extends JpaRepository<MateReply, Long> {
      * */
     @Query("SELECT m FROM MateReply m WHERE m.deletedAt IS NULL AND m.mateId = :mateId ORDER BY m.mateReplyId ASC LIMIT :limit OFFSET :from")
     List<MateReply> findAllByDeletedAtIsNull(Long mateId, int from, int limit);
+
+    Optional<MateReply> findByMateIdAndDeletedAtIsNull(Long replyId);
 }
