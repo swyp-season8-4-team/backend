@@ -8,6 +8,7 @@ import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.mate.dto.request.MateCreateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateDetailResponse;
+import org.swyp.dessertbee.mate.dto.response.MatesPageResponse;
 import org.swyp.dessertbee.mate.entity.Mate;
 import org.swyp.dessertbee.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.mate.repository.MateCategoryRepository;
@@ -144,7 +145,7 @@ public class MateService {
 
     }
 
-    public List<MateDetailResponse> getMates(int from, int to) {
+    public MatesPageResponse getMates(int from, int to) {
 
 
         if (from >= to) {
@@ -153,8 +154,12 @@ public class MateService {
 
         int limit = to - from;
 
-        try {
-            return mateRepository.findAllByDeletedAtIsNull(from, limit)
+
+        // limit + 1 만큼 데이터를 가져와서 다음 데이터가 있는지 확인
+        List<Mate> mates = mateRepository.findAllByDeletedAtIsNull(from, limit + 1);
+
+
+        List<MateDetailResponse> matesResponses =mateRepository.findAllByDeletedAtIsNull(from, limit)
                     .stream()
                     .map(mate -> {
                         List<String> mateImages = imageService.getImagesByTypeAndId(ImageType.MATE, mate.getMateId());
@@ -164,11 +169,12 @@ public class MateService {
                         return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator);
                     })
                     .collect(Collectors.toList());
-        } catch (Exception e) {
 
-            return Collections.emptyList(); // 전체 실패 시 빈 리스트 반환
+        // limit보다 적은 개수가 조회되면 마지막 데이터임
+        boolean isLast = mates.size() <= limit;
 
-        }
+        return new MatesPageResponse(matesResponses, isLast);
+
     }
 
 }

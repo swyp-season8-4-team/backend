@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.mate.dto.request.MateCreateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateDetailResponse;
+import org.swyp.dessertbee.mate.dto.response.MatesPageResponse;
 import org.swyp.dessertbee.mate.service.MateMemberService;
 import org.swyp.dessertbee.mate.service.MateService;
 import java.util.List;
@@ -117,7 +118,7 @@ public class MateController {
      * */
     @GetMapping
     @Operation(summary = "메이트 전체 조회", description = "디저트메이트 전체 조회합니다.")
-    public ResponseEntity<List<MateDetailResponse>> getMates(
+    public ResponseEntity<MatesPageResponse> getMates(
             @RequestParam int from,
             @RequestParam int to
     ) {
