@@ -145,6 +145,9 @@ public class MateService {
 
     }
 
+    /**
+     * 디저트메이트 전체 조회
+     * */
     public MatesPageResponse getMates(int from, int to) {
 
 

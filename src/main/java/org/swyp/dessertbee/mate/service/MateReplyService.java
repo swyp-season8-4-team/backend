@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.swyp.dessertbee.mate.dto.MateUserIds;
 import org.swyp.dessertbee.mate.dto.request.MateReplyCreateRequest;
+import org.swyp.dessertbee.mate.dto.response.MateReplyPageResponse;
 import org.swyp.dessertbee.mate.dto.response.MateReplyResponse;
 import org.swyp.dessertbee.mate.entity.MateMember;
 import org.swyp.dessertbee.mate.entity.MateReply;
@@ -14,7 +15,10 @@ import org.swyp.dessertbee.mate.repository.MateRepository;
 import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.mate.exception.MateExceptions.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -67,6 +71,38 @@ public class MateReplyService {
 
         return MateReplyResponse.fromEntity(mateReply, mateUuid, userUuid);
     }
+
+    /**
+     * 디저트메이트 댓글 전체 조회
+     * */
+    public MateReplyPageResponse getReplies(UUID mateUuid, int from, int to) {
+
+        if (from >= to) {
+            throw new FromToMateException("잘못된 범위 요청입니다.");
+        }
+
+        int limit = to - from;
+
+        MateUserIds mateUserIds = validateMate(mateUuid);
+        Long mateId = mateUserIds.getMateId();
+
+        // limit + 1 만큼 데이터를 가져와서 다음 데이터가 있는지 확인
+        List<MateReply> replies = mateReplyRepository.findAllByDeletedAtIsNull(mateId, from, limit + 1);
+
+        List<MateReplyResponse> repliesResponse = mateReplyRepository.findAllByDeletedAtIsNull(mateId, from, limit)
+                .stream()
+                .map( mateReply -> {
+                   return getReplyDetail(mateUuid, mateReply.getMateReplyId());
+                })
+                .collect(Collectors.toList());
+
+        // limit보다 적은 개수가 조회되면 마지막 데이터임
+        boolean isLast = replies.size() <= limit;
+
+
+        return new MateReplyPageResponse(repliesResponse, isLast);
+    }
+
 
     /**
      * Mate와 User 한번에 유효성 검사

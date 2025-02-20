@@ -13,9 +13,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.mate.dto.request.MateReplyCreateRequest;
+import org.swyp.dessertbee.mate.dto.response.MateReplyPageResponse;
 import org.swyp.dessertbee.mate.dto.response.MateReplyResponse;
 import org.swyp.dessertbee.mate.service.MateReplyService;
 
+import java.util.List;
 import java.util.UUID;
 
 @Tag(name = "MateReply", description = "디저트메이트 댓글 관련 API")
@@ -70,4 +72,15 @@ public class MateReplyController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * 디저트메이트 댓글 전체 조회
+     * */
+    @GetMapping
+    public ResponseEntity<MateReplyPageResponse> getReplies(@PathVariable UUID mateUuid,
+                                                           @RequestParam int from,
+                                                           @RequestParam int to) {
+
+
+        return ResponseEntity.ok(mateReplyService.getReplies(mateUuid, from, to));
+    }
 }
