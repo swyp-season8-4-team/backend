@@ -13,9 +13,7 @@ import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
 import org.swyp.dessertbee.store.review.entity.StoreReview;
 import org.swyp.dessertbee.store.review.repository.StoreReviewRepository;
 import org.swyp.dessertbee.store.store.dto.request.StoreCreateRequest;
-import org.swyp.dessertbee.store.store.dto.response.StoreDetailResponse;
-import org.swyp.dessertbee.store.store.dto.response.StoreMapResponse;
-import org.swyp.dessertbee.store.store.dto.response.StoreSummaryResponse;
+import org.swyp.dessertbee.store.store.dto.response.*;
 import org.swyp.dessertbee.store.store.entity.*;
 import org.swyp.dessertbee.store.store.repository.*;
 import org.swyp.dessertbee.user.entity.UserEntity;
@@ -38,6 +36,7 @@ public class StoreService {
     private final StoreStatisticsRepository storeStatisticsRepository;
     private final StoreOperatingHourRepository storeOperatingHourRepository;
     private final StoreHolidayRepository storeHolidayRepository;
+    private final SavedStoreRepository savedStoreRepository;
     private final ImageService imageService;
     private final MenuService menuService;
     private final UserRepository userRepository;
@@ -177,9 +176,37 @@ public class StoreService {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않거나 삭제된 가게입니다."));
 
         List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, storeId);
+        List<String> ownerPickImages = imageService.getImagesByTypeAndId(ImageType.OWNERPICK, storeId);
         List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(storeUuid);
 
-        return StoreSummaryResponse.fromEntity(store, tags, storeImages);
+        // 운영 시간
+        List<StoreOperatingHour> operatingHours = storeOperatingHourRepository.findByStoreId(storeId);
+        List<OperatingHourResponse> operatingHourResponses = operatingHours.stream()
+                .map(o -> OperatingHourResponse.builder()
+                        .dayOfWeek(o.getDayOfWeek())
+                        .openingTime(o.getOpeningTime())
+                        .closingTime(o.getClosingTime())
+                        .lastOrderTime(o.getLastOrderTime())
+                        .isClosed(o.getIsClosed())
+                        .build())
+                .toList();
+
+        // 휴무일
+        List<StoreHoliday> holidays = storeHolidayRepository.findByStoreId(storeId);
+        List<HolidayResponse> holidayResponses = holidays.stream()
+                .map(h -> HolidayResponse.builder()
+                        .date(h.getHolidayDate().toString())
+                        .reason(h.getReason())
+                        .build())
+                .toList();
+
+        // 해당 가게를 저장한 사람들의 취향 태그 Top3 조회
+        List<Object[]> preferenceCounts = savedStoreRepository.findTop3PreferencesByStoreId(storeId);
+        List<String> topPreferences = preferenceCounts.stream()
+                .map(result -> (String) result[0])
+                .toList();
+
+        return  StoreSummaryResponse.fromEntity(store, tags, operatingHourResponses, holidayResponses, storeImages, ownerPickImages, topPreferences);
     }
 
     /** 가게 상세 정보 조회 */
@@ -217,8 +244,8 @@ public class StoreService {
         // 운영 시간
         List<StoreOperatingHour> operatingHours = storeOperatingHourRepository.findByStoreId(storeId);
 
-        List<StoreDetailResponse.OperatingHourResponse> operatingHourResponses = operatingHours.stream()
-                .map(o -> StoreDetailResponse.OperatingHourResponse.builder()
+        List<OperatingHourResponse> operatingHourResponses = operatingHours.stream()
+                .map(o -> OperatingHourResponse.builder()
                         .dayOfWeek(o.getDayOfWeek())
                         .openingTime(o.getOpeningTime())
                         .closingTime(o.getClosingTime())
@@ -230,8 +257,8 @@ public class StoreService {
         // 휴무일
         List<StoreHoliday> holidays = storeHolidayRepository.findByStoreId(storeId);
 
-        List<StoreDetailResponse.HolidayResponse> holidayResponses = holidays.stream()
-                .map(h -> StoreDetailResponse.HolidayResponse.builder()
+        List<HolidayResponse> holidayResponses = holidays.stream()
+                .map(h -> HolidayResponse.builder()
                         .date(h.getHolidayDate().toString())
                         .reason(h.getReason())
                         .build())
