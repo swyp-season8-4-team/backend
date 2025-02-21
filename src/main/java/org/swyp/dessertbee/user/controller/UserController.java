@@ -7,6 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.swyp.dessertbee.store.store.service.UserStoreService;
 import org.swyp.dessertbee.user.dto.NicknameValidationRequestDto;
 import org.swyp.dessertbee.user.dto.UserDetailResponseDto;
 import org.swyp.dessertbee.user.dto.UserResponseDto;
@@ -14,7 +15,9 @@ import org.swyp.dessertbee.user.dto.UserUpdateRequestDto;
 import org.swyp.dessertbee.user.service.UserService;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * 사용자 정보 조회 관련 컨트롤러
@@ -26,6 +29,7 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+    private final UserStoreService userStoreService;
 
     /**
      * 현재 인증된 사용자의 상세 정보를 조회
@@ -97,5 +101,15 @@ public class UserController {
         log.info("프로필 이미지 업데이트 요청 - 파일명: {}", image.getOriginalFilename());
         UserDetailResponseDto response = userService.updateProfileImage(image);
         return ResponseEntity.ok(response);
+    }
+
+    /** 사용자의 취향을 업데이트하고 저장된 모든 가게 리스트의 취향도 변경 */
+    @PatchMapping("/{userUuid}/preferences")
+    public ResponseEntity<Void> updateUserPreferences(
+            @PathVariable UUID userUuid,
+            @RequestBody List<String> newUserPreferences) {
+
+        userStoreService.updateUserPreferencesAndSavedStores(userUuid, newUserPreferences);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -34,31 +34,12 @@ public class StoreDetailResponse {
     private BigDecimal averageRating;
     private List<MenuResponse> menus;
     private List<String> storeImages;
-    private List<String> ownerPickImages; // 사장님 픽 이미지 추가
+    private List<String> ownerPickImages;
     private List<StoreReviewResponse> storeReviews;
     private List<String> tags;
     private List<String> notice;
     private List<OperatingHourResponse> operatingHours;
     private List<HolidayResponse> holidays;
-
-    @Data
-    @Builder
-    @AllArgsConstructor
-    public static class OperatingHourResponse {
-        private DayOfWeek dayOfWeek;
-        private LocalTime openingTime;
-        private LocalTime closingTime;
-        private LocalTime lastOrderTime;
-        private Boolean isClosed;
-    }
-
-    @Data
-    @Builder
-    @AllArgsConstructor
-    public static class HolidayResponse {
-        private String date;
-        private String reason;
-    }
 
     public static StoreDetailResponse fromEntity(Store store, Long userId, UUID userUuid,
                                                  List<OperatingHourResponse> operatingHours,

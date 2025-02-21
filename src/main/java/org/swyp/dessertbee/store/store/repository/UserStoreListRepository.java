@@ -11,6 +11,9 @@ import java.util.List;
 public interface UserStoreListRepository extends JpaRepository<UserStoreList, Long> {
     List<UserStoreList> findByUser(UserEntity user);
 
-    /** 특정 유저가 가진 저장 리스트 개수 반환 */
-    long countByUser(UserEntity user);
+    /** 특정 유저가 같은 이름을 가진 저장 리스트가 있는지 확인 */
+    boolean existsByUserAndListName(UserEntity user, String listName);
+
+    /** 특정 유저가 같은 아이콘 색상을 가진 저장 리스트가 있는지 확인 */
+    boolean existsByUserAndIconColorId(UserEntity user, Long iconColorId);
 }

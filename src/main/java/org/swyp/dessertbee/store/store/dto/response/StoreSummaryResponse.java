@@ -17,8 +17,12 @@ public class StoreSummaryResponse {
     private UUID storeUuid;
     private String name;
     private BigDecimal averageRating;
-    private List<String> tags;
     private List<String> storeImages;
+    private List<String> ownerPickImages;
+    private List<String> tags;
+    private List<OperatingHourResponse> operatingHours;
+    private List<HolidayResponse> holidays;
+    private List<String> topPreferences;
 
     private String address;
     private String phone;
@@ -29,7 +33,11 @@ public class StoreSummaryResponse {
     private Boolean parkingYn;
 
     public static StoreSummaryResponse fromEntity(Store store, List<String> tags,
-                                                  List<String> storeImages) {
+                                                  List<OperatingHourResponse> operatingHours,
+                                                  List<HolidayResponse> holidays,
+                                                  List<String> storeImages,
+                                                  List<String> ownerPickImages,
+                                                  List<String> topPreferences) {
         return StoreSummaryResponse.builder()
                 .storeId(store.getStoreId())
                 .storeUuid(store.getStoreUuid())
@@ -37,6 +45,10 @@ public class StoreSummaryResponse {
                 .averageRating(store.getAverageRating())
                 .tags(tags)
                 .storeImages(storeImages)
+                .ownerPickImages(ownerPickImages)
+                .operatingHours(operatingHours)
+                .holidays(holidays)
+                .topPreferences(topPreferences)
                 .address(store.getAddress())
                 .phone(store.getPhone())
                 .storeLink(store.getStoreLink())

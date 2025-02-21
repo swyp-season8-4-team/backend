@@ -81,7 +81,7 @@ public class StoreReviewService {
     public StoreReviewResponse updateReview(UUID storeUuid, UUID reviewUuid, StoreReviewUpdateRequest request, List<MultipartFile> newImages) {
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
         Long reviewId = storeReviewRepository.findReviewIdByReviewUuid(reviewUuid);
-        StoreReview review = storeReviewRepository.findByReviewId(reviewId)
+        StoreReview review = storeReviewRepository.findByReviewIdAndDeletedAtIsNull(reviewId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 리뷰가 존재하지 않습니다."));
 
         // storeId 검증
@@ -109,7 +109,7 @@ public class StoreReviewService {
     public void deleteReview(UUID storeUuid, UUID reviewUuid) {
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
         Long reviewId = storeReviewRepository.findReviewIdByReviewUuid(reviewUuid);
-        StoreReview review = storeReviewRepository.findByReviewId(reviewId)
+        StoreReview review = storeReviewRepository.findByReviewIdAndDeletedAtIsNull(reviewId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 리뷰가 존재하지 않습니다."));
 
         // storeId 검증 추가

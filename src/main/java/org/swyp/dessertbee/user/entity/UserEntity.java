@@ -85,13 +85,6 @@ public class UserEntity {
     @JoinColumn(name = "mbti_id", nullable = true)
     private MbtiEntity mbti;
 
-    public boolean hasRole(String roleName) {
-        return userRoles.stream()
-                .map(UserRoleEntity::getRole)
-                .map(RoleEntity::getName)
-                .anyMatch(name -> name.equalsIgnoreCase(roleName));
-    }
-
     public void addRole(RoleEntity role) {
         UserRoleEntity userRole = UserRoleEntity.builder()
                 .user(this)
