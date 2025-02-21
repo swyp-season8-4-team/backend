@@ -17,6 +17,9 @@ public class MateExceptions {
         }
     }
 
+    /**
+     * 유저 예외
+     * */
     public static class UserNotFoundExcption extends BusinessException {
         public UserNotFoundExcption(){super(ErrorCode.USER_NOT_FOUND);}
 
@@ -25,6 +28,13 @@ public class MateExceptions {
         }
     }
 
+    /**
+     * 디저트 메이트 멤버 예외
+     * */
+    public static class MateMemberNotFoundExcption extends BusinessException {
+        public MateMemberNotFoundExcption(){super(ErrorCode.MATE_MEMBER_NOT_FOUND);}
+        public MateMemberNotFoundExcption(String message) {super(ErrorCode.MATE_MEMBER_NOT_FOUND, message);}
+    }
 
     /**
      * 디저트메이트 목록 조회 예외(잘못된 범위 설정)
@@ -83,7 +93,7 @@ public class MateExceptions {
     }
 
     /**
-     * 관리자 권한 예외
+     * 디저트 메이트 멤버 관리자 권한 예외
      * */
     public static class PermissionDeniedException extends BusinessException {
         public PermissionDeniedException(){
@@ -95,5 +105,14 @@ public class MateExceptions {
     }
 
 
+    /**
+     *  디저트 메이트 댓글 예외
+     * */
+    public static class MateReplyNotFoundException extends BusinessException {
+        public MateReplyNotFoundException(){super(ErrorCode.MATE_REPLY_NOT_FOUND);}
 
+        public MateReplyNotFoundException(String message) {
+            super(ErrorCode.MATE_REPLY_NOT_FOUND, message);
+        }
+    }
 }

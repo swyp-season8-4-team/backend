@@ -63,10 +63,10 @@ public class MateController {
      * 메이트 상세 정보 조회
      */
     @Operation(summary = "메이트 상세 정보 조회", description = "디저트메이트 상세 정보 조회합니다.")
-    @GetMapping("/{mateUuid}/details")
-    public ResponseEntity<MateDetailResponse> getMateDetails(@PathVariable UUID mateUuid) {
+    @GetMapping("/{mateUuid}")
+    public ResponseEntity<MateDetailResponse> getMateDetail(@PathVariable UUID mateUuid) {
 
-        MateDetailResponse mate = mateService.getMateDetails(mateUuid);
+        MateDetailResponse mate = mateService.getMateDetail(mateUuid);
         return ResponseEntity.ok(mate);
     }
 

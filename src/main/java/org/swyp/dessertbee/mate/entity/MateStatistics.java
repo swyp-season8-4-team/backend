@@ -26,7 +26,7 @@ public class MateStatistics {
     private Integer views;
     private Integer saves;
     private Integer reviews;
-    private LocalDate createDate;
+
 
     @CreationTimestamp
     @Column(name = "created_at")
