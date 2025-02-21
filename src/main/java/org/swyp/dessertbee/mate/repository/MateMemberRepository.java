@@ -18,6 +18,8 @@ public interface MateMemberRepository extends JpaRepository<MateMember, Long> {
 
     List<MateMember> findByMateIdAndDeletedAtIsNullAndApprovalYnTrue(Long mateId);
 
+    int countByMateIdAndApprovalYn(Long mateId, Boolean approvalYn);
+
     @Query("SELECT u FROM UserEntity u " +
             "JOIN MateMember m ON u.id = m.userId " +
             "WHERE m.mateId = :mateId AND m.grade = 'CREATOR'")

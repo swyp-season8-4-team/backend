@@ -3,6 +3,7 @@ package org.swyp.dessertbee.mate.repository;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.swyp.dessertbee.mate.entity.Mate;
 
@@ -15,6 +16,9 @@ public interface MateRepository extends JpaRepository<Mate, Long> {
 
     @Transactional
     Optional<Mate> findByMateIdAndDeletedAtIsNull(Long mateId);
+
+    @Query("SELECT m FROM Mate m WHERE m.storeId = :storeId AND m.deletedAt IS NULL")
+    List<Mate> findByStoreIdAndDeletedAtIsNull(@Param("storeId") Long storeId);
 
     /**
      * MateUuid로 MateId 조회
