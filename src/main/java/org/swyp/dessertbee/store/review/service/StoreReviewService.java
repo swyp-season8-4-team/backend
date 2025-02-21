@@ -14,6 +14,8 @@ import org.swyp.dessertbee.store.review.entity.StoreReview;
 import org.swyp.dessertbee.store.review.repository.StoreReviewRepository;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.store.store.service.StoreService;
+import org.swyp.dessertbee.user.entity.UserEntity;
+import org.swyp.dessertbee.user.repository.UserRepository;
 
 import java.util.List;
 import java.util.UUID;
@@ -26,6 +28,7 @@ public class StoreReviewService {
 
     private final StoreReviewRepository storeReviewRepository;
     private final StoreRepository storeRepository;
+    private final UserRepository userRepository;
     private final ImageService imageService;
     private final StoreService storeService;
 
@@ -56,10 +59,15 @@ public class StoreReviewService {
 
         List<String> imageUrls = imageService.getImagesByTypeAndId(ImageType.SHORT, review.getReviewId());
 
+        UserEntity reviewer = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+        List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, reviewer.getId());
+
         // 리뷰 등록 후 평균 평점 업데이트
         storeService.updateAverageRating(storeId);
 
-        return StoreReviewResponse.fromEntity(review, imageUrls);
+        return StoreReviewResponse.fromEntity(review, reviewer.getNickname(),
+                profileImage.isEmpty() ? null : profileImage.get(0), imageUrls);
     }
 
     /** 특정 가게 리뷰 조회 */
@@ -71,7 +79,13 @@ public class StoreReviewService {
         return reviews.stream()
                 .map(review -> {
                     List<String> images = imageService.getImagesByTypeAndId(ImageType.SHORT, review.getReviewId());
-                    return StoreReviewResponse.fromEntity(review, images);
+
+                    UserEntity reviewer = userRepository.findById(review.getUserId())
+                            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+                    List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, reviewer.getId());
+
+                    return StoreReviewResponse.fromEntity(review, reviewer.getNickname(),
+                            profileImage.isEmpty() ? null : profileImage.get(0), images);
                 })
                 .collect(Collectors.toList());
     }
@@ -84,7 +98,6 @@ public class StoreReviewService {
         StoreReview review = storeReviewRepository.findByReviewIdAndDeletedAtIsNull(reviewId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 리뷰가 존재하지 않습니다."));
 
-        // storeId 검증
         if (!review.getStoreId().equals(storeId)) {
             throw new IllegalArgumentException("해당 가게의 리뷰가 아닙니다.");
         }
@@ -98,9 +111,16 @@ public class StoreReviewService {
             imageService.uploadAndSaveImages(newImages, ImageType.SHORT, reviewId, "short/" + review.getReviewId());
         }
 
+        List<String> updatedImages = imageService.getImagesByTypeAndId(ImageType.SHORT, reviewId);
+
+        UserEntity reviewer = userRepository.findById(review.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+        List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, reviewer.getId());
+
         storeService.updateAverageRating(storeId);
 
-        return StoreReviewResponse.fromEntity(review, imageService.getImagesByTypeAndId(ImageType.SHORT, reviewId));
+        return StoreReviewResponse.fromEntity(review, reviewer.getNickname(),
+                profileImage.isEmpty() ? null : profileImage.get(0), updatedImages);
     }
 
 
@@ -112,7 +132,6 @@ public class StoreReviewService {
         StoreReview review = storeReviewRepository.findByReviewIdAndDeletedAtIsNull(reviewId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 리뷰가 존재하지 않습니다."));
 
-        // storeId 검증 추가
         if (!review.getStoreId().equals(storeId)) {
             throw new IllegalArgumentException("해당 가게의 리뷰가 아닙니다.");
         }
