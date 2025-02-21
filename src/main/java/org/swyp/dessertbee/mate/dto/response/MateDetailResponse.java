@@ -34,6 +34,7 @@ public class MateDetailResponse {
 
         return MateDetailResponse.builder()
                 .mateUuid(mate.getMateUuid())
+                .mateId(mate.getMateId())
                 .userId(mate.getUserId())
                 .userUuid(creator.getUserUuid())
                 .nickname(creator.getNickname())

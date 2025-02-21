@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class MateService {
 
     private final UserRepository userRepository;
@@ -40,6 +39,7 @@ public class MateService {
 
 
     /** 메이트 등록 */
+    @Transactional
     public MateDetailResponse createMate(MateCreateRequest request, List<MultipartFile> mateImage){
 
         Long userId = userRepository.findIdByUserUuid(request.getUserUuid());
@@ -69,12 +69,12 @@ public class MateService {
         //디저트 메이트 mateId를 가진 member 데이터 생성
         mateMemberService.addCreatorAsMember(mate.getMateUuid(), userId);
 
-        return getMateDetails(mate.getMateUuid());
+        return getMateDetail(mate.getMateUuid());
     }
 
 
     /** 메이트 상세 정보 */
-    public MateDetailResponse getMateDetails(UUID mateUuid) {
+    public MateDetailResponse getMateDetail(UUID mateUuid) {
 
         //mateUuid로 mateId 조회
         Long mateId = mateRepository.findMateIdByMateUuid(mateUuid);
@@ -127,6 +127,7 @@ public class MateService {
     /**
      * 메이트 수정
      * */
+    @Transactional
     public void updateMate(UUID mateUuid, MateCreateRequest request, MultipartFile mateImage) {
         //mateUuid로 mateId 조회
         Long mateId = mateRepository.findMateIdByMateUuid(mateUuid);
@@ -145,6 +146,10 @@ public class MateService {
 
     }
 
+    /**
+     * 디저트메이트 전체 조회
+     * */
+    @Transactional
     public MatesPageResponse getMates(int from, int to) {
 
 
@@ -176,5 +181,7 @@ public class MateService {
         return new MatesPageResponse(matesResponses, isLast);
 
     }
+
+
 
 }
