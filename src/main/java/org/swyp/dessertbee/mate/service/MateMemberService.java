@@ -23,7 +23,6 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class MateMemberService {
 
 
@@ -36,6 +35,7 @@ public class MateMemberService {
     /**
      * 디저트 메이트 생성 시 생성자 등록
      */
+    @Transactional
     public void addCreatorAsMember(UUID mateUuid, Long userId) {
 
         Long mateId = mateRepository.findMateIdByMateUuid(mateUuid);
@@ -54,6 +54,7 @@ public class MateMemberService {
     /**
      * 디저트메이트 삭제 시 멤버 삭제
      */
+    @Transactional
     public void deleteAllMember(Long mateId) {
 
         try {
@@ -82,6 +83,7 @@ public class MateMemberService {
     /**
      * 디저트 메이트 멤버 전체 조회
      */
+    @Transactional
     public List<MateMemberResponse> getMembers(UUID mateUuid) {
 
         //mateId 유효성 검사
@@ -125,6 +127,7 @@ public class MateMemberService {
      *
      * @return
      */
+    @Transactional
     public void applyMate(UUID mateUuid, UUID userUuid) {
         //mateId,userId  유효성 검사
         MateUserIds validate = validateMateAndUser(mateUuid, userUuid);
@@ -189,6 +192,7 @@ public class MateMemberService {
     /**
      * 디저트 메이트 멤버 신청 수락 api
      * */
+    @Transactional
     public void acceptMember (UUID mateUuid, UUID userUuid){
         //mateId,userId  유효성 검사
         MateUserIds validate = validateMateAndUser(mateUuid, userUuid);

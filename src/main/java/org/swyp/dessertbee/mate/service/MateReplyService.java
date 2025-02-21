@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class MateReplyService {
 
     private final MateReplyRepository replyRepository;
@@ -37,6 +36,7 @@ public class MateReplyService {
     /**
      * 디저트메이트 댓글 생성
      * */
+    @Transactional
     public MateReplyResponse createReply(UUID mateUuid, MateReplyCreateRequest request) {
 
         //디저트 메이트 유효성 검사
