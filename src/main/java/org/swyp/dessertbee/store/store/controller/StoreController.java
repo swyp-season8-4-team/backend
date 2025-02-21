@@ -71,9 +71,6 @@ public class StoreController {
     /** 가게 상세 정보 조회 */
     @GetMapping("/{storeUuid}/details")
     public StoreDetailResponse getStoreDetails(@PathVariable UUID storeUuid, UserEntity user) {
-        if (storeUuid == null) {
-            throw new IllegalArgumentException("storeUuid가 요청에서 누락되었습니다.");
-        }
         return storeService.getStoreDetails(storeUuid, user);
     }
 

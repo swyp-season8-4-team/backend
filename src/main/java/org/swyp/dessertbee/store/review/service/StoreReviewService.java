@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.store.review.dto.request.StoreReviewCreateRequest;
 import org.swyp.dessertbee.store.review.dto.request.StoreReviewUpdateRequest;
@@ -37,7 +39,7 @@ public class StoreReviewService {
     public StoreReviewResponse createReview(UUID storeUuid, StoreReviewCreateRequest request, List<MultipartFile> images) {
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
         if (storeId == null) {
-            throw new IllegalArgumentException("storeUuid에 해당하는 storeId를 찾을 수 없습니다: " + storeUuid);
+            throw new BusinessException(ErrorCode.INVALID_STORE_UUID);
         }
 
         StoreReview review = StoreReview.builder()
@@ -50,7 +52,7 @@ public class StoreReviewService {
         storeReviewRepository.save(review);
 
         if (review.getReviewUuid() == null) {
-            throw new IllegalStateException("reviewUuid가 null입니다. JPA 엔티티 저장이 정상적으로 동작하는지 확인하세요.");
+            throw new BusinessException(ErrorCode.INVALID_STORE_REVIEW_UUID);
         }
 
         if (images != null && !images.isEmpty()) {
@@ -60,7 +62,7 @@ public class StoreReviewService {
         List<String> imageUrls = imageService.getImagesByTypeAndId(ImageType.SHORT, review.getReviewId());
 
         UserEntity reviewer = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, reviewer.getId());
 
         // 리뷰 등록 후 평균 평점 업데이트
@@ -81,7 +83,7 @@ public class StoreReviewService {
                     List<String> images = imageService.getImagesByTypeAndId(ImageType.SHORT, review.getReviewId());
 
                     UserEntity reviewer = userRepository.findById(review.getUserId())
-                            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+                            .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
                     List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, reviewer.getId());
 
                     return StoreReviewResponse.fromEntity(review, reviewer.getNickname(),
@@ -96,10 +98,10 @@ public class StoreReviewService {
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
         Long reviewId = storeReviewRepository.findReviewIdByReviewUuid(reviewUuid);
         StoreReview review = storeReviewRepository.findByReviewIdAndDeletedAtIsNull(reviewId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 리뷰가 존재하지 않습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_REVIEW_NOT_FOUND));
 
         if (!review.getStoreId().equals(storeId)) {
-            throw new IllegalArgumentException("해당 가게의 리뷰가 아닙니다.");
+            throw new BusinessException(ErrorCode.INVALID_STORE_REVIEW);
         }
 
         review.setContent(request.getContent());
@@ -114,7 +116,7 @@ public class StoreReviewService {
         List<String> updatedImages = imageService.getImagesByTypeAndId(ImageType.SHORT, reviewId);
 
         UserEntity reviewer = userRepository.findById(review.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, reviewer.getId());
 
         storeService.updateAverageRating(storeId);
@@ -130,10 +132,10 @@ public class StoreReviewService {
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
         Long reviewId = storeReviewRepository.findReviewIdByReviewUuid(reviewUuid);
         StoreReview review = storeReviewRepository.findByReviewIdAndDeletedAtIsNull(reviewId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 리뷰가 존재하지 않습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_REVIEW_NOT_FOUND));
 
         if (!review.getStoreId().equals(storeId)) {
-            throw new IllegalArgumentException("해당 가게의 리뷰가 아닙니다.");
+            throw new BusinessException(ErrorCode.INVALID_STORE_REVIEW);
         }
 
         review.softDelete();

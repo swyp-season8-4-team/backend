@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.store.menu.dto.request.MenuCreateRequest;
 import org.swyp.dessertbee.store.menu.dto.response.MenuResponse;
@@ -32,7 +34,7 @@ public class MenuService {
     public List<MenuResponse> getMenusByStore(UUID storeUuid) {
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
         if (storeId == null) {
-            throw new IllegalArgumentException("storeUuid에 해당하는 storeId를 찾을 수 없습니다: " + storeUuid);
+            throw new BusinessException(ErrorCode.INVALID_STORE_UUID);
         }
 
         return menuRepository.findByStoreIdAndDeletedAtIsNull(storeId).stream()
@@ -45,10 +47,10 @@ public class MenuService {
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
         Long menuId = menuRepository.findMenuIdByMenuUuid(menuUuid);
         if (menuId == null) {
-            throw new IllegalArgumentException("해당 메뉴 UUID에 대한 menuId를 찾을 수 없습니다: " + menuUuid);
+            throw new BusinessException(ErrorCode.INVALID_STORE_MENU_UUID);
         }
         Menu menu = menuRepository.findByMenuIdAndStoreIdAndDeletedAtIsNull(menuId, storeId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 가게에 존재하지 않는 메뉴입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_STORE_MENU));
 
         return MenuResponse.fromEntity(menu, imageService.getImagesByTypeAndId(ImageType.MENU, menuId));
     }
@@ -59,7 +61,7 @@ public class MenuService {
 
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
         if (storeId == null) {
-            throw new IllegalArgumentException("해당 UUID의 가게가 존재하지 않습니다. storeUuid=" + storeUuid);
+            throw new BusinessException(ErrorCode.INVALID_STORE_UUID);
         }
 
         // 메뉴 저장
@@ -91,7 +93,7 @@ public class MenuService {
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
         Long menuId = menuRepository.findMenuIdByMenuUuid(menuUuid);
         Menu menu = menuRepository.findByMenuIdAndStoreIdAndDeletedAtIsNull(menuId, storeId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 메뉴입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_MENU_NOT_FOUND));
 
         menu.update(request.getName(), request.getPrice(), request.getIsPopular(), request.getDescription());
 
@@ -106,7 +108,7 @@ public class MenuService {
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
         Long menuId = menuRepository.findMenuIdByMenuUuid(menuUuid);
         Menu menu = menuRepository.findByMenuIdAndStoreIdAndDeletedAtIsNull(menuId, storeId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 메뉴입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_MENU_NOT_FOUND));
 
         menu.softDelete();
         menuRepository.save(menu);

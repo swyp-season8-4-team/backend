@@ -4,6 +4,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.swyp.dessertbee.common.entity.ImageType;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.preference.entity.PreferenceEntity;
 import org.swyp.dessertbee.preference.entity.UserPreferenceEntity;
@@ -39,11 +41,11 @@ public class UserStoreService {
     public List<UserStoreListResponse> getUserStoreLists(UUID userUuid) {
         Long userId = userRepository.findIdByUserUuid(userUuid);
         if (userId == null) {
-            throw new IllegalArgumentException("해당 userUuid로 조회된 userId가 없습니다: " + userUuid);
+            throw new BusinessException(ErrorCode.INVALID_USER_UUID);
         }
 
         UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 유저를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         List<UserStoreList> lists = userStoreListRepository.findByUser(user);
 
@@ -62,21 +64,21 @@ public class UserStoreService {
     public UserStoreListResponse createUserStoreList(UUID userUuid, String listName, Long iconColorId) {
         Long userId = userRepository.findIdByUserUuid(userUuid);
         if (userId == null) {
-            throw new IllegalArgumentException("해당 userUuid로 조회된 userId가 없습니다: " + userUuid);
+            throw new BusinessException(ErrorCode.INVALID_USER_UUID);
         }
 
         UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 유저를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         boolean nameExists = userStoreListRepository.existsByUserAndListName(user, listName);
         boolean colorExists = userStoreListRepository.existsByUserAndIconColorId(user, iconColorId);
 
         if (nameExists && colorExists) {
-            throw new IllegalArgumentException("동일한 이름과 colorId를 가진 리스트가 이미 존재합니다.");
+            throw new BusinessException(ErrorCode.STORE_DUPLICATE_LIST);
         } else if (nameExists) {
-            throw new IllegalArgumentException("동일한 이름의 리스트가 이미 존재합니다.");
+            throw new BusinessException(ErrorCode.STORE_DUPLICATE_LIST_NAME);
         } else if (colorExists) {
-            throw new IllegalArgumentException("동일한 colorId를 가진 리스트가 이미 존재합니다.");
+            throw new BusinessException(ErrorCode.STORE_DUPLICATE_COLOR);
         }
 
         UserStoreList newList = userStoreListRepository.save(
@@ -99,7 +101,7 @@ public class UserStoreService {
     /** 저장 리스트 수정 */
     public UserStoreListResponse updateUserStoreList(Long listId, String newName, Long newIconColorId) {
         UserStoreList list = userStoreListRepository.findById(listId)
-                .orElseThrow(() -> new IllegalArgumentException("저장 리스트를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_LIST_NOT_FOUND));
 
         list.updateList(newName, newIconColorId);
         userStoreListRepository.save(list);
@@ -116,7 +118,7 @@ public class UserStoreService {
     /** 저장 리스트 삭제 */
     public void deleteUserStoreList(Long listId) {
         UserStoreList list = userStoreListRepository.findById(listId)
-                .orElseThrow(() -> new IllegalArgumentException("저장 리스트를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_LIST_NOT_FOUND));
 
         // 리스트 내 저장된 가게 삭제
         savedStoreRepository.deleteByUserStoreList(list);
@@ -128,20 +130,20 @@ public class UserStoreService {
     /** 리스트에 가게 추가 */
     public SavedStoreResponse addStoreToList(Long listId, UUID storeUuid, List<String> userPreferences) {
         UserStoreList list = userStoreListRepository.findById(listId)
-                .orElseThrow(() -> new IllegalArgumentException("저장 리스트를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_LIST_NOT_FOUND));
 
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
         if (storeId == null) {
-            throw new IllegalArgumentException("해당 UUID의 가게를 찾을 수 없습니다: " + storeUuid);
+            throw new BusinessException(ErrorCode.INVALID_STORE_UUID);
         }
 
         Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new IllegalArgumentException("가게를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
         // 이미 리스트에 존재하는 가게인지 확인
         boolean exists = savedStoreRepository.findByUserStoreListAndStore(list, store).isPresent();
         if (exists) {
-            throw new IllegalArgumentException("해당 가게는 이미 리스트에 존재합니다.");
+            throw new BusinessException(ErrorCode.STORE_ALREADY_SAVED);
         }
 
         SavedStore savedStore = savedStoreRepository.save(
@@ -167,7 +169,7 @@ public class UserStoreService {
     /** 리스트별 저장된 가게 조회 */
     public List<SavedStoreResponse> getStoresByList(Long listId) {
         UserStoreList list = userStoreListRepository.findById(listId)
-                .orElseThrow(() -> new IllegalArgumentException("저장 리스트를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_LIST_NOT_FOUND));
 
         return savedStoreRepository.findByUserStoreList(list).stream()
                 .map(savedStore -> new SavedStoreResponse(
@@ -188,13 +190,13 @@ public class UserStoreService {
     public void updateUserPreferencesAndSavedStores(UUID userUuid, List<String> newUserPreferences) {
         Long userId = userRepository.findIdByUserUuid(userUuid);
         UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userUuid));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 기존 취향 삭제 후 새로운 취향 저장
         user.getUserPreferences().clear();
         for (String preference : newUserPreferences) {
             PreferenceEntity preferenceEntity = preferenceRepository.findByPreferenceName(preference)
-                    .orElseThrow(() -> new IllegalArgumentException("해당 취향이 존재하지 않습니다: " + preference));
+                    .orElseThrow(() -> new BusinessException(ErrorCode.PREFERENCES_NOT_FOUND));
             user.getUserPreferences().add(UserPreferenceEntity.builder().user(user).preference(preferenceEntity).build());
         }
         userRepository.save(user); // 변경된 취향 저장
@@ -219,18 +221,18 @@ public class UserStoreService {
     /** 리스트에서 가게 삭제 */
     public void removeStoreFromList(Long listId, UUID storeUuid) {
         UserStoreList list = userStoreListRepository.findById(listId)
-                .orElseThrow(() -> new IllegalArgumentException("저장 리스트를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_LIST_NOT_FOUND));
 
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
         if (storeId == null) {
-            throw new IllegalArgumentException("해당 UUID의 가게를 찾을 수 없습니다: " + storeUuid);
+            throw new BusinessException(ErrorCode.INVALID_STORE_UUID);
         }
 
         Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new IllegalArgumentException("가게를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
         SavedStore savedStore = savedStoreRepository.findByUserStoreListAndStore(list, store)
-                .orElseThrow(() -> new IllegalArgumentException("해당 리스트에 저장된 가게가 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.SAVED_STORE_NOT_FOUND));
 
         savedStoreRepository.delete(savedStore);
     }
