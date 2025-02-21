@@ -21,7 +21,7 @@ public interface StoreReviewRepository extends JpaRepository<StoreReview, Long> 
     /** 특정 가게에 존재하는 리뷰 목록 조회 **/
     List<StoreReview> findByStoreIdAndDeletedAtIsNull(Long storeId);
 
-    Optional<StoreReview> findByReviewId(Long reviewId);
+    Optional<StoreReview> findByReviewIdAndDeletedAtIsNull(Long reviewId);
 
     @Query("SELECT r.reviewId FROM StoreReview r WHERE r.reviewUuid = :reviewUuid")
     Long findReviewIdByReviewUuid(@Param("reviewUuid") UUID reviewUuid);
