@@ -2,22 +2,24 @@ package org.swyp.dessertbee.mate.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.swyp.dessertbee.mate.dto.MateUserIds;
 import org.swyp.dessertbee.mate.dto.request.MateReplyCreateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateReplyPageResponse;
 import org.swyp.dessertbee.mate.dto.response.MateReplyResponse;
-import org.swyp.dessertbee.mate.entity.Mate;
-import org.swyp.dessertbee.mate.entity.MateMember;
 import org.swyp.dessertbee.mate.entity.MateReply;
 import org.swyp.dessertbee.mate.repository.MateMemberRepository;
 import org.swyp.dessertbee.mate.repository.MateReplyRepository;
 import org.swyp.dessertbee.mate.repository.MateRepository;
+import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.mate.exception.MateExceptions.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -63,44 +65,34 @@ public class MateReplyService {
         //디저트 메이트 유효성 검사
         validateMate(mateUuid);
 
-
         MateReply mateReply = mateReplyRepository.findById(replyId)
                 .orElseThrow(() -> new MateReplyNotFoundException("존재하지 않는 댓글입니다."));
 
-        UUID userUuid = userRepository.findUserUuidById(mateReply.getUserId());
+       UserEntity user = userRepository.findById(mateReply.getUserId())
+                .orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 유저입니다."));
 
-
-        return MateReplyResponse.fromEntity(mateReply, mateUuid, userUuid);
+        return MateReplyResponse.fromEntity(mateReply, mateUuid, user);
     }
 
     /**
      * 디저트메이트 댓글 전체 조회
      * */
     @Transactional
-    public MateReplyPageResponse getReplies(UUID mateUuid, int from, int to) {
-
-        if (from >= to) {
-            throw new FromToMateException("잘못된 범위 요청입니다.");
-        }
-
-        int limit = to - from;
-
+    public MateReplyPageResponse getReplies(UUID mateUuid, Pageable pageable) {
         MateUserIds mateUserIds = validateMate(mateUuid);
         Long mateId = mateUserIds.getMateId();
 
-        // limit + 1 만큼 데이터를 가져와서 다음 데이터가 있는지 확인
-        List<MateReply> replies = mateReplyRepository.findAllByDeletedAtIsNull(mateId, from, limit + 1);
+        // Pageable을 이용하여 데이터 조회
+        Page<MateReply> repliesPage = mateReplyRepository.findAllByDeletedAtIsNull(mateId, pageable);
 
-        List<MateReplyResponse> repliesResponse = mateReplyRepository.findAllByDeletedAtIsNull(mateId, from, limit)
+        // MateReplyResponse로 변환
+        List<MateReplyResponse> repliesResponse = repliesPage.getContent()
                 .stream()
-                .map( mateReply -> {
-                   return getReplyDetail(mateUuid, mateReply.getMateReplyId());
-                })
+                .map(mateReply -> getReplyDetail(mateUuid, mateReply.getMateReplyId()))
                 .collect(Collectors.toList());
 
-        // limit보다 적은 개수가 조회되면 마지막 데이터임
-        boolean isLast = replies.size() <= limit;
-
+        // 다음 페이지 존재 여부
+        boolean isLast = repliesPage.isLast();
 
         return new MateReplyPageResponse(repliesResponse, isLast);
     }

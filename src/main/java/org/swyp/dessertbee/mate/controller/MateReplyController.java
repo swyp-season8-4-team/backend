@@ -8,6 +8,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.parameters.P;
@@ -16,6 +19,7 @@ import org.swyp.dessertbee.mate.dto.request.MateCreateRequest;
 import org.swyp.dessertbee.mate.dto.request.MateReplyCreateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateReplyPageResponse;
 import org.swyp.dessertbee.mate.dto.response.MateReplyResponse;
+import org.swyp.dessertbee.mate.exception.MateExceptions;
 import org.swyp.dessertbee.mate.service.MateReplyService;
 
 import java.util.List;
@@ -81,15 +85,20 @@ public class MateReplyController {
                                                            @RequestParam int from,
                                                            @RequestParam int to) {
 
+        if (from >= to) {
+            throw new MateExceptions.FromToMateException("잘못된 범위 요청입니다.");
+        }
 
-        return ResponseEntity.ok(mateReplyService.getReplies(mateUuid, from, to));
+        Pageable pageable = PageRequest.of(from, to, Sort.by("mateReplyId").ascending());
+
+        return ResponseEntity.ok(mateReplyService.getReplies(mateUuid, pageable));
     }
 
     /**
      * 디저트메이트 댓글 수정
      * */
     @PatchMapping("/{replyId}")
-    public ResponseEntity<String> updateMate(
+    public ResponseEntity<String> updateReply(
             @PathVariable UUID mateUuid,
             @PathVariable Long replyId,
             @RequestPart(value = "request") String requestJson
