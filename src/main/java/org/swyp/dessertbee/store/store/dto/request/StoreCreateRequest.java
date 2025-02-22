@@ -15,6 +15,7 @@ import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Builder
 @Data
@@ -23,7 +24,7 @@ import java.util.Map;
 public class StoreCreateRequest {
 
     @NotNull
-    private Long ownerId;
+    private UUID userUuid;
 
     @NotBlank
     private String name;

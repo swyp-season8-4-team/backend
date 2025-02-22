@@ -3,6 +3,7 @@ package org.swyp.dessertbee.store.store.dto.response;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import org.swyp.dessertbee.mate.dto.response.MateResponse;
 import org.swyp.dessertbee.store.menu.dto.response.MenuResponse;
 import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
 import org.swyp.dessertbee.store.store.entity.Store;
@@ -31,24 +32,31 @@ public class StoreDetailResponse {
     private Boolean animalYn;
     private Boolean tumblerYn;
     private Boolean parkingYn;
+    private String description;
     private BigDecimal averageRating;
     private List<MenuResponse> menus;
     private List<String> storeImages;
     private List<String> ownerPickImages;
+    private int totalReviewCount;
     private List<StoreReviewResponse> storeReviews;
     private List<String> tags;
     private List<String> notice;
     private List<OperatingHourResponse> operatingHours;
     private List<HolidayResponse> holidays;
+    private List<String> topPreferences;
+    private List<MateResponse> mate;
 
     public static StoreDetailResponse fromEntity(Store store, Long userId, UUID userUuid,
+                                                 int totalReviewCount,
                                                  List<OperatingHourResponse> operatingHours,
                                                  List<HolidayResponse> holidays,
                                                  List<MenuResponse> menus,
                                                  List<String> storeImages,
                                                  List<String> ownerPickImages,
+                                                 List<String> topPreferences,
                                                  List<StoreReviewResponse> storeReviews,
-                                                 List<String> tags) {
+                                                 List<String> tags,
+                                                 List<MateResponse> mate) {
         return StoreDetailResponse.builder()
                 .userId(userId)
                 .userUuid(userUuid)
@@ -61,15 +69,19 @@ public class StoreDetailResponse {
                 .animalYn(store.getAnimalYn())
                 .tumblerYn(store.getTumblerYn())
                 .parkingYn(store.getParkingYn())
+                .description(store.getDescription())
                 .averageRating(store.getAverageRating())
                 .notice(store.getNotice())
                 .operatingHours(operatingHours)
                 .holidays(holidays)
+                .topPreferences(topPreferences)
                 .menus(menus)
                 .storeImages(storeImages)
                 .ownerPickImages(ownerPickImages)
+                .totalReviewCount(totalReviewCount)
                 .storeReviews(storeReviews)
                 .tags(tags)
+                .mate(mate)
                 .build();
     }
 }

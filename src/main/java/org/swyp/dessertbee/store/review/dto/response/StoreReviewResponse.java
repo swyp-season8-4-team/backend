@@ -16,12 +16,14 @@ import java.util.UUID;
 public class StoreReviewResponse {
     private UUID reviewUuid;
     private Long storeId;
+    private String nickname;
+    private String profileImage;
     private String content;
     private BigDecimal rating;
     private LocalDateTime createdAt;
     private List<String> images;
 
-    public static StoreReviewResponse fromEntity(StoreReview review, List<String> images) {
+    public static StoreReviewResponse fromEntity(StoreReview review, String nickname, String profileImage, List<String> images) {
         if (review.getReviewUuid() == null) {
             throw new IllegalStateException("reviewUuid가 null입니다. 리뷰가 정상적으로 저장되었는지 확인해주세요.");
         }
@@ -29,6 +31,8 @@ public class StoreReviewResponse {
         return StoreReviewResponse.builder()
                 .reviewUuid(review.getReviewUuid())
                 .storeId(review.getStoreId())
+                .nickname(nickname)
+                .profileImage(profileImage)
                 .content(review.getContent())
                 .rating(review.getRating())
                 .createdAt(review.getCreatedAt())

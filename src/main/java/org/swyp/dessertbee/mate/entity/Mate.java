@@ -35,6 +35,9 @@ public class Mate {
     @Column(name = "user_id")
     private Long userId;
 
+    @Column(name = "store_id")
+    private Long storeId;
+
     @Column(name = "mate_category_id")
     private Long mateCategoryId; //메이트 카테고리(ex:친목,빵지순례 등등)
 

@@ -6,7 +6,15 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
+import org.swyp.dessertbee.mate.dto.response.MateResponse;
+import org.swyp.dessertbee.mate.entity.Mate;
+import org.swyp.dessertbee.mate.entity.MateCategory;
+import org.swyp.dessertbee.mate.repository.MateCategoryRepository;
+import org.swyp.dessertbee.mate.repository.MateMemberRepository;
+import org.swyp.dessertbee.mate.repository.MateRepository;
 import org.swyp.dessertbee.store.menu.dto.response.MenuResponse;
 import org.swyp.dessertbee.store.menu.service.MenuService;
 import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
@@ -37,6 +45,9 @@ public class StoreService {
     private final StoreOperatingHourRepository storeOperatingHourRepository;
     private final StoreHolidayRepository storeHolidayRepository;
     private final SavedStoreRepository savedStoreRepository;
+    private final MateCategoryRepository mateCategoryRepository;
+    private final MateMemberRepository mateMemberRepository;
+    private final MateRepository mateRepository;
     private final ImageService imageService;
     private final MenuService menuService;
     private final UserRepository userRepository;
@@ -48,9 +59,10 @@ public class StoreService {
                                            List<MultipartFile> ownerPickImageFiles,
                                            List<MultipartFile> menuImageFiles) {
 
+        Long ownerId = userRepository.findIdByUserUuid(request.getUserUuid());
         // ownerId로 UserEntity 조회 (로그인한 사용자 정보)
-        UserEntity user = userRepository.findById(request.getOwnerId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+        UserEntity user = userRepository.findById(ownerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         if (menuImageFiles == null) {
             menuImageFiles = Collections.emptyList(); // menuImageFiles가 null이면 빈 리스트로 처리
@@ -58,7 +70,8 @@ public class StoreService {
 
         Store store = storeRepository.save(
                 Store.builder()
-                        .ownerId(request.getOwnerId())
+                        .ownerId(ownerId)
+                        .ownerUuid(request.getUserUuid())
                         .name(request.getName())
                         .phone(request.getPhone())
                         .address(request.getAddress())
@@ -138,7 +151,7 @@ public class StoreService {
     /** 태그 저장 (1~3개 선택) */
     private void saveStoreTags(Store store, List<Long> tagIds) {
         if (tagIds == null || tagIds.isEmpty() || tagIds.size() > 3) {
-            throw new IllegalArgumentException("태그는 1개 이상 3개 이하로 선택해야 합니다.");
+            throw new BusinessException(ErrorCode.INVALID_TAG_SELECTION);
         }
 
         // 선택한 태그 조회
@@ -146,7 +159,7 @@ public class StoreService {
 
         // 태그가 유효한지 검증 (혹시 존재하지 않는 태그 ID가 포함되었는지 체크)
         if (selectedTags.size() != tagIds.size()) {
-            throw new IllegalArgumentException("유효하지 않은 태그가 포함되어 있습니다.");
+            throw new BusinessException(ErrorCode.INVALID_TAG_INCLUDED);
         }
 
         // 태그-가게 관계 저장
@@ -173,7 +186,7 @@ public class StoreService {
     public StoreSummaryResponse getStoreSummary(UUID storeUuid) {
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
         Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않거나 삭제된 가게입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
         List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, storeId);
         List<String> ownerPickImages = imageService.getImagesByTypeAndId(ImageType.OWNERPICK, storeId);
@@ -213,7 +226,7 @@ public class StoreService {
     public StoreDetailResponse getStoreDetails(UUID storeUuid, UserEntity user) {
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
         Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않거나 삭제된 가게입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
         // 로그인한 사용자인 경우에만 userId, userUuid 포함
         Long userId = (user != null) ? user.getId() : null;
@@ -224,19 +237,6 @@ public class StoreService {
 
         // 사장님 픽 이미지
         List<String> ownerPickImages = imageService.getImagesByTypeAndId(ImageType.OWNERPICK, storeId);
-
-        // 메뉴 리스트
-        List<MenuResponse> menus = menuService.getMenusByStore(storeUuid);
-
-        // 한줄 리뷰
-        List<StoreReview> reviews = storeReviewRepository.findByStoreIdAndDeletedAtIsNull(storeId);
-
-        Map<Long, List<String>> reviewImagesMap = imageService.getImagesByTypeAndIds(ImageType.REVIEW,
-                reviews.stream().map(StoreReview::getReviewId).toList());
-
-        List<StoreReviewResponse> reviewResponses = reviews.stream()
-                .map(review -> StoreReviewResponse.fromEntity(review, reviewImagesMap.getOrDefault(review.getReviewId(), List.of())))
-                .toList();
 
         // 태그 조회
         List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(storeUuid);
@@ -264,9 +264,54 @@ public class StoreService {
                         .build())
                 .toList();
 
-        // 가게 상세 정보 반환
-        return StoreDetailResponse.fromEntity(store, userId, userUuid, operatingHourResponses, holidayResponses, menus,
-                storeImages, ownerPickImages, reviewResponses, tags);
+        // 해당 가게를 저장한 사람들의 취향 태그 Top3 조회
+        List<Object[]> preferenceCounts = savedStoreRepository.findTop3PreferencesByStoreId(storeId);
+        List<String> topPreferences = preferenceCounts.stream()
+                .map(result -> (String) result[0])
+                .toList();
+
+        // 메뉴 리스트
+        List<MenuResponse> menus = menuService.getMenusByStore(storeUuid);
+
+        // 한줄 리뷰
+        List<StoreReview> reviews = storeReviewRepository.findByStoreIdAndDeletedAtIsNull(storeId);
+        int totalReviewCount = reviews.size();
+        Map<Long, List<String>> reviewImagesMap = imageService.getImagesByTypeAndIds(ImageType.REVIEW,
+                reviews.stream().map(StoreReview::getReviewId).toList());
+
+        List<StoreReviewResponse> reviewResponses = reviews.stream().map(review -> {
+            UserEntity reviewer = userRepository.findById(review.getUserId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+            List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, reviewer.getId());
+
+            return StoreReviewResponse.fromEntity(review, reviewer.getNickname(),
+                    profileImage.isEmpty() ? null : profileImage.get(0),
+                    reviewImagesMap.getOrDefault(review.getReviewId(), Collections.emptyList()));
+        }).toList();
+
+        // 디저트 메이트
+        List<Mate> mates = mateRepository.findByStoreIdAndDeletedAtIsNull(storeId);
+        List<MateResponse> mateResponses = mates.stream().map(mate -> {
+            UserEntity mateCreator = userRepository.findById(mate.getUserId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+            String mateCategory = mateCategoryRepository.findById(mate.getMateCategoryId())
+                    .map(MateCategory::getName).orElse("알 수 없음");
+            List<String> mateThumbnail = imageService.getImagesByTypeAndId(ImageType.MATE, mate.getMateId());
+            //int currentMembers = mateMemberRepository.countByMateIdAndApprovalYn(mate.getMateId(), true);
+
+            return MateResponse.builder()
+                    .mateUuid(mate.getMateUuid())
+                    .mateCategory(mateCategory)
+                    .thumbnail(mateThumbnail.isEmpty() ? null : mateThumbnail.get(0))
+                    .title(mate.getTitle())
+                    .content(mate.getContent())
+                    .nickname(mateCreator.getNickname())
+                    .recruitYn(mate.getRecruitYn())
+                    .build();
+        }).toList();
+
+        return StoreDetailResponse.fromEntity(store, userId, userUuid, totalReviewCount, operatingHourResponses, holidayResponses, menus,
+                storeImages, ownerPickImages, topPreferences, reviewResponses, tags, mateResponses);
     }
 
     /** 가게의 평균 평점 업데이트 (리뷰 등록,수정,삭제 시 호출) */

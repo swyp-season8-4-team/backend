@@ -36,6 +36,31 @@ public enum ErrorCode {
     UNAUTHORIZED_ACCESS(HttpStatus.FORBIDDEN, "U004", "해당 정보에 대한 접근 권한이 없습니다."),
     INVALID_USER_UUID(HttpStatus.BAD_REQUEST, "U005", "유효하지 않은 사용자 식별자입니다."),
 
+    // Preference
+    PREFERENCES_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "취향 정보를 찾을 수 없습니다."),
+
+    // Store
+    STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "존재하지 않는 가게입니다."),
+    STORE_CREATION_FAILED(HttpStatus.BAD_REQUEST, "S002", "가게 생성에 실패했습니다."),
+    STORE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "S003", "가게에 대한 접근 권한이 없습니다."),
+    STORE_ALREADY_EXISTS(HttpStatus.CONFLICT, "S004", "이미 존재하는 가게입니다."),
+    STORE_LIST_NOT_FOUND(HttpStatus.NOT_FOUND, "S005", "저장 리스트를 찾을 수 없습니다."),
+    STORE_DUPLICATE_LIST(HttpStatus.CONFLICT, "S006", "동일한 이름과 colorId를 가진 리스트가 이미 존재합니다."),
+    STORE_DUPLICATE_LIST_NAME(HttpStatus.CONFLICT, "S007", "동일한 이름의 리스트가 이미 존재합니다."),
+    STORE_DUPLICATE_COLOR(HttpStatus.CONFLICT, "S008", "동일한 colorId를 가진 리스트가 이미 존재합니다."),
+    STORE_ALREADY_SAVED(HttpStatus.CONFLICT, "S009", "해당 가게는 이미 리스트에 존재합니다."),
+    SAVED_STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "S010", "해당 리스트에 저장된 가게가 없습니다."),
+    INVALID_STORE_UUID(HttpStatus.BAD_REQUEST, "S011", "유효하지 않은 가게 식별자입니다."),
+    INVALID_TAG_SELECTION(HttpStatus.BAD_REQUEST, "S012", "태그는 1개 이상 3개 이하로 선택해야 합니다."),
+    INVALID_TAG_INCLUDED(HttpStatus.BAD_REQUEST, "S013", "유효하지 않은 태그가 포함되어 있습니다."),
+    INVALID_STORE_REVIEW_UUID(HttpStatus.BAD_REQUEST, "S014", "유효하지 않은 한줄 리뷰 식별자입니다."),
+    STORE_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "S015", "존재하지 않는 한줄 리뷰입니다."),
+    INVALID_STORE_REVIEW(HttpStatus.NOT_FOUND, "S016", "해당 가게에 존재하는 리뷰가 아닙니다."),
+    INVALID_STORE_MENU_UUID(HttpStatus.BAD_REQUEST, "S017", "유효하지 않은 메뉴 식별자입니다."),
+    STORE_MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "S018", "존재하지 않는 메뉴입니다."),
+    INVALID_STORE_MENU(HttpStatus.NOT_FOUND, "S019", "해당 가게에 존재하는 메뉴가 아닙니다."),
+
+
     // 사장님 권한
     /**
      * 필요한 에러코드에 대하 추가적으로 더 적으시면 됩니다. - 영민 -
