@@ -15,6 +15,7 @@ import org.swyp.dessertbee.mate.entity.MateCategory;
 import org.swyp.dessertbee.mate.repository.MateCategoryRepository;
 import org.swyp.dessertbee.mate.repository.MateMemberRepository;
 import org.swyp.dessertbee.mate.repository.MateRepository;
+import org.swyp.dessertbee.preference.repository.PreferenceRepository;
 import org.swyp.dessertbee.store.menu.dto.response.MenuResponse;
 import org.swyp.dessertbee.store.menu.service.MenuService;
 import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
@@ -30,6 +31,7 @@ import org.swyp.dessertbee.user.repository.UserRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 
 @Service
@@ -46,8 +48,8 @@ public class StoreService {
     private final StoreHolidayRepository storeHolidayRepository;
     private final SavedStoreRepository savedStoreRepository;
     private final MateCategoryRepository mateCategoryRepository;
-    private final MateMemberRepository mateMemberRepository;
     private final MateRepository mateRepository;
+    private final PreferenceRepository preferenceRepository;
     private final ImageService imageService;
     private final MenuService menuService;
     private final UserRepository userRepository;
@@ -176,6 +178,43 @@ public class StoreService {
     /** 반경 내 가게 조회 */
     public List<StoreMapResponse> getStoresByLocation(Double lat, Double lng, Double radius) {
         List<Store> stores = storeRepository.findStoresByLocation(lat, lng, radius);
+
+        return stores.stream()
+                .map(StoreMapResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    /** 반경 내 특정 취향 태그를 가지는 가게 조회 */
+    public List<StoreMapResponse> getStoresByLocationAndTag(Double lat, Double lng, Double radius, Long preferenceTagId) {
+        if (preferenceRepository.findById(preferenceTagId).isEmpty()){
+            throw new BusinessException(ErrorCode.PREFERENCES_NOT_FOUND);
+        }
+        String preferenceName = preferenceRepository.findPreferenceNameById(preferenceTagId);
+        List<Store> stores = storeRepository.findStoresByLocationAndTag(lat, lng, radius, preferenceName);
+
+        return stores.stream()
+                .map(StoreMapResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    public List<StoreMapResponse> getStoresByMyPreferences(Double lat, Double lng, Double radius, UserEntity user) {
+        // 인증된 사용자가 아닌 경우 예외 발생
+        if (user == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
+
+        // 해당 사용자에게 취향(preference) 값이 존재하는지 확인
+        List<String> userPreferenceNames = user.getUserPreferences().stream()
+                .map(up -> up.getPreference().getPreferenceName())
+                .distinct()
+                .collect(Collectors.toList());
+
+        if (userPreferenceNames.isEmpty()) {
+            throw new BusinessException(ErrorCode.USER_PREFERENCES_NOT_FOUND);
+        }
+
+        // 사용자의 취향 태그 중 하나라도 매칭되는 가게 조회
+        List<Store> stores = storeRepository.findStoresByUserPreferences(lng, lat, radius, userPreferenceNames);
 
         return stores.stream()
                 .map(StoreMapResponse::fromEntity)

@@ -37,7 +37,8 @@ public enum ErrorCode {
     INVALID_USER_UUID(HttpStatus.BAD_REQUEST, "U005", "유효하지 않은 사용자 식별자입니다."),
 
     // Preference
-    PREFERENCES_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "취향 정보를 찾을 수 없습니다."),
+    PREFERENCES_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "존재하지 않는 취향 태그입니다."),
+    USER_PREFERENCES_NOT_FOUND(HttpStatus.NOT_FOUND, "P002", "취향을 등록하지 않은 사용자입니다."),
 
     // Store
     STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "존재하지 않는 가게입니다."),

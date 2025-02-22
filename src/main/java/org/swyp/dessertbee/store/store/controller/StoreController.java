@@ -6,8 +6,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.swyp.dessertbee.preference.entity.UserPreferenceEntity;
 import org.swyp.dessertbee.store.store.dto.request.StoreCreateRequest;
 import org.swyp.dessertbee.store.store.dto.response.StoreDetailResponse;
 import org.swyp.dessertbee.store.store.dto.response.StoreMapResponse;
@@ -15,10 +17,7 @@ import org.swyp.dessertbee.store.store.dto.response.StoreSummaryResponse;
 import org.swyp.dessertbee.store.store.service.StoreService;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/stores")
@@ -58,8 +57,28 @@ public class StoreController {
     public List<StoreMapResponse> getStoresByLocation(
             @RequestParam Double latitude,
             @RequestParam Double longitude,
-            @RequestParam Double radius) {
-        return storeService.getStoresByLocation(latitude, longitude, radius);
+            @RequestParam Double radius,
+            @RequestParam(required = false) Long preferenceTagId) {
+
+        if (preferenceTagId != null) {
+            return storeService.getStoresByLocationAndTag(latitude, longitude, radius, preferenceTagId);
+        } else {
+            return storeService.getStoresByLocation(latitude, longitude, radius);
+        }
+    }
+
+    /**
+     * 반경 내 가게 조회 (인증된 사용자의 취향 태그 기반)
+     */
+    @GetMapping("/map/my-preferences")
+    public ResponseEntity<List<StoreMapResponse>> getStoresByMyPreferences(
+            @RequestParam("latitude") Double latitude,
+            @RequestParam("longitude") Double longitude,
+            @RequestParam("radius") Double radius,
+            @AuthenticationPrincipal UserEntity user) {
+
+        List<StoreMapResponse> storeMapResponses = storeService.getStoresByMyPreferences(latitude, longitude, radius, user);
+        return ResponseEntity.ok(storeMapResponses);
     }
 
     /** 가게 간략 정보 조회 */
