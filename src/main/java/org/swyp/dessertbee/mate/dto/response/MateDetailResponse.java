@@ -23,6 +23,7 @@ public class MateDetailResponse {
     private String content;
     private Boolean recruitYn;
     private List<String> mateImage;
+    private List<String> profileImage;
 
     //디저트메이트 카테고리명
     private String mateCategory;
@@ -30,7 +31,8 @@ public class MateDetailResponse {
     public static MateDetailResponse fromEntity(Mate mate,
                                                 List<String> mateImage,
                                                 String category,
-                                                UserEntity creator){
+                                                UserEntity creator,
+                                                List<String> profileImage){
 
         return MateDetailResponse.builder()
                 .mateUuid(mate.getMateUuid())
@@ -38,6 +40,7 @@ public class MateDetailResponse {
                 .userId(mate.getUserId())
                 .userUuid(creator.getUserUuid())
                 .nickname(creator.getNickname())
+                .profileImage(profileImage)
                 .title(mate.getTitle())
                 .content(mate.getContent())
                 .recruitYn(mate.getRecruitYn())

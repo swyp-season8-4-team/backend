@@ -108,8 +108,9 @@ public class MateReplyService {
         Long mateId = mateUserIds.getMateId();
 
         //replyId 존재 여부 확인
-        MateReply reply = mateReplyRepository.findByMateIdAndDeletedAtIsNull(replyId)
+        MateReply reply = mateReplyRepository.findByMateIdAndMateReplyId(mateId,replyId)
                 .orElseThrow(() -> new MateReplyNotFoundException("존재하지 않는 댓글입니다."));
+
 
 
         reply.update(request.getContent());

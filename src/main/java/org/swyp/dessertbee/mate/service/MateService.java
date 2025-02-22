@@ -94,7 +94,10 @@ public class MateService {
         // 사용자 UUID 조회
         UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
 
-        return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, creator);
+        //사용자 프로필 조회
+        List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, mate.getUserId());
+
+        return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, creator, profileImage);
 
     }
 
@@ -170,8 +173,10 @@ public class MateService {
                         List<String> mateImages = imageService.getImagesByTypeAndId(ImageType.MATE, mate.getMateId());
                         String mateCategory = mateCategoryRepository.findCategoryNameById(mate.getMateCategoryId());
                         UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
+                        //사용자 프로필 조회
+                        List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, mate.getUserId());
 
-                        return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator);
+                        return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator, profileImage);
                     })
                     .collect(Collectors.toList());
 
