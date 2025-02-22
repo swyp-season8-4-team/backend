@@ -58,8 +58,14 @@ public class StoreController {
     public List<StoreMapResponse> getStoresByLocation(
             @RequestParam Double latitude,
             @RequestParam Double longitude,
-            @RequestParam Double radius) {
-        return storeService.getStoresByLocation(latitude, longitude, radius);
+            @RequestParam Double radius,
+            @RequestParam(required = false) Long preferenceTagId) {
+
+        if (preferenceTagId != null) {
+            return storeService.getStoresByLocationAndTag(latitude, longitude, radius, preferenceTagId);
+        } else {
+            return storeService.getStoresByLocation(latitude, longitude, radius);
+        }
     }
 
     /** 가게 간략 정보 조회 */
