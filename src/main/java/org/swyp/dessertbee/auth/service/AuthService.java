@@ -42,7 +42,7 @@ public interface AuthService {
      * @throws InvalidVerificationTokenException 유효하지 않은 인증 토큰
      * @throws DuplicateEmailException 이메일 중복
      */
-    SignUpResponse signup(SignUpRequest request, String verificationToken);
+    LoginResponse signup(SignUpRequest request, String verificationToken);
 
 
     /**
