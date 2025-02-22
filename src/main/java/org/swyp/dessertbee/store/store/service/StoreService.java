@@ -295,7 +295,7 @@ public class StoreService {
             String mateCategory = mateCategoryRepository.findById(mate.getMateCategoryId())
                     .map(MateCategory::getName).orElse("알 수 없음");
             List<String> mateThumbnail = imageService.getImagesByTypeAndId(ImageType.MATE, mate.getMateId());
-            int currentMembers = mateMemberRepository.countByMateIdAndApprovalYn(mate.getMateId(), true);
+            //int currentMembers = mateMemberRepository.countByMateIdAndApprovalYn(mate.getMateId(), true);
 
             return MateResponse.builder()
                     .mateUuid(mate.getMateUuid())
@@ -303,7 +303,6 @@ public class StoreService {
                     .thumbnail(mateThumbnail.isEmpty() ? null : mateThumbnail.get(0))
                     .title(mate.getTitle())
                     .content(mate.getContent())
-                    .currentMembers(currentMembers)
                     .nickname(mateCreator.getNickname())
                     .recruitYn(mate.getRecruitYn())
                     .build();
