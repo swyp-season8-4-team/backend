@@ -49,6 +49,24 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
                                            @Param("radius") Double radius,
                                            @Param("preferenceName") String preferenceName);
 
+    // 반경 내 검색어에 맞는 가게 조회 메서드
+    @Query(value = "SELECT DISTINCT s.* " +
+            "FROM store s " +
+            "LEFT JOIN store_tag_relation str ON s.store_id = str.store_id " +
+            "LEFT JOIN store_tag st ON str.tag_id = st.id " +
+            "LEFT JOIN menu m ON s.store_id = m.store_id " +
+            "WHERE (s.name LIKE CONCAT('%', :searchKeyword, '%') " +
+            "   OR st.name LIKE CONCAT('%', :searchKeyword, '%') " +
+            "   OR s.address LIKE CONCAT('%', :searchKeyword, '%') " +
+            "   OR m.name LIKE CONCAT('%', :searchKeyword, '%')) " +
+            "AND ST_Distance_Sphere(point(:lng, :lat), point(s.longitude, s.latitude)) <= :radius " +
+            "AND s.deleted_at IS NULL",
+            nativeQuery = true)
+    List<Store> findStoresByLocationAndKeyword(@Param("lat") Double lat,
+                                               @Param("lng") Double lng,
+                                               @Param("radius") Double radius,
+                                               @Param("searchKeyword") String searchKeyword);
+
     // 반경 내 사용자의 취향 태그(Top3 중 하나가 해당하는)를 가지는 가게 조회 메서드
     @Query(value = """
         SELECT s.*
