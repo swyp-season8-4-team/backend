@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.swyp.dessertbee.common.entity.ImageType;
+import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.mate.dto.MateUserIds;
 import org.swyp.dessertbee.mate.dto.request.MateReplyCreateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateReplyPageResponse;
@@ -32,6 +34,7 @@ public class MateReplyService {
     private final MateReplyRepository mateReplyRepository;
     private final MateMemberRepository mateMemberRepository;
     private final MateRepository mateRepository;
+    private final ImageService imageService;
 
     /**
      * 디저트메이트 댓글 생성
@@ -71,7 +74,11 @@ public class MateReplyService {
        UserEntity user = userRepository.findById(mateReply.getUserId())
                 .orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 유저입니다."));
 
-        return MateReplyResponse.fromEntity(mateReply, mateUuid, user);
+
+        // 사용자별 프로필 이미지 조회
+        List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
+
+        return MateReplyResponse.fromEntity(mateReply, mateUuid, user, profileImage);
     }
 
     /**
