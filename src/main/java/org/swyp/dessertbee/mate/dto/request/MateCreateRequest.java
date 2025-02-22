@@ -16,6 +16,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class MateCreateRequest {
 
+    private Long mateId;
+
     @NotNull
     private UUID userUuid;
 
