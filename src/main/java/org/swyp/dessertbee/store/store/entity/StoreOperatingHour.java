@@ -29,10 +29,8 @@ public class StoreOperatingHour {
     @Column(nullable = false, length = 10)
     private DayOfWeek dayOfWeek; // 요일 (월~일)
 
-    @Column(nullable = false)
     private LocalTime openingTime; // 개점 시간
 
-    @Column(nullable = false)
     private LocalTime closingTime; // 폐점 시간
 
     private LocalTime lastOrderTime; // 라스트오더 시간

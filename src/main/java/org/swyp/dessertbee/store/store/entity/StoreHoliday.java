@@ -26,7 +26,6 @@ public class StoreHoliday {
     @Column(nullable = false)
     private LocalDate holidayDate; // 특정 휴무일
 
-    @Column(length = 255)
     private String reason; // 휴무 사유
 
     @CreationTimestamp
