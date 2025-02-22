@@ -59,8 +59,9 @@ public class StoreService {
                                            List<MultipartFile> ownerPickImageFiles,
                                            List<MultipartFile> menuImageFiles) {
 
+        Long ownerId = userRepository.findIdByUserUuid(request.getUserUuid());
         // ownerId로 UserEntity 조회 (로그인한 사용자 정보)
-        UserEntity user = userRepository.findById(request.getOwnerId())
+        UserEntity user = userRepository.findById(ownerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         if (menuImageFiles == null) {
@@ -69,7 +70,8 @@ public class StoreService {
 
         Store store = storeRepository.save(
                 Store.builder()
-                        .ownerId(request.getOwnerId())
+                        .ownerId(ownerId)
+                        .ownerUuid(request.getUserUuid())
                         .name(request.getName())
                         .phone(request.getPhone())
                         .address(request.getAddress())

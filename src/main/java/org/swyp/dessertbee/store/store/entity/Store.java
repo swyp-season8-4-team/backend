@@ -32,6 +32,9 @@ public class Store {
     @Column(name = "owner_id")
     private Long ownerId;
 
+    @Column(name = "owner_uuid")
+    private UUID ownerUuid;
+
     @Column(nullable = false)
     private String name;
 
