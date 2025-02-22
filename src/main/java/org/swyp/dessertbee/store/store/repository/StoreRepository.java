@@ -55,10 +55,9 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
             "LEFT JOIN store_tag_relation str ON s.store_id = str.store_id " +
             "LEFT JOIN store_tag st ON str.tag_id = st.id " +
             "LEFT JOIN menu m ON s.store_id = m.store_id " +
-            "WHERE (s.name LIKE CONCAT('%', :searchKeyword, '%') " +
-            "   OR st.name LIKE CONCAT('%', :searchKeyword, '%') " +
-            "   OR s.address LIKE CONCAT('%', :searchKeyword, '%') " +
-            "   OR m.name LIKE CONCAT('%', :searchKeyword, '%')) " +
+            "WHERE (MATCH(s.name, s.address) AGAINST(:searchKeyword IN NATURAL LANGUAGE MODE) " +
+            "   OR MATCH(st.name) AGAINST(:searchKeyword IN NATURAL LANGUAGE MODE) " +
+            "   OR MATCH(m.name) AGAINST(:searchKeyword IN NATURAL LANGUAGE MODE)) " +
             "AND ST_Distance_Sphere(point(:lng, :lat), point(s.longitude, s.latitude)) <= :radius " +
             "AND s.deleted_at IS NULL",
             nativeQuery = true)
