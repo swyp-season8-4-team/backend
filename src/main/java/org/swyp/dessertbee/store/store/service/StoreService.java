@@ -197,6 +197,15 @@ public class StoreService {
                 .collect(Collectors.toList());
     }
 
+    /** 반경 내 가게 조회 */
+    public List<StoreMapResponse> getStoresByLocationAndKeyword(Double lat, Double lng, Double radius, String searchKeyword) {
+        List<Store> stores = storeRepository.findStoresByLocationAndKeyword(lat, lng, radius, searchKeyword);
+
+        return stores.stream()
+                .map(StoreMapResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
+
     public List<StoreMapResponse> getStoresByMyPreferences(Double lat, Double lng, Double radius, UserEntity user) {
         // 인증된 사용자가 아닌 경우 예외 발생
         if (user == null) {
