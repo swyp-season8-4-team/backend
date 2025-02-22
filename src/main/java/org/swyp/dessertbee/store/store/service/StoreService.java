@@ -197,6 +197,30 @@ public class StoreService {
                 .collect(Collectors.toList());
     }
 
+    public List<StoreMapResponse> getStoresByMyPreferences(Double lat, Double lng, Double radius, UserEntity user) {
+        // 인증된 사용자가 아닌 경우 예외 발생
+        if (user == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
+
+        // 해당 사용자에게 취향(preference) 값이 존재하는지 확인
+        List<String> userPreferenceNames = user.getUserPreferences().stream()
+                .map(up -> up.getPreference().getPreferenceName())
+                .distinct()
+                .collect(Collectors.toList());
+
+        if (userPreferenceNames.isEmpty()) {
+            throw new BusinessException(ErrorCode.USER_PREFERENCES_NOT_FOUND);
+        }
+
+        // 사용자의 취향 태그 중 하나라도 매칭되는 가게 조회
+        List<Store> stores = storeRepository.findStoresByUserPreferences(lng, lat, radius, userPreferenceNames);
+
+        return stores.stream()
+                .map(StoreMapResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
+
     /** 가게 간략 정보 조회 */
     public StoreSummaryResponse getStoreSummary(UUID storeUuid) {
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
