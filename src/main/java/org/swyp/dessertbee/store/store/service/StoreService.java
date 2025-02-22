@@ -2,7 +2,6 @@ package org.swyp.dessertbee.store.store.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
@@ -13,7 +12,6 @@ import org.swyp.dessertbee.mate.dto.response.MateResponse;
 import org.swyp.dessertbee.mate.entity.Mate;
 import org.swyp.dessertbee.mate.entity.MateCategory;
 import org.swyp.dessertbee.mate.repository.MateCategoryRepository;
-import org.swyp.dessertbee.mate.repository.MateMemberRepository;
 import org.swyp.dessertbee.mate.repository.MateRepository;
 import org.swyp.dessertbee.preference.repository.PreferenceRepository;
 import org.swyp.dessertbee.store.menu.dto.response.MenuResponse;
@@ -55,7 +53,6 @@ public class StoreService {
     private final UserRepository userRepository;
 
     /** 가게 등록 (이벤트, 쿠폰, 메뉴 + 이미지 포함) */
-    @PreAuthorize("hasRole('ROLE_OWNER')")
     public StoreDetailResponse createStore(StoreCreateRequest request,
                                            List<MultipartFile> storeImageFiles,
                                            List<MultipartFile> ownerPickImageFiles,
