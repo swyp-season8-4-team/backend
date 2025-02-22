@@ -22,13 +22,13 @@ public class MateMemberResponse {
     private String grade;
     private Boolean approvalYn;
     private Boolean removeYn;
-    private List<String> userImage;
+    private List<String> profileImage;
     private String nickname;
 
     public static MateMemberResponse fromEntity(MateMember member,
                                                 UUID mateUuid,
                                                 UserEntity user,
-                                                List<String> userImage) {
+                                                List<String> profileImage) {
         return MateMemberResponse.builder()
                 .mateId(member.getMateId())
                 .mateUuid(mateUuid)
@@ -37,7 +37,7 @@ public class MateMemberResponse {
                 .grade(member.getGrade().toString())
                 .approvalYn(member.getApprovalYn())
                 .removeYn(member.getRemoveYn())
-                .userImage(userImage)
+                .profileImage(profileImage)
                 .nickname(user.getNickname())
                 .build();
     }

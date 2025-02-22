@@ -114,10 +114,10 @@ public class MateMemberService {
                     }
 
                     // 사용자별 프로필 이미지 조회
-                    List<String> userImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
+                    List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
 
                     // MateMemberResponse 생성
-                    return MateMemberResponse.fromEntity(mateMember, mateUuid, user, userImages);
+                    return MateMemberResponse.fromEntity(mateMember, mateUuid, user, profileImages);
                 })
                 .toList();
     }
