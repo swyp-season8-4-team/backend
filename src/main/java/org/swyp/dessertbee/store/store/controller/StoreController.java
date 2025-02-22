@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,18 +26,18 @@ import java.util.*;
 public class StoreController {
 
     private final StoreService storeService;
-    private final ObjectMapper objectMapper; // JSON 변환을 위한 ObjectMapper 추가
+    private final ObjectMapper objectMapper;
 
     /** 가게 등록 */
+    @PreAuthorize("isAuthenticated() and hasRole('ROLE_OWNER')")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StoreDetailResponse> createStore(
-            @RequestPart("request") String requestJson,  // JSON 문자열로 받음
+            @RequestPart("request") String requestJson,
             @RequestPart(value = "storeImageFiles", required = false) List<MultipartFile> storeImageFiles,
             @RequestPart(value = "ownerPickImageFiles", required = false) List<MultipartFile> ownerPickImageFiles,
             @RequestPart(value = "menuImageFiles", required = false) List<MultipartFile> menuImageFiles) {
 
         try {
-            // JSON 문자열을 StoreCreateRequest 객체로 변환
             StoreCreateRequest request = objectMapper.readValue(requestJson, StoreCreateRequest.class);
 
             storeImageFiles = storeImageFiles != null ? storeImageFiles : Collections.emptyList();
@@ -47,7 +48,7 @@ public class StoreController {
             StoreDetailResponse response = storeService.createStore(request, storeImageFiles, ownerPickImageFiles, menuImageFiles);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
-            e.printStackTrace();  // 에러 로그 출력
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
