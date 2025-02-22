@@ -43,7 +43,7 @@ public class AuthController {
             @ApiResponse(responseCode = "409", description = "이미 존재하는 이메일")
     })
     @PostMapping("/signup")
-    public ResponseEntity<SignUpResponse> signup(
+    public ResponseEntity<LoginResponse> signup(
             @RequestHeader("X-Email-Verification-Token") String verificationToken,
             @Valid @RequestBody SignUpRequest request
     ) throws BadRequestException {
@@ -55,7 +55,7 @@ public class AuthController {
         }
 
         // 회원가입 처리
-        SignUpResponse response = authService.signup(request, verificationToken);
+        LoginResponse response = authService.signup(request, verificationToken);
         return ResponseEntity.ok(response);
     }
 

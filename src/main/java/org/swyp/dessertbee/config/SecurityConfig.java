@@ -91,7 +91,7 @@ public class SecurityConfig {
 
         // allowedOrigins를 yml 설정값에서 가져와서 설정
         String[] origins = corsAllowedOrigins.split(",");
-        configuration.setAllowedOrigins(Arrays.asList(origins));
+        configuration.setAllowedOrigins(Collections.singletonList("*")); // 일단 모든 오리진 허용하도록 수정
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowCredentials(true);

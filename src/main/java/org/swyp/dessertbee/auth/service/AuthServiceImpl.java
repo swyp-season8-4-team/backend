@@ -28,6 +28,7 @@ import org.swyp.dessertbee.role.repository.RoleRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -66,7 +67,7 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     @Transactional
-    public SignUpResponse signup(SignUpRequest request, String verificationToken) {
+    public LoginResponse signup(SignUpRequest request, String verificationToken) {
         try {
             // 메일 인증 토큰 검증
             validateEmailVerificationToken(verificationToken, request.getEmail(), EmailVerificationPurpose.SIGNUP);
@@ -101,13 +102,24 @@ public class AuthServiceImpl implements AuthService {
             RoleEntity role = roleRepository.findByName(request.getRole())
                     .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "유효하지 않은 역할입니다."));
             user.addRole(role);
+            List<String> roles = Collections.singletonList(role.getName().getRoleName());
 
             // 사용자 정보 저장
             userRepository.save(user);
 
+            // Access Token, Refresh Token 생성
+            String accessToken = jwtUtil.createAccessToken(user.getEmail(), roles, false);
+            String refreshToken = jwtUtil.createRefreshToken(user.getEmail(), roles, false);
+
+            // Refresh Token 저장
+            saveRefreshToken(user.getEmail(), refreshToken);
+
             log.info("회원가입 완료 - 이메일: {}", request.getEmail());
 
-            return SignUpResponse.success(request.getEmail());
+            List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
+            String profileImageUrl = profileImages.isEmpty() ? null : profileImages.get(0);
+
+            return LoginResponse.success(accessToken, user, profileImageUrl);
 
         } catch (BusinessException e) {
             log.warn("회원가입 실패 - 이메일: {}, 사유: {}", request.getEmail(), e.getMessage());
