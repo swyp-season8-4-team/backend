@@ -20,6 +20,6 @@ public class    MenuCreateRequest {
     private BigDecimal price; // 가격
 
     private Boolean isPopular = false; // 인기 메뉴 여부 (기본값: false)
-
     private String description; // 메뉴 설명
+    private String imageFileKey;
 }

@@ -9,6 +9,7 @@ import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
+import org.swyp.dessertbee.common.util.CustomMultipartFile;
 import org.swyp.dessertbee.store.menu.dto.request.MenuCreateRequest;
 import org.swyp.dessertbee.store.menu.dto.response.MenuResponse;
 import org.swyp.dessertbee.store.menu.entity.Menu;
@@ -77,16 +78,28 @@ public class MenuService {
 
         menuRepository.saveAll(menus);
 
-        // 각 메뉴의 이름을 기반으로 이미지 파일 업로드
-        menus.forEach(menu -> {
-            MultipartFile file = menuImageFiles.get(menu.getName());
-            if (file != null) {
-                String url = imageService.uploadAndSaveImage(file, ImageType.MENU, menu.getMenuId(), "menu/" + menu.getMenuId());
-                log.info(url);
-            }
-        });
-    }
+        // 저장된 메뉴 리스트와 요청 데이터를 인덱스별로 매핑
+        for (int i = 0; i < menus.size(); i++) {
+            Menu menu = menus.get(i);
+            String imageKey = menuRequests.get(i).getImageFileKey();
+            if (imageKey != null) {
+                MultipartFile file = menuImageFiles.get(imageKey);
+                if (file != null) {
+                    // 파일명 재정의 (메뉴 이름)
+                    String originalFilename = file.getOriginalFilename();
+                    String extension = "";
+                    if (originalFilename != null && originalFilename.lastIndexOf('.') != -1) {
+                        extension = originalFilename.substring(originalFilename.lastIndexOf('.'));
+                    }
+                    String newFilename = menu.getName().trim() + extension;
+                    // 새로운 파일명 반영
+                    MultipartFile renamedFile = new CustomMultipartFile(file, newFilename);
 
+                    imageService.uploadAndSaveImage(renamedFile, ImageType.MENU, menu.getMenuId(), "menu/" + menu.getMenuId());
+                }
+            }
+        }
+    }
 
     /** 메뉴 수정 */
     public void updateMenu(UUID storeUuid, UUID menuUuid, MenuCreateRequest request, MultipartFile file) {
@@ -99,7 +112,16 @@ public class MenuService {
 
         // 기존 이미지 삭제 후 새 이미지 업로드
         if (file != null) {
-            imageService.updateImage(ImageType.MENU, menuId, file, "menu/" + menuId);
+            // 파일명 재정의 (메뉴 이름)
+            String originalFilename = file.getOriginalFilename();
+            String extension = "";
+            if (originalFilename != null && originalFilename.lastIndexOf('.') != -1) {
+                extension = originalFilename.substring(originalFilename.lastIndexOf('.'));
+            }
+            String newFilename = menu.getName().trim() + extension;
+            MultipartFile renamedFile = new CustomMultipartFile(file, newFilename);
+
+            imageService.updateImage(ImageType.MENU, menuId, renamedFile, "menu/" + menuId);
         }
     }
 

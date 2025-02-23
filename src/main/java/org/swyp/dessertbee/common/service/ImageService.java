@@ -23,7 +23,7 @@ public class ImageService {
     private final ImageRepository imageRepository;
     private final S3Service s3Service;
 
-    /** 다중 이미지 업로드 후 URL 반환 */
+    /** 다중 이미지 업로드 */
     @Transactional
     public void uploadAndSaveImages(List<MultipartFile> files, ImageType refType, Long refId, String folder) {
         if (files == null || files.isEmpty()) return;
@@ -44,9 +44,9 @@ public class ImageService {
         imageRepository.saveAll(images);
     }
 
-    /** 단일 이미지 업로드 후 URL 반환 */
-    public String uploadAndSaveImage(MultipartFile file, ImageType refType, Long refId, String folder) {
-        if (file == null) return null;
+    /** 단일 이미지 업로드 */
+    public void uploadAndSaveImage(MultipartFile file, ImageType refType, Long refId, String folder) {
+        if (file == null) return;
 
         try {
             String url = s3Service.uploadFile(file, folder);
@@ -60,7 +60,6 @@ public class ImageService {
 
             imageRepository.save(image);
             log.info("이미지 업로드 성공 - type: {}, refId: {}", refType, refId);
-            return url;
         } catch (Exception e) {
             log.error("이미지 업로드 실패 - type: {}, refId: {}", refType, refId, e);
             throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR);
