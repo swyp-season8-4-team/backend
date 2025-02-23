@@ -14,12 +14,14 @@ import org.swyp.dessertbee.mate.entity.MateCategory;
 import org.swyp.dessertbee.mate.repository.MateCategoryRepository;
 import org.swyp.dessertbee.mate.repository.MateRepository;
 import org.swyp.dessertbee.preference.repository.PreferenceRepository;
+import org.swyp.dessertbee.store.menu.dto.request.MenuCreateRequest;
 import org.swyp.dessertbee.store.menu.dto.response.MenuResponse;
 import org.swyp.dessertbee.store.menu.service.MenuService;
 import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
 import org.swyp.dessertbee.store.review.entity.StoreReview;
 import org.swyp.dessertbee.store.review.repository.StoreReviewRepository;
 import org.swyp.dessertbee.store.store.dto.request.StoreCreateRequest;
+import org.swyp.dessertbee.store.store.dto.request.StoreUpdateRequest;
 import org.swyp.dessertbee.store.store.dto.response.*;
 import org.swyp.dessertbee.store.store.entity.*;
 import org.swyp.dessertbee.store.store.repository.*;
@@ -28,6 +30,7 @@ import org.swyp.dessertbee.user.repository.UserRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
@@ -364,5 +367,127 @@ public class StoreService {
     public void updateAverageRating(Long storeId) {
         BigDecimal newAverageRating = storeReviewRepository.findAverageRatingByStoreId(storeId);
         storeRepository.updateAverageRating(storeId, newAverageRating);
+    }
+
+    /** 가게 수정 */
+    public StoreDetailResponse updateStore(UUID storeUuid,
+                                           StoreUpdateRequest request,
+                                           List<MultipartFile> storeImageFiles,
+                                           List<MultipartFile> ownerPickImageFiles,
+                                           List<MultipartFile> menuImageFiles,
+                                           UserEntity user) {
+        // 가게 존재 여부 및 삭제 여부 체크
+        Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
+        Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
+
+        if (!store.getOwnerUuid().equals(user.getUserUuid())) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
+
+        // 가게 기본 정보 업데이트
+        store.setName(request.getName());
+        store.setPhone(request.getPhone());
+        store.setAddress(request.getAddress());
+        store.setStoreLink(request.getStoreLink());
+        store.setLatitude(request.getLatitude());
+        store.setLongitude(request.getLongitude());
+        store.setDescription(request.getDescription());
+        store.setAnimalYn(Boolean.TRUE.equals(request.getAnimalYn()));
+        store.setTumblerYn(Boolean.TRUE.equals(request.getTumblerYn()));
+        store.setParkingYn(Boolean.TRUE.equals(request.getParkingYn()));
+        store.setNotice(request.getNotice());
+        storeRepository.save(store);
+
+        if (!storeImageFiles.isEmpty()) {
+            List<Long> deleteStoreImageIds = request.getStoreImageDeleteIds();
+            String folder = "store/" + store.getStoreId();
+            imageService.updatePartialImages(deleteStoreImageIds, storeImageFiles, ImageType.STORE, store.getStoreId(), folder);
+        }
+
+        if (!ownerPickImageFiles.isEmpty()) {
+            List<Long> deleteOwnerPickImageIds = request.getOwnerPickImageDeleteIds();
+            String folder = "ownerpick/" + store.getStoreId();
+            imageService.updatePartialImages(deleteOwnerPickImageIds, ownerPickImageFiles, ImageType.OWNERPICK, store.getStoreId(), folder);
+        }
+
+        if (request.getTagIds() != null && !request.getTagIds().isEmpty()) {
+            storeTagRelationRepository.deleteByStore(store);
+            saveStoreTags(store, request.getTagIds());
+        }
+
+        if (request.getMenus() != null && !request.getMenus().isEmpty()) {
+            Map<String, MultipartFile> menuImageMap = menuImageFiles.stream()
+                    .collect(Collectors.toMap(MultipartFile::getOriginalFilename, file -> file, (a, b) -> b));
+
+            for (StoreUpdateRequest.MenuRequest menuRequest : request.getMenus()) {
+                MultipartFile file = null;
+                if (menuRequest.getImageFileKey() != null) {
+                    file = menuImageMap.get(menuRequest.getImageFileKey());
+                }
+
+                MenuCreateRequest menuCreateRequest = convertToMenuCreateRequest(menuRequest);
+
+                if (menuRequest.getMenuUuid() != null) {
+                    menuService.updateMenu(store.getStoreUuid(), menuRequest.getMenuUuid(), menuCreateRequest, file);
+                } else {
+                    menuService.addMenu(store.getStoreUuid(), menuCreateRequest, file);
+                }
+            }
+        }
+
+        if (request.getOperatingHours() != null) {
+            storeOperatingHourRepository.deleteByStoreId(store.getStoreId());
+            List<StoreOperatingHour> operatingHours = request.getOperatingHours().stream()
+                    .map(hour -> StoreOperatingHour.builder()
+                            .storeId(store.getStoreId())
+                            .dayOfWeek(hour.getDayOfWeek())
+                            .openingTime(hour.getOpeningTime())
+                            .closingTime(hour.getClosingTime())
+                            .lastOrderTime(hour.getLastOrderTime())
+                            .isClosed(hour.getIsClosed())
+                            .build())
+                    .collect(Collectors.toList());
+            storeOperatingHourRepository.saveAll(operatingHours);
+        }
+
+        if (request.getHolidays() != null) {
+            storeHolidayRepository.deleteByStoreId(store.getStoreId());
+            List<StoreHoliday> holidays = request.getHolidays().stream()
+                    .map(holiday -> StoreHoliday.builder()
+                            .storeId(store.getStoreId())
+                            .holidayDate(LocalDate.parse(holiday.getDate()))
+                            .reason(holiday.getReason())
+                            .build())
+                    .collect(Collectors.toList());
+            storeHolidayRepository.saveAll(holidays);
+        }
+
+        return getStoreDetails(store.getStoreUuid(), user);
+    }
+
+    private MenuCreateRequest convertToMenuCreateRequest(StoreUpdateRequest.MenuRequest menuRequest) {
+        MenuCreateRequest mcr = new MenuCreateRequest();
+        mcr.setMenuUuid(menuRequest.getMenuUuid());
+        mcr.setName(menuRequest.getName());
+        mcr.setPrice(menuRequest.getPrice());
+        mcr.setIsPopular(menuRequest.getIsPopular());
+        mcr.setDescription(menuRequest.getDescription());
+        mcr.setImageFileKey(menuRequest.getImageFileKey());
+        return mcr;
+    }
+
+    /** 가게 삭제 */
+    public void deleteStore(UUID storeUuid, UserEntity user) {
+        Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
+        Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
+
+        if (!store.getOwnerUuid().equals(user.getUserUuid())) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
+
+        store.setDeletedAt(LocalDateTime.now());
+        storeRepository.save(store);
     }
 }
