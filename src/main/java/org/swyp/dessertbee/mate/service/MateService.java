@@ -14,6 +14,7 @@ import org.swyp.dessertbee.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.mate.repository.MateCategoryRepository;
 import org.swyp.dessertbee.mate.repository.MateMemberRepository;
 import org.swyp.dessertbee.mate.repository.MateRepository;
+import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 import org.slf4j.Logger;
@@ -34,9 +35,8 @@ public class MateService {
     private final MateMemberRepository mateMemberRepository;
     private final MateCategoryRepository mateCategoryRepository;
     private final MateMemberService mateMemberService;
+    private final StoreRepository storeRepository;
     private final ImageService imageService;
-    private static final Logger log = LoggerFactory.getLogger(MateService.class); // Logger 추가
-
 
     /** 메이트 등록 */
     @Transactional
@@ -49,13 +49,18 @@ public class MateService {
             throw new UserNotFoundExcption("존재하지 않는 유저입니다.");
         }
 
+        //장소명으로 storeId 조회
+        Long storeId = storeRepository.findStoreIdByName(request.getPlace().getPlaceName());
+
         Mate mate = mateRepository.save(
                 Mate.builder()
                         .userId(userId)
+                        .storeId(storeId)
                         .mateCategoryId(request.getMateCategoryId())
                         .title(request.getTitle())
                         .content(request.getContent())
                         .recruitYn(Boolean.TRUE.equals(request.getRecruitYn()))
+                        .placeName(request.getPlace().getPlaceName())
                         .build()
         );
 
