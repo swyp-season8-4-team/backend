@@ -144,7 +144,7 @@ public class MateService {
         Mate mate = mateRepository.findByMateIdAndDeletedAtIsNull(mateId)
                 .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
-        mate.update(request.getTitle(), request.getContent(), request.getRecruitYn(), request.getMateCategoryId());
+        mate.update(request);
 
 
         //기존 이미지 삭제 후 새 이미지 업로드

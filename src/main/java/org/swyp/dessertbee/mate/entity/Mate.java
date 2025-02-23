@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
+import org.swyp.dessertbee.mate.dto.request.MateCreateRequest;
 import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 import java.math.BigDecimal;
@@ -79,11 +80,12 @@ public class Mate {
     private LocalDateTime deletedAt;
 
 
-    public void update(String title, String content, Boolean recruitYn, Long mateCategoryId){
-        this.title = title;
-        this.content = content;
-        this.recruitYn = recruitYn;
-        this.mateCategoryId = mateCategoryId;
+    public void update(MateCreateRequest request) {
+        this.title = request.getTitle();
+        this.content = request.getContent();
+        this.recruitYn = request.getRecruitYn();
+        this.mateCategoryId = request.getMateCategoryId();
+        this.placeName = request.getPlace().getPlaceName();
     }
 
     public void softDelete(){
