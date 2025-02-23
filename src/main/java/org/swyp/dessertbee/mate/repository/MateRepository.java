@@ -15,7 +15,7 @@ import java.util.UUID;
 public interface MateRepository extends JpaRepository<Mate, Long> {
 
     @Transactional
-    Optional<Mate> findByMateIdAndDeletedAtIsNull(Long mateId);
+    Optional<Mate> findByMateUuidAndDeletedAtIsNull(UUID mateUuid);
 
     @Query("SELECT m FROM Mate m WHERE m.storeId = :storeId AND m.deletedAt IS NULL")
     List<Mate> findByStoreIdAndDeletedAtIsNull(@Param("storeId") Long storeId);
@@ -24,7 +24,7 @@ public interface MateRepository extends JpaRepository<Mate, Long> {
      * MateUuid로 MateId 조회
      * */
     @Query("SELECT m.mateId FROM Mate m where m.mateUuid = :mateUuid")
-    Long findMateIdByMateUuid(UUID mateUuid);
+    Optional<Long> findMateIdByMateUuid(UUID mateUuid);
 
     /**
      *

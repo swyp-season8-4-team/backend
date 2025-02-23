@@ -2,6 +2,7 @@ package org.swyp.dessertbee.mate.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.swyp.dessertbee.mate.exception.MateExceptions;
 
 import java.time.LocalDateTime;
 
@@ -32,8 +33,8 @@ public class MateMember {
     @Column(name = "approval_yn")
     private  Boolean approvalYn;
 
-    @Column(name = "remove_yn")
-    private Boolean removeYn;
+    @Column(name = "banned_yn")
+    private Boolean bannedYn;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
@@ -44,7 +45,24 @@ public class MateMember {
     }
 
     public void removeDelete(){
-        this.removeYn = Boolean.TRUE;
+        this.bannedYn = Boolean.TRUE;
         this.deletedAt = LocalDateTime.now();
     }
+
+    public Boolean isPending()
+    {
+        return !this.getApprovalYn() && this.getDeletedAt() == null;
+    }
+
+    public Boolean isReject()
+    {
+        return !this.getApprovalYn() && this.getDeletedAt() != null;
+    }
+
+    public Boolean isReapply()
+    {
+        return this.getApprovalYn() && this.getDeletedAt() != null;
+    }
+
+
 }

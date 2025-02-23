@@ -83,16 +83,13 @@ public class MateService {
     /** 메이트 상세 정보 */
     public MateDetailResponse getMateDetail(UUID mateUuid) {
 
-        //mateUuid로 mateId 조회
-        Long mateId = mateRepository.findMateIdByMateUuid(mateUuid);
-
         //mateId로 디저트메이트 여부 확인
-        Mate mate = mateRepository.findByMateIdAndDeletedAtIsNull(mateId)
+        Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
                 .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
 
         //디저트메이트 사진 조회
-        List<String> mateImage = imageService.getImagesByTypeAndId(ImageType.MATE, mateId);
+        List<String> mateImage = imageService.getImagesByTypeAndId(ImageType.MATE, mate.getMateId());
 
         //mateCategoryId로 name 조회
         String mateCategory = String.valueOf(mateCategoryRepository.findCategoryNameById( mate.getMateCategoryId()));
@@ -112,21 +109,18 @@ public class MateService {
     @Transactional
     public void deleteMate(UUID mateUuid) {
 
-        //mateUuid로 mateId 조회
-        Long mateId = mateRepository.findMateIdByMateUuid(mateUuid);
-
-        //mateId 존재 여부 확인
-        Mate mate = mateRepository.findByMateIdAndDeletedAtIsNull(mateId)
-                .orElseThrow(() -> new MateNotFoundException("존재하지 !않는 디저트메이트입니다."));
+        //mateId로 디저트메이트 여부 확인
+        Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
+                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
         try {
                 mate.softDelete();
                 mateRepository.save(mate);
 
                 //디저트메이트 멤버 삭제
-                mateMemberService.deleteAllMember(mateId);
+                mateMemberService.deleteAllMember(mate.getMateId());
 
-                imageService.deleteImagesByRefId(ImageType.MATE, mateId);
+                imageService.deleteImagesByRefId(ImageType.MATE, mate.getMateId());
 
         } catch (Exception e) {
                 System.out.println("❌ S3 이미지 삭제 중 오류 발생: " + e.getMessage());
@@ -139,11 +133,9 @@ public class MateService {
      * */
     @Transactional
     public void updateMate(UUID mateUuid, MateCreateRequest request, MultipartFile mateImage) {
-        //mateUuid로 mateId 조회
-        Long mateId = mateRepository.findMateIdByMateUuid(mateUuid);
 
         //mateId 존재 여부 확인
-        Mate mate = mateRepository.findByMateIdAndDeletedAtIsNull(mateId)
+        Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
                 .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
         mate.update(request);
@@ -152,7 +144,7 @@ public class MateService {
 
         //기존 이미지 삭제 후 새 이미지 업로드
         if (mateImage != null && !mateImage.isEmpty()) {
-            imageService.updateImage(ImageType.MATE,mateId, mateImage, "mate/" + mateId);
+            imageService.updateImage(ImageType.MATE, mate.getMateId(), mateImage, "mate/" + mate.getMateId());
         }
 
     }

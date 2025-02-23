@@ -130,4 +130,16 @@ public class MateExceptions {
         }
 
     }
+
+    /**
+     * 댓글 작성자가 아닐때 예외
+     * */
+    public static class NotCommentAuthorException extends BusinessException {
+        public NotCommentAuthorException(){
+            super(ErrorCode.MATE_REPLY_NOT_AUTHOR);
+        }
+        public NotCommentAuthorException(String message) {
+            super(ErrorCode.MATE_REPLY_NOT_AUTHOR, message);
+        }
+    }
 }

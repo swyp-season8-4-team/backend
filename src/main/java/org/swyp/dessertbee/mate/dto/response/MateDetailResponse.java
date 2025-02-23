@@ -16,6 +16,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class MateDetailResponse {
 
+    private Long mateId;
     private UUID mateUuid;
     private Long storeId;
     private UUID userUuid;
@@ -39,6 +40,7 @@ public class MateDetailResponse {
                                                 List<String> profileImage){
 
         return MateDetailResponse.builder()
+                .mateId(mate.getMateId())
                 .mateUuid(mate.getMateUuid())
                 .storeId(mate.getStoreId())
                 .userUuid(creator.getUserUuid())

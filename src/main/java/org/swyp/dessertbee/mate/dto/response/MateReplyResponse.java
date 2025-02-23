@@ -18,9 +18,7 @@ public class MateReplyResponse {
 
 
     private Long mateReplyId;
-    private Long mateId;
     private UUID mateUuid;
-    private Long userId;
     private String nickname;
     private UUID userUuid;
     private String content;
@@ -35,9 +33,7 @@ public class MateReplyResponse {
 
         return MateReplyResponse.builder()
                 .mateReplyId(reply.getMateReplyId())
-                .mateId(reply.getMateId())
                 .mateUuid(mateUuid)
-                .userId(reply.getUserId())
                 .nickname(user.getNickname())
                 .userUuid(user.getUserUuid())
                 .content(reply.getContent())

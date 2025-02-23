@@ -21,9 +21,6 @@ public class MateReplyCreateRequest {
     private UUID userUuid;
 
     @NotNull
-    private Long userId;
-
-    @NotNull
     private String content;
 
     private String report;

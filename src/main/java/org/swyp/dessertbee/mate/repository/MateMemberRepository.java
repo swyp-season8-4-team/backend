@@ -34,4 +34,6 @@ public interface MateMemberRepository extends JpaRepository<MateMember, Long> {
     Optional<MateMember> findByMateIdAndUserId(Long mateId, Long userId);
 
     MateMember findGradeByMateIdAndUserId(Long mateId, Long userId);
+
+    Optional<MateMember> findByMateIdAndUserIdAndDeletedAtIsNull(Long mateId, Long userId);
 }
