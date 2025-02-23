@@ -114,10 +114,10 @@ public class MateMemberService {
                     }
 
                     // 사용자별 프로필 이미지 조회
-                    List<String> userImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
+                    List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
 
                     // MateMemberResponse 생성
-                    return MateMemberResponse.fromEntity(mateMember, mateUuid, user, userImages);
+                    return MateMemberResponse.fromEntity(mateMember, mateUuid, user, profileImages);
                 })
                 .toList();
     }
@@ -188,6 +188,47 @@ public class MateMemberService {
     }
 
 
+    /**
+     * 디저트 메이트 대기 멤버 전체 조회
+     **/
+    public List<MateMemberResponse> pendingMate(UUID mateUuid) {
+
+        MateUserIds validateMate = validateMate(mateUuid);
+        Long mateId = validateMate.getMateId();
+
+        List<MateMember> mateMembers = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndApprovalYnFalse(validateMate.getMateId());
+
+        //userId로 userUuid 조회
+        List<UserEntity> users = mateMembers.stream()
+                .flatMap(mateMember ->
+                        userRepository.findAllUserUuidAndNicknameById(mateMember.getUserId()).stream()
+                )
+                .toList();
+
+
+        // MateMember와 UserEntity를 매칭하여 MateMemberResponse 생성
+        return mateMembers.stream()
+                .map(mateMember -> {
+                    // 사용자 정보 찾기
+                    UserEntity user = null;
+                    try {
+                        user = users.stream()
+                                .filter(u -> u.getId().equals(mateMember.getUserId()))
+                                .findFirst()
+                                .orElseThrow(() -> new UserNotFoundExcption("사용자 정보를 찾을 수 없습니다."));
+                    } catch (UserNotFoundExcption e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    // 사용자별 프로필 이미지 조회
+                    List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
+
+                    // MateMemberResponse 생성
+                    return MateMemberResponse.fromEntity(mateMember, mateUuid, user, profileImages);
+                })
+                .toList();
+    }
+
 
     /**
      * 디저트 메이트 멤버 신청 수락 api
@@ -245,6 +286,7 @@ public class MateMemberService {
         MateUserIds validateCreator = validateUser(creatorUuid);
         Long creatorId = validateCreator.getUserId();
 
+
         //mateMember 테이블에서 생성자 조회
         MateMember creator = mateMemberRepository.findGradeByMateIdAndUserId(mateId, creatorId);
 
@@ -285,6 +327,11 @@ public class MateMemberService {
         MateUserIds validate = validateMateAndUser(mateUuid, userUuid);
         Long mateId = validate.getMateId();
         Long userId = validate.getUserId();
+
+        //디저트 메이트 멤버인지 확인
+        mateMemberRepository.findByMateIdAndUserId(mateId, userId)
+                .orElseThrow(() -> new MateMemberNotFoundExcption("디저트메이트 멤버가 아닙니다."));
+
 
         MateMember mateMember = mateMemberRepository.findByMateIdAndUserId(mateId, userId)
                 .orElseThrow(() -> new MateMemberNotFoundExcption("존재하지 않는 멤버입니다."));
@@ -352,11 +399,8 @@ public class MateMemberService {
             throw new UserNotFoundExcption("존재하지 않는 유저입니다.");
         }
 
-        //디저트 메이트 멤버인지 확인
-        mateMemberRepository.findByMateIdAndUserId(mateId, userId)
-                .orElseThrow(() -> new MateMemberNotFoundExcption("디저트메이트 멤버가 아닙니다."));
-
         return new MateUserIds(mateId, userId);
     }
+
 }
 

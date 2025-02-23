@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.mate.dto.response.MateMemberResponse;
 import org.swyp.dessertbee.mate.service.MateMemberService;
+import org.swyp.dessertbee.mate.service.MateService;
 
 import java.util.List;
 import java.util.UUID;
@@ -39,6 +40,16 @@ public class MateMemberController {
         return ResponseEntity.ok("디저트메이트에 성공적으로 신청되었습니다.");
     }
 
+    /**
+     * 디저트 메이트 대기 멤버 전체 조회
+     **/
+    @GetMapping("apply")
+    public ResponseEntity<List<MateMemberResponse>> pendingMate(@PathVariable UUID mateUuid) {
+
+        List<MateMemberResponse> members = mateMemberService.pendingMate(mateUuid);
+
+        return ResponseEntity.ok(members);
+    }
     /**
      * 디저트 메이트 멤버 신청 수락 api
      * */

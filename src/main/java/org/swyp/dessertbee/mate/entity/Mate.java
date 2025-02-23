@@ -11,6 +11,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -44,8 +45,20 @@ public class Mate {
     @Column(nullable = false, length = 255)
     private String title;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(nullable = false, length = 1000)
     private String content;
+
+    @Column(name = "place_name")
+    private String placeName;
+
+    private String address;
+
+    @Column(precision = 10, scale = 8)
+    private BigDecimal latitude;
+
+    @Column(precision = 11, scale = 8)
+    private BigDecimal longitude;
+
 
     @Column(name = "recruit_yn")
     private Boolean recruitYn;  //메이트 현재 모집 여부
