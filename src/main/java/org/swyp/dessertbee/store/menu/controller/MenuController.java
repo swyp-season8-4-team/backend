@@ -64,10 +64,10 @@ public class MenuController {
         if (menuRequests.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
-
-        // **파일 업로드 단일/다중 지원**
+        // 기존의 getName() 대신 getOriginalFilename()을 사용하여 파일 맵 생성
         Map<String, MultipartFile> menuImageMap = menuImageFiles != null
-                ? menuImageFiles.stream().collect(Collectors.toMap(MultipartFile::getOriginalFilename, file -> file, (a, b) -> a))
+                ? menuImageFiles.stream()
+                .collect(Collectors.toMap(MultipartFile::getOriginalFilename, file -> file, (a, b) -> a))
                 : Collections.emptyMap();
 
         menuService.addMenus(storeUuid, menuRequests, menuImageMap);
