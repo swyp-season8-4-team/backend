@@ -23,6 +23,7 @@ public class Store {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "store_id")
     private Long storeId;
 
     @Column(name = "store_uuid", nullable = false, unique = true, updatable = false)
@@ -42,6 +43,8 @@ public class Store {
     private String phone;
 
     private String address;
+
+    @Column(name = "store_link")
     private String storeLink;
 
     @Column(precision = 10, scale = 8)
@@ -50,13 +53,18 @@ public class Store {
     @Column(precision = 11, scale = 8)
     private BigDecimal longitude;
 
+    @Column(name = "animal_yn")
     private Boolean animalYn;
+
+    @Column(name = "tumbler_yn")
     private Boolean tumblerYn;
+
+    @Column(name = "parking_yn")
     private Boolean parkingYn;
 
     private String description;
 
-    @Column(precision = 3, scale = 2)
+    @Column(name = "average_rating", precision = 3, scale = 2)
     @Builder.Default
     private BigDecimal averageRating = BigDecimal.ZERO;
 
@@ -65,12 +73,15 @@ public class Store {
     @Builder.Default
     private StoreStatus status = StoreStatus.APPROVED;
 
+    @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
     @CreationTimestamp
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @Lob
