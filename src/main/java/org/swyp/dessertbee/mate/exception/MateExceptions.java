@@ -115,4 +115,19 @@ public class MateExceptions {
             super(ErrorCode.MATE_REPLY_NOT_FOUND, message);
         }
     }
+    /**
+     * 디저트 메이트 사진 2개 이상 예외
+     * */
+    public static class MateImageCountExceededException extends BusinessException {
+
+        public MateImageCountExceededException()
+        {
+            super(ErrorCode.MATE_IMAGE_COUNT_EXCEEDED);
+        }
+
+        public MateImageCountExceededException(String message){
+            super(ErrorCode.MATE_IMAGE_COUNT_EXCEEDED, message);
+        }
+
+    }
 }

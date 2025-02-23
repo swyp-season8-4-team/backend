@@ -41,7 +41,7 @@ public class MateController {
     })
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MateDetailResponse> createMate(@RequestPart("request")  String requestJson,
-                                                         @RequestPart(value = "mateImage", required = false) List<MultipartFile> mateImage) {
+                                                         @RequestPart(value = "mateImage", required = false) MultipartFile mateImage) {
 
         MateCreateRequest request;
         try {

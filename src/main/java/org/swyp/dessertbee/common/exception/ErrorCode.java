@@ -83,7 +83,8 @@ public enum ErrorCode {
     ALREADY_TEAM_MEMBER(HttpStatus.CONFLICT,"M007" , "해당 사용자는 이미 팀원입니다."),
     MATE_PERMISSION_DENIED(HttpStatus.FORBIDDEN, "M008","메이트 관리자 권한이 없습니다."),
     MATE_REPLY_NOT_FOUND(HttpStatus.NOT_FOUND, "M009" , "존재하지 않는 댓글입니다."),
-    MATE_MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "M010", "디저트메이트 멤버가 아닙니다.");
+    MATE_MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "M010", "디저트메이트 멤버가 아닙니다."),
+    MATE_IMAGE_COUNT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "M011", "디저트메이트 사진 등록은 1장 가능합니다.");
 
 
     private final HttpStatus httpStatus;

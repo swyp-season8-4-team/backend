@@ -10,6 +10,7 @@ import org.swyp.dessertbee.mate.dto.request.MateCreateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.mate.dto.response.MatesPageResponse;
 import org.swyp.dessertbee.mate.entity.Mate;
+import org.swyp.dessertbee.mate.exception.MateExceptions;
 import org.swyp.dessertbee.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.mate.repository.MateCategoryRepository;
 import org.swyp.dessertbee.mate.repository.MateMemberRepository;
@@ -40,7 +41,7 @@ public class MateService {
 
     /** 메이트 등록 */
     @Transactional
-    public MateDetailResponse createMate(MateCreateRequest request, List<MultipartFile> mateImage){
+    public MateDetailResponse createMate(MateCreateRequest request, MultipartFile mateImage){
 
         Long userId = userRepository.findIdByUserUuid(request.getUserUuid());
 
@@ -65,10 +66,11 @@ public class MateService {
         );
 
 
-        // 메이트 대표 사진 S3 업로드 및 저장
+
+        //기존 이미지 삭제 후 새 이미지 업로드
         if (mateImage != null && !mateImage.isEmpty()) {
             String folder = "mate/" + mate.getMateId();
-            imageService.uploadAndSaveImages(mateImage, ImageType.MATE, mate.getMateId(), folder);
+            imageService.uploadAndSaveImage(mateImage, ImageType.MATE, mate.getMateId(), folder);
         }
 
         //디저트 메이트 mateId를 가진 member 데이터 생성
@@ -145,6 +147,7 @@ public class MateService {
                 .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
         mate.update(request);
+
 
 
         //기존 이미지 삭제 후 새 이미지 업로드
