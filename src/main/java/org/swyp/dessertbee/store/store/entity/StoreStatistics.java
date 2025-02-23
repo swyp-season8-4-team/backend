@@ -20,7 +20,7 @@ public class StoreStatistics {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long statisticsId;
 
-    @Column(name = "owner_id")
+    @Column(name = "store_id")
     private Long storeId;
 
     private Integer views;
