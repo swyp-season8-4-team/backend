@@ -31,6 +31,17 @@ public class MenuService {
     private final ImageService imageService;
     private final StoreRepository storeRepository;
 
+    /** 파일명 재정의 */
+    private MultipartFile renameFile(MultipartFile file, String menuName) {
+        String originalFilename = file.getOriginalFilename();
+        String extension = "";
+        if (originalFilename.lastIndexOf('.') != -1) {
+            extension = originalFilename.substring(originalFilename.lastIndexOf('.'));
+        }
+        String newFilename = menuName.trim() + extension;
+        return new CustomMultipartFile(file, newFilename);
+    }
+
     /** 특정 가게의 메뉴 목록 조회 */
     public List<MenuResponse> getMenusByStore(UUID storeUuid) {
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
@@ -56,7 +67,30 @@ public class MenuService {
         return MenuResponse.fromEntity(menu, imageService.getImagesByTypeAndId(ImageType.MENU, menuId));
     }
 
-    /** 메뉴 추가 */
+    /** 개별 메뉴 추가 (개별 메뉴 수정/추가 API 용) */
+    public void addMenu(UUID storeUuid, MenuCreateRequest request, MultipartFile file) {
+        Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
+        if (storeId == null) {
+            throw new BusinessException(ErrorCode.INVALID_STORE_UUID);
+        }
+
+        Menu menu = Menu.builder()
+                .storeId(storeId)
+                .name(request.getName())
+                .price(request.getPrice())
+                .isPopular(request.getIsPopular())
+                .description(request.getDescription())
+                .build();
+        menuRepository.save(menu);
+
+        // 이미지 파일이 있는 경우 재정의된 파일명으로 업로드
+        if (file != null) {
+            MultipartFile renamedFile = renameFile(file, menu.getName());
+            imageService.uploadAndSaveImage(renamedFile, ImageType.MENU, menu.getMenuId(), "menu/" + menu.getMenuId());
+        }
+    }
+
+    /** 메뉴 전체 일괄 추가 (가게 등록 시 사용) */
     public void addMenus(UUID storeUuid, List<MenuCreateRequest> menuRequests, Map<String, MultipartFile> menuImageFiles) {
         if (menuRequests == null || menuRequests.isEmpty()) return;
 
@@ -75,26 +109,16 @@ public class MenuService {
                         .description(request.getDescription())
                         .build())
                 .collect(Collectors.toList());
-
         menuRepository.saveAll(menus);
 
-        // 저장된 메뉴 리스트와 요청 데이터를 인덱스별로 매핑
+        // 각 메뉴에 대해 이미지 파일 업로드 처리
         for (int i = 0; i < menus.size(); i++) {
             Menu menu = menus.get(i);
             String imageKey = menuRequests.get(i).getImageFileKey();
             if (imageKey != null) {
                 MultipartFile file = menuImageFiles.get(imageKey);
                 if (file != null) {
-                    // 파일명 재정의 (메뉴 이름)
-                    String originalFilename = file.getOriginalFilename();
-                    String extension = "";
-                    if (originalFilename != null && originalFilename.lastIndexOf('.') != -1) {
-                        extension = originalFilename.substring(originalFilename.lastIndexOf('.'));
-                    }
-                    String newFilename = menu.getName().trim() + extension;
-                    // 새로운 파일명 반영
-                    MultipartFile renamedFile = new CustomMultipartFile(file, newFilename);
-
+                    MultipartFile renamedFile = renameFile(file, menu.getName());
                     imageService.uploadAndSaveImage(renamedFile, ImageType.MENU, menu.getMenuId(), "menu/" + menu.getMenuId());
                 }
             }
@@ -110,17 +134,8 @@ public class MenuService {
 
         menu.update(request.getName(), request.getPrice(), request.getIsPopular(), request.getDescription());
 
-        // 기존 이미지 삭제 후 새 이미지 업로드
         if (file != null) {
-            // 파일명 재정의 (메뉴 이름)
-            String originalFilename = file.getOriginalFilename();
-            String extension = "";
-            if (originalFilename != null && originalFilename.lastIndexOf('.') != -1) {
-                extension = originalFilename.substring(originalFilename.lastIndexOf('.'));
-            }
-            String newFilename = menu.getName().trim() + extension;
-            MultipartFile renamedFile = new CustomMultipartFile(file, newFilename);
-
+            MultipartFile renamedFile = renameFile(file, menu.getName());
             imageService.updateImage(ImageType.MENU, menuId, renamedFile, "menu/" + menuId);
         }
     }
