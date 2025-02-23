@@ -7,11 +7,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class    MenuCreateRequest {
+
+    private UUID menuUuid;
 
     @NotBlank
     private String name; // 메뉴 이름
