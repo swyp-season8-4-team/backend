@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.store.store.dto.response.SavedStoreResponse;
 import org.swyp.dessertbee.store.store.dto.response.UserStoreListResponse;
+import org.swyp.dessertbee.store.store.dto.response.UserStoreListSimpleResponse;
 import org.swyp.dessertbee.store.store.entity.SavedStore;
 import org.swyp.dessertbee.store.store.entity.UserStoreList;
 import org.swyp.dessertbee.store.store.service.UserStoreService;
@@ -31,6 +32,12 @@ public class UserStoreController {
                                                              @RequestParam String listName,
                                                              @RequestParam Long iconColorId) {
         return ResponseEntity.ok(userStoreService.createUserStoreList(userUuid, listName, iconColorId));
+    }
+
+    /** listId로 특정 리스트 정보 조회 */
+    @GetMapping("/lists/{listId}")
+    public ResponseEntity<UserStoreListSimpleResponse> getUserStoreList(@PathVariable Long listId) {
+        return ResponseEntity.ok(userStoreService.getUserStoreList(listId));
     }
 
     /** 저장 리스트 수정 */

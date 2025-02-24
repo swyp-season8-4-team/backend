@@ -12,6 +12,7 @@ import org.swyp.dessertbee.preference.entity.UserPreferenceEntity;
 import org.swyp.dessertbee.preference.repository.PreferenceRepository;
 import org.swyp.dessertbee.store.store.dto.response.SavedStoreResponse;
 import org.swyp.dessertbee.store.store.dto.response.UserStoreListResponse;
+import org.swyp.dessertbee.store.store.dto.response.UserStoreListSimpleResponse;
 import org.swyp.dessertbee.store.store.entity.SavedStore;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.entity.UserStoreList;
@@ -22,6 +23,7 @@ import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -58,6 +60,18 @@ public class UserStoreService {
                         savedStoreRepository.countByUserStoreList(list)
                 ))
                 .collect(Collectors.toList());
+    }
+
+    /** listId로 특정 리스트 조회 */
+    public UserStoreListSimpleResponse getUserStoreList(Long listId) {
+        UserStoreList userStoreList = userStoreListRepository.findById(listId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_LIST_NOT_FOUND));
+
+        return UserStoreListSimpleResponse.builder()
+                .listId(userStoreList.getId())
+                .listName(userStoreList.getListName())
+                .iconColorId(userStoreList.getIconColorId())
+                .build();
     }
 
     /** 저장 리스트 생성 */
