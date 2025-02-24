@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.store.store.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -61,9 +62,16 @@ public class StoreCreateRequest {
     @NoArgsConstructor
     public static class OperatingHourRequest {
         private DayOfWeek dayOfWeek;
+
+        @JsonFormat(pattern = "HH:mm")
         private LocalTime openingTime;
+
+        @JsonFormat(pattern = "HH:mm")
         private LocalTime closingTime;
+
+        @JsonFormat(pattern = "HH:mm")
         private LocalTime lastOrderTime;
+
         private Boolean isClosed;
     }
 
