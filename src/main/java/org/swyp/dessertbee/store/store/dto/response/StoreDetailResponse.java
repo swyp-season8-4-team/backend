@@ -42,6 +42,8 @@ public class StoreDetailResponse {
     private List<HolidayResponse> holidays;
     private List<String> topPreferences;
     private List<MateResponse> mate;
+    private boolean saved;
+    private Long savedListId;
 
     public static StoreDetailResponse fromEntity(Store store, Long userId, UUID userUuid,
                                                  int totalReviewCount,
@@ -53,7 +55,9 @@ public class StoreDetailResponse {
                                                  List<String> topPreferences,
                                                  List<StoreReviewResponse> storeReviews,
                                                  List<String> tags,
-                                                 List<MateResponse> mate) {
+                                                 List<MateResponse> mate,
+                                                 boolean saved,
+                                                 Long savedListId) {
         return StoreDetailResponse.builder()
                 .userId(userId)
                 .userUuid(userUuid)
@@ -81,6 +85,8 @@ public class StoreDetailResponse {
                 .storeReviews(storeReviews)
                 .tags(tags)
                 .mate(mate)
+                .saved(saved)
+                .savedListId(savedListId)
                 .build();
     }
 }

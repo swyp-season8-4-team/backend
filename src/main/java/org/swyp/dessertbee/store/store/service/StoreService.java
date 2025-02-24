@@ -276,9 +276,13 @@ public class StoreService {
         Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
-        // 로그인한 사용자인 경우에만 userId, userUuid 포함
-        Long userId = (user != null) ? user.getId() : null;
-        UUID userUuid = (user != null) ? user.getUserUuid() : null;
+        Long userId = Optional.ofNullable(user).map(UserEntity::getId).orElse(null);
+        UUID userUuid = Optional.ofNullable(user).map(UserEntity::getUserUuid).orElse(null);
+
+        Optional<SavedStore> savedStoreOpt = Optional.ofNullable(user)
+                .flatMap(u -> savedStoreRepository.findFirstByStoreAndUserStoreList_User_Id(store, u.getId()));
+        boolean saved = savedStoreOpt.isPresent();
+        Long savedListId = savedStoreOpt.map(s -> s.getUserStoreList().getId()).orElse(null);
 
         // 가게 대표 이미지
         List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, storeId);
@@ -359,7 +363,7 @@ public class StoreService {
         }).toList();
 
         return StoreDetailResponse.fromEntity(store, userId, userUuid, totalReviewCount, operatingHourResponses, holidayResponses, menus,
-                storeImages, ownerPickImages, topPreferences, reviewResponses, tags, mateResponses);
+                storeImages, ownerPickImages, topPreferences, reviewResponses, tags, mateResponses, saved, savedListId);
     }
 
     /** 가게의 평균 평점 업데이트 (리뷰 등록,수정,삭제 시 호출) */
