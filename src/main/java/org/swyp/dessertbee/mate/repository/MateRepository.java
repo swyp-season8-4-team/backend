@@ -32,7 +32,7 @@ public interface MateRepository extends JpaRepository<Mate, Long> {
     /**
      *
      * */
-    @Query("SELECT m FROM Mate m WHERE m.deletedAt IS NULL ORDER BY m.mateId")
+    @Query("SELECT m FROM Mate m WHERE m.deletedAt IS NULL ORDER BY m.mateId DESC")
     Page<Mate> findAllByDeletedAtIsNull(Pageable pageable);
 
 
