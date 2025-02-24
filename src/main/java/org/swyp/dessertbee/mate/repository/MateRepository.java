@@ -1,6 +1,8 @@
 package org.swyp.dessertbee.mate.repository;
 
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -29,9 +31,8 @@ public interface MateRepository extends JpaRepository<Mate, Long> {
     /**
      *
      * */
-    @Query("SELECT m FROM Mate m WHERE m.deletedAt IS NULL ORDER BY m.mateId ASC LIMIT :limit OFFSET :from")
-    List<Mate> findAllByDeletedAtIsNull(int from, int limit);
-
+    @Query("SELECT m FROM Mate m WHERE m.deletedAt IS NULL ORDER BY m.mateId")
+    Page<Mate> findAllByDeletedAtIsNull(Pageable pageable);
 
 
 }

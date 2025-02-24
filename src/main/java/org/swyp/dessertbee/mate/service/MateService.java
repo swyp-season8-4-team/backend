@@ -2,6 +2,8 @@ package org.swyp.dessertbee.mate.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
@@ -10,11 +12,13 @@ import org.swyp.dessertbee.mate.dto.request.MateCreateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.mate.dto.response.MatesPageResponse;
 import org.swyp.dessertbee.mate.entity.Mate;
+import org.swyp.dessertbee.mate.entity.SavedMate;
 import org.swyp.dessertbee.mate.exception.MateExceptions;
 import org.swyp.dessertbee.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.mate.repository.MateCategoryRepository;
 import org.swyp.dessertbee.mate.repository.MateMemberRepository;
 import org.swyp.dessertbee.mate.repository.MateRepository;
+import org.swyp.dessertbee.mate.repository.SavedMateRepository;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
@@ -35,6 +39,7 @@ public class MateService {
     private final MateRepository mateRepository;
     private final MateMemberRepository mateMemberRepository;
     private final MateCategoryRepository mateCategoryRepository;
+    private final SavedMateRepository savedMateRepository;
     private final MateMemberService mateMemberService;
     private final StoreRepository storeRepository;
     private final ImageService imageService;
@@ -120,6 +125,9 @@ public class MateService {
                 //디저트메이트 멤버 삭제
                 mateMemberService.deleteAllMember(mate.getMateId());
 
+                //저장된 디저트메이트 삭제
+                savedMateRepository.deleteByMateId(mate.getMateId());
+
                 imageService.deleteImagesByRefId(ImageType.MATE, mate.getMateId());
 
         } catch (Exception e) {
@@ -153,21 +161,15 @@ public class MateService {
      * 디저트메이트 전체 조회
      * */
     @Transactional
-    public MatesPageResponse getMates(int from, int to) {
+    public MatesPageResponse getMates(Pageable pageable) {
 
-
-        if (from >= to) {
-            throw new FromToMateException("잘못된 범위 요청입니다.");
-        }
-
-        int limit = to - from;
 
 
         // limit + 1 만큼 데이터를 가져와서 다음 데이터가 있는지 확인
-        List<Mate> mates = mateRepository.findAllByDeletedAtIsNull(from, limit + 1);
+        Page<Mate> mates = mateRepository.findAllByDeletedAtIsNull(pageable);
 
 
-        List<MateDetailResponse> matesResponses =mateRepository.findAllByDeletedAtIsNull(from, limit)
+        List<MateDetailResponse> matesResponses = mateRepository.findAllByDeletedAtIsNull(pageable)
                     .stream()
                     .map(mate -> {
                         List<String> mateImages = imageService.getImagesByTypeAndId(ImageType.MATE, mate.getMateId());
@@ -180,8 +182,8 @@ public class MateService {
                     })
                     .collect(Collectors.toList());
 
-        // limit보다 적은 개수가 조회되면 마지막 데이터임
-        boolean isLast = mates.size() <= limit;
+        // 다음 페이지 존재 여부 확인
+        boolean isLast = mates.isLast();
 
         return new MatesPageResponse(matesResponses, isLast);
 

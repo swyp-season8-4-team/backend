@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.mate.dto.request.MateCreateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.mate.dto.response.MatesPageResponse;
+import org.swyp.dessertbee.mate.exception.MateExceptions;
 import org.swyp.dessertbee.mate.service.MateMemberService;
 import org.swyp.dessertbee.mate.service.MateService;
 import java.util.List;
@@ -123,6 +126,12 @@ public class MateController {
             @RequestParam int to
     ) {
 
-        return ResponseEntity.ok(mateService.getMates(from, to));
+        if (from >= to) {
+            throw new MateExceptions.FromToMateException("잘못된 범위 요청입니다.");
+        }
+
+
+        Pageable pageable = PageRequest.of(from, to);
+        return ResponseEntity.ok(mateService.getMates(pageable));
     }
 }

@@ -142,4 +142,17 @@ public class MateExceptions {
             super(ErrorCode.MATE_REPLY_NOT_AUTHOR, message);
         }
     }
+
+    /**
+     * 디저트메이트 저장 중복 예외
+     * */
+    public static class DuplicationSavedMateException extends BusinessException {
+        public DuplicationSavedMateException(){
+            super(ErrorCode.SAVED_STORE_DUPLICATION);
+        }
+
+        public DuplicationSavedMateException(String message) {
+            super(ErrorCode.SAVED_STORE_DUPLICATION, message);
+        }
+    }
 }
