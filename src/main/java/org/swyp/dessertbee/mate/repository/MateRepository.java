@@ -29,11 +29,14 @@ public interface MateRepository extends JpaRepository<Mate, Long> {
     @Query("SELECT m.mateId FROM Mate m where m.mateUuid = :mateUuid")
     Optional<Long> findMateIdByMateUuid(UUID mateUuid);
 
+
     /**
-     *
-     * */
-    @Query("SELECT m FROM Mate m WHERE m.deletedAt IS NULL ORDER BY m.mateId DESC")
-    Page<Mate> findAllByDeletedAtIsNull(Pageable pageable);
+     * 디저트 메이트 카테고리로 조회(카테고리 아이디 없을 떄는 null)
+     **/
+    @Query("SELECT m FROM Mate m " +
+            "WHERE m.deletedAt IS NULL " +
+            "AND (:mateCategoryId IS NULL OR m.mateCategoryId = :mateCategoryId) ORDER BY m.mateId DESC")
+    Page<Mate> findByDeletedAtIsNullAndMateCategoryId(@Param("mateCategoryId") Long mateCategoryId, Pageable pageable);
 
 
     @Query("SELECT m FROM Mate m WHERE m.deletedAt IS NULL AND m.mateId IN :mateIds")
