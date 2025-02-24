@@ -61,7 +61,7 @@ public class MateMember {
 
     public Boolean isReapply()
     {
-        return this.getApprovalYn() && this.getDeletedAt() != null;
+        return this.getApprovalYn() && this.getDeletedAt() != null ;
     }
 
 
