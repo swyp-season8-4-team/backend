@@ -61,7 +61,7 @@ public class StoreService {
                                            List<MultipartFile> ownerPickImageFiles,
                                            List<MultipartFile> menuImageFiles) {
 
-        Long ownerId = userRepository.findIdByUserUuid(request.getUserUuid());
+        Long ownerId = userRepository.findIdByUserUuidUsingUuidToBin(request.getUserUuid());
         // ownerId로 UserEntity 조회 (로그인한 사용자 정보)
         UserEntity user = userRepository.findById(ownerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
