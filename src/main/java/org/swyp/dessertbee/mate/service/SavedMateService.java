@@ -122,7 +122,9 @@ public class SavedMateService {
                     UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
                     List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, mate.getUserId());
 
-                    return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator, profileImage);
+                    //저장된 디저트메이트 데이터만 지고 오는거니까 true
+                    boolean saved = true;
+                    return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator, profileImage, saved);
                 })
                 .collect(Collectors.toList());
 

@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -67,6 +68,7 @@ public class MateService {
                         .content(request.getContent())
                         .recruitYn(Boolean.TRUE.equals(request.getRecruitYn()))
                         .placeName(request.getPlace().getPlaceName())
+                        .updatedAt(null)
                         .build()
         );
 
@@ -81,12 +83,12 @@ public class MateService {
         //디저트 메이트 mateId를 가진 member 데이터 생성
         mateMemberService.addCreatorAsMember(mate.getMateUuid(), userId);
 
-        return getMateDetail(mate.getMateUuid());
+        return getMateDetail(mate.getMateUuid(), request.getUserUuid());
     }
 
 
     /** 메이트 상세 정보 */
-    public MateDetailResponse getMateDetail(UUID mateUuid) {
+    public MateDetailResponse getMateDetail(UUID mateUuid, UUID userUuid) {
 
         //mateId로 디저트메이트 여부 확인
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
@@ -98,15 +100,23 @@ public class MateService {
 
         //mateCategoryId로 name 조회
         String mateCategory = String.valueOf(mateCategoryRepository.findCategoryNameById( mate.getMateCategoryId()));
-
-
-        // 사용자 UUID 조회
+        //작성자 UUID 조회
         UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
 
-        //사용자 프로필 조회
+        //작성자 프로필 조회
         List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, mate.getUserId());
 
-        return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, creator, profileImage);
+        //현재 접속해 있는 사용자의 user 정보
+        Long userId = userRepository.findIdByUserUuid(userUuid);
+
+
+        SavedMate savedMate = null;
+        if (userId != null) {
+            savedMate = savedMateRepository.findByMate_MateIdAndUserId(mate.getMateId(), userId);
+        }
+        boolean saved = (savedMate != null);
+
+        return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, creator, profileImage, saved);
 
     }
 
@@ -161,7 +171,7 @@ public class MateService {
      * 디저트메이트 전체 조회
      * */
     @Transactional
-    public MatesPageResponse getMates(Pageable pageable) {
+    public MatesPageResponse getMates(Pageable pageable,UUID userUuid) {
 
 
 
@@ -178,7 +188,18 @@ public class MateService {
                         //사용자 프로필 조회
                         List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, mate.getUserId());
 
-                        return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator, profileImage);
+
+                        //현재 접속해 있는 사용자의 user 정보
+                        Long userId = userRepository.findIdByUserUuid(userUuid);
+
+                        SavedMate savedMate = null;
+                        if (userId != null) {
+                            savedMate = savedMateRepository.findByMate_MateIdAndUserId(mate.getMateId(), userId);
+                        }
+                        boolean saved = (savedMate != null);
+
+
+                        return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator, profileImage, saved);
                     })
                     .collect(Collectors.toList());
 

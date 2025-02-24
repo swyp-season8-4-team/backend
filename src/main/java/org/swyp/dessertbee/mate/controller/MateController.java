@@ -64,9 +64,9 @@ public class MateController {
      */
     @Operation(summary = "메이트 상세 정보 조회", description = "디저트메이트 상세 정보 조회합니다.")
     @GetMapping("/{mateUuid}")
-    public ResponseEntity<MateDetailResponse> getMateDetail(@PathVariable UUID mateUuid) {
+    public ResponseEntity<MateDetailResponse> getMateDetail(@PathVariable UUID mateUuid, UUID userUuid) {
 
-        MateDetailResponse mate = mateService.getMateDetail(mateUuid);
+        MateDetailResponse mate = mateService.getMateDetail(mateUuid, userUuid);
         return ResponseEntity.ok(mate);
     }
 
@@ -120,7 +120,8 @@ public class MateController {
     @Operation(summary = "메이트 전체 조회", description = "디저트메이트 전체 조회합니다.")
     public ResponseEntity<MatesPageResponse> getMates(
             @RequestParam int from,
-            @RequestParam int to
+            @RequestParam int to,
+            UUID userUuid
     ) {
 
         if (from >= to) {
@@ -129,6 +130,6 @@ public class MateController {
 
 
         Pageable pageable = PageRequest.of(from, to);
-        return ResponseEntity.ok(mateService.getMates(pageable));
+        return ResponseEntity.ok(mateService.getMates(pageable, userUuid));
     }
 }
