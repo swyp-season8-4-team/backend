@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,11 +16,9 @@ import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.mate.dto.request.MateCreateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.mate.dto.response.MatesPageResponse;
-import org.swyp.dessertbee.mate.exception.MateExceptions;
+import org.swyp.dessertbee.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.mate.service.MateMemberService;
 import org.swyp.dessertbee.mate.service.MateService;
-import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 @Tag(name = "Mate", description = "디저트메이트 관련 API")
@@ -127,7 +124,7 @@ public class MateController {
     ) {
 
         if (from >= to) {
-            throw new MateExceptions.FromToMateException("잘못된 범위 요청입니다.");
+            throw new FromToMateException("잘못된 범위 요청입니다.");
         }
 
 

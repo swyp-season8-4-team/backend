@@ -155,4 +155,15 @@ public class MateExceptions {
             super(ErrorCode.SAVED_STORE_DUPLICATION, message);
         }
     }
+
+    /**
+     * 디저트메이트 저장 존재 여부
+     * */
+    public static class SavedMateNotFoundException extends BusinessException {
+        public SavedMateNotFoundException(){super(ErrorCode.SAVED_MATE_NOT_FOUND);}
+
+        public SavedMateNotFoundException(String message) {
+            super(ErrorCode.SAVED_MATE_NOT_FOUND, message);
+        }
+    }
 }

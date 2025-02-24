@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.swyp.dessertbee.mate.entity.Mate;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,4 +36,6 @@ public interface MateRepository extends JpaRepository<Mate, Long> {
     Page<Mate> findAllByDeletedAtIsNull(Pageable pageable);
 
 
+    @Query("SELECT m FROM Mate m WHERE m.deletedAt IS NULL AND m.mateId IN :mateIds")
+    List<Mate> findByMateIdIn(@Param("mateIds") List<Long> mateIds);
 }

@@ -126,7 +126,7 @@ public class MateService {
                 mateMemberService.deleteAllMember(mate.getMateId());
 
                 //저장된 디저트메이트 삭제
-                savedMateRepository.deleteByMateId(mate.getMateId());
+                savedMateRepository.deleteByMate_MateId(mate.getMateId());
 
                 imageService.deleteImagesByRefId(ImageType.MATE, mate.getMateId());
 

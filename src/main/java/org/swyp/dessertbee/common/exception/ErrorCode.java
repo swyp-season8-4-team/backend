@@ -85,7 +85,9 @@ public enum ErrorCode {
     MATE_REPLY_NOT_FOUND(HttpStatus.NOT_FOUND, "M009" , "존재하지 않는 댓글입니다."),
     MATE_MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "M010", "디저트메이트 멤버가 아닙니다."),
     MATE_IMAGE_COUNT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "M011", "디저트메이트 사진 등록은 1장 가능합니다."),
-    MATE_REPLY_NOT_AUTHOR(HttpStatus.FORBIDDEN, "M012", "댓글 작성자가 아닙니다.");
+    MATE_REPLY_NOT_AUTHOR(HttpStatus.FORBIDDEN, "M012", "댓글 작성자가 아닙니다."),
+    SAVED_STORE_DUPLICATION(HttpStatus.CONFLICT, "M013", "이미 저장된 디저트메이트입니다."),
+    SAVED_MATE_NOT_FOUND(HttpStatus.NOT_FOUND,"M014" , "저장하지 않은 디저트메이트입니다.");
 
 
     private final HttpStatus httpStatus;
