@@ -20,6 +20,8 @@ public class StoreDetailResponse {
     private UUID userUuid;
     private Long storeId;
     private UUID storeUuid;
+    private Long ownerId;
+    private UUID ownerUuid;
     private String name;
     private String address;
     private String phone;
@@ -57,6 +59,8 @@ public class StoreDetailResponse {
                 .userUuid(userUuid)
                 .storeId(store.getStoreId())
                 .storeUuid(store.getStoreUuid())
+                .ownerId(store.getOwnerId())
+                .ownerUuid(store.getOwnerUuid())
                 .name(store.getName())
                 .address(store.getAddress())
                 .phone(store.getPhone())
