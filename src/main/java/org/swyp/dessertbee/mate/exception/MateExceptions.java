@@ -115,4 +115,55 @@ public class MateExceptions {
             super(ErrorCode.MATE_REPLY_NOT_FOUND, message);
         }
     }
+    /**
+     * 디저트 메이트 사진 2개 이상 예외
+     * */
+    public static class MateImageCountExceededException extends BusinessException {
+
+        public MateImageCountExceededException()
+        {
+            super(ErrorCode.MATE_IMAGE_COUNT_EXCEEDED);
+        }
+
+        public MateImageCountExceededException(String message){
+            super(ErrorCode.MATE_IMAGE_COUNT_EXCEEDED, message);
+        }
+
+    }
+
+    /**
+     * 댓글 작성자가 아닐때 예외
+     * */
+    public static class NotCommentAuthorException extends BusinessException {
+        public NotCommentAuthorException(){
+            super(ErrorCode.MATE_REPLY_NOT_AUTHOR);
+        }
+        public NotCommentAuthorException(String message) {
+            super(ErrorCode.MATE_REPLY_NOT_AUTHOR, message);
+        }
+    }
+
+    /**
+     * 디저트메이트 저장 중복 예외
+     * */
+    public static class DuplicationSavedMateException extends BusinessException {
+        public DuplicationSavedMateException(){
+            super(ErrorCode.SAVED_STORE_DUPLICATION);
+        }
+
+        public DuplicationSavedMateException(String message) {
+            super(ErrorCode.SAVED_STORE_DUPLICATION, message);
+        }
+    }
+
+    /**
+     * 디저트메이트 저장 존재 여부
+     * */
+    public static class SavedMateNotFoundException extends BusinessException {
+        public SavedMateNotFoundException(){super(ErrorCode.SAVED_MATE_NOT_FOUND);}
+
+        public SavedMateNotFoundException(String message) {
+            super(ErrorCode.SAVED_MATE_NOT_FOUND, message);
+        }
+    }
 }

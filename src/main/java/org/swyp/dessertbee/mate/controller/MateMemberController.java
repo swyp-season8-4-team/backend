@@ -34,7 +34,7 @@ public class MateMemberController {
      * 디저트 메이트 멤버 신청 api
      * */
     @PostMapping("/apply")
-    public ResponseEntity<String> applyMate(@PathVariable UUID mateUuid, Long userId, UUID userUuid) {
+    public ResponseEntity<String> applyMate(@PathVariable UUID mateUuid, UUID userUuid) {
 
         mateMemberService.applyMate(mateUuid ,userUuid);
         return ResponseEntity.ok("디저트메이트에 성공적으로 신청되었습니다.");
@@ -54,9 +54,9 @@ public class MateMemberController {
      * 디저트 메이트 멤버 신청 수락 api
      * */
     @PatchMapping("/apply")
-    public ResponseEntity<String> acceptMemeber(@PathVariable UUID mateUuid, Long userId, UUID userUuid) {
+    public ResponseEntity<String> acceptMemeber(@PathVariable UUID mateUuid, UUID creatorUuid, UUID targetUuid) {
 
-        mateMemberService.acceptMember(mateUuid, userUuid);
+        mateMemberService.acceptMember(mateUuid, creatorUuid, targetUuid);
         return ResponseEntity.ok("팀원이 되었습니다~!");
     }
 
@@ -64,9 +64,9 @@ public class MateMemberController {
      * 디저트 메이트 멤버 신청 거절 api
      * */
     @DeleteMapping("/apply")
-    public ResponseEntity<String> rejectMemeber(@PathVariable UUID mateUuid, UUID userUuid) {
+    public ResponseEntity<String> rejectMemeber(@PathVariable UUID mateUuid, UUID creatorUuid, UUID targetUuid) {
 
-        mateMemberService.rejectMember(mateUuid, userUuid);
+        mateMemberService.rejectMember(mateUuid, creatorUuid, targetUuid);
 
         return ResponseEntity.ok("거절 되었습니다.");
     }
@@ -75,9 +75,9 @@ public class MateMemberController {
      * 디저트 메이트 멤버 강퇴 api
      * */
     @DeleteMapping("/members")
-    public ResponseEntity<String> removeMember(@PathVariable UUID mateUuid, UUID creatorUuid, UUID targetUuid) {
+    public ResponseEntity<String> bannedMember(@PathVariable UUID mateUuid, UUID creatorUuid, UUID targetUuid) {
 
-        mateMemberService.removeMember(mateUuid, creatorUuid, targetUuid);
+        mateMemberService.bannedMember(mateUuid, creatorUuid, targetUuid);
 
         return ResponseEntity.ok("성공적으로 강퇴 되었습니다.");
     }

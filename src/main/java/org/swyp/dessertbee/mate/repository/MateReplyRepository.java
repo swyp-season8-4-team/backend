@@ -21,7 +21,6 @@ public interface MateReplyRepository extends JpaRepository<MateReply, Long> {
     @Query("SELECT m FROM MateReply m WHERE m.deletedAt IS NULL AND m.mateId = :mateId")
     Page<MateReply> findAllByDeletedAtIsNull(@Param("mateId") Long mateId, Pageable pageable);
 
-    Optional<MateReply> findByMateIdAndDeletedAtIsNull(Long replyId);
 
-    Optional<MateReply> findByMateIdAndMateReplyId(Long mateId, Long replyId);
+    Optional<MateReply> findByMateIdAndMateReplyIdAndDeletedAtIsNull(Long mateId, Long replyId);
 }

@@ -11,6 +11,7 @@ import org.swyp.dessertbee.mate.dto.MateUserIds;
 import org.swyp.dessertbee.mate.dto.request.MateReplyCreateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateReplyPageResponse;
 import org.swyp.dessertbee.mate.dto.response.MateReplyResponse;
+import org.swyp.dessertbee.mate.entity.Mate;
 import org.swyp.dessertbee.mate.entity.MateReply;
 import org.swyp.dessertbee.mate.repository.MateMemberRepository;
 import org.swyp.dessertbee.mate.repository.MateReplyRepository;
@@ -46,7 +47,6 @@ public class MateReplyService {
         MateUserIds mateUserIds = validateMateAndUser(mateUuid, request.getUserUuid());
         Long mateId = mateUserIds.getMateId();
         Long userId = mateUserIds.getUserId();
-
 
         MateReply mateReply = replyRepository.save(
                 MateReply.builder()
@@ -111,16 +111,18 @@ public class MateReplyService {
     @Transactional
     public void updateReply(UUID mateUuid, Long replyId, MateReplyCreateRequest request) {
 
-        MateUserIds mateUserIds = validateMate(mateUuid);
+        MateUserIds mateUserIds = validateMateAndUser(mateUuid, request.getUserUuid());
         Long mateId = mateUserIds.getMateId();
 
         //replyId 존재 여부 확인
-        MateReply reply = mateReplyRepository.findByMateIdAndMateReplyId(mateId,replyId)
+        MateReply mateReply = mateReplyRepository.findByMateIdAndMateReplyIdAndDeletedAtIsNull(mateId,replyId)
                 .orElseThrow(() -> new MateReplyNotFoundException("존재하지 않는 댓글입니다."));
 
+        if(!mateReply.getUserId().equals(mateUserIds.getUserId())) {
+            throw new NotCommentAuthorException("댓글 작성자가 아닙니다.");
+        }
 
-
-        reply.update(request.getContent());
+        mateReply.update(request.getContent());
 
     }
 
@@ -129,13 +131,17 @@ public class MateReplyService {
      * 디저트메이트 댓글 삭제
      * */
     @Transactional
-    public void deleteReply(UUID mateUuid, Long replyId) {
+    public void deleteReply(UUID mateUuid, Long replyId, UUID userUuid) {
 
-        MateUserIds mateUserIds = validateMate(mateUuid);
+        MateUserIds mateUserIds = validateMateAndUser(mateUuid, userUuid);
         Long mateId = mateUserIds.getMateId();
 
-        MateReply mateReply = mateReplyRepository.findByMateIdAndMateReplyId(mateId, replyId)
+        MateReply mateReply = mateReplyRepository.findByMateIdAndMateReplyIdAndDeletedAtIsNull(mateId, replyId)
                 .orElseThrow(() -> new MateReplyNotFoundException("존재하지 않는 댓글입니다."));
+
+        if(!mateReply.getUserId().equals(mateUserIds.getUserId())) {
+            throw new NotCommentAuthorException("댓글 작성자가 아닙니다.");
+        }
 
         try {
 
@@ -155,10 +161,8 @@ public class MateReplyService {
      * */
     private MateUserIds validateMateAndUser(UUID mateUuid, UUID userUuid) {
 
-        // mateUuid로 mateId 조회
-        Long mateId = mateRepository.findMateIdByMateUuid(mateUuid);
 
-        mateRepository.findByMateIdAndDeletedAtIsNull(mateId)
+        Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
                 .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
         // userUuid로 userId 조회
@@ -168,11 +172,11 @@ public class MateReplyService {
         }
 
         //디저트 메이트 멤버인지 확인
-        mateMemberRepository.findByMateIdAndUserId(mateId, userId)
+        mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mate.getMateId(), userId)
                 .orElseThrow(() -> new MateMemberNotFoundExcption("디저트메이트 멤버가 아닙니다."));
 
 
-        return new MateUserIds(mateId, userId);
+        return new MateUserIds(mate.getMateId(), userId);
     }
 
     /**
@@ -181,14 +185,10 @@ public class MateReplyService {
     public MateUserIds validateMate (UUID mateUuid){
 
 
-        // mateUuid로 mateId 조회
-        Long mateId = mateRepository.findMateIdByMateUuid(mateUuid);
-
-
-        mateRepository.findByMateIdAndDeletedAtIsNull(mateId)
+        Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
                 .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
 
-        return new MateUserIds(mateId, null);
+        return new MateUserIds(mate.getMateId(), null);
     }
 }

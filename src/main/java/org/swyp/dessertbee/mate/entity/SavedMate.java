@@ -18,16 +18,19 @@ public class SavedMate {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "saved_mate_id")
+    private Long savedMateId;
 
-    @Column(name = "mate_id")
-    private Long mateId;
-
-    @Column(name = "user_id")
+    @Column(nullable = false)
     private Long userId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mate_id", referencedColumnName = "mate_id", nullable = false) // ✅ referencedColumnName 추가
+    private Mate mate;
 
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
 }
+

@@ -12,6 +12,7 @@ import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface MateMemberRepository extends JpaRepository<MateMember, Long> {
@@ -31,7 +32,9 @@ public interface MateMemberRepository extends JpaRepository<MateMember, Long> {
     @Query("UPDATE MateMember m SET m.approvalYn = true WHERE m.mateId = :mateId AND m.userId = :userId")
     void updateApprovalYn(Long mateId, Long userId);
 
-    Optional<MateMember> findByMateIdAndUserId(Long mateId, Long userId);
+    Optional<MateMember> findGradeByMateIdAndUserIdAndDeletedAtIsNull(Long mateId, Long userId);
 
-    MateMember findGradeByMateIdAndUserId(Long mateId, Long userId);
+    Optional<MateMember> findByMateIdAndUserIdAndDeletedAtIsNull(Long mateId, Long userId);
+
+    Optional<MateMember> findByMateIdAndUserId(Long mateId, Long userId);
 }
