@@ -7,13 +7,8 @@ import org.swyp.dessertbee.mate.dto.response.MateResponse;
 import org.swyp.dessertbee.store.menu.dto.response.MenuResponse;
 import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
 import org.swyp.dessertbee.store.store.entity.Store;
-import org.swyp.dessertbee.store.store.entity.StoreHoliday;
-import org.swyp.dessertbee.store.store.entity.StoreOperatingHour;
-import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.math.BigDecimal;
-import java.time.DayOfWeek;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,6 +20,8 @@ public class StoreDetailResponse {
     private UUID userUuid;
     private Long storeId;
     private UUID storeUuid;
+    private Long ownerId;
+    private UUID ownerUuid;
     private String name;
     private String address;
     private String phone;
@@ -62,6 +59,8 @@ public class StoreDetailResponse {
                 .userUuid(userUuid)
                 .storeId(store.getStoreId())
                 .storeUuid(store.getStoreUuid())
+                .ownerId(store.getOwnerId())
+                .ownerUuid(store.getOwnerUuid())
                 .name(store.getName())
                 .address(store.getAddress())
                 .phone(store.getPhone())

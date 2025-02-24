@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.store.store.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -29,10 +30,13 @@ public class StoreOperatingHour {
     @Column(nullable = false, length = 10)
     private DayOfWeek dayOfWeek; // 요일 (월~일)
 
+    @JsonFormat(pattern = "HH:mm")
     private LocalTime openingTime; // 개점 시간
 
+    @JsonFormat(pattern = "HH:mm")
     private LocalTime closingTime; // 폐점 시간
 
+    @JsonFormat(pattern = "HH:mm")
     private LocalTime lastOrderTime; // 라스트오더 시간
 
     private Boolean isClosed; // 해당 요일 휴무 여부
