@@ -185,12 +185,19 @@ public class StoreService {
     }
 
     /** 반경 내 특정 취향 태그를 가지는 가게 조회 */
-    public List<StoreMapResponse> getStoresByLocationAndTag(Double lat, Double lng, Double radius, Long preferenceTagId) {
-        if (preferenceRepository.findById(preferenceTagId).isEmpty()){
+    public List<StoreMapResponse> getStoresByLocationAndTags(Double lat, Double lng, Double radius, List<Long> preferenceTagIds) {
+        if (preferenceTagIds == null || preferenceTagIds.isEmpty()) {
             throw new BusinessException(ErrorCode.PREFERENCES_NOT_FOUND);
         }
-        String preferenceName = preferenceRepository.findPreferenceNameById(preferenceTagId);
-        List<Store> stores = storeRepository.findStoresByLocationAndTag(lat, lng, radius, preferenceName);
+
+        // 존재하지 않는 preferenceTagId가 있는지 검증
+        List<String> preferenceNames = preferenceRepository.findPreferenceNamesByIds(preferenceTagIds);
+        if (preferenceNames.isEmpty()) {
+            throw new BusinessException(ErrorCode.PREFERENCES_NOT_FOUND);
+        }
+
+        // 여러 태그 중 하나라도 매칭되는 가게를 조회
+        List<Store> stores = storeRepository.findStoresByLocationAndTags(lat, lng, radius, preferenceNames);
 
         return stores.stream()
                 .map(StoreMapResponse::fromEntity)
@@ -223,7 +230,7 @@ public class StoreService {
         }
 
         // 사용자의 취향 태그 중 하나라도 매칭되는 가게 조회
-        List<Store> stores = storeRepository.findStoresByUserPreferences(lng, lat, radius, userPreferenceNames);
+        List<Store> stores = storeRepository.findStoresByLocationAndTags(lng, lat, radius, userPreferenceNames);
 
         return stores.stream()
                 .map(StoreMapResponse::fromEntity)
