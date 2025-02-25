@@ -121,6 +121,7 @@ public class MateController {
     public ResponseEntity<MatesPageResponse> getMates(
             @RequestParam int from,
             @RequestParam int to,
+            @RequestParam String keyword,
             UUID userUuid,
             Long mateCategoryId
     ) {
@@ -131,6 +132,6 @@ public class MateController {
 
 
         Pageable pageable = PageRequest.of(from, to);
-        return ResponseEntity.ok(mateService.getMates(pageable, userUuid, mateCategoryId));
+        return ResponseEntity.ok(mateService.getMates(pageable, userUuid, mateCategoryId, keyword));
     }
 }

@@ -35,8 +35,14 @@ public interface MateRepository extends JpaRepository<Mate, Long> {
      **/
     @Query("SELECT m FROM Mate m " +
             "WHERE m.deletedAt IS NULL " +
-            "AND (:mateCategoryId IS NULL OR m.mateCategoryId = :mateCategoryId) ORDER BY m.mateId DESC")
-    Page<Mate> findByDeletedAtIsNullAndMateCategoryId(@Param("mateCategoryId") Long mateCategoryId, Pageable pageable);
+            "AND (:mateCategoryId IS NULL OR m.mateCategoryId = :mateCategoryId) " +
+            "AND (:keyword IS NULL OR (m.title LIKE CONCAT('%', :keyword, '%') " +
+            "     OR m.content LIKE CONCAT('%', :keyword, '%') " +
+            "     OR m.placeName LIKE CONCAT('%', :keyword, '%'))) " +
+            "ORDER BY m.mateId DESC")
+    Page<Mate> findByDeletedAtIsNullAndMateCategoryId(@Param("mateCategoryId") Long mateCategoryId,
+                                                      @Param("keyword") String keyword,
+                                                      Pageable pageable);
 
 
     @Query("SELECT m FROM Mate m WHERE m.deletedAt IS NULL AND m.mateId IN :mateIds")
