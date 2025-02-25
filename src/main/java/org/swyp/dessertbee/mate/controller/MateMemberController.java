@@ -43,7 +43,7 @@ public class MateMemberController {
     /**
      * 디저트 메이트 대기 멤버 전체 조회
      **/
-    @GetMapping("apply")
+    @GetMapping("/pending")
     public ResponseEntity<List<MateMemberResponse>> pendingMate(@PathVariable UUID mateUuid) {
 
         List<MateMemberResponse> members = mateMemberService.pendingMate(mateUuid);
@@ -63,7 +63,7 @@ public class MateMemberController {
     /**
      * 디저트 메이트 멤버 신청 거절 api
      * */
-    @DeleteMapping("/apply")
+    @DeleteMapping("/reject")
     public ResponseEntity<String> rejectMemeber(@PathVariable UUID mateUuid, UUID creatorUuid, UUID targetUuid) {
 
         mateMemberService.rejectMember(mateUuid, creatorUuid, targetUuid);
