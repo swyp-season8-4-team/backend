@@ -9,6 +9,10 @@ import org.swyp.dessertbee.preference.dto.PreferenceResponseDto;
 import org.swyp.dessertbee.preference.entity.PreferenceEntity;
 import org.swyp.dessertbee.preference.entity.UserPreferenceEntity;
 import org.swyp.dessertbee.preference.repository.PreferenceRepository;
+import org.swyp.dessertbee.store.store.entity.SavedStore;
+import org.swyp.dessertbee.store.store.entity.UserStoreList;
+import org.swyp.dessertbee.store.store.repository.SavedStoreRepository;
+import org.swyp.dessertbee.store.store.repository.UserStoreListRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.util.HashSet;
@@ -22,6 +26,8 @@ import java.util.stream.Collectors;
 public class PreferenceService {
 
     private final PreferenceRepository preferenceRepository;
+    private final UserStoreListRepository userStoreListRepository;
+    private final SavedStoreRepository savedStoreRepository;
 
     /**
      * 모든 선호도 정보를 조회하는 메서드
@@ -68,6 +74,30 @@ public class PreferenceService {
                     .build();
             user.getUserPreferences().add(userPreference);
         });
+
+        // 유저가 저장한 가게(SavedStore)의 선호도도 업데이트
+        updateSavedStoresPreferences(user, preferences);
+    }
+
+    /**
+     * 유저가 저장한 가게의 선호도 정보를 업데이트합니다.
+     */
+    private void updateSavedStoresPreferences(UserEntity user, Set<PreferenceEntity> newPreferences) {
+        List<UserStoreList> userLists = userStoreListRepository.findByUser(user);
+        if (userLists.isEmpty()) return;
+
+        // 유저의 저장된 모든 가게 가져오기
+        List<SavedStore> savedStores = savedStoreRepository.findByUserStoreListIn(userLists);
+        if (savedStores.isEmpty()) return;
+
+        // 모든 저장된 가게의 선호도를 새로운 선호도로 업데이트
+        for (SavedStore savedStore : savedStores) {
+            savedStore.getUserPreferences().clear();
+            savedStore.setUserPreferences(newPreferences.stream().map(PreferenceEntity::getPreferenceName).toList());
+        }
+
+        // 변경된 가게 선호도 저장
+        savedStoreRepository.saveAll(savedStores);
     }
 
     /**

@@ -102,14 +102,4 @@ public class UserController {
         UserDetailResponseDto response = userService.updateProfileImage(image);
         return ResponseEntity.ok(response);
     }
-
-    /** 사용자의 취향을 업데이트하고 저장된 모든 가게 리스트의 취향도 변경 */
-    @PatchMapping("/{userUuid}/preferences")
-    public ResponseEntity<Void> updateUserPreferences(
-            @PathVariable UUID userUuid,
-            @RequestBody List<String> newUserPreferences) {
-
-        userStoreService.updateUserPreferencesAndSavedStores(userUuid, newUserPreferences);
-        return ResponseEntity.noContent().build();
-    }
 }
