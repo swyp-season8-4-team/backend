@@ -41,6 +41,15 @@ public class MateMemberController {
     }
 
     /**
+     * 디저트메이트 멤버 신청 취소 api
+     * */
+    @DeleteMapping("/apply")
+    public ResponseEntity<String> cancelApplyMate(@PathVariable UUID mateUuid, UUID userUuid) {
+
+        mateMemberService.cancelApplyMate(mateUuid, userUuid);
+        return ResponseEntity.ok("디저트메이트 성공적으로 신청 취소되었습니다.");
+    }
+    /**
      * 디저트 메이트 대기 멤버 전체 조회
      **/
     @GetMapping("/pending")

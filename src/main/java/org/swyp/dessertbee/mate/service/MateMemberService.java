@@ -153,10 +153,6 @@ public class MateMemberService {
             return;
         }
 
-        if(mateMember.getUserId().equals(userId)) {
-            throw new AlreadyTeamMemberException("해당 사용자는 이미 팀원입니다.");
-        }
-
         if (mateMember.getBannedYn()) {
             throw new MateApplyBannedException("디저트메이트 강퇴 당한 사람입니다. 신청 불가능합니다.");
         }
@@ -196,7 +192,25 @@ public class MateMemberService {
     }
 
 
+    /**
+     * 디저트메이트 신청 취소 api
+     * */
+    public void cancelApplyMate(UUID mateUuid, UUID userUuid) {
 
+        //mateId,userId  유효성 검사
+        MateUserIds validate = validateMateAndUser(mateUuid, userUuid);
+        Long mateId = validate.getMateId();
+        Long userId = validate.getUserId();
+
+        MateMember mateMember = mateMemberRepository.findByMateIdAndUserId(mateId, userId)
+                .orElseThrow(() ->  new MateNotFoundException("디저트메이트 신청하신 분이 아닙니다."));
+
+        assert mateMember != null;
+        if(mateMember.isPending()){
+            mateMemberRepository.delete(mateMember);
+        }
+
+    }
     /**
      * 디저트 메이트 대기 멤버 전체 조회
      **/
@@ -422,6 +436,7 @@ public class MateMemberService {
 
         return new MateUserIds(mateId, userId);
     }
+
 
 }
 
