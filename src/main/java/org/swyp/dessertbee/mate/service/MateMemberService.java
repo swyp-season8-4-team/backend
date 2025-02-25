@@ -138,6 +138,7 @@ public class MateMemberService {
         MateMember mateMember = mateMemberRepository.findByMateIdAndUserId(mateId, userId)
                 .orElse(null);
 
+
         if(mateMember == null) {
             // mateMember가 없으면 새로 저장 후 종료
             mateMemberRepository.save(
@@ -150,6 +151,10 @@ public class MateMemberService {
                             .build()
             );
             return;
+        }
+
+        if(mateMember.getUserId().equals(userId)) {
+            throw new AlreadyTeamMemberException("해당 사용자는 이미 팀원입니다.");
         }
 
         if (mateMember.getBannedYn()) {
