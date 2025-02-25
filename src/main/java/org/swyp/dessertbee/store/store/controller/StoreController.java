@@ -60,11 +60,11 @@ public class StoreController {
             @RequestParam Double latitude,
             @RequestParam Double longitude,
             @RequestParam Double radius,
-            @RequestParam(required = false) Long preferenceTagId,
+            @RequestParam(required = false) List<Long> preferenceTagIds,
             @RequestParam(required = false) String searchKeyword) {
 
-        if (preferenceTagId != null) {
-            return storeService.getStoresByLocationAndTag(latitude, longitude, radius, preferenceTagId);
+        if (preferenceTagIds != null && !preferenceTagIds.isEmpty()) {
+            return storeService.getStoresByLocationAndTags(latitude, longitude, radius, preferenceTagIds);
         } else if (searchKeyword != null) {
             return storeService.getStoresByLocationAndKeyword(latitude, longitude, radius, searchKeyword);
         } else {

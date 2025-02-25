@@ -28,7 +28,7 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
     """, nativeQuery = true)
     List<Store> findStoresByLocation(@Param("lat") Double lat, @Param("lng") Double lng, @Param("radius") Double radius);
 
-    // 반경 내 특정 취향 태그(저장된 Top3 취향 태그 중 하나)를 가지는 가게 조회
+    // 반경 내 특정 취향 태그를 가지는 가게 조회
     @Query(value = """
         SELECT s.*
         FROM store s
@@ -40,14 +40,13 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
             GROUP BY ss.store_id, sp.preference
         ) AS top_pref ON s.store_id = top_pref.store_id
         WHERE top_pref.rn <= 3
-          AND top_pref.preference = :preferenceName
+          AND top_pref.preference IN (:preferenceNames)
           AND ST_Distance_Sphere(point(:lng, :lat), point(s.longitude, s.latitude)) <= :radius
           AND s.deleted_at IS NULL
     """, nativeQuery = true)
-    List<Store> findStoresByLocationAndTag(@Param("lat") Double lat,
+    List<Store> findStoresByLocationAndTags(@Param("lat") Double lat,
                                            @Param("lng") Double lng,
-                                           @Param("radius") Double radius,
-                                           @Param("preferenceName") String preferenceName);
+                                           @Param("radius") Double radius, @Param("preferenceNames") List<String> preferenceNames);
 
     // 반경 내 검색어에 맞는 가게 조회 메서드
     @Query(value = "SELECT DISTINCT s.* " +
@@ -65,27 +64,6 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
                                                @Param("lng") Double lng,
                                                @Param("radius") Double radius,
                                                @Param("searchKeyword") String searchKeyword);
-
-    // 반경 내 사용자의 취향 태그(Top3 중 하나가 해당하는)를 가지는 가게 조회 메서드
-    @Query(value = """
-        SELECT s.*
-        FROM store s
-        JOIN (
-            SELECT ss.store_id, sp.preference,
-                   ROW_NUMBER() OVER (PARTITION BY ss.store_id ORDER BY COUNT(*) DESC) AS rn
-            FROM saved_store ss
-            JOIN saved_store_preferences sp ON ss.id = sp.saved_store_id
-            GROUP BY ss.store_id, sp.preference
-        ) AS top_pref ON s.store_id = top_pref.store_id
-        WHERE top_pref.rn <= 3
-          AND top_pref.preference IN (:preferenceNames)
-          AND ST_Distance_Sphere(point(:lng, :lat), point(s.longitude, s.latitude)) <= :radius
-          AND s.deleted_at IS NULL
-    """, nativeQuery = true)
-    List<Store> findStoresByUserPreferences(@Param("lng") Double lng,
-                                            @Param("lat") Double lat,
-                                            @Param("radius") Double radius,
-                                            @Param("preferenceNames") List<String> preferenceNames);
 
     Optional<Store> findByStoreIdAndDeletedAtIsNull(Long storeId);
 
