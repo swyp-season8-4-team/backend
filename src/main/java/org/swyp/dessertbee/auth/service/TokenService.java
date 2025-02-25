@@ -103,10 +103,23 @@ public class TokenService {
         }
     }
 
-
+    /**
+     * 리프레시 토큰을 사용하여 새로운 액세스 토큰 발급
+     * @param refreshToken 리프레시 토큰
+     * @return 새로운 액세스 토큰 응답
+     */
     @Transactional
-    public TokenResponse refreshAccessToken(String email) {
+    public TokenResponse refreshAccessToken(String refreshToken) {
         try {
+            // 리프레시 토큰 검증
+            if (!jwtUtil.validateToken(refreshToken, false)) {
+                log.warn("리프레시 토큰 검증 실패 - 유효하지 않은 토큰");
+                throw new BusinessException(ErrorCode.INVALID_VERIFICATION_TOKEN, "유효하지 않은 리프레시 토큰입니다.");
+            }
+
+            // 토큰에서 이메일 추출
+            String email = jwtUtil.getEmail(refreshToken, false);
+
             // 사용자 조회
             UserEntity user = userRepository.findByEmail(email)
                     .orElseThrow(() -> {
@@ -114,12 +127,18 @@ public class TokenService {
                         return new BusinessException(ErrorCode.INVALID_CREDENTIALS, "해당 이메일의 사용자를 찾을 수 없습니다.");
                     });
 
-            // DB에서 리프레시 토큰 조회 및 검증
+            // DB에서 리프레시 토큰 조회
             AuthEntity auth = authRepository.findByUserAndProvider(Optional.of(user), "local")
                     .orElseThrow(() -> {
                         log.warn("리프레시 토큰 검증 실패 - 사용자({})에 대한 인증 정보 없음", email);
                         return new BusinessException(ErrorCode.INVALID_CREDENTIALS, "리프레시 토큰이 존재하지 않습니다.");
                     });
+
+            // DB에 저장된 토큰과 요청된 토큰 비교
+            if (!refreshToken.equals(auth.getRefreshToken())) {
+                log.warn("리프레시 토큰 검증 실패 - 토큰 불일치: {}", email);
+                throw new BusinessException(ErrorCode.INVALID_VERIFICATION_TOKEN, "유효하지 않은 리프레시 토큰입니다.");
+            }
 
             // 리프레시 토큰 만료 여부 KST 기준으로 확인
             if (auth.getRefreshTokenExpiresAt().isBefore(LocalDateTime.now(KST))) {
@@ -144,10 +163,10 @@ public class TokenService {
                     .build();
         }
         catch (BusinessException e) {
-            log.warn("리프레시 토큰 검증 실패 - 이메일: {}, 사유: {}", email, e.getMessage());
+            log.warn("리프레시 토큰 검증 실패 - 사유: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("리프레시 토큰 검증 중 알 수 없는 오류 발생 - 이메일: {}", email, e);
+            log.error("리프레시 토큰 검증 중 알 수 없는 오류 발생", e);
             throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }

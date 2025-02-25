@@ -18,6 +18,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class LoginResponse {
     private String accessToken;     // JWT 액세스 토큰
+    private String tokenType;       // 토큰 타입
+    private long expiresIn;         // 토큰 만료 시간
     private UUID userUuid;          // 사용자 UUID
     private String email;           // 사용자 이메일
     private String nickname;        // 사용자 닉네임
@@ -25,29 +27,20 @@ public class LoginResponse {
 
     /**
      * 로그인 성공 응답 생성
-     * @param token JWT 액세스 토큰
+     * @param accessToken JWT 액세스 토큰
+     * @param expiresIn 액세스 토큰 만료 시간 (파라미터 추가됨)
      * @param user 사용자 엔티티
      * @return 로그인 응답 객체
      */
-    public static LoginResponse success(String token, UserEntity user, String profileImageUrl) {
+    public static LoginResponse success(String accessToken, long expiresIn, UserEntity user, String profileImageUrl) {
         return LoginResponse.builder()
-                .accessToken(token)
+                .accessToken(accessToken)
+                .tokenType("Bearer") // 토큰 타입 설정 (추가됨)
+                .expiresIn(expiresIn) // 만료 시간 설정 (추가됨)
                 .userUuid(user.getUserUuid())
                 .email(user.getEmail())
                 .nickname(user.getNickname())
                 .profileImageUrl(profileImageUrl)
-                .build();
-    }
-
-    /**
-     * 토큰만 포함된 응답 생성
-     * 토큰 갱신 시 사용
-     * @param token JWT 액세스 토큰
-     * @return 로그인 응답 객체
-     */
-    public static LoginResponse withToken(String token) {
-        return LoginResponse.builder()
-                .accessToken(token)
                 .build();
     }
 }
