@@ -12,9 +12,7 @@ import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
-import org.swyp.dessertbee.preference.entity.PreferenceEntity;
-import org.swyp.dessertbee.preference.entity.UserPreferenceEntity;
-import org.swyp.dessertbee.preference.repository.PreferenceRepository;
+import org.swyp.dessertbee.preference.service.PreferenceService;
 import org.swyp.dessertbee.user.dto.UserDetailResponseDto;
 import org.swyp.dessertbee.user.dto.UserResponseDto;
 import org.swyp.dessertbee.user.dto.UserUpdateRequestDto;
@@ -26,7 +24,6 @@ import org.swyp.dessertbee.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * UserService 구현체
@@ -39,8 +36,9 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final MbtiRepository mbtiRepository;
-    private final PreferenceRepository preferenceRepository;
     private final ImageService imageService;
+    private final PreferenceService preferenceService;
+
 
 
 
@@ -139,7 +137,7 @@ public class UserServiceImpl implements UserService {
                 .address(user.getAddress())
                 .gender(user.getGender())
                 .profileImage(profileImageUrl)  // imageId 대신 imageUrl 사용
-                .preferences(convertToPreferenceIds(user.getUserPreferences()))
+                .preferences(preferenceService.convertToPreferenceIds(user.getUserPreferences()))
                 .mbti(user.getMbti() != null ? user.getMbti().getMbtiType() : null)
                 .build();
     }
@@ -157,21 +155,9 @@ public class UserServiceImpl implements UserService {
                 .nickname(user.getNickname())
                 .gender(user.getGender())
                 .profileImageUrl(profileImageUrl)
-                .preferences(convertToPreferenceIds(user.getUserPreferences()))
+                .preferences(preferenceService.convertToPreferenceIds(user.getUserPreferences()))
                 .mbti(user.getMbti() != null ? user.getMbti().getMbtiType() : null)
                 .build();
-    }
-
-    /**
-     * UserPreferenceEntity Set을 preference ID List로 변환합니다.
-     */
-    private List<Long> convertToPreferenceIds(Set<UserPreferenceEntity> preferences) {
-        if (preferences == null || preferences.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return preferences.stream()
-                .map(up -> up.getPreference().getId())
-                .collect(Collectors.toList());
     }
 
     /**
@@ -209,7 +195,7 @@ public class UserServiceImpl implements UserService {
 
         // 선호도 업데이트
         if (updateRequest.getPreferences() != null) {
-            updatePreferences(user, updateRequest.getPreferences());
+            preferenceService.updateUserPreferences(user, updateRequest.getPreferences());
         }
 
         // MBTI 업데이트
@@ -241,37 +227,6 @@ public class UserServiceImpl implements UserService {
 
         Optional.ofNullable(updateRequest.getGender())
                 .ifPresent(user::setGender);
-    }
-
-    /**
-     * 사용자의 선호도 정보를 업데이트합니다.
-     * 기존 선호도를 모두 제거하고 새로운 선호도로 대체합니다.
-     */
-    private void updatePreferences(UserEntity user, List<Long> newPreferenceIds) {
-        // 기존 선호도 모두 제거
-        user.getUserPreferences().clear();
-
-        // 새로운 선호도가 없는 경우 종료
-        if (newPreferenceIds == null || newPreferenceIds.isEmpty()) {
-            return;
-        }
-
-        // 새로운 선호도 ID들의 유효성을 한 번에 검사
-        Set<PreferenceEntity> preferences = new HashSet<>(preferenceRepository.findAllById(newPreferenceIds));
-
-        // 요청된 모든 선호도 ID가 유효한지 확인
-        if (preferences.size() != newPreferenceIds.size()) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "존재하지 않는 선호도가 포함되어 있습니다.");
-        }
-
-        // 새로운 선호도 설정
-        preferences.forEach(preference -> {
-            UserPreferenceEntity userPreference = UserPreferenceEntity.builder()
-                    .user(user)
-                    .preference(preference)
-                    .build();
-            user.getUserPreferences().add(userPreference);
-        });
     }
 
     /**
