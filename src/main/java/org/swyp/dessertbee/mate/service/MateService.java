@@ -12,6 +12,8 @@ import org.swyp.dessertbee.mate.dto.request.MateCreateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.mate.dto.response.MatesPageResponse;
 import org.swyp.dessertbee.mate.entity.Mate;
+import org.swyp.dessertbee.mate.entity.MateApplyStatus;
+import org.swyp.dessertbee.mate.entity.MateMember;
 import org.swyp.dessertbee.mate.entity.SavedMate;
 import org.swyp.dessertbee.mate.exception.MateExceptions;
 import org.swyp.dessertbee.mate.exception.MateExceptions.*;
@@ -110,13 +112,37 @@ public class MateService {
         Long userId = userRepository.findIdByUserUuid(userUuid);
 
 
+        //저장했는지 유무 확인
         SavedMate savedMate = null;
         if (userId != null) {
             savedMate = savedMateRepository.findByMate_MateIdAndUserId(mate.getMateId(), userId);
         }
         boolean saved = (savedMate != null);
 
-        return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, creator, profileImage, saved);
+
+        //신청했는지 유무 확인
+        MateMember  applyMember = mateMemberRepository.findByMateIdAndUserId(mate.getMateId(), userId)
+                .orElse(null);
+
+        String applyStatus = "";
+
+        if (applyMember == null) {
+            applyStatus = MateApplyStatus.NONE.name();
+        }else{
+
+
+            if(applyMember.isPending())
+            {
+                applyStatus = MateApplyStatus.PENDING.name();
+            }
+
+            if (applyMember.isApprove()){
+                applyStatus = MateApplyStatus.APPROVED.name();
+            }
+
+        }
+
+        return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, creator, profileImage, saved, applyStatus);
 
     }
 
@@ -201,8 +227,29 @@ public class MateService {
                         }
                         boolean saved = (savedMate != null);
 
+                        //신청했는지 유무 확인
+                        MateMember applyMember = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndUserId(mate.getMateId(), userId);
 
-                        return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator, profileImage, saved);
+                        String applyStatus = "";
+
+                        if (applyMember == null) {
+                            applyStatus = MateApplyStatus.NONE.name();
+                        }else{
+
+
+                            if(applyMember.isPending())
+                            {
+                                applyStatus = MateApplyStatus.PENDING.name();
+                            }
+
+                            if (applyMember.isApprove()){
+                                applyStatus = MateApplyStatus.APPROVED.name();
+                            }
+
+                        }
+
+                        return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator, profileImage, saved, applyStatus);
+
                     })
                     .collect(Collectors.toList());
 

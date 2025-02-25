@@ -170,6 +170,8 @@ public class MateMemberService {
         }
 
 
+
+
         //재신청 로직
         if (mateMember.isReapply()) {
 

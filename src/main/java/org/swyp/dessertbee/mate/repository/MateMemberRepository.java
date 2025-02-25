@@ -37,4 +37,8 @@ public interface MateMemberRepository extends JpaRepository<MateMember, Long> {
     Optional<MateMember> findByMateIdAndUserIdAndDeletedAtIsNull(Long mateId, Long userId);
 
     Optional<MateMember> findByMateIdAndUserId(Long mateId, Long userId);
+
+
+    //신청했는지 안했는지 확인하는 필드
+    MateMember findByMateIdAndDeletedAtIsNullAndUserId(Long mateId, Long userId);
 }

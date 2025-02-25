@@ -64,5 +64,7 @@ public class MateMember {
         return this.getApprovalYn() && this.getDeletedAt() != null ;
     }
 
-
+    public Boolean isApprove() {
+        return this.getApprovalYn()&& this.getDeletedAt() == null;
+    }
 }
