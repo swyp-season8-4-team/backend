@@ -203,8 +203,6 @@ public class MateService {
     public MatesPageResponse getMates(Pageable pageable,UUID userUuid, Long mateCategoryId, String keyword) {
 
 
-
-        // limit + 1 만큼 데이터를 가져와서 다음 데이터가 있는지 확인
         Page<Mate> mates = mateRepository.findByDeletedAtIsNullAndMateCategoryId( mateCategoryId, keyword,pageable);
 
 
@@ -267,7 +265,7 @@ public class MateService {
 
         Long userId = userRepository.findIdByUserUuid(userUuid);
 
-        // limit + 1 만큼 데이터를 가져와서 다음 데이터가 있는지 확인
+
         Page<Mate> mates = mateRepository.findByDeletedAtIsNullAndUserId(pageable, userId);
 
 

@@ -130,8 +130,9 @@ public class MateController {
             throw new FromToMateException("잘못된 범위 요청입니다.");
         }
 
-
-        Pageable pageable = PageRequest.of(from, to);
+        int size = to - from;
+        int page = from / size;
+        Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(mateService.getMates(pageable, userUuid, mateCategoryId, keyword));
     }
 
@@ -147,8 +148,10 @@ public class MateController {
             throw new FromToMateException("잘못된 범위 요청입니다.");
         }
 
+        int size = to - from;
+        int page = from / size;
+        Pageable pageable = PageRequest.of(page, size);
 
-        Pageable pageable = PageRequest.of(from, to);
 
         return ResponseEntity.ok(mateService.getMyMates(pageable, userUuid));
     }
