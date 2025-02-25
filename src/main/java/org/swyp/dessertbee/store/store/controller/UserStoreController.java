@@ -63,7 +63,7 @@ public class UserStoreController {
 
     /** 리스트별 저장된 가게 조회 */
     @GetMapping("/lists/{listId}/stores")
-    public ResponseEntity<List<SavedStoreResponse>> getStoresByList(@PathVariable Long listId) {
+    public ResponseEntity<UserStoreListResponse> getStoresByList(@PathVariable Long listId) {
         return ResponseEntity.ok(userStoreService.getStoresByList(listId));
     }
 
