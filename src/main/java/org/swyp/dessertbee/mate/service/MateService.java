@@ -156,7 +156,10 @@ public class MateService {
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
                 .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
-        mate.update(request);
+        //장소명으로 storeId 조회
+        Long storeId = storeRepository.findStoreIdByName(request.getPlace().getPlaceName());
+
+        mate.update(request, storeId);
 
 
 

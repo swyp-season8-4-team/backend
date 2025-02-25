@@ -80,11 +80,12 @@ public class Mate {
     private LocalDateTime deletedAt;
 
 
-    public void update(MateCreateRequest request) {
+    public void update(MateCreateRequest request, Long storeId) {
         this.title = request.getTitle();
         this.content = request.getContent();
         this.recruitYn = request.getRecruitYn();
         this.mateCategoryId = request.getMateCategoryId();
+        this.storeId = storeId;
         this.placeName = request.getPlace().getPlaceName();
     }
 
