@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.auth.service;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.auth.dto.login.LoginRequest;
@@ -23,10 +24,10 @@ public interface AuthService {
 
     /**
      * 리프레시 토큰을 통해 새로운 액세스 토큰 발급
-     * @param email 유저 이메일
+     * @param refreshToken 리프레시 토큰
      * @return 새로운 액세스 토큰 응답
      */
-    TokenResponse refreshAccessToken(String email);
+    TokenResponse refreshAccessToken(String refreshToken);
 
     /**
      * 리프레시 토큰 무효화 (로그아웃)
@@ -38,20 +39,22 @@ public interface AuthService {
      * 회원가입 처리
      * @param request 회원가입 요청 정보
      * @param verificationToken 이메일 인증 토큰
+     * @param response HTTP 응답 객체 (쿠키 설정용)
      * @return 회원가입 결과
      * @throws InvalidVerificationTokenException 유효하지 않은 인증 토큰
      * @throws DuplicateEmailException 이메일 중복
      */
-    LoginResponse signup(SignUpRequest request, String verificationToken);
+    LoginResponse signup(SignUpRequest request, String verificationToken, HttpServletResponse response);
 
 
     /**
      * 로그인 처리
      * @param request 로그인 요청 정보
+     * @param response HTTP 응답 객체 (쿠키 설정용)
      * @return 로그인 응답 정보
      * @throws InvalidCredentialsException 잘못된 인증 정보
      */
-    LoginResponse login(LoginRequest request);
+    LoginResponse login(LoginRequest request, HttpServletResponse response);
 
     /**
      * 비밀번호 재설정

@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.auth.service;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,23 +8,21 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.auth.dto.TokenResponse;
 import org.swyp.dessertbee.auth.dto.login.LoginRequest;
 import org.swyp.dessertbee.auth.dto.login.LoginResponse;
 import org.swyp.dessertbee.auth.dto.logout.LogoutResponse;
 import org.swyp.dessertbee.auth.dto.passwordreset.PasswordResetRequest;
 import org.swyp.dessertbee.auth.dto.signup.SignUpRequest;
-import org.swyp.dessertbee.auth.dto.signup.SignUpResponse;
 import org.swyp.dessertbee.auth.exception.AuthExceptions.*;
 import org.swyp.dessertbee.auth.jwt.JWTUtil;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
+import org.swyp.dessertbee.common.util.CookieUtil;
 import org.swyp.dessertbee.email.entity.EmailVerificationPurpose;
 import org.swyp.dessertbee.role.entity.RoleEntity;
-import org.swyp.dessertbee.role.entity.RoleType;
 import org.swyp.dessertbee.role.repository.RoleRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
@@ -48,8 +47,8 @@ public class AuthServiceImpl implements AuthService {
     private TokenService tokenService;
 
     @Override
-    public TokenResponse refreshAccessToken(String email) {
-        return tokenService.refreshAccessToken(email);
+    public TokenResponse refreshAccessToken(String refreshToken) {
+        return tokenService.refreshAccessToken(refreshToken);
     }
 
     @Override
@@ -67,7 +66,7 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     @Transactional
-    public LoginResponse signup(SignUpRequest request, String verificationToken) {
+    public LoginResponse signup(SignUpRequest request, String verificationToken, HttpServletResponse response) {
         try {
             // 메일 인증 토큰 검증
             validateEmailVerificationToken(verificationToken, request.getEmail(), EmailVerificationPurpose.SIGNUP);
@@ -110,16 +109,22 @@ public class AuthServiceImpl implements AuthService {
             // Access Token, Refresh Token 생성
             String accessToken = jwtUtil.createAccessToken(user.getEmail(), roles, false);
             String refreshToken = jwtUtil.createRefreshToken(user.getEmail(), roles, false);
+            long expiresIn = jwtUtil.getSHORT_ACCESS_TOKEN_EXPIRE();
+
 
             // Refresh Token 저장
             saveRefreshToken(user.getEmail(), refreshToken);
+            // Refresh Token을 쿠키에 설정
+            long maxAge = jwtUtil.getSHORT_REFRESH_TOKEN_EXPIRE() / 1000;
+            CookieUtil.addRefreshTokenCookie(response, refreshToken, maxAge);
+
 
             log.info("회원가입 완료 - 이메일: {}", request.getEmail());
 
             List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
             String profileImageUrl = profileImages.isEmpty() ? null : profileImages.get(0);
 
-            return LoginResponse.success(accessToken, user, profileImageUrl);
+            return LoginResponse.success(accessToken, expiresIn, user, profileImageUrl);
 
         } catch (BusinessException e) {
             log.warn("회원가입 실패 - 이메일: {}, 사유: {}", request.getEmail(), e.getMessage());
@@ -137,7 +142,7 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     @Transactional
-    public LoginResponse login(LoginRequest request) {
+    public LoginResponse login(LoginRequest request, HttpServletResponse response) {
         try {
             // 1. 사용자 조회
             UserEntity user = userRepository.findByEmail(request.getEmail())
@@ -158,18 +163,27 @@ public class AuthServiceImpl implements AuthService {
                     .collect(Collectors.toList());
 
             // 4. Access Token, Refresh Token 생성
+            boolean keepLoggedIn = request.isKeepLoggedIn();
             String accessToken = jwtUtil.createAccessToken(user.getEmail(), roles, request.isKeepLoggedIn());
             String refreshToken = jwtUtil.createRefreshToken(user.getEmail(), roles, request.isKeepLoggedIn());
+            long expiresIn = request.isKeepLoggedIn() ?
+                    jwtUtil.getLONG_ACCESS_TOKEN_EXPIRE() :
+                    jwtUtil.getSHORT_ACCESS_TOKEN_EXPIRE();
 
             // 5. Refresh Token 저장
             saveRefreshToken(user.getEmail(), refreshToken);
+            long maxAge = keepLoggedIn ?
+                    jwtUtil.getLONG_REFRESH_TOKEN_EXPIRE() / 1000 :
+                    jwtUtil.getSHORT_REFRESH_TOKEN_EXPIRE() / 1000;
+            CookieUtil.addRefreshTokenCookie(response, refreshToken, maxAge);
+
 
             // 6. 프로필 이미지
             List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
             String profileImageUrl = profileImages.isEmpty() ? null : profileImages.get(0);
 
             // 7. 로그인 응답 생성
-            return LoginResponse.success(accessToken, user, profileImageUrl);
+            return LoginResponse.success(accessToken, expiresIn, user, profileImageUrl);
 
         } catch (InvalidCredentialsException e) {
             log.warn("로그인 실패 - 이메일: {}, 사유: {}", request.getEmail(), e.getMessage());
