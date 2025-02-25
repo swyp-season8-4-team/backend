@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -15,4 +16,5 @@ public class UserStoreListResponse {
     private String listName;
     private Long iconColorId;
     private int storeCount;
+    private List<SavedStoreResponse> storeData;
 }

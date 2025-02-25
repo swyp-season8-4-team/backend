@@ -22,6 +22,7 @@ import org.swyp.dessertbee.store.store.repository.UserStoreListRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -52,13 +53,14 @@ public class UserStoreService {
         List<UserStoreList> lists = userStoreListRepository.findByUser(user);
 
         return lists.stream()
-                .map(list -> new UserStoreListResponse(
-                        list.getId(),
-                        userUuid,
-                        list.getListName(),
-                        list.getIconColorId(),
-                        savedStoreRepository.countByUserStoreList(list)
-                ))
+                .map(list -> UserStoreListResponse.builder()
+                        .listId(list.getId())
+                        .userUuid(userUuid)
+                        .listName(list.getListName())
+                        .iconColorId(list.getIconColorId())
+                        .storeCount(savedStoreRepository.countByUserStoreList(list))
+                        .storeData(Collections.emptyList())
+                        .build())
                 .collect(Collectors.toList());
     }
 
@@ -103,13 +105,14 @@ public class UserStoreService {
                         .build()
         );
 
-        return new UserStoreListResponse(
-                newList.getId(),
-                userUuid,
-                newList.getListName(),
-                newList.getIconColorId(),
-                0
-        );
+        return UserStoreListResponse.builder()
+                .listId(newList.getId())
+                .userUuid(userUuid)
+                .listName(newList.getListName())
+                .iconColorId(newList.getIconColorId())
+                .storeCount(0)
+                .storeData(Collections.emptyList()) // 저장된 가게 정보가 없으므로 빈 리스트 설정
+                .build();
     }
 
     /** 저장 리스트 수정 */
@@ -120,13 +123,14 @@ public class UserStoreService {
         list.updateList(newName, newIconColorId);
         userStoreListRepository.save(list);
 
-        return new UserStoreListResponse(
-                list.getId(),
-                list.getUser().getUserUuid(),
-                list.getListName(),
-                list.getIconColorId(),
-                savedStoreRepository.countByUserStoreList(list)
-        );
+        return UserStoreListResponse.builder()
+                .listId(list.getId())
+                .userUuid(list.getUser().getUserUuid())
+                .listName(list.getListName())
+                .iconColorId(list.getIconColorId())
+                .storeCount(savedStoreRepository.countByUserStoreList(list))
+                .storeData(Collections.emptyList())
+                .build();
     }
 
     /** 저장 리스트 삭제 */
@@ -181,22 +185,35 @@ public class UserStoreService {
     }
 
     /** 리스트별 저장된 가게 조회 */
-    public List<SavedStoreResponse> getStoresByList(Long listId) {
+    public UserStoreListResponse getStoresByList(Long listId) {
+        // 리스트 엔티티 조회
         UserStoreList list = userStoreListRepository.findById(listId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_LIST_NOT_FOUND));
 
-        return savedStoreRepository.findByUserStoreList(list).stream()
-                .map(savedStore -> new SavedStoreResponse(
-                        list.getUser().getUserUuid(),
-                        savedStore.getStore().getStoreUuid(),
-                        list.getId(),
-                        list.getListName(),
-                        savedStore.getStore().getName(),
-                        savedStore.getStore().getAddress(),
-                        imageService.getImagesByTypeAndId(ImageType.STORE, savedStore.getStore().getStoreId()),
-                        savedStore.getUserPreferences()
-                ))
+        // 해당 리스트에 저장된 가게 정보 매핑
+        List<SavedStoreResponse> storeData = savedStoreRepository.findByUserStoreList(list).stream()
+                .map(savedStore -> SavedStoreResponse.builder()
+                        .userUuid(list.getUser().getUserUuid())
+                        .storeUuid(savedStore.getStore().getStoreUuid())
+                        .listId(list.getId())
+                        .listName(list.getListName())
+                        .storeName(savedStore.getStore().getName())
+                        .storeAddress(savedStore.getStore().getAddress())
+                        .imageUrls(imageService.getImagesByTypeAndId(ImageType.STORE, savedStore.getStore().getStoreId()))
+                        .userPreferences(savedStore.getUserPreferences())
+                        .build())
                 .collect(Collectors.toList());
+
+        int storeCount = storeData.size();
+
+        return UserStoreListResponse.builder()
+                .listId(list.getId())
+                .userUuid(list.getUser().getUserUuid())
+                .listName(list.getListName())
+                .iconColorId(list.getIconColorId())
+                .storeCount(storeCount)
+                .storeData(storeData)
+                .build();
     }
 
     /** 사용자의 취향을 업데이트하고, 저장된 모든 가게 리스트의 취향도 변경 */
