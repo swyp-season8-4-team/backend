@@ -260,4 +260,62 @@ public class MateService {
 
     }
 
+    /**
+     * 내가 참여한 디저트메이트 조회
+     * */
+    public MatesPageResponse getMyMates(Pageable pageable, UUID userUuid) {
+
+        Long userId = userRepository.findIdByUserUuid(userUuid);
+
+        // limit + 1 만큼 데이터를 가져와서 다음 데이터가 있는지 확인
+        Page<Mate> mates = mateRepository.findByDeletedAtIsNullAndUserId(pageable, userId);
+
+
+        List<MateDetailResponse> matesResponses = mateRepository.findByDeletedAtIsNullAndUserId(pageable, userId)
+                .stream()
+                .map(mate -> {
+                    List<String> mateImages = imageService.getImagesByTypeAndId(ImageType.MATE, mate.getMateId());
+                    String mateCategory = mateCategoryRepository.findCategoryNameById(mate.getMateCategoryId());
+                    UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
+                    //사용자 프로필 조회
+                    List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, mate.getUserId());
+
+
+                    SavedMate savedMate = null;
+                    if (userId != null) {
+                        savedMate = savedMateRepository.findByMate_MateIdAndUserId(mate.getMateId(), userId);
+                    }
+                    boolean saved = (savedMate != null);
+
+                    //신청했는지 유무 확인
+                    MateMember applyMember = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndUserId(mate.getMateId(), userId);
+
+                    String applyStatus = "";
+
+                    if (applyMember == null) {
+                        applyStatus = MateApplyStatus.NONE.name();
+                    }else{
+
+
+                        if(applyMember.isPending())
+                        {
+                            applyStatus = MateApplyStatus.PENDING.name();
+                        }
+
+                        if (applyMember.isApprove()){
+                            applyStatus = MateApplyStatus.APPROVED.name();
+                        }
+
+                    }
+
+                    return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator, profileImage, saved, applyStatus);
+
+                })
+                .collect(Collectors.toList());
+
+        // 다음 페이지 존재 여부 확인
+        boolean isLast = mates.isLast();
+
+        return new MatesPageResponse(matesResponses, isLast);
+    }
 }

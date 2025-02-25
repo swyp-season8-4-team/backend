@@ -47,4 +47,8 @@ public interface MateRepository extends JpaRepository<Mate, Long> {
 
     @Query("SELECT m FROM Mate m WHERE m.deletedAt IS NULL AND m.mateId IN :mateIds")
     List<Mate> findByMateIdIn(@Param("mateIds") List<Long> mateIds);
+
+    @Query("SELECT m FROM Mate m WHERE m.deletedAt IS NULL " +
+            "AND m.userId = :userId")
+    Page<Mate> findByDeletedAtIsNullAndUserId(Pageable pageable, Long userId);
 }
