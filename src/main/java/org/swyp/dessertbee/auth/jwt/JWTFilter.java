@@ -1,6 +1,9 @@
 package org.swyp.dessertbee.auth.jwt;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,11 +17,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.swyp.dessertbee.auth.dto.CustomOAuth2User;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.user.dto.UserOAuthDto;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -35,32 +39,51 @@ public class JWTFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain) throws ServletException, IOException {
-
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
         try {
             String token = extractTokenFromHeader(request);
 
-            if (token != null && jwtUtil.validateToken(token, true)) {
-                // 토큰이 유효한 경우 인증 처리
-                Authentication authentication = createAuthentication(token);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-
-                log.debug("Set Authentication to security context for '{}' token",
-                        maskToken(token));
+            if (token != null) {
+                if (jwtUtil.validateToken(token, true)) {
+                    Authentication authentication = createAuthentication(token);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
             }
 
+            filterChain.doFilter(request, response);
         } catch (ExpiredJwtException e) {
-            log.info("만료된 JWT 토큰입니다.");
-            // 만료된 토큰 처리는 프론트엔드에서 처리하도록 함
+            log.info("만료된 JWT 토큰: {}", e.getMessage());
+            SecurityContextHolder.clearContext();
+            sendAuthenticationError(response, ErrorCode.EXPIRED_VERIFICATION_TOKEN, "만료된 인증 토큰입니다.");
+        } catch (JwtException e) {
+            log.warn("유효하지 않은 JWT 토큰: {}", e.getMessage());
+            SecurityContextHolder.clearContext();
+            sendAuthenticationError(response, ErrorCode.INVALID_VERIFICATION_TOKEN, "유효하지 않은 인증 토큰입니다.");
         } catch (Exception e) {
             log.error("JWT 토큰 처리 중 오류 발생", e);
+            SecurityContextHolder.clearContext();
+            sendAuthenticationError(response, ErrorCode.INTERNAL_SERVER_ERROR, "인증 처리 중 오류가 발생했습니다.");
         }
-
-        filterChain.doFilter(request, response);
     }
+
+    private void sendAuthenticationError(HttpServletResponse response, ErrorCode errorCode, String message) throws IOException {
+        response.setStatus(errorCode.getHttpStatus().value());
+        response.setContentType("application/json;charset=UTF-8");
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("status", errorCode.getHttpStatus().value());
+        errorResponse.put("code", errorCode.getCode());
+        errorResponse.put("message", message);
+        errorResponse.put("timestamp", LocalDateTime.now().toString());
+
+        objectMapper.writeValue(response.getWriter(), errorResponse);
+    }
+
+
 
     /**
      * Request Header에서 토큰 추출
