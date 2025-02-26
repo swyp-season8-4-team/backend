@@ -1,7 +1,9 @@
 package org.swyp.dessertbee.common.exception;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -34,6 +36,29 @@ public class GlobalExceptionHandler {
         return ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE,
                 e.getBindingResult().getAllErrors().get(0).getDefaultMessage());
     }
+
+    /**
+     * HTTP 메시지 파싱 예외 처리
+     * 요청 본문을 객체로 변환할 수 없을 때 발생하는 예외 처리
+     * ENUM값 처리를 위해서 일단 만들었는데 다른 파싱 예외도 추가하시면 됩니다.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    protected ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
+        log.warn("요청 본문 파싱 실패: {}", e.getMessage());
+
+        // 열거형 값 오류인지 확인
+        if (e.getCause() instanceof InvalidFormatException) {
+            InvalidFormatException cause = (InvalidFormatException) e.getCause();
+            if (cause.getTargetType() != null && cause.getTargetType().isEnum()) {
+                // 로그에는 상세 정보 기록
+                log.warn("유효하지 않은 열거형 값: {}, 타입: {}", cause.getValue(), cause.getTargetType().getSimpleName());
+                return ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, "유효하지 않은 입력값입니다.");
+            }
+        }
+
+        return ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, "잘못된 요청 형식입니다.");
+    }
+
 
     /**
      * 그 외 모든 예외 처리
