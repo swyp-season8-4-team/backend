@@ -61,7 +61,10 @@ public class SavedMateController {
         if (from >= to) {
             throw new FromToMateException("잘못된 범위 요청입니다.");
         }
-        Pageable pageable = PageRequest.of(from, to);
+
+        int size = to - from;
+        int page = from / size;
+        Pageable pageable = PageRequest.of(page, size);
 
         return ResponseEntity.ok(savedMateService.getSavedMates(pageable, userUuid));
     }

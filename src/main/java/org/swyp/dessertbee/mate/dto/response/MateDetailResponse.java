@@ -28,6 +28,8 @@ public class MateDetailResponse {
     private MatePlace place;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private boolean saved;
+    private String applyStatus;
 
     //디저트메이트 카테고리명
     private String mateCategory;
@@ -36,7 +38,9 @@ public class MateDetailResponse {
                                                 List<String> mateImage,
                                                 String category,
                                                 UserEntity creator,
-                                                List<String> profileImage){
+                                                List<String> profileImage,
+                                                boolean saved,
+                                                String applyStatus) {
 
         return MateDetailResponse.builder()
                 .mateUuid(mate.getMateUuid())
@@ -57,6 +61,8 @@ public class MateDetailResponse {
                         .build())
                 .createdAt(mate.getCreatedAt())
                 .updatedAt(mate.getUpdatedAt())
+                .saved(saved)
+                .applyStatus(applyStatus)
                 .build();
     }
 
