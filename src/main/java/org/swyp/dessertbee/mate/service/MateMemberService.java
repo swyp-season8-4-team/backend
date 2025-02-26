@@ -138,6 +138,7 @@ public class MateMemberService {
         MateMember mateMember = mateMemberRepository.findByMateIdAndUserId(mateId, userId)
                 .orElse(null);
 
+
         if(mateMember == null) {
             // mateMember가 없으면 새로 저장 후 종료
             mateMemberRepository.save(
@@ -165,6 +166,8 @@ public class MateMemberService {
         }
 
 
+
+
         //재신청 로직
         if (mateMember.isReapply()) {
 
@@ -189,7 +192,25 @@ public class MateMemberService {
     }
 
 
+    /**
+     * 디저트메이트 신청 취소 api
+     * */
+    public void cancelApplyMate(UUID mateUuid, UUID userUuid) {
 
+        //mateId,userId  유효성 검사
+        MateUserIds validate = validateMateAndUser(mateUuid, userUuid);
+        Long mateId = validate.getMateId();
+        Long userId = validate.getUserId();
+
+        MateMember mateMember = mateMemberRepository.findByMateIdAndUserId(mateId, userId)
+                .orElseThrow(() ->  new MateNotFoundException("디저트메이트 신청하신 분이 아닙니다."));
+
+        assert mateMember != null;
+        if(mateMember.isPending()){
+            mateMemberRepository.delete(mateMember);
+        }
+
+    }
     /**
      * 디저트 메이트 대기 멤버 전체 조회
      **/
@@ -415,6 +436,7 @@ public class MateMemberService {
 
         return new MateUserIds(mateId, userId);
     }
+
 
 }
 

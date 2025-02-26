@@ -10,6 +10,8 @@ import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.mate.dto.response.MatesPageResponse;
 import org.swyp.dessertbee.mate.entity.Mate;
+import org.swyp.dessertbee.mate.entity.MateApplyStatus;
+import org.swyp.dessertbee.mate.entity.MateMember;
 import org.swyp.dessertbee.mate.entity.SavedMate;
 import org.swyp.dessertbee.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.mate.repository.MateCategoryRepository;
@@ -122,7 +124,31 @@ public class SavedMateService {
                     UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
                     List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, mate.getUserId());
 
-                    return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator, profileImage);
+                    //저장된 디저트메이트 데이터만 지고 오는거니까 true
+                    boolean saved = true;
+
+
+                    //신청했는지 유무 확인
+                    MateMember applyMember = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndUserId(mate.getMateId(), userId);
+
+                    String applyStatus = "";
+
+                    if (applyMember == null) {
+                        applyStatus = MateApplyStatus.NONE.name();
+                    }else{
+
+
+                        if(applyMember.isPending())
+                        {
+                            applyStatus = MateApplyStatus.PENDING.name();
+                        }
+
+                        if (applyMember.isApprove()){
+                            applyStatus = MateApplyStatus.APPROVED.name();
+                        }
+
+                    }
+                    return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator, profileImage, saved, applyStatus);
                 })
                 .collect(Collectors.toList());
 

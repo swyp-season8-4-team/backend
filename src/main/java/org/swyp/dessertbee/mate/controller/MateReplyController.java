@@ -89,7 +89,9 @@ public class MateReplyController {
             throw new MateExceptions.FromToMateException("잘못된 범위 요청입니다.");
         }
 
-        Pageable pageable = PageRequest.of(from, to, Sort.by("mateReplyId").ascending());
+        int size = to - from;
+        int page = from / size;
+        Pageable pageable = PageRequest.of(page, size);
 
         return ResponseEntity.ok(mateReplyService.getReplies(mateUuid, pageable));
     }

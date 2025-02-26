@@ -64,9 +64,9 @@ public class MateController {
      */
     @Operation(summary = "메이트 상세 정보 조회", description = "디저트메이트 상세 정보 조회합니다.")
     @GetMapping("/{mateUuid}")
-    public ResponseEntity<MateDetailResponse> getMateDetail(@PathVariable UUID mateUuid) {
+    public ResponseEntity<MateDetailResponse> getMateDetail(@PathVariable UUID mateUuid, UUID userUuid) {
 
-        MateDetailResponse mate = mateService.getMateDetail(mateUuid);
+        MateDetailResponse mate = mateService.getMateDetail(mateUuid, userUuid);
         return ResponseEntity.ok(mate);
     }
 
@@ -120,15 +120,40 @@ public class MateController {
     @Operation(summary = "메이트 전체 조회", description = "디저트메이트 전체 조회합니다.")
     public ResponseEntity<MatesPageResponse> getMates(
             @RequestParam int from,
-            @RequestParam int to
+            @RequestParam int to,
+            @RequestParam String keyword,
+            UUID userUuid,
+            Long mateCategoryId
     ) {
 
         if (from >= to) {
             throw new FromToMateException("잘못된 범위 요청입니다.");
         }
 
-
-        Pageable pageable = PageRequest.of(from, to);
-        return ResponseEntity.ok(mateService.getMates(pageable));
+        int size = to - from;
+        int page = from / size;
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(mateService.getMates(pageable, userUuid, mateCategoryId, keyword));
     }
+
+    /**
+     * 내가 참여한 디저트메이트 조회
+     * */
+    @GetMapping("/me")
+    public ResponseEntity<MatesPageResponse> getMyMates(@RequestParam int from,
+                                                        @RequestParam int to,
+                                                        UUID userUuid){
+
+        if (from >= to) {
+            throw new FromToMateException("잘못된 범위 요청입니다.");
+        }
+
+        int size = to - from;
+        int page = from / size;
+        Pageable pageable = PageRequest.of(page, size);
+
+
+        return ResponseEntity.ok(mateService.getMyMates(pageable, userUuid));
+    }
+
 }
