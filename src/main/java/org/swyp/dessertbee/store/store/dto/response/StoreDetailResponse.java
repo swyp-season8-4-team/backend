@@ -24,6 +24,8 @@ public class StoreDetailResponse {
     private UUID ownerUuid;
     private String name;
     private String address;
+    private BigDecimal latitude;
+    private BigDecimal longitude;
     private String phone;
     private String storeLink;
     private Boolean animalYn;
@@ -67,6 +69,8 @@ public class StoreDetailResponse {
                 .ownerUuid(store.getOwnerUuid())
                 .name(store.getName())
                 .address(store.getAddress())
+                .latitude(store.getLatitude())
+                .longitude(store.getLongitude())
                 .phone(store.getPhone())
                 .storeLink(store.getStoreLink())
                 .animalYn(store.getAnimalYn())
