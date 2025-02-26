@@ -216,39 +216,6 @@ public class UserStoreService {
                 .build();
     }
 
-    /** 사용자의 취향을 업데이트하고, 저장된 모든 가게 리스트의 취향도 변경 */
-    @Transactional
-    public void updateUserPreferencesAndSavedStores(UUID userUuid, List<String> newUserPreferences) {
-        Long userId = userRepository.findIdByUserUuid(userUuid);
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        // 기존 취향 삭제 후 새로운 취향 저장
-        user.getUserPreferences().clear();
-        for (String preference : newUserPreferences) {
-            PreferenceEntity preferenceEntity = preferenceRepository.findByPreferenceName(preference)
-                    .orElseThrow(() -> new BusinessException(ErrorCode.PREFERENCES_NOT_FOUND));
-            user.getUserPreferences().add(UserPreferenceEntity.builder().user(user).preference(preferenceEntity).build());
-        }
-        userRepository.save(user); // 변경된 취향 저장
-
-        // 사용자의 저장 리스트 가져오기
-        List<UserStoreList> userLists = userStoreListRepository.findByUser(user);
-        if (userLists.isEmpty()) return; // 저장 리스트가 없으면 종료
-
-        // 저장 리스트에 속한 모든 가게 찾기
-        List<SavedStore> savedStores = savedStoreRepository.findByUserStoreListIn(userLists);
-        if (savedStores.isEmpty()) return; // 저장된 가게가 없으면 종료
-
-        // 모든 가게의 취향을 새로 업데이트
-        for (SavedStore savedStore : savedStores) {
-            savedStore.getUserPreferences().clear();
-            savedStore.setUserPreferences(newUserPreferences);
-        }
-
-        savedStoreRepository.saveAll(savedStores);
-    }
-
     /** 리스트에서 가게 삭제 */
     public void removeStoreFromList(Long listId, UUID storeUuid) {
         UserStoreList list = userStoreListRepository.findById(listId)
