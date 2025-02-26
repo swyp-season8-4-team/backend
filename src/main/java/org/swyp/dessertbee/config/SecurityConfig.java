@@ -16,6 +16,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.swyp.dessertbee.auth.jwt.JWTFilter;
 import org.swyp.dessertbee.auth.jwt.JWTUtil;
+import org.swyp.dessertbee.auth.jwt.JwtAuthenticationEntryPoint;
 import org.swyp.dessertbee.auth.oauth2.CustomSuccessHandler;
 import org.swyp.dessertbee.auth.service.AuthService;
 import org.swyp.dessertbee.auth.service.CustomOAuth2UserService;
@@ -36,6 +37,7 @@ public class SecurityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomSuccessHandler customSuccessHandler;
     private final JWTUtil jwtUtil;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Value("${spring.graphql.cors.allowed-origins}")
     private String corsAllowedOrigins;
@@ -52,19 +54,14 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-//                        // OAuth2 관련 엔드포인트 명확히 지정
-//                        .requestMatchers("/api/oauth2/authorization").permitAll()
-//                        .requestMatchers("/api/oauth2/code").permitAll()
-//                        // 다른 public API 엔드포인트
-//                        .requestMatchers("/api/auth/**").permitAll()
-//                        .requestMatchers("/api/public/**").permitAll()
-//                        // 나머지 요청은 인증 필요
-//                        .anyRequest().authenticated()
-                                // OAuth2 인증이 필요한 엔드포인트만 지정
-                                .requestMatchers("/api/oauth2/authorization/**").authenticated()
-                                .requestMatchers("/api/oauth2/code/**").authenticated()
-                                // 나머지 모든 요청 허용
-                                .anyRequest().permitAll()
+                        // OAuth2 관련 엔드포인트 명확히 지정
+                        .requestMatchers("/api/oauth2/authorization").permitAll()
+                        .requestMatchers("/api/oauth2/code").permitAll()
+                        // 다른 public API 엔드포인트
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/public/**").permitAll()
+                        // 나머지 요청은 인증 필요
+                        .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(endpoint ->
@@ -75,8 +72,11 @@ public class SecurityConfig {
                         .successHandler(customSuccessHandler)
                 )
                 .addFilterBefore(new JWTFilter(jwtUtil),
-                        UsernamePasswordAuthenticationFilter.class);        // CORS 설정 추가
-        http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
+                        UsernamePasswordAuthenticationFilter.class)        // CORS 설정 추가
+                .exceptionHandling(exceptionHandling ->
+                exceptionHandling.authenticationEntryPoint(jwtAuthenticationEntryPoint)
+        )
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
         return http.build();
     }
