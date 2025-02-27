@@ -53,7 +53,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void saveRefreshToken(String email, String refreshToken) {
-        tokenService.saveRefreshToken(email, refreshToken);
+        tokenService.saveRefreshToken(email, refreshToken, "local", null);
     }
 
     @Override
