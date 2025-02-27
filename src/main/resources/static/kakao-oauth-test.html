@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>카카오 OAuth 테스트</title>
+</head>
+<body>
+<h1>카카오 OAuth 테스트</h1>
+
+<!-- 카카오 로그인 버튼 -->
+<button onclick="loginWithKakao()">카카오로 로그인</button>
+
+<!-- 인가 코드 표시 영역 -->
+<div id="codeDisplay" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc; display: none;">
+    <h3>인가 코드:</h3>
+    <pre id="authCode"></pre>
+    <button onclick="sendCodeToBackend()">백엔드로 코드 전송</button>
+</div>
+
+<!-- 응답 표시 영역 -->
+<div id="responseDisplay" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc; display: none;">
+    <h3>백엔드 응답:</h3>
+    <pre id="backendResponse"></pre>
+</div>
+
+<script>
+    // URL 파라미터에서 코드 추출하는 함수
+    function getUrlParameter(name) {
+        name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+        var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+        var results = regex.exec(location.search);
+        return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    };
+
+    // 페이지 로드 시 URL에서 코드 확인
+    window.onload = function() {
+        var code = getUrlParameter('code');
+        if (code) {
+            document.getElementById('codeDisplay').style.display = 'block';
+            document.getElementById('authCode').textContent = code;
+        }
+    };
+
+    // 카카오 로그인 함수
+    function loginWithKakao() {
+        // 여기에 카카오 개발자 콘솔에서 얻은 클라이언트 ID를 입력하세요
+        var clientId = '';
+        // 현재 페이지 URL을 리다이렉트 URI로 사용
+        var redirectUri = encodeURIComponent(window.location.href);
+
+        // 카카오 인증 페이지로 리다이렉트
+        window.location.href = 'https://kauth.kakao.com/oauth/authorize?client_id=' + clientId +
+            '&redirect_uri=' + redirectUri +
+            '&response_type=code';
+    }
+
+    // 백엔드로 코드 전송 함수
+    function sendCodeToBackend() {
+        var code = document.getElementById('authCode').textContent;
+
+        fetch('http://localhost:8080/api/auth/oauth2/callback', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                code: code,
+                provider: 'kakao'
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('responseDisplay').style.display = 'block';
+                document.getElementById('backendResponse').textContent = JSON.stringify(data, null, 2);
+
+                // JWT 토큰을 로컬 스토리지에 저장 (실제 앱에서는 더 안전한 방법 사용 권장)
+                if (data.accessToken) {
+                    localStorage.setItem('jwt_token', data.accessToken);
+                    console.log('JWT 토큰이 로컬 스토리지에 저장되었습니다');
+                }
+            })
+            .catch(error => {
+                document.getElementById('responseDisplay').style.display = 'block';
+                document.getElementById('backendResponse').textContent = 'Error: ' + error;
+            });
+    }
+</script>
+</body>
+</html>
