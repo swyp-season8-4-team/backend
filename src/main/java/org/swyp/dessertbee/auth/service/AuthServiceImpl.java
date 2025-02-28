@@ -20,7 +20,6 @@ import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
-import org.swyp.dessertbee.common.util.CookieUtil;
 import org.swyp.dessertbee.email.entity.EmailVerificationPurpose;
 import org.swyp.dessertbee.preference.service.PreferenceService;
 import org.swyp.dessertbee.role.entity.RoleEntity;
@@ -115,17 +114,13 @@ public class AuthServiceImpl implements AuthService {
 
             // Refresh Token 저장
             saveRefreshToken(user.getEmail(), refreshToken);
-            // Refresh Token을 쿠키에 설정
-            long maxAge = jwtUtil.getSHORT_REFRESH_TOKEN_EXPIRE() / 1000;
-            CookieUtil.addRefreshTokenCookie(response, refreshToken, maxAge);
-
 
             log.info("회원가입 완료 - 이메일: {}", request.getEmail());
 
             List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
             String profileImageUrl = profileImages.isEmpty() ? null : profileImages.get(0);
 
-            return LoginResponse.success(accessToken, expiresIn, user, profileImageUrl);
+            return LoginResponse.success(accessToken, refreshToken, expiresIn, user, profileImageUrl);
 
         } catch (BusinessException e) {
             log.warn("회원가입 실패 - 이메일: {}, 사유: {}", request.getEmail(), e.getMessage());
@@ -173,11 +168,6 @@ public class AuthServiceImpl implements AuthService {
 
             // 5. Refresh Token 저장
             saveRefreshToken(user.getEmail(), refreshToken);
-            long maxAge = keepLoggedIn ?
-                    jwtUtil.getLONG_REFRESH_TOKEN_EXPIRE() / 1000 :
-                    jwtUtil.getSHORT_REFRESH_TOKEN_EXPIRE() / 1000;
-            CookieUtil.addRefreshTokenCookie(response, refreshToken, maxAge);
-
 
             // 6. 프로필 이미지
             List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
@@ -187,7 +177,7 @@ public class AuthServiceImpl implements AuthService {
             boolean isPreferenceSet = preferenceService.isUserPreferenceSet(user);
 
             // 8. 로그인 응답 생성
-            return LoginResponse.success(accessToken, expiresIn, user, profileImageUrl, isPreferenceSet);
+            return LoginResponse.success(accessToken, refreshToken, expiresIn, user, profileImageUrl, isPreferenceSet);
 
         } catch (InvalidCredentialsException e) {
             log.warn("로그인 실패 - 이메일: {}, 사유: {}", request.getEmail(), e.getMessage());
