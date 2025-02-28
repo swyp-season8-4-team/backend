@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface MateReportRepository extends JpaRepository<MateReport, Long> {
 
     MateReport findByMateIdAndUserId(Long mateId, Long userId);
+
+    MateReport findByMateReplyIdAndUserId(Long replyId, Long userId);
 }
