@@ -9,7 +9,9 @@ spring:
       client:
         registration:
           kakao:
-            redirect-uri: "http://${SERVER_HOST}:8080/${KAKAO_REDIRECT_URI}"
+            redirect-uri:
+              - ${KAKAO_REDIRECT_URI_PREVIEW}
+              - ${KAKAO_REDIRECT_URI_PROD}
   graphql:
     cors:
       allowed-origins: "https://desserbee.com,https://www.desserbee.com,http://desserbee.com,http://www.desserbee.com,https://api.desserbee.com"
