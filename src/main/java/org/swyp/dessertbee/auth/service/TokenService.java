@@ -34,7 +34,7 @@ public class TokenService {
      * 리프레시 토큰을 저장하거나 업데이트
      */
     @Transactional
-    public void saveRefreshToken(String email, String refreshToken) {
+    public void saveRefreshToken(String email, String refreshToken, String provider, String providerId) {
         try {
 
             // 사용자 조회
@@ -44,18 +44,25 @@ public class TokenService {
                         return new BusinessException(ErrorCode.INVALID_CREDENTIALS, "해당 이메일의 사용자를 찾을 수 없습니다.");
                     });
 
-            AuthEntity auth = authRepository.findByUserAndProvider(Optional.of(user), "local")
+            // provider가 null인 경우 'local'로 기본 설정
+            String safeProvider = Optional.ofNullable(provider).orElse("local");
+
+            // 특정 프로바이더의 인증 정보 찾기 (없으면 새로 생성)
+            AuthEntity auth = authRepository.findByUserAndProvider(Optional.of(user), safeProvider)
                     .orElse(AuthEntity.builder()
                             .user(user)
-                            .provider("local")
+                            .provider(safeProvider)
                             .build());
 
-            long refreshTokenExpireTime = 864000000; // 추후 변경
-            auth.updateRefreshToken(refreshToken, LocalDateTime.now().plusSeconds(refreshTokenExpireTime));
             // JWTUtil의 LONG_REFRESH_TOKEN_EXPIRE 값과 동일하게 설정
             LocalDateTime expirationTime = LocalDateTime.now(KST)
                     .plus(Duration.ofMillis(jwtUtil.getLONG_REFRESH_TOKEN_EXPIRE()));
             auth.updateRefreshToken(refreshToken, expirationTime);
+
+            // providerId가 null이 아닌 경우에만 설정
+            if (providerId != null) {
+                auth.setProviderId(providerId);
+            }
 
             authRepository.save(auth);
 

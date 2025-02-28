@@ -16,14 +16,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.swyp.dessertbee.auth.jwt.JWTFilter;
 import org.swyp.dessertbee.auth.jwt.JWTUtil;
-import org.swyp.dessertbee.auth.jwt.JwtAuthenticationEntryPoint;
-import org.swyp.dessertbee.auth.oauth2.CustomSuccessHandler;
-import org.swyp.dessertbee.auth.service.AuthService;
-import org.swyp.dessertbee.auth.service.CustomOAuth2UserService;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 /**
  * 스프링 시큐리티 설정 클래스
@@ -34,10 +29,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final CustomOAuth2UserService customOAuth2UserService;
-    private final CustomSuccessHandler customSuccessHandler;
     private final JWTUtil jwtUtil;
-    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Value("${spring.graphql.cors.allowed-origins}")
     private String corsAllowedOrigins;
@@ -54,29 +46,28 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // OAuth2 관련 엔드포인트 명확히 지정
-                        .requestMatchers("/api/oauth2/authorization").permitAll()
-                        .requestMatchers("/api/oauth2/code").permitAll()
-                        // 다른 public API 엔드포인트
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/public/**").permitAll()
-                        // 나머지 요청은 인증 필요
-                        .anyRequest().authenticated()
+//                        // OAuth2 관련 엔드포인트 명확히 지정
+//                        .requestMatchers("/api/oauth2/authorization").permitAll()
+//                        .requestMatchers("/api/oauth2/code").permitAll()
+//                        // 다른 public API 엔드포인트
+//                        .requestMatchers("/api/auth/**").permitAll()
+//                        .requestMatchers("/api/public/**").permitAll()
+//                        // 나머지 요청은 인증 필요
+//                        .anyRequest().authenticated()
+                                // OAuth2 인증이 필요한 엔드포인트만 지정
+                                .requestMatchers("/api/oauth2/authorization/**").authenticated()
+                                .requestMatchers("/api/oauth2/code/**").authenticated()
+                                // 나머지 모든 요청 허용
+                                .anyRequest().permitAll()
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(endpoint ->
                                 endpoint.baseUri("/api/oauth2/authorization"))
                         .loginProcessingUrl("/api/oauth2/code")
-                        .userInfoEndpoint(userInfo ->
-                                userInfo.userService(customOAuth2UserService))
-                        .successHandler(customSuccessHandler)
                 )
                 .addFilterBefore(new JWTFilter(jwtUtil),
-                        UsernamePasswordAuthenticationFilter.class)        // CORS 설정 추가
-                .exceptionHandling(exceptionHandling ->
-                exceptionHandling.authenticationEntryPoint(jwtAuthenticationEntryPoint)
-        )
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()));
+                        UsernamePasswordAuthenticationFilter.class);        // CORS 설정 추가
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
         return http.build();
     }
@@ -94,7 +85,6 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(Collections.singletonList("*")); // 일단 모든 오리진 허용하도록 수정
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        configuration.setAllowCredentials(true);
         configuration.setAllowedHeaders(Arrays.asList("Origin", "Content-Type", "Accept", "Authorization"));
         configuration.setMaxAge(3600L);
 
