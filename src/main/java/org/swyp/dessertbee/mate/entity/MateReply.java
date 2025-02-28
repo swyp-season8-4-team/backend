@@ -41,8 +41,6 @@ public class MateReply {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    @Column
-    private String report;
 
     public void update(String content){
         this.content = content;

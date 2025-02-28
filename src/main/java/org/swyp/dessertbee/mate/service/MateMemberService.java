@@ -9,6 +9,7 @@ import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.mate.dto.MateUserIds;
 import org.swyp.dessertbee.mate.dto.response.MateMemberResponse;
+import org.swyp.dessertbee.mate.entity.Mate;
 import org.swyp.dessertbee.mate.entity.MateMember;
 import org.swyp.dessertbee.mate.entity.MateMemberGrade;
 import org.swyp.dessertbee.mate.exception.MateExceptions;
@@ -134,6 +135,12 @@ public class MateMemberService {
         MateUserIds validate = validateMateAndUser(mateUuid, userUuid);
         Long mateId = validate.getMateId();
         Long userId = validate.getUserId();
+
+        Mate mate = mateRepository.findById(mateId).orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+
+        if(!mate.getRecruitYn()){
+            throw new MateRecruitDoneException("해당 디저트메이트 모집 마감입니다.");
+        }
 
         MateMember mateMember = mateMemberRepository.findByMateIdAndUserId(mateId, userId)
                 .orElse(null);

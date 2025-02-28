@@ -53,7 +53,6 @@ public class MateReplyService {
                         .mateId(mateId)
                         .userId(userId)
                         .content(request.getContent())
-                        .report(null)
                 .build()
         );
 

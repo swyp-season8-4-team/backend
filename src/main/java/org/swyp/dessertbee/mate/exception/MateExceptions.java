@@ -115,21 +115,6 @@ public class MateExceptions {
             super(ErrorCode.MATE_REPLY_NOT_FOUND, message);
         }
     }
-    /**
-     * 디저트 메이트 사진 2개 이상 예외
-     * */
-    public static class MateImageCountExceededException extends BusinessException {
-
-        public MateImageCountExceededException()
-        {
-            super(ErrorCode.MATE_IMAGE_COUNT_EXCEEDED);
-        }
-
-        public MateImageCountExceededException(String message){
-            super(ErrorCode.MATE_IMAGE_COUNT_EXCEEDED, message);
-        }
-
-    }
 
     /**
      * 댓글 작성자가 아닐때 예외
@@ -164,6 +149,28 @@ public class MateExceptions {
 
         public SavedMateNotFoundException(String message) {
             super(ErrorCode.SAVED_MATE_NOT_FOUND, message);
+        }
+    }
+
+    /**
+     * 디저트메이트 모집 마감 예외
+     * */
+    public static class MateRecruitDoneException extends BusinessException {
+        public MateRecruitDoneException(){super(ErrorCode.MATE_RECRUIT_DONE);}
+
+        public MateRecruitDoneException(String message) {
+            super(ErrorCode.MATE_RECRUIT_DONE, message);
+        }
+    }
+
+    /**
+     * 디저트메이트 신고 예외
+     * */
+    public static class DuplicationReportException extends BusinessException {
+        public DuplicationReportException(){super(ErrorCode.DUPLICATION_REPORT);}
+
+        public DuplicationReportException(String message) {
+            super(ErrorCode.DUPLICATION_REPORT, message);
         }
     }
 }

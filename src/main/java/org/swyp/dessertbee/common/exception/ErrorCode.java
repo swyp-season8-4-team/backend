@@ -14,7 +14,6 @@ public enum ErrorCode {
     // Common
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "C001", "잘못된 입력값입니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "C002", "서버 에러가 발생했습니다."),
-
     // Auth
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "A001", "이미 등록된 이메일입니다."),
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "A002", "이미 사용중인 닉네임입니다."),
@@ -85,10 +84,11 @@ public enum ErrorCode {
     MATE_PERMISSION_DENIED(HttpStatus.FORBIDDEN, "M008","메이트 관리자 권한이 없습니다."),
     MATE_REPLY_NOT_FOUND(HttpStatus.NOT_FOUND, "M009" , "존재하지 않는 댓글입니다."),
     MATE_MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "M010", "디저트메이트 멤버가 아닙니다."),
-    MATE_IMAGE_COUNT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "M011", "디저트메이트 사진 등록은 1장 가능합니다."),
-    MATE_REPLY_NOT_AUTHOR(HttpStatus.FORBIDDEN, "M012", "댓글 작성자가 아닙니다."),
-    SAVED_STORE_DUPLICATION(HttpStatus.CONFLICT, "M013", "이미 저장된 디저트메이트입니다."),
-    SAVED_MATE_NOT_FOUND(HttpStatus.NOT_FOUND,"M014" , "저장하지 않은 디저트메이트입니다.");
+    MATE_REPLY_NOT_AUTHOR(HttpStatus.FORBIDDEN, "M011", "댓글 작성자가 아닙니다."),
+    SAVED_STORE_DUPLICATION(HttpStatus.CONFLICT, "M012", "이미 저장된 디저트메이트입니다."),
+    SAVED_MATE_NOT_FOUND(HttpStatus.NOT_FOUND,"M013" , "저장하지 않은 디저트메이트입니다."),
+    MATE_RECRUIT_DONE(HttpStatus.FORBIDDEN,"M014" , "해당 디저트메이트 모집 마감입니다."),
+    DUPLICATION_REPORT(HttpStatus.CONFLICT, "M015", "이미 신고된 게시물입니다.");
 
 
     private final HttpStatus httpStatus;
