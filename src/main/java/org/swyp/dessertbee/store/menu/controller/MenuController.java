@@ -3,6 +3,8 @@ package org.swyp.dessertbee.store.menu.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +19,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Tag(name = "Menu", description = "가게 메뉴 관련 API")
 @RestController
 @RequestMapping("/api/stores/{storeUuid}/menus")
 @RequiredArgsConstructor
@@ -25,12 +28,14 @@ public class MenuController {
     private final MenuService menuService;
 
     /** 특정 가게의 메뉴 목록 조회 */
+    @Operation(summary = "메뉴 목록 조회", description = "가게의 메뉴 목록을 조회합니다.")
     @GetMapping
     public ResponseEntity<List<MenuResponse>> getMenusByStore(@PathVariable UUID storeUuid) {
         return ResponseEntity.ok(menuService.getMenusByStore(storeUuid));
     }
 
     /** 특정 가게의 특정 메뉴 조회 */
+    @Operation(summary = "메뉴 정보 조회", description = "메뉴 정보를 조회합니다.")
     @GetMapping("/{menuUuid}")
     public ResponseEntity<MenuResponse> getMenuByStore(
             @PathVariable UUID storeUuid,
@@ -39,6 +44,7 @@ public class MenuController {
     }
 
     /** 메뉴 등록 (파일 업로드 포함) */
+    @Operation(summary = "메뉴 등록", description = "가게에 메뉴를 등록합니다.")
     @PostMapping
     public ResponseEntity<Void> addMenus(
             @PathVariable UUID storeUuid,
@@ -75,6 +81,7 @@ public class MenuController {
     }
 
     /** 메뉴 수정 (파일 업로드 포함) */
+    @Operation(summary = "메뉴 수정", description = "가게의 메뉴를 수정합니다.")
     @PatchMapping("/{menuUuid}")
     public ResponseEntity<Void> updateMenu(
             @PathVariable UUID storeUuid,
@@ -96,6 +103,7 @@ public class MenuController {
     }
 
     /** 메뉴 삭제 */
+    @Operation(summary = "메뉴 삭제", description = "가게의 메뉴를 삭제합니다.")
     @DeleteMapping("/{menuUuid}")
     public ResponseEntity<Void> deleteMenu(@PathVariable UUID storeUuid, @PathVariable UUID menuUuid) {
         menuService.deleteMenu(storeUuid, menuUuid);

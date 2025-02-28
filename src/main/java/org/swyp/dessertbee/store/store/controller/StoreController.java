@@ -1,6 +1,8 @@
 package org.swyp.dessertbee.store.store.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,6 +23,7 @@ import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.util.*;
 
+@Tag(name = "Store", description = "가게 관련 API")
 @RestController
 @RequestMapping("/api/stores")
 @RequiredArgsConstructor
@@ -30,6 +33,7 @@ public class StoreController {
     private final ObjectMapper objectMapper;
 
     /** 가게 등록 */
+    @Operation(summary = "가게 등록", description = "업주가 가게를 등록합니다.")
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_OWNER')")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StoreDetailResponse> createStore(
@@ -55,6 +59,7 @@ public class StoreController {
     }
 
     /** 반경 내 가게 조회 */
+    @Operation(summary = "반경 내 가게 조회", description = "지도 반경 내 가게를 조회합니다.")
     @GetMapping("/map")
     public List<StoreMapResponse> getStoresByLocation(
             @RequestParam Double latitude,
@@ -75,6 +80,7 @@ public class StoreController {
     /**
      * 반경 내 가게 조회 (인증된 사용자의 취향 태그 기반)
      */
+    @Operation(summary = "반경 내 사용자 취향 가게 조회", description = "반경 내에서 사용자의 취향 태그를 가진 가게를 조회합니다.")
     @GetMapping("/map/my-preferences")
     public ResponseEntity<List<StoreMapResponse>> getStoresByMyPreferences(
             @RequestParam("latitude") Double latitude,
@@ -87,18 +93,21 @@ public class StoreController {
     }
 
     /** 가게 간략 정보 조회 */
+    @Operation(summary = "가게 간략 정보 조회", description = "가게의 간략한 정보를 조회합니다.")
     @GetMapping("/{storeUuid}/summary")
     public StoreSummaryResponse getStoreSummary(@PathVariable UUID storeUuid) {
         return storeService.getStoreSummary(storeUuid);
     }
 
     /** 가게 상세 정보 조회 */
+    @Operation(summary = "가게 상세 정보 조회", description = "가게의 상세한 정보를 조회합니다.")
     @GetMapping("/{storeUuid}/details")
     public StoreDetailResponse getStoreDetails(@PathVariable UUID storeUuid, UserEntity user) {
         return storeService.getStoreDetails(storeUuid, user);
     }
 
     /** 가게 수정 */
+    @Operation(summary = "가게 수정", description = "업주가 가게의 정보를 수정합니다.")
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_OWNER')")
     @PatchMapping(value = "/{storeUuid}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StoreDetailResponse> updateStore(
@@ -127,6 +136,7 @@ public class StoreController {
     }
 
     /** 가게 삭제 */
+    @Operation(summary = "가게 삭제", description = "업주가 가게를 삭제합니다.")
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_OWNER')")
     @DeleteMapping("/{storeUuid}")
     public ResponseEntity<Void> deleteStore(@PathVariable UUID storeUuid,
