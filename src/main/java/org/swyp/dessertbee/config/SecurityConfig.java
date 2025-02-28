@@ -32,8 +32,8 @@ public class SecurityConfig {
 
     private final JWTUtil jwtUtil;
 
-    @Value("${spring.graphql.cors.allowed-origins}")
-    private String corsAllowedOrigins;
+//    @Value("${spring.graphql.cors.allowed-origins}")
+//    private String corsAllowedOrigins;
 
     @Bean
     public JWTFilter jwtFilter() {
