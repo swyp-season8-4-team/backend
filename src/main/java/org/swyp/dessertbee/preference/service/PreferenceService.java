@@ -45,6 +45,16 @@ public class PreferenceService {
     }
 
     /**
+     * 사용자의 선호도 설정 여부를 확인합니다.
+     * @param user 확인할 사용자 엔티티
+     * @return 선호도 설정 여부 (설정된 경우 true)
+     */
+    public boolean isUserPreferenceSet(UserEntity user) {
+        // 사용자의 선호도 설정이 존재하고 비어있지 않은 경우 true 반환
+        return user.getUserPreferences() != null && !user.getUserPreferences().isEmpty();
+    }
+
+    /**
      * 사용자의 선호도 정보를 업데이트합니다.
      * 기존 선호도를 모두 제거하고 새로운 선호도로 대체합니다.
      */

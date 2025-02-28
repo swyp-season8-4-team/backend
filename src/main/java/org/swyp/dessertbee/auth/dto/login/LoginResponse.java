@@ -24,6 +24,7 @@ public class LoginResponse {
     private String email;           // 사용자 이메일
     private String nickname;        // 사용자 닉네임
     private String profileImageUrl; // 프로필 이미지
+    private boolean isPreferenceSet; // 사용자 선호도 설정 여부
 
     /**
      * 로그인 성공 응답 생성
@@ -32,15 +33,23 @@ public class LoginResponse {
      * @param user 사용자 엔티티
      * @return 로그인 응답 객체
      */
-    public static LoginResponse success(String accessToken, long expiresIn, UserEntity user, String profileImageUrl) {
+    public static LoginResponse success(String accessToken, long expiresIn, UserEntity user, String profileImageUrl, boolean isPreferenceSet) {
         return LoginResponse.builder()
                 .accessToken(accessToken)
-                .tokenType("Bearer") // 토큰 타입 설정 (추가됨)
-                .expiresIn(expiresIn) // 만료 시간 설정 (추가됨)
+                .tokenType("Bearer") // 토큰 타입 설정
+                .expiresIn(expiresIn) // 만료 시간 설정
                 .userUuid(user.getUserUuid())
                 .email(user.getEmail())
                 .nickname(user.getNickname())
                 .profileImageUrl(profileImageUrl)
+                .isPreferenceSet(isPreferenceSet) // 선호도 설정 여부
                 .build();
+    }
+
+    /**
+     * 회원가입을 위한 오버로딩 메서드
+     */
+    public static LoginResponse success(String accessToken, long expiresIn, UserEntity user, String profileImageUrl) {
+        return success(accessToken, expiresIn, user, profileImageUrl, false);
     }
 }

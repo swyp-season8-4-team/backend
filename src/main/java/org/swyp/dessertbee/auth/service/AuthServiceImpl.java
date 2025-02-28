@@ -22,6 +22,7 @@ import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.common.util.CookieUtil;
 import org.swyp.dessertbee.email.entity.EmailVerificationPurpose;
+import org.swyp.dessertbee.preference.service.PreferenceService;
 import org.swyp.dessertbee.role.entity.RoleEntity;
 import org.swyp.dessertbee.role.repository.RoleRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
@@ -41,7 +42,7 @@ public class AuthServiceImpl implements AuthService {
     private final JWTUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final ImageService imageService;
-
+    private final PreferenceService preferenceService;
 
     @Autowired
     private TokenService tokenService;
@@ -182,8 +183,11 @@ public class AuthServiceImpl implements AuthService {
             List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
             String profileImageUrl = profileImages.isEmpty() ? null : profileImages.get(0);
 
-            // 7. 로그인 응답 생성
-            return LoginResponse.success(accessToken, expiresIn, user, profileImageUrl);
+            // 7. 선호도 설정 여부 파악
+            boolean isPreferenceSet = preferenceService.isUserPreferenceSet(user);
+
+            // 8. 로그인 응답 생성
+            return LoginResponse.success(accessToken, expiresIn, user, profileImageUrl, isPreferenceSet);
 
         } catch (InvalidCredentialsException e) {
             log.warn("로그인 실패 - 이메일: {}, 사유: {}", request.getEmail(), e.getMessage());
