@@ -82,14 +82,15 @@ public class SecurityConfig {
 
         // allowedOrigins를 yml 설정값에서 가져와서 설정
         String[] origins = corsAllowedOrigins.split(",");
-        configuration.setAllowedOrigins(Collections.singletonList("*")); // 일단 모든 오리진 허용하도록 수정
+        configuration.setAllowedOrigins(Arrays.asList(origins)); // 명시적으로 허용할 도메인 지정
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Origin", "Content-Type", "Accept", "Authorization"));
+        configuration.setAllowedHeaders(Arrays.asList("Origin", "Content-Type", "Accept", "Authorization", "X-Email-Verification-Token"));
+        configuration.setAllowCredentials(true); // 쿠키를 포함한 크로스 도메인 요청 허용
         configuration.setMaxAge(3600L);
 
         // 노출할 헤더 설정 - Set-Cookie도 포함
-        configuration.setExposedHeaders(Arrays.asList("Authorization", "Set-Cookie"));
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Set-Cookie","X-Email-Verification-Token"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

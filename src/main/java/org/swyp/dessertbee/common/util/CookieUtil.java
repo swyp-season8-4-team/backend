@@ -23,7 +23,8 @@ public class CookieUtil {
         ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, refreshToken)
                 .httpOnly(true)        // JavaScript에서 접근 불가능
                 .secure(true)          // HTTPS 환경에서만 전송
-                .sameSite("Strict")    // CSRF 방지
+                .sameSite("None")      // 크로스 사이트 요청 허용 (Strict에서 None으로 변경)
+                .domain(".desserbee.com") // 모든 desserbee.com 서브도메인에서 쿠키 공유 가능하도록 설정
                 .path(REFRESH_TOKEN_PATH) // 토큰 갱신 엔드포인트에서만 사용
                 .maxAge(maxAge)        // 쿠키 만료 시간 (초)
                 .build();
@@ -40,7 +41,8 @@ public class CookieUtil {
         ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, "")
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Strict")
+                .sameSite("None")        // 크로스 사이트 요청 허용
+                .domain(".desserbee.com") // 모든 desserbee.com 서브도메인에서 쿠키 공유 가능하도록 설정
                 .path(REFRESH_TOKEN_PATH)
                 .maxAge(0)  // 즉시 만료
                 .build();
