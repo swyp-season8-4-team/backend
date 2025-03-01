@@ -3,7 +3,6 @@ package org.swyp.dessertbee.store.store.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -12,7 +11,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.swyp.dessertbee.preference.entity.UserPreferenceEntity;
 import org.swyp.dessertbee.store.store.dto.request.StoreCreateRequest;
 import org.swyp.dessertbee.store.store.dto.request.StoreUpdateRequest;
 import org.swyp.dessertbee.store.store.dto.response.StoreDetailResponse;
@@ -34,7 +32,7 @@ public class StoreController {
 
     /** 가게 등록 */
     @Operation(summary = "가게 등록", description = "업주가 가게를 등록합니다.")
-    @PreAuthorize("isAuthenticated() and hasRole('ROLE_OWNER')")
+    @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StoreDetailResponse> createStore(
             @RequestPart("request") String requestJson,
@@ -108,7 +106,7 @@ public class StoreController {
 
     /** 가게 수정 */
     @Operation(summary = "가게 수정", description = "업주가 가게의 정보를 수정합니다.")
-    @PreAuthorize("isAuthenticated() and hasRole('ROLE_OWNER')")
+    @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @PatchMapping(value = "/{storeUuid}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StoreDetailResponse> updateStore(
             @PathVariable UUID storeUuid,
@@ -136,7 +134,7 @@ public class StoreController {
 
     /** 가게 삭제 */
     @Operation(summary = "가게 삭제", description = "업주가 가게를 삭제합니다.")
-    @PreAuthorize("isAuthenticated() and hasRole('ROLE_OWNER')")
+    @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @DeleteMapping("/{storeUuid}")
     public ResponseEntity<Void> deleteStore(@PathVariable UUID storeUuid,
                                             @AuthenticationPrincipal UserEntity user) {
