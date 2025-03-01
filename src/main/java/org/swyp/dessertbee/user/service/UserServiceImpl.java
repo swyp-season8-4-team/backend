@@ -1,6 +1,5 @@
 package org.swyp.dessertbee.user.service;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,9 +12,9 @@ import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.preference.service.PreferenceService;
-import org.swyp.dessertbee.user.dto.UserDetailResponseDto;
-import org.swyp.dessertbee.user.dto.UserResponseDto;
-import org.swyp.dessertbee.user.dto.UserUpdateRequestDto;
+import org.swyp.dessertbee.user.dto.response.UserDetailResponseDto;
+import org.swyp.dessertbee.user.dto.response.UserResponseDto;
+import org.swyp.dessertbee.user.dto.request.UserUpdateRequestDto;
 import org.swyp.dessertbee.user.entity.MbtiEntity;
 import org.swyp.dessertbee.user.entity.NicknameValidationPurpose;
 import org.swyp.dessertbee.user.entity.UserEntity;

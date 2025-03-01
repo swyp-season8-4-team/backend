@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.user.dto.requset;
+package org.swyp.dessertbee.user.dto.request;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

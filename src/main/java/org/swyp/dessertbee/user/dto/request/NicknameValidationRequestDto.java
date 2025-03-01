@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.user.dto.requset;
+package org.swyp.dessertbee.user.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
