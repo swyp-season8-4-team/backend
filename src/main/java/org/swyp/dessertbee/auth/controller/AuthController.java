@@ -92,14 +92,9 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<LogoutResponse> logout(
             @Parameter(description = "JWT 액세스 토큰", required = true)
-            @RequestHeader("Authorization") String token,
-            HttpServletResponse response
-    ) {
+            @RequestHeader("Authorization") String token) {
         String accessToken = token.substring(7);
         LogoutResponse logoutResponse = authService.logout(accessToken);
-
-        // 리프레시 토큰 쿠키 삭제
-        CookieUtil.deleteRefreshTokenCookie(response);
 
         return ResponseEntity.ok(logoutResponse);
     }

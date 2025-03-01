@@ -189,7 +189,7 @@ public class KakaoOAuthService {
         String profileImageUrl = profileImages.isEmpty() ? null : profileImages.get(0);
 
         boolean isPreferenceSet = preferenceService.isUserPreferenceSet(user);
-        return LoginResponse.success(accessToken, expiresIn, user, profileImageUrl, isPreferenceSet);
+        return LoginResponse.success(accessToken, refreshToken, expiresIn, user, profileImageUrl, isPreferenceSet);
     }
 
     /**

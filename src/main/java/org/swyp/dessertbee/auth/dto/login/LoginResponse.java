@@ -18,6 +18,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class LoginResponse {
     private String accessToken;     // JWT 액세스 토큰
+    private String refreshToken;    // JWT 리프레시 토큰
     private String tokenType;       // 토큰 타입
     private long expiresIn;         // 토큰 만료 시간
     private UUID userUuid;          // 사용자 UUID
@@ -33,11 +34,12 @@ public class LoginResponse {
      * @param user 사용자 엔티티
      * @return 로그인 응답 객체
      */
-    public static LoginResponse success(String accessToken, long expiresIn, UserEntity user, String profileImageUrl, boolean isPreferenceSet) {
+    public static LoginResponse success(String accessToken, String refreshToken, long expiresIn, UserEntity user, String profileImageUrl, boolean isPreferenceSet) {
         return LoginResponse.builder()
                 .accessToken(accessToken)
-                .tokenType("Bearer") // 토큰 타입 설정
-                .expiresIn(expiresIn) // 만료 시간 설정
+                .refreshToken(refreshToken)
+                .tokenType("Bearer") // 토큰 타입 설정 (추가됨)
+                .expiresIn(expiresIn) // 만료 시간 설정 (추가됨)
                 .userUuid(user.getUserUuid())
                 .email(user.getEmail())
                 .nickname(user.getNickname())
@@ -49,7 +51,7 @@ public class LoginResponse {
     /**
      * 회원가입을 위한 오버로딩 메서드
      */
-    public static LoginResponse success(String accessToken, long expiresIn, UserEntity user, String profileImageUrl) {
-        return success(accessToken, expiresIn, user, profileImageUrl, false);
+    public static LoginResponse success(String accessToken, String refreshToken, long expiresIn, UserEntity user, String profileImageUrl) {
+        return success(accessToken, refreshToken, expiresIn, user, profileImageUrl, false);
     }
 }
