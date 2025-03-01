@@ -23,6 +23,7 @@ public class MateReplyResponse {
     private UUID userUuid;
     private String content;
     private List<String> profileImage;
+    private UserEntity.Gender gender;
 
 
     public static MateReplyResponse fromEntity(MateReply reply,
@@ -35,6 +36,7 @@ public class MateReplyResponse {
                 .mateReplyId(reply.getMateReplyId())
                 .mateUuid(mateUuid)
                 .nickname(user.getNickname())
+                .gender(user.getGender())
                 .userUuid(user.getUserUuid())
                 .content(reply.getContent())
                 .profileImage(profileImage)
