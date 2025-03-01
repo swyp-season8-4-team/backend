@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.email.entity.EmailVerificationPurpose;
 
 import javax.crypto.SecretKey;
@@ -93,23 +94,38 @@ public class JWTUtil {
     /**
      * 토큰 유효성 검증
      */
-    public boolean validateToken(String token, boolean isAccessToken) {
+    /**
+     * JWT 토큰 유효성 검증
+     * @param token 검증할 토큰
+     * @param isAccessToken 액세스 토큰 여부 (true: 액세스 토큰, false: 리프레시 토큰)
+     * @return 검증 결과 에러코드 (null이면 유효한 토큰)
+     */
+    public ErrorCode validateToken(String token, boolean isAccessToken) {
+        if (token == null) {
+            return ErrorCode.JWT_TOKEN_MISSING;
+        }
+
+        SecretKey key = isAccessToken ? accessTokenSecretKey : refreshTokenSecretKey;
         try {
-            SecretKey key = isAccessToken ? accessTokenSecretKey : refreshTokenSecretKey;
             Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
-            return true;
-        } catch (SecurityException | MalformedJwtException e) {
-            log.error("잘못된 JWT 서명입니다.");
+            return null; // 유효한 토큰
         } catch (ExpiredJwtException e) {
             log.error("만료된 JWT 토큰입니다.");
+            return ErrorCode.JWT_TOKEN_EXPIRED;
+        } catch (SecurityException | MalformedJwtException e) {
+            log.error("잘못된 JWT 서명입니다: {}", e.getMessage());
+            return ErrorCode.JWT_SIGNATURE_INVALID;
         } catch (UnsupportedJwtException e) {
-            log.error("지원되지 않는 JWT 토큰입니다.");
+            log.error("지원되지 않는 JWT 토큰입니다: {}", e.getMessage());
+            return ErrorCode.JWT_TOKEN_UNSUPPORTED;
         } catch (IllegalArgumentException e) {
-            log.error("JWT 토큰이 잘못되었습니다.");
+            log.error("JWT 토큰이 잘못되었습니다: {}", e.getMessage());
+            return ErrorCode.JWT_TOKEN_MALFORMED;
+        } catch (Exception e) {
+            log.error("JWT 토큰 검증 중 예상치 못한 오류: {}", e.getMessage());
+            return ErrorCode.AUTHENTICATION_FAILED;
         }
-        return false;
     }
-
     /**
      * 토큰에서 이메일 추출
      */
