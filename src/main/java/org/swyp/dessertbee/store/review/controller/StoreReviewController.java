@@ -56,17 +56,10 @@ public class StoreReviewController {
     public ResponseEntity<StoreReviewResponse> updateReview(
             @PathVariable UUID storeUuid,
             @PathVariable UUID reviewUuid,
-            @RequestPart(value = "request") String requestJson,
+            @RequestPart(value = "request") StoreReviewUpdateRequest request,
             @RequestPart(required = false) List<MultipartFile> newImages) {
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        StoreReviewUpdateRequest request;
-        try {
-            request = objectMapper.readValue(requestJson, StoreReviewUpdateRequest.class);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("JSON 요청 양식 오류", e);
-        }
-
+        log.info("📥 요청 데이터: {}", request);
         StoreReviewResponse response = storeReviewService.updateReview(storeUuid, reviewUuid, request, newImages);
         return ResponseEntity.ok(response);
     }
