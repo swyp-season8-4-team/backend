@@ -394,16 +394,19 @@ public class StoreService {
                                            StoreUpdateRequest request,
                                            List<MultipartFile> storeImageFiles,
                                            List<MultipartFile> ownerPickImageFiles,
-                                           List<MultipartFile> menuImageFiles,
-                                           UserEntity user) {
+                                           List<MultipartFile> menuImageFiles) {
         // 가게 존재 여부 및 삭제 여부 체크
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
         Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
-        if (!store.getOwnerUuid().equals(user.getUserUuid())) {
+        if (!store.getOwnerUuid().equals(request.getUserUuid())) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
         }
+
+        Long ownerId = userRepository.findIdByUserUuid(request.getUserUuid());
+        UserEntity user = userRepository.findById(ownerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 가게 기본 정보 업데이트
         store.setName(request.getName());
