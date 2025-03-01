@@ -17,4 +17,5 @@ public class MateResponse {
     private String content;
     private String nickname;
     private Boolean recruitYn;
+    private boolean saved;
 }
