@@ -48,6 +48,7 @@ public class AuthEntity {
     @Column(name = "refresh_token_expires_at")
     private LocalDateTime refreshTokenExpiresAt;
 
+    @Builder.Default
     @Column(nullable = false)
     private boolean active = true;
 
