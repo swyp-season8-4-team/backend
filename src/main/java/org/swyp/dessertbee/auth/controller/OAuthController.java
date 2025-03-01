@@ -1,6 +1,5 @@
 package org.swyp.dessertbee.auth.controller;
 
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -26,12 +25,11 @@ public class OAuthController {
      */
     @PostMapping("/callback")
     public ResponseEntity<LoginResponse> oauthCallback(
-            @RequestBody OAuthCodeRequest request,
-            HttpServletResponse response) {
+            @RequestBody OAuthCodeRequest request) {
 
         log.info("OAuth 인가 코드 수신 - 제공자: {}", request.getProvider());
         LoginResponse loginResponse = oAuthService.processOAuthLogin(
-                request.getCode(), request.getProvider(), response);
+                request.getCode(), request.getProvider());
 
         return ResponseEntity.ok(loginResponse);
     }

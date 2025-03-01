@@ -1,6 +1,5 @@
 package org.swyp.dessertbee.auth.service;
 
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,7 +65,7 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     @Transactional
-    public LoginResponse signup(SignUpRequest request, String verificationToken, HttpServletResponse response) {
+    public LoginResponse signup(SignUpRequest request, String verificationToken) {
         try {
             // 메일 인증 토큰 검증
             validateEmailVerificationToken(verificationToken, request.getEmail(), EmailVerificationPurpose.SIGNUP);
@@ -138,7 +137,7 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     @Transactional
-    public LoginResponse login(LoginRequest request, HttpServletResponse response) {
+    public LoginResponse login(LoginRequest request) {
         try {
             // 1. 사용자 조회
             UserEntity user = userRepository.findByEmail(request.getEmail())

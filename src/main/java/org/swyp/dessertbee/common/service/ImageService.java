@@ -10,10 +10,17 @@ import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.repository.ImageRepository;
+import org.springframework.mock.web.MockMultipartFile;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor
@@ -82,6 +89,94 @@ public class ImageService {
                 .stream()
                 .map(Image::getUrl)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 외부 URL에서 이미지를 다운로드하여 S3에 업로드하고 DB에 저장
+     */
+    @Transactional
+    public void downloadAndSaveImage(String imageUrl, ImageType refType, Long refId, String folder) {
+        if (imageUrl == null || imageUrl.isEmpty()) return;
+
+        try {
+            // 파일명 생성 (URL에서 파일명 추출 또는 기본값 사용)
+            String fileName = extractFileNameFromUrl(imageUrl);
+
+            // 이미지 다운로드 및 MultipartFile로 변환
+            MultipartFile imageFile = downloadImageFromUrl(imageUrl, fileName);
+
+            // S3에 업로드 및 DB에 저장 (기존 메서드 활용)
+            uploadAndSaveImage(imageFile, refType, refId, folder);
+
+            log.info("외부 이미지 다운로드 및 저장 성공 - type: {}, refId: {}, url: {}",
+                    refType, refId, imageUrl);
+        } catch (Exception e) {
+            log.error("외부 이미지 다운로드 및 저장 실패 - type: {}, refId: {}, url: {}",
+                    refType, refId, imageUrl, e);
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR);
+        }
+    }
+
+    /**
+     * URL에서 파일명을 추출하는 메서드
+     */
+    private String extractFileNameFromUrl(String imageUrl) {
+        try {
+            // URL에서 파일명 부분 추출 시도
+            String[] parts = imageUrl.split("/");
+            String lastPart = parts[parts.length - 1];
+
+            // 파일명에 쿼리 파라미터가 있는 경우 제거
+            if (lastPart.contains("?")) {
+                lastPart = lastPart.substring(0, lastPart.indexOf("?"));
+            }
+
+            // 파일명이 비어있거나 추출할 수 없는 경우 기본값 사용
+            if (lastPart.isEmpty()) {
+                return "downloaded-image.jpg";
+            }
+
+            return lastPart;
+        } catch (Exception e) {
+            // 파일명 추출 실패 시 기본값 반환
+            return "downloaded-image.jpg";
+        }
+    }
+
+    /**
+     * URL에서 이미지를 다운로드하여 MultipartFile로 변환하는 메서드
+     */
+    private MultipartFile downloadImageFromUrl(String imageUrl, String fileName) throws IOException {
+        URL url = new URL(imageUrl);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+
+        try (InputStream inputStream = connection.getInputStream();
+             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+
+            byte[] imageBytes = outputStream.toByteArray();
+
+            // 이미지 타입 감지 (기본값은 image/jpeg)
+            String contentType = connection.getContentType();
+            if (contentType == null || contentType.isEmpty()) {
+                contentType = "image/jpeg";
+            }
+            // MockMultipartFile 생성
+            return new MockMultipartFile(
+                    fileName,  // 필드 이름으로 파일명 사용
+                    fileName,  // 원본 파일명
+                    contentType,
+                    imageBytes
+            );
+        } finally {
+            connection.disconnect();
+        }
     }
 
     /** 여러 refId에 해당하는 이미지 조회 */
