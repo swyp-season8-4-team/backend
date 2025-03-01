@@ -12,6 +12,7 @@ import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.mate.dto.MateUserIds;
 import org.swyp.dessertbee.mate.dto.request.MateReplyCreateRequest;
 import org.swyp.dessertbee.mate.dto.request.MateReportRequest;
+import org.swyp.dessertbee.mate.dto.request.MateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateReplyPageResponse;
 import org.swyp.dessertbee.mate.dto.response.MateReplyResponse;
 import org.swyp.dessertbee.mate.entity.Mate;
@@ -139,9 +140,9 @@ public class MateReplyService {
      * 디저트메이트 댓글 삭제
      * */
     @Transactional
-    public void deleteReply(UUID mateUuid, Long replyId, UUID userUuid) {
+    public void deleteReply(UUID mateUuid, Long replyId, MateRequest request) {
 
-        MateUserIds mateUserIds = validateMateAndUser(mateUuid, userUuid);
+        MateUserIds mateUserIds = validateMateAndUser(mateUuid, request.getUserUuid());
         Long mateId = mateUserIds.getMateId();
 
         MateReply mateReply = mateReplyRepository.findByMateIdAndMateReplyIdAndDeletedAtIsNull(mateId, replyId)

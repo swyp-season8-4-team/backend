@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.mate.dto.request.MateCreateRequest;
 import org.swyp.dessertbee.mate.dto.request.MateReplyCreateRequest;
 import org.swyp.dessertbee.mate.dto.request.MateReportRequest;
+import org.swyp.dessertbee.mate.dto.request.MateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateReplyPageResponse;
 import org.swyp.dessertbee.mate.dto.response.MateReplyResponse;
 import org.swyp.dessertbee.mate.exception.MateExceptions;
@@ -105,9 +106,9 @@ public class MateReplyController {
      * */
     @DeleteMapping("/{replyId}")
     public ResponseEntity<String> deleteReply(@PathVariable UUID mateUuid,
-                                              @PathVariable Long replyId, UUID userUuid) {
+                                              @PathVariable Long replyId, @RequestBody MateRequest request) {
 
-        mateReplyService.deleteReply(mateUuid, replyId, userUuid);
+        mateReplyService.deleteReply(mateUuid, replyId, request);
 
         return ResponseEntity.ok("댓글이 성공적으로 삭제되었습니다.");
     }

@@ -8,6 +8,8 @@ import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.mate.dto.MateUserIds;
+import org.swyp.dessertbee.mate.dto.request.MateApplyMemberRequest;
+import org.swyp.dessertbee.mate.dto.request.MateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateMemberResponse;
 import org.swyp.dessertbee.mate.entity.Mate;
 import org.swyp.dessertbee.mate.entity.MateMember;
@@ -130,9 +132,9 @@ public class MateMemberService {
      * @return
      */
     @Transactional
-    public void applyMate(UUID mateUuid, UUID userUuid) {
+    public void applyMate(UUID mateUuid, MateRequest request) {
         //mateId,userId  유효성 검사
-        MateUserIds validate = validateMateAndUser(mateUuid, userUuid);
+        MateUserIds validate = validateMateAndUser(mateUuid, request.getUserUuid());
         Long mateId = validate.getMateId();
         Long userId = validate.getUserId();
 
@@ -202,10 +204,10 @@ public class MateMemberService {
     /**
      * 디저트메이트 신청 취소 api
      * */
-    public void cancelApplyMate(UUID mateUuid, UUID userUuid) {
+    public void cancelApplyMate(UUID mateUuid, MateRequest request) {
 
         //mateId,userId  유효성 검사
-        MateUserIds validate = validateMateAndUser(mateUuid, userUuid);
+        MateUserIds validate = validateMateAndUser(mateUuid, request.getUserUuid());
         Long mateId = validate.getMateId();
         Long userId = validate.getUserId();
 
@@ -264,10 +266,11 @@ public class MateMemberService {
      * 디저트 메이트 멤버 신청 수락 api
      * */
     @Transactional
-    public void acceptMember (UUID mateUuid, UUID creatorUuid, UUID targetUuid){
+    public void acceptMember (UUID mateUuid, MateApplyMemberRequest request) {
+
 
         //생성자 권한을 위해 생성자 userId 조회 및 유효성 검사
-        MateUserIds creatorIds  = validateMateAndUser(mateUuid,creatorUuid);
+        MateUserIds creatorIds  = validateMateAndUser(mateUuid, request.getCreatorUuid());
         Long mateId = creatorIds.getMateId();
         Long creatorId = creatorIds.getUserId();
 
@@ -277,7 +280,7 @@ public class MateMemberService {
 
         if (creator.getGrade().equals(MateMemberGrade.CREATOR)) {
 
-            Long targetId = userRepository.findIdByUserUuid(targetUuid);
+            Long targetId = userRepository.findIdByUserUuid(request.getTargetUuid());
 
             MateMember target = mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, targetId)
                     .orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 멤버입니다."));
@@ -291,10 +294,10 @@ public class MateMemberService {
      * 디저트 메이트 멤버 신청 거절 api
      * */
     @Transactional
-    public void rejectMember (UUID mateUuid, UUID creatorUuid, UUID targetUuid){
+    public void rejectMember (UUID mateUuid, MateApplyMemberRequest request) {
 
         //생성자 권한을 위해 생성자 userId 조회 및 유효성 검사
-        MateUserIds creatorIds  = validateMateAndUser(mateUuid,creatorUuid);
+        MateUserIds creatorIds  = validateMateAndUser(mateUuid, request.getCreatorUuid());
         Long mateId = creatorIds.getMateId();
         Long creatorId = creatorIds.getUserId();
 
@@ -304,7 +307,7 @@ public class MateMemberService {
 
         if (creator.getGrade().equals(MateMemberGrade.CREATOR)) {
 
-            Long targetId = userRepository.findIdByUserUuid(targetUuid);
+            Long targetId = userRepository.findIdByUserUuid(request.getTargetUuid());
 
             MateMember target = mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, targetId)
                     .orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 멤버입니다."));
@@ -327,10 +330,10 @@ public class MateMemberService {
      * 디저트 메이트 멤버 강퇴 api
      * */
     @Transactional
-    public void bannedMember (UUID mateUuid, UUID creatorUuid, UUID targetUuid){
+    public void bannedMember (UUID mateUuid, MateApplyMemberRequest request) {
 
         //생성자 권한을 위해 생성자 userId 조회 및 유효성 검사
-        MateUserIds creatorIds  = validateMateAndUser(mateUuid,creatorUuid);
+        MateUserIds creatorIds  = validateMateAndUser(mateUuid, request.getCreatorUuid());
         Long mateId = creatorIds.getMateId();
         Long creatorId = creatorIds.getUserId();
 
@@ -340,7 +343,7 @@ public class MateMemberService {
 
         if (creator.getGrade().equals(MateMemberGrade.CREATOR)) {
 
-            MateUserIds targetIds = validateMateAndUser(mateUuid, targetUuid);
+            MateUserIds targetIds = validateMateAndUser(mateUuid, request.getTargetUuid());
             Long tragetId = targetIds.getUserId();
 
             MateMember target = mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, tragetId)
@@ -367,10 +370,10 @@ public class MateMemberService {
      * 디저트 메이트 멤버 탈퇴 api
      * */
     @Transactional
-    public void leaveMember (UUID mateUuid, UUID userUuid){
+    public void leaveMember (UUID mateUuid, MateRequest request) {
 
         //mateId,userId  유효성 검사
-        MateUserIds validate = validateMateAndUser(mateUuid, userUuid);
+        MateUserIds validate = validateMateAndUser(mateUuid, request.getUserUuid());
         Long mateId = validate.getMateId();
         Long userId = validate.getUserId();
 

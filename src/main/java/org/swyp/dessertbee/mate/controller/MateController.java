@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.mate.dto.request.MateCreateRequest;
 import org.swyp.dessertbee.mate.dto.request.MateReportRequest;
+import org.swyp.dessertbee.mate.dto.request.MateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.mate.dto.response.MatesPageResponse;
 import org.swyp.dessertbee.mate.exception.MateExceptions.*;
@@ -55,7 +56,10 @@ public class MateController {
      */
     @Operation(summary = "메이트 상세 정보 조회", description = "디저트메이트 상세 정보 조회합니다.")
     @GetMapping("/{mateUuid}")
-    public ResponseEntity<MateDetailResponse> getMateDetail(@PathVariable UUID mateUuid, UUID userUuid) {
+    public ResponseEntity<MateDetailResponse> getMateDetail(@PathVariable UUID mateUuid, @RequestBody MateRequest request) {
+
+        //request 객체로 받아서 Uuid 넣기
+        UUID userUuid = request.getUserUuid();
 
         MateDetailResponse mate = mateService.getMateDetail(mateUuid, userUuid);
         return ResponseEntity.ok(mate);
@@ -98,8 +102,7 @@ public class MateController {
             @RequestParam(required = false, defaultValue = "0") int from,
             @RequestParam(required = false, defaultValue = "10") int to,
             @RequestParam(required = false, defaultValue = "") String keyword,
-            UUID userUuid,
-            Long mateCategoryId
+            @RequestBody MateRequest request
     ) {
 
         if (from >= to) {
@@ -109,16 +112,19 @@ public class MateController {
         int size = to - from;
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(mateService.getMates(pageable, userUuid, mateCategoryId, keyword));
+        return ResponseEntity.ok(mateService.getMates(pageable, request, keyword));
     }
 
     /**
      * 내가 참여한 디저트메이트 조회
      * */
     @GetMapping("/me")
-    public ResponseEntity<MatesPageResponse> getMyMates(@RequestParam int from,
-                                                        @RequestParam int to,
-                                                        UUID userUuid){
+    public ResponseEntity<MatesPageResponse> getMyMates( @RequestParam(required = false, defaultValue = "0") int from,
+                                                         @RequestParam(required = false, defaultValue = "10") int to,
+                                                         @RequestBody MateRequest request){
+
+        //request 객체로 받아서 Uuid 넣기
+        UUID userUuid = request.getUserUuid();
 
         if (from >= to) {
             throw new FromToMateException("잘못된 범위 요청입니다.");
