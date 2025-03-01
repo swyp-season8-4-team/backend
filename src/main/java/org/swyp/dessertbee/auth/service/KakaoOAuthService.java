@@ -19,6 +19,7 @@ import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.common.util.CookieUtil;
+import org.swyp.dessertbee.preference.service.PreferenceService;
 import org.swyp.dessertbee.role.entity.RoleEntity;
 import org.swyp.dessertbee.role.entity.RoleType;
 import org.swyp.dessertbee.role.repository.RoleRepository;
@@ -42,6 +43,7 @@ public class KakaoOAuthService {
     private final JWTUtil jwtUtil;
     private final ImageService imageService;
     private final RestTemplate restTemplate = new RestTemplate();
+    private final PreferenceService preferenceService;
 
     @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
     private String clientId;
@@ -186,7 +188,8 @@ public class KakaoOAuthService {
                 ImageType.PROFILE, user.getId());
         String profileImageUrl = profileImages.isEmpty() ? null : profileImages.get(0);
 
-        return LoginResponse.success(accessToken, expiresIn, user, profileImageUrl);
+        boolean isPreferenceSet = preferenceService.isUserPreferenceSet(user);
+        return LoginResponse.success(accessToken, expiresIn, user, profileImageUrl, isPreferenceSet);
     }
 
     /**
