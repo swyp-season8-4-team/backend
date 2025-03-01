@@ -5,5 +5,5 @@ public enum MateApplyStatus {
         PENDING,    // 신청 중 (대기 상태)
         APPROVED,   // 승인됨
         REJECTED,   // 거절됨
-        REAPPLY     // 재신청 중
+        BANNED    // 강퇴됨
 }

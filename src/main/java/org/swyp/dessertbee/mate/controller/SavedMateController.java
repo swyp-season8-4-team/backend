@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.mate.dto.request.MateRequest;
 import org.swyp.dessertbee.mate.dto.response.MatesPageResponse;
@@ -13,6 +14,7 @@ import org.swyp.dessertbee.mate.entity.Mate;
 import org.swyp.dessertbee.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.mate.service.MateService;
 import org.swyp.dessertbee.mate.service.SavedMateService;
+import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.util.UUID;
 
@@ -43,9 +45,9 @@ public class SavedMateController {
      * 디저트메이트 삭제
      * */
     @DeleteMapping("/{mateUuid}")
-    public ResponseEntity<String> deleteSavedMate(@PathVariable UUID mateUuid,@RequestBody MateRequest request) {
+    public ResponseEntity<String> deleteSavedMate(@PathVariable UUID mateUuid, @AuthenticationPrincipal UserEntity user) {
 
-        savedMateService.deleteSavedMate(mateUuid, request);
+        savedMateService.deleteSavedMate(mateUuid, user.getUserUuid());
 
         return ResponseEntity.ok("디저트메이트가 성공적으로 삭제되었습니다.");
     }

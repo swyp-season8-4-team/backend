@@ -97,6 +97,7 @@ public class MateService {
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
                 .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
+        System.out.println(userUuid);
 
         //디저트메이트 사진 조회
         List<String> mateImage = imageService.getImagesByTypeAndId(ImageType.MATE, mate.getMateId());
@@ -121,26 +122,17 @@ public class MateService {
         boolean saved = (savedMate != null);
 
 
+        System.out.println(userId);
         //신청했는지 유무 확인
-        MateMember  applyMember = mateMemberRepository.findByMateIdAndUserId(mate.getMateId(), userId)
+        MateMember  member = mateMemberRepository.findByMateIdAndUserId(mate.getMateId(), userId)
                 .orElse(null);
 
-        String applyStatus = "";
+        MateApplyStatus applyStatus;
 
-        if (applyMember == null) {
-            applyStatus = MateApplyStatus.NONE.name();
+        if(member == null) {
+            applyStatus = MateApplyStatus.NONE;
         }else{
-
-
-            if(applyMember.isPending())
-            {
-                applyStatus = MateApplyStatus.PENDING.name();
-            }
-
-            if (applyMember.isApprove()){
-                applyStatus = MateApplyStatus.APPROVED.name();
-            }
-
+            applyStatus = member.getApplyStatus();
         }
 
         return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, creator, profileImage, saved, applyStatus);
@@ -201,10 +193,8 @@ public class MateService {
      * 디저트메이트 전체 조회
      * */
     @Transactional
-    public MatesPageResponse getMates(Pageable pageable, MateRequest request, String keyword) {
+    public MatesPageResponse getMates(Pageable pageable, UUID userUuid, String keyword, Long mateCategoryId) {
 
-        Long mateCategoryId = request.getMateCategoryId();
-        UUID userUuid = request.getUserUuid();
 
 
         Page<Mate> mates = mateRepository.findByDeletedAtIsNullAndMateCategoryId( mateCategoryId, keyword,pageable);
@@ -232,25 +222,8 @@ public class MateService {
                         //신청했는지 유무 확인
                         MateMember applyMember = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndUserId(mate.getMateId(), userId);
 
-                        String applyStatus = "";
 
-                        if (applyMember == null) {
-                            applyStatus = MateApplyStatus.NONE.name();
-                        }else{
-
-
-                            if(applyMember.isPending())
-                            {
-                                applyStatus = MateApplyStatus.PENDING.name();
-                            }
-
-                            if (applyMember.isApprove()){
-                                applyStatus = MateApplyStatus.APPROVED.name();
-                            }
-
-                        }
-
-                        return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator, profileImage, saved, applyStatus);
+                        return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator, profileImage, saved, applyMember.getApplyStatus());
 
                     })
                     .collect(Collectors.toList());
@@ -292,25 +265,7 @@ public class MateService {
                     //신청했는지 유무 확인
                     MateMember applyMember = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndUserId(mate.getMateId(), userId);
 
-                    String applyStatus = "";
-
-                    if (applyMember == null) {
-                        applyStatus = MateApplyStatus.NONE.name();
-                    }else{
-
-
-                        if(applyMember.isPending())
-                        {
-                            applyStatus = MateApplyStatus.PENDING.name();
-                        }
-
-                        if (applyMember.isApprove()){
-                            applyStatus = MateApplyStatus.APPROVED.name();
-                        }
-
-                    }
-
-                    return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator, profileImage, saved, applyStatus);
+                    return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator, profileImage, saved, applyMember.getApplyStatus());
 
                 })
                 .collect(Collectors.toList());
