@@ -87,14 +87,9 @@ public class UserStoreService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         boolean nameExists = userStoreListRepository.existsByUserAndListName(user, listName);
-        boolean colorExists = userStoreListRepository.existsByUserAndIconColorId(user, iconColorId);
 
-        if (nameExists && colorExists) {
-            throw new BusinessException(ErrorCode.STORE_DUPLICATE_LIST);
-        } else if (nameExists) {
+        if (nameExists) {
             throw new BusinessException(ErrorCode.STORE_DUPLICATE_LIST_NAME);
-        } else if (colorExists) {
-            throw new BusinessException(ErrorCode.STORE_DUPLICATE_COLOR);
         }
 
         UserStoreList newList = userStoreListRepository.save(
