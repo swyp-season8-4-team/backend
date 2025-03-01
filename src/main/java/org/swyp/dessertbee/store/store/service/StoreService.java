@@ -11,8 +11,10 @@ import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.mate.dto.response.MateResponse;
 import org.swyp.dessertbee.mate.entity.Mate;
 import org.swyp.dessertbee.mate.entity.MateCategory;
+import org.swyp.dessertbee.mate.entity.SavedMate;
 import org.swyp.dessertbee.mate.repository.MateCategoryRepository;
 import org.swyp.dessertbee.mate.repository.MateRepository;
+import org.swyp.dessertbee.mate.repository.SavedMateRepository;
 import org.swyp.dessertbee.preference.repository.PreferenceRepository;
 import org.swyp.dessertbee.store.menu.dto.request.MenuCreateRequest;
 import org.swyp.dessertbee.store.menu.dto.response.MenuResponse;
@@ -54,6 +56,7 @@ public class StoreService {
     private final ImageService imageService;
     private final MenuService menuService;
     private final UserRepository userRepository;
+    private final SavedMateRepository savedMateRepository;
 
     /** 가게 등록 (이벤트, 쿠폰, 메뉴 + 이미지 포함) */
     public StoreDetailResponse createStore(StoreCreateRequest request,
@@ -359,6 +362,10 @@ public class StoreService {
             List<String> mateThumbnail = imageService.getImagesByTypeAndId(ImageType.MATE, mate.getMateId());
             //int currentMembers = mateMemberRepository.countByMateIdAndApprovalYn(mate.getMateId(), true);
 
+            //저장했는지 유무 확인
+            SavedMate savedMate = savedMateRepository.findByMate_MateIdAndUserId(mate.getMateId(), userId);
+            boolean mateSaved = (savedMate != null);
+
             return MateResponse.builder()
                     .mateUuid(mate.getMateUuid())
                     .mateCategory(mateCategory)
@@ -367,6 +374,7 @@ public class StoreService {
                     .content(mate.getContent())
                     .nickname(mateCreator.getNickname())
                     .recruitYn(mate.getRecruitYn())
+                    .saved(mateSaved)
                     .build();
         }).toList();
 
@@ -386,16 +394,19 @@ public class StoreService {
                                            StoreUpdateRequest request,
                                            List<MultipartFile> storeImageFiles,
                                            List<MultipartFile> ownerPickImageFiles,
-                                           List<MultipartFile> menuImageFiles,
-                                           UserEntity user) {
+                                           List<MultipartFile> menuImageFiles) {
         // 가게 존재 여부 및 삭제 여부 체크
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
         Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
-        if (!store.getOwnerUuid().equals(user.getUserUuid())) {
+        if (!store.getOwnerUuid().equals(request.getUserUuid())) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
         }
+
+        Long ownerId = userRepository.findIdByUserUuid(request.getUserUuid());
+        UserEntity user = userRepository.findById(ownerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 가게 기본 정보 업데이트
         store.setName(request.getName());

@@ -115,8 +115,7 @@ public class StoreController {
             @RequestPart("request") String requestJson,
             @RequestPart(value = "storeImageFiles", required = false) List<MultipartFile> storeImageFiles,
             @RequestPart(value = "ownerPickImageFiles", required = false) List<MultipartFile> ownerPickImageFiles,
-            @RequestPart(value = "menuImageFiles", required = false) List<MultipartFile> menuImageFiles,
-            @AuthenticationPrincipal UserEntity user) {
+            @RequestPart(value = "menuImageFiles", required = false) List<MultipartFile> menuImageFiles) {
         try {
             // StoreUpdateRequest는 StoreCreateRequest와 유사한 구조를 가정합니다.
             StoreUpdateRequest request = objectMapper.readValue(requestJson, StoreUpdateRequest.class);
@@ -127,7 +126,7 @@ public class StoreController {
             menuImageFiles = (menuImageFiles != null) ? menuImageFiles : Collections.emptyList();
 
             StoreDetailResponse updatedStore = storeService.updateStore(storeUuid, request,
-                    storeImageFiles, ownerPickImageFiles, menuImageFiles, user);
+                    storeImageFiles, ownerPickImageFiles, menuImageFiles);
             return ResponseEntity.ok(updatedStore);
         } catch (Exception e) {
             e.printStackTrace();
