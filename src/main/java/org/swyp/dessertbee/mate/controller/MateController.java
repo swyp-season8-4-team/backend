@@ -102,7 +102,7 @@ public class MateController {
             @RequestParam(required = false, defaultValue = "0") int from,
             @RequestParam(required = false, defaultValue = "10") int to,
             @RequestParam(required = false, defaultValue = "") String keyword,
-            @RequestBody MateRequest request
+            @ModelAttribute MateRequest request
     ) {
 
         if (from >= to) {
