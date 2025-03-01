@@ -79,6 +79,7 @@ public class StoreController {
      * 반경 내 가게 조회 (인증된 사용자의 취향 태그 기반)
      */
     @Operation(summary = "반경 내 사용자 취향 가게 조회", description = "반경 내에서 사용자의 취향 태그를 가진 가게를 조회합니다.")
+    @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
     @GetMapping("/map/my-preferences")
     public ResponseEntity<List<StoreMapResponse>> getStoresByMyPreferences(
             @RequestParam("latitude") Double latitude,
