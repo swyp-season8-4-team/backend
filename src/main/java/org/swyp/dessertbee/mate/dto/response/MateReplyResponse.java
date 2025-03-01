@@ -8,6 +8,7 @@ import org.swyp.dessertbee.mate.entity.MateMember;
 import org.swyp.dessertbee.mate.entity.MateReply;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,6 +25,8 @@ public class MateReplyResponse {
     private String content;
     private List<String> profileImage;
     private UserEntity.Gender gender;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
 
     public static MateReplyResponse fromEntity(MateReply reply,
@@ -40,6 +43,8 @@ public class MateReplyResponse {
                 .userUuid(user.getUserUuid())
                 .content(reply.getContent())
                 .profileImage(profileImage)
+                .createdAt(reply.getCreatedAt())
+                .updatedAt(reply.getUpdatedAt())
                 .build();
 
     }
