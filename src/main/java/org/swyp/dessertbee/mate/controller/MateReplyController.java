@@ -83,8 +83,8 @@ public class MateReplyController {
      * */
     @GetMapping
     public ResponseEntity<MateReplyPageResponse> getReplies(@PathVariable UUID mateUuid,
-                                                           @RequestParam int from,
-                                                           @RequestParam int to) {
+                                                            @RequestParam(required = false, defaultValue = "0") int from,
+                                                            @RequestParam(required = false, defaultValue = "10") int to) {
 
         if (from >= to) {
             throw new MateExceptions.FromToMateException("잘못된 범위 요청입니다.");
