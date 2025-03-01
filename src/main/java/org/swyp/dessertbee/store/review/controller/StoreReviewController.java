@@ -1,17 +1,13 @@
 package org.swyp.dessertbee.store.review.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.store.review.dto.request.StoreReviewCreateRequest;
 import org.swyp.dessertbee.store.review.dto.request.StoreReviewUpdateRequest;
 import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
@@ -31,6 +27,7 @@ public class StoreReviewController {
 
     /** 리뷰 등록 */
     @Operation(summary = "한줄 리뷰 등록", description = "한줄 리뷰를 등록합니다.")
+    @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
     @PostMapping
     public ResponseEntity<StoreReviewResponse> createReview(
             @PathVariable UUID storeUuid,
@@ -52,6 +49,7 @@ public class StoreReviewController {
 
     /** 리뷰 수정 */
     @Operation(summary = "한줄 리뷰 수정", description = "한줄 리뷰를 수장합니다.")
+    @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
     @PatchMapping("/{reviewUuid}")
     public ResponseEntity<StoreReviewResponse> updateReview(
             @PathVariable UUID storeUuid,
@@ -66,6 +64,7 @@ public class StoreReviewController {
 
     /** 리뷰 삭제 */
     @Operation(summary = "한줄 리뷰 삭제", description = "한줄 리뷰를 삭제합니다.")
+    @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
     @DeleteMapping("/{reviewUuid}")
     public ResponseEntity<Void> deleteReview(@PathVariable UUID storeUuid, @PathVariable UUID reviewUuid) {
         storeReviewService.deleteReview(storeUuid, reviewUuid);
