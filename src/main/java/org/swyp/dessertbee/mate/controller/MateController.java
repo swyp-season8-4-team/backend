@@ -56,7 +56,7 @@ public class MateController {
      */
     @Operation(summary = "메이트 상세 정보 조회", description = "디저트메이트 상세 정보 조회합니다.")
     @GetMapping("/{mateUuid}")
-    public ResponseEntity<MateDetailResponse> getMateDetail(@PathVariable UUID mateUuid, @RequestBody MateRequest request) {
+    public ResponseEntity<MateDetailResponse> getMateDetail(@PathVariable UUID mateUuid, @ModelAttribute MateRequest request) {
 
         //request 객체로 받아서 Uuid 넣기
         UUID userUuid = request.getUserUuid();
@@ -121,7 +121,7 @@ public class MateController {
     @GetMapping("/me")
     public ResponseEntity<MatesPageResponse> getMyMates( @RequestParam(required = false, defaultValue = "0") int from,
                                                          @RequestParam(required = false, defaultValue = "10") int to,
-                                                         @RequestBody MateRequest request){
+                                                         @ModelAttribute MateRequest request){
 
         //request 객체로 받아서 Uuid 넣기
         UUID userUuid = request.getUserUuid();
