@@ -1,6 +1,6 @@
 package org.swyp.dessertbee.auth.jwt;
 
-import io.jsonwebtoken.ExpiredJwtException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,12 +13,13 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.swyp.dessertbee.common.exception.ErrorCode;
+import org.swyp.dessertbee.common.exception.ErrorResponse;
 import org.swyp.dessertbee.role.entity.RoleType;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
-
 /**
  * JWT 토큰을 검증하고 인증을 처리하는 필터
  * Spring Security Filter Chain에서 사용됨
@@ -38,25 +39,23 @@ public class JWTFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
 
-        try {
-            String token = extractTokenFromHeader(request);
+        String token = extractTokenFromHeader(request);
 
-            if (token != null && jwtUtil.validateToken(token, true)) {
+        if (token != null) {
+            ErrorCode errorCode = jwtUtil.validateToken(token, true);
+
+            if (errorCode == null) {
                 // 토큰이 유효한 경우 인증 처리
                 Authentication authentication = createAuthentication(token);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-
-                log.debug("Set Authentication to security context for '{}' token",
-                        maskToken(token));
+                log.debug("인증 성공: '{}'", maskToken(token));
+            } else {
+                // 토큰 검증 실패 - 구체적인 오류 코드로 응답
+                SecurityContextHolder.clearContext();
+                handleJwtException(response, errorCode);
+                return; // 필터 체인 중단
             }
-
-        } catch (ExpiredJwtException e) {
-            log.info("만료된 JWT 토큰입니다.");
-            // 만료된 토큰 처리는 프론트엔드에서 처리하도록 함
-        } catch (Exception e) {
-            log.error("JWT 토큰 처리 중 오류 발생", e);
         }
-
         filterChain.doFilter(request, response);
     }
 
@@ -116,5 +115,22 @@ public class JWTFilter extends OncePerRequestFilter {
         return path.startsWith("/api/auth/") ||
                 path.startsWith("/api/oauth2/") ||
                 path.startsWith("/api/public/");
+    }
+
+    /**
+     * JWT 예외 처리 및 응답 생성
+     */
+    private void handleJwtException(HttpServletResponse response, ErrorCode errorCode) throws IOException {
+        response.setStatus(errorCode.getHttpStatus().value());
+        response.setContentType("application/json;charset=UTF-8");
+
+        ErrorResponse errorResponse = ErrorResponse.from(errorCode);
+
+        // JavaTimeModule 등록
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+        objectMapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+
+        objectMapper.writeValue(response.getWriter(), errorResponse);
     }
 }

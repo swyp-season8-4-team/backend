@@ -116,17 +116,8 @@ public class AuthController {
     @PostMapping("/token/refresh")
     public ResponseEntity<TokenResponse> refreshToken(
             @CookieValue(name = "refreshToken", required = true) String refreshToken) {
-        try {
-            // 리프레시 토큰으로 새 액세스 토큰 발급
-            TokenResponse tokenResponse = authService.refreshAccessToken(refreshToken);
-            return ResponseEntity.ok(tokenResponse);
-        } catch (BusinessException e) {
-            log.warn("토큰 재발급 실패: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        } catch (Exception e) {
-            log.error("토큰 재발급 중 오류 발생", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        TokenResponse tokenResponse = authService.refreshAccessToken(refreshToken);
+        return ResponseEntity.ok(tokenResponse);
     }
 }
 

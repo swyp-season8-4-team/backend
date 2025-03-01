@@ -24,6 +24,13 @@ public enum ErrorCode {
     AUTHENTICATION_FAILED(HttpStatus.UNAUTHORIZED, "A007", "인증에 실패했습니다."),
     SIGNUP_RESTRICTED_DELETED_ACCOUNT(HttpStatus.FORBIDDEN, "A007", "탈퇴한 계정은 30일 이후에 재가입이 가능합니다."),
 
+    // JWT
+    JWT_SIGNATURE_INVALID(HttpStatus.UNAUTHORIZED, "J001", "유효하지 않은 JWT 서명입니다."),
+    JWT_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "J002", "만료된 JWT 토큰입니다."),
+    JWT_TOKEN_UNSUPPORTED(HttpStatus.UNAUTHORIZED, "J003", "지원되지 않는 JWT 토큰 형식입니다."),
+    JWT_TOKEN_MALFORMED(HttpStatus.UNAUTHORIZED, "J004", "잘못된 형식의 JWT 토큰입니다."),
+    JWT_TOKEN_MISSING(HttpStatus.UNAUTHORIZED, "J005", "JWT 토큰이 제공되지 않았습니다."),
+
     // Email
     EMAIL_SENDING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "E005", "이메일 발송에 실패했습니다."),
     TOO_MANY_VERIFICATION_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "E001", "너무 많은 인증 요청이 있었습니다. 잠시 후 다시 시도해주세요."),

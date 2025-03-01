@@ -11,6 +11,7 @@ import org.swyp.dessertbee.auth.jwt.JWTUtil;
 import org.swyp.dessertbee.auth.repository.AuthRepository;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
+import org.swyp.dessertbee.common.exception.ErrorResponse;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
@@ -119,9 +120,10 @@ public class TokenService {
     public TokenResponse refreshAccessToken(String refreshToken) {
         try {
             // 리프레시 토큰 검증
-            if (!jwtUtil.validateToken(refreshToken, false)) {
+            ErrorCode errorCode = jwtUtil.validateToken(refreshToken, false);
+            if (errorCode != null) {
                 log.warn("리프레시 토큰 검증 실패 - 유효하지 않은 토큰");
-                throw new BusinessException(ErrorCode.INVALID_VERIFICATION_TOKEN, "유효하지 않은 리프레시 토큰입니다.");
+                throw new BusinessException(errorCode, "유효하지 않은 리프레시 토큰입니다.");
             }
 
             // 토큰에서 이메일 추출
