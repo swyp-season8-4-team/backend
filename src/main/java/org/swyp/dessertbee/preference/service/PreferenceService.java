@@ -103,7 +103,9 @@ public class PreferenceService {
         // 모든 저장된 가게의 선호도를 새로운 선호도로 업데이트
         for (SavedStore savedStore : savedStores) {
             savedStore.getUserPreferences().clear();
-            savedStore.setUserPreferences(newPreferences.stream().map(PreferenceEntity::getPreferenceName).toList());
+            savedStore.setUserPreferences(newPreferences.stream()
+                    .map(PreferenceEntity::getId)
+                    .toList());
         }
 
         // 변경된 가게 선호도 저장

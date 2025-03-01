@@ -73,7 +73,7 @@ public class UserStoreController {
     @Operation(summary = "리스트에 가게 저장", description = "해당 리스트에 가게를 저장합니다.")
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
     @PostMapping("/lists/{listId}/stores/{storeUuid}")
-    public ResponseEntity<SavedStoreResponse> addStoreToList(@PathVariable Long listId, @PathVariable UUID storeUuid, @RequestBody List<String> userPreferences) {
+    public ResponseEntity<SavedStoreResponse> addStoreToList(@PathVariable Long listId, @PathVariable UUID storeUuid, @RequestBody List<Long> userPreferences) {
         return ResponseEntity.ok(userStoreService.addStoreToList(listId, storeUuid, userPreferences));
     }
 

@@ -141,7 +141,7 @@ public class UserStoreService {
     }
 
     /** 리스트에 가게 추가 */
-    public SavedStoreResponse addStoreToList(Long listId, UUID storeUuid, List<String> userPreferences) {
+    public SavedStoreResponse addStoreToList(Long listId, UUID storeUuid, List<Long> userPreferences) {
         UserStoreList list = userStoreListRepository.findById(listId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_LIST_NOT_FOUND));
 
