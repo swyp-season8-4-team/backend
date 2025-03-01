@@ -7,6 +7,8 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 
 /**
  * 전역 예외 처리를 위한 핸들러
@@ -59,6 +61,20 @@ public class GlobalExceptionHandler {
         return ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, "잘못된 요청 형식입니다.");
     }
 
+    /**
+     * PreAuthorize를 위한 스프링 시큐리티 접근 거부 예외 처리
+     */
+    @ExceptionHandler({AccessDeniedException.class, AuthorizationDeniedException.class})
+    protected ResponseEntity<ErrorResponse> handleAccessDeniedException(Exception e) {
+        log.warn("Access denied: {}", e.getMessage());
+
+        // @PreAuthorize 어노테이션에 의한 권한 거부 시
+        if (e instanceof AuthorizationDeniedException) {
+            return ErrorResponse.of(ErrorCode.ROLE_ACCESS_DENIED);
+        }
+
+        return ErrorResponse.of(ErrorCode.UNAUTHORIZED_ACCESS);
+    }
 
     /**
      * 그 외 모든 예외 처리
