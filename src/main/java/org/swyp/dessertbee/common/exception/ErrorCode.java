@@ -23,6 +23,7 @@ public enum ErrorCode {
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "A006", "잘못된 인증 정보입니다."),
     AUTHENTICATION_FAILED(HttpStatus.UNAUTHORIZED, "A007", "인증에 실패했습니다."),
     SIGNUP_RESTRICTED_DELETED_ACCOUNT(HttpStatus.FORBIDDEN, "A007", "탈퇴한 계정은 30일 이후에 재가입이 가능합니다."),
+    ROLE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "U010", "해당 권한으로는 접근이 불가합니다."),
 
     // JWT
     JWT_SIGNATURE_INVALID(HttpStatus.UNAUTHORIZED, "J001", "유효하지 않은 JWT 서명입니다."),
