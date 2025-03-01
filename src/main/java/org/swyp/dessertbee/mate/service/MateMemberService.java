@@ -12,6 +12,7 @@ import org.swyp.dessertbee.mate.dto.request.MateApplyMemberRequest;
 import org.swyp.dessertbee.mate.dto.request.MateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateMemberResponse;
 import org.swyp.dessertbee.mate.entity.Mate;
+import org.swyp.dessertbee.mate.entity.MateApplyStatus;
 import org.swyp.dessertbee.mate.entity.MateMember;
 import org.swyp.dessertbee.mate.entity.MateMemberGrade;
 import org.swyp.dessertbee.mate.exception.MateExceptions;
@@ -50,7 +51,7 @@ public class MateMemberService {
                         .mateId(mateId)
                         .userId(userId)
                         .grade(MateMemberGrade.CREATOR)
-                        .approvalYn(true)
+                        .applyStatus(MateApplyStatus.APPROVED)
                         .build()
         );
     }
@@ -65,7 +66,7 @@ public class MateMemberService {
 
 
             // mateId로 모든 멤버 조회
-            List<MateMember> members = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndApprovalYnTrue(mateId);
+            List<MateMember> members = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndApplyStatus(mateId, MateApplyStatus.APPROVED);
 
             // 각 멤버에 대해 softDelete 처리
             for (MateMember member : members) {
@@ -93,7 +94,7 @@ public class MateMemberService {
         //mateId 유효성 검사
         MateUserIds validateMate = validateMate(mateUuid);
 
-        List<MateMember> mateMembers = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndApprovalYnTrue(validateMate.getMateId());
+        List<MateMember> mateMembers = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndApplyStatus(validateMate.getMateId(), MateApplyStatus.APPROVED);
 
         //userId로 userUuid 조회
         List<UserEntity> users = mateMembers.stream()
@@ -121,7 +122,7 @@ public class MateMemberService {
                     List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
 
                     // MateMemberResponse 생성
-                    return MateMemberResponse.fromEntity(mateMember, mateUuid, user, profileImages);
+                    return MateMemberResponse.fromEntity(mateMember, user, profileImages);
                 })
                 .toList();
     }
@@ -155,14 +156,13 @@ public class MateMemberService {
                             .mateId(mateId)
                             .userId(userId)
                             .grade(MateMemberGrade.NORMAL)
-                            .approvalYn(false)
-                            .bannedYn(false)
+                            .applyStatus(MateApplyStatus.PENDING)
                             .build()
             );
             return;
         }
 
-        if (mateMember.getBannedYn()) {
+        if (mateMember.isBanned()) {
             throw new MateApplyBannedException("디저트메이트 강퇴 당한 사람입니다. 신청 불가능합니다.");
         }
 
@@ -186,8 +186,7 @@ public class MateMemberService {
                             .mateId(mateId)
                             .userId(userId)
                             .grade(MateMemberGrade.NORMAL)
-                            .approvalYn(false)
-                            .bannedYn(false)
+                            .applyStatus(MateApplyStatus.PENDING)
                             .build()
             );
             return;  // ✅ 재신청이 끝나면 return으로 이후 예외 방지
@@ -228,7 +227,7 @@ public class MateMemberService {
         MateUserIds validateMate = validateMate(mateUuid);
         Long mateId = validateMate.getMateId();
 
-        List<MateMember> mateMembers = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndApprovalYnFalse(validateMate.getMateId());
+        List<MateMember> mateMembers = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndApplyStatus(validateMate.getMateId(), MateApplyStatus.PENDING);
 
         //userId로 userUuid 조회
         List<UserEntity> users = mateMembers.stream()
@@ -256,7 +255,7 @@ public class MateMemberService {
                     List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
 
                     // MateMemberResponse 생성
-                    return MateMemberResponse.fromEntity(mateMember, mateUuid, user, profileImages);
+                    return MateMemberResponse.fromEntity(mateMember, user, profileImages);
                 })
                 .toList();
     }
@@ -286,8 +285,10 @@ public class MateMemberService {
                     .orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 멤버입니다."));
 
 
-            mateMemberRepository.updateApprovalYn(mateId, target.getUserId());
+            mateMemberRepository.updateApplyStatus(MateApplyStatus.APPROVED, mateId, target.getUserId());
         }
+
+
     }
 
     /**
@@ -313,6 +314,8 @@ public class MateMemberService {
                     .orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 멤버입니다."));
 
             try {
+
+                mateMemberRepository.updateApplyStatus(MateApplyStatus.REJECTED, mateId, target.getUserId());
                 target.softDelete();
 
                 // 변경된 모든 멤버 저장
@@ -350,7 +353,9 @@ public class MateMemberService {
                     .orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 멤버입니다."));
 
             try {
-                target.removeDelete();
+                mateMemberRepository.updateApplyStatus(MateApplyStatus.BANNED, mateId, target.getUserId());
+
+                target.softDelete();
 
                 // 변경된 모든 멤버 저장
                 mateMemberRepository.save(target);
