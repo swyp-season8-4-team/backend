@@ -44,7 +44,7 @@ public class StoreReviewService {
 
         StoreReview review = StoreReview.builder()
                 .storeId(storeId)
-                .userId(request.getUserId())
+                .userUuid(request.getUserUuid())
                 .content(request.getContent())
                 .rating(request.getRating())
                 .build();
@@ -61,7 +61,8 @@ public class StoreReviewService {
 
         List<String> imageUrls = imageService.getImagesByTypeAndId(ImageType.SHORT, review.getReviewId());
 
-        UserEntity reviewer = userRepository.findById(request.getUserId())
+        Long userId = userRepository.findIdByUserUuid(request.getUserUuid());
+        UserEntity reviewer = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, reviewer.getId());
 
@@ -82,7 +83,8 @@ public class StoreReviewService {
                 .map(review -> {
                     List<String> images = imageService.getImagesByTypeAndId(ImageType.SHORT, review.getReviewId());
 
-                    UserEntity reviewer = userRepository.findById(review.getUserId())
+                    Long userId = userRepository.findIdByUserUuid(review.getUserUuid());
+                    UserEntity reviewer = userRepository.findById(userId)
                             .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
                     List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, reviewer.getId());
 
@@ -115,7 +117,8 @@ public class StoreReviewService {
 
         List<String> updatedImages = imageService.getImagesByTypeAndId(ImageType.SHORT, reviewId);
 
-        UserEntity reviewer = userRepository.findById(review.getUserId())
+        Long userId = userRepository.findIdByUserUuid(review.getUserUuid());
+        UserEntity reviewer = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, reviewer.getId());
 

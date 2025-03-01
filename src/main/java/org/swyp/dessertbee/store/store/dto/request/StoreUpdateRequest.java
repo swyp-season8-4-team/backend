@@ -16,7 +16,7 @@ import java.util.UUID;
 public class StoreUpdateRequest {
 
     @NotNull
-    private String userUuid;
+    private UUID userUuid;
 
     @NotBlank
     private String name;

@@ -13,8 +13,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class StoreReviewCreateRequest {
 
-    @NotNull(message = "유저 ID는 필수입니다.")
-    private Long userId;
+    @NotNull(message = "유저 UUID는 필수입니다.")
+    private UUID userUuid;
 
     @NotBlank(message = "리뷰 내용은 필수입니다.")
     private String content;

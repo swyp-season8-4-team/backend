@@ -339,7 +339,8 @@ public class StoreService {
                 reviews.stream().map(StoreReview::getReviewId).toList());
 
         List<StoreReviewResponse> reviewResponses = reviews.stream().map(review -> {
-            UserEntity reviewer = userRepository.findById(review.getUserId())
+            Long reviewerId = userRepository.findIdByUserUuid(review.getUserUuid());
+            UserEntity reviewer = userRepository.findById(reviewerId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
             List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, reviewer.getId());
 
