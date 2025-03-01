@@ -15,7 +15,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class MateMemberResponse {
 
-    private UUID mateUuid;
     private Long userId;
     private UUID userUUid;
     private String grade;
@@ -30,7 +29,6 @@ public class MateMemberResponse {
                                                 UserEntity user,
                                                 List<String> profileImage) {
         return MateMemberResponse.builder()
-                .mateUuid(mateUuid)
                 .userId(user.getId())
                 .userUUid(user.getUserUuid())
                 .gender(user.getGender())
