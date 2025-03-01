@@ -58,6 +58,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.0'
 
     implementation 'software.amazon.awssdk:s3:2.20.86'
+    implementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 tasks.named('test') {
