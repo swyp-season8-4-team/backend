@@ -34,17 +34,8 @@ public class StoreReviewController {
     @PostMapping
     public ResponseEntity<StoreReviewResponse> createReview(
             @PathVariable UUID storeUuid,
-            @RequestPart(value = "request") String requestJson,
+            @RequestPart(value = "request") StoreReviewCreateRequest request,
             @RequestPart(required = false) List<MultipartFile> images) {
-
-        // JSON String을 객체로 변환
-        ObjectMapper objectMapper = new ObjectMapper();
-        StoreReviewCreateRequest request;
-        try {
-            request = objectMapper.readValue(requestJson, StoreReviewCreateRequest.class);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("JSON 요청 양식 오류", e);
-        }
 
         log.info("📥 요청 데이터: {}", request);
         StoreReviewResponse response = storeReviewService.createReview(storeUuid, request, images);
