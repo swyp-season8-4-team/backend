@@ -267,9 +267,9 @@ public class AuthServiceImpl implements AuthService {
         try {
 
             // 토큰 유효성 검사
-            if (!jwtUtil.validateToken(token, true)) {
+            if (jwtUtil.validateToken(token, true) != null) {
                 log.warn("토큰 검증 실패 - 만료되거나 유효하지 않은 인증 토큰: {}", token);
-                throw new InvalidVerificationTokenException("만료되었거나 유효하지 않은 인증 토큰입니다.");
+                throw new InvalidVerificationTokenException("만료되었거나 유효하지 않은 이메일 인증 토큰입니다.");
             }
 
             // 토큰에서 이메일 추출
