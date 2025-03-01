@@ -8,16 +8,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.store.store.service.UserStoreService;
-import org.swyp.dessertbee.user.dto.NicknameValidationRequestDto;
-import org.swyp.dessertbee.user.dto.UserDetailResponseDto;
-import org.swyp.dessertbee.user.dto.UserResponseDto;
-import org.swyp.dessertbee.user.dto.UserUpdateRequestDto;
+import org.swyp.dessertbee.user.dto.request.NicknameValidationRequestDto;
+import org.swyp.dessertbee.user.dto.response.UserDetailResponseDto;
+import org.swyp.dessertbee.user.dto.response.UserResponseDto;
+import org.swyp.dessertbee.user.dto.request.UserUpdateRequestDto;
 import org.swyp.dessertbee.user.service.UserService;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * 사용자 정보 조회 관련 컨트롤러

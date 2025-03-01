@@ -159,9 +159,9 @@ public class AuthServiceImpl implements AuthService {
 
             // 4. Access Token, Refresh Token 생성
             boolean keepLoggedIn = request.isKeepLoggedIn();
-            String accessToken = jwtUtil.createAccessToken(user.getEmail(), roles, request.isKeepLoggedIn());
-            String refreshToken = jwtUtil.createRefreshToken(user.getEmail(), roles, request.isKeepLoggedIn());
-            long expiresIn = request.isKeepLoggedIn() ?
+            String accessToken = jwtUtil.createAccessToken(user.getEmail(), roles, keepLoggedIn);
+            String refreshToken = jwtUtil.createRefreshToken(user.getEmail(), roles, keepLoggedIn);
+            long expiresIn = keepLoggedIn ?
                     jwtUtil.getLONG_ACCESS_TOKEN_EXPIRE() :
                     jwtUtil.getSHORT_ACCESS_TOKEN_EXPIRE();
 

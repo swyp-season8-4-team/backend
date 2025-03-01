@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.user.dto;
+package org.swyp.dessertbee.user.dto.request;
 
 import jakarta.validation.constraints.Pattern;
 import lombok.AccessLevel;

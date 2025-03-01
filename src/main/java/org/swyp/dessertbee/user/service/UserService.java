@@ -1,9 +1,9 @@
 package org.swyp.dessertbee.user.service;
 
 import org.springframework.web.multipart.MultipartFile;
-import org.swyp.dessertbee.user.dto.UserDetailResponseDto;
-import org.swyp.dessertbee.user.dto.UserResponseDto;
-import org.swyp.dessertbee.user.dto.UserUpdateRequestDto;
+import org.swyp.dessertbee.user.dto.response.UserDetailResponseDto;
+import org.swyp.dessertbee.user.dto.response.UserResponseDto;
+import org.swyp.dessertbee.user.dto.request.UserUpdateRequestDto;
 import org.swyp.dessertbee.user.entity.NicknameValidationPurpose;
 
 public interface UserService {

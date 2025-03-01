@@ -3,7 +3,7 @@ package org.swyp.dessertbee.user.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.swyp.dessertbee.user.dto.MbtiResponseDto;
+import org.swyp.dessertbee.user.dto.response.MbtiResponseDto;
 import org.swyp.dessertbee.user.repository.MbtiRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;

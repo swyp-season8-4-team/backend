@@ -3,7 +3,7 @@ package org.swyp.dessertbee.user.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.swyp.dessertbee.user.dto.MbtiResponseDto;
+import org.swyp.dessertbee.user.dto.response.MbtiResponseDto;
 import org.swyp.dessertbee.user.service.MbtiService;
 
 import java.util.List;
