@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.user.dto;
+package org.swyp.dessertbee.user.dto.response;
 
 import lombok.AccessLevel;
 import lombok.Builder;
