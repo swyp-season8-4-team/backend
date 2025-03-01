@@ -7,7 +7,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.swyp.dessertbee.mate.dto.request.MateRequest;
 import org.swyp.dessertbee.mate.dto.response.MatesPageResponse;
+import org.swyp.dessertbee.mate.entity.Mate;
 import org.swyp.dessertbee.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.mate.service.MateService;
 import org.swyp.dessertbee.mate.service.SavedMateService;
@@ -27,10 +29,10 @@ public class SavedMateController {
      * 디저트메이트 저장
      * */
     @PostMapping("/{mateUuid}")
-    public ResponseEntity<String> saveMate(@PathVariable UUID mateUuid, UUID userUuid) {
+    public ResponseEntity<String> saveMate(@PathVariable UUID mateUuid,@RequestBody MateRequest request) {
 
 
-        savedMateService.saveMate(mateUuid, userUuid);
+        savedMateService.saveMate(mateUuid, request);
 
 
         return ResponseEntity.ok("디저트메이트가 성공적으로 저장되었습니다.");
@@ -41,9 +43,9 @@ public class SavedMateController {
      * 디저트메이트 삭제
      * */
     @DeleteMapping("/{mateUuid}")
-    public ResponseEntity<String> deleteSavedMate(@PathVariable UUID mateUuid, UUID userUuid) {
+    public ResponseEntity<String> deleteSavedMate(@PathVariable UUID mateUuid,@RequestBody MateRequest request) {
 
-        savedMateService.deleteSavedMate(mateUuid, userUuid);
+        savedMateService.deleteSavedMate(mateUuid, request);
 
         return ResponseEntity.ok("디저트메이트가 성공적으로 삭제되었습니다.");
     }
@@ -55,7 +57,7 @@ public class SavedMateController {
     private ResponseEntity<MatesPageResponse> getSavedMates(
             @RequestParam int from,
             @RequestParam int to,
-            UUID userUuid
+            @RequestBody MateRequest request
     ){
 
         if (from >= to) {
@@ -66,6 +68,6 @@ public class SavedMateController {
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
 
-        return ResponseEntity.ok(savedMateService.getSavedMates(pageable, userUuid));
+        return ResponseEntity.ok(savedMateService.getSavedMates(pageable, request));
     }
 }

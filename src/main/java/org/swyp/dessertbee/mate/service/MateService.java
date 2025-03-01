@@ -12,6 +12,7 @@ import org.swyp.dessertbee.common.repository.ReportRepository;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.mate.dto.request.MateCreateRequest;
 import org.swyp.dessertbee.mate.dto.request.MateReportRequest;
+import org.swyp.dessertbee.mate.dto.request.MateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.mate.dto.response.MatesPageResponse;
 import org.swyp.dessertbee.mate.entity.*;
@@ -200,7 +201,10 @@ public class MateService {
      * 디저트메이트 전체 조회
      * */
     @Transactional
-    public MatesPageResponse getMates(Pageable pageable,UUID userUuid, Long mateCategoryId, String keyword) {
+    public MatesPageResponse getMates(Pageable pageable, MateRequest request, String keyword) {
+
+        Long mateCategoryId = request.getMateCategoryId();
+        UUID userUuid = request.getUserUuid();
 
 
         Page<Mate> mates = mateRepository.findByDeletedAtIsNullAndMateCategoryId( mateCategoryId, keyword,pageable);

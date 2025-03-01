@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.swyp.dessertbee.mate.dto.request.MateApplyMemberRequest;
+import org.swyp.dessertbee.mate.dto.request.MateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateMemberResponse;
 import org.swyp.dessertbee.mate.service.MateMemberService;
 import org.swyp.dessertbee.mate.service.MateService;
@@ -34,9 +36,10 @@ public class MateMemberController {
      * 디저트 메이트 멤버 신청 api
      * */
     @PostMapping("/apply")
-    public ResponseEntity<String> applyMate(@PathVariable UUID mateUuid, UUID userUuid) {
+        public ResponseEntity<String> applyMate(@PathVariable UUID mateUuid,@RequestBody MateRequest request) {
 
-        mateMemberService.applyMate(mateUuid ,userUuid);
+
+        mateMemberService.applyMate(mateUuid ,request);
         return ResponseEntity.ok("디저트메이트에 성공적으로 신청되었습니다.");
     }
 
@@ -44,9 +47,10 @@ public class MateMemberController {
      * 디저트메이트 멤버 신청 취소 api
      * */
     @DeleteMapping("/apply")
-    public ResponseEntity<String> cancelApplyMate(@PathVariable UUID mateUuid, UUID userUuid) {
+    public ResponseEntity<String> cancelApplyMate(@PathVariable UUID mateUuid,@RequestBody MateRequest request) {
 
-        mateMemberService.cancelApplyMate(mateUuid, userUuid);
+
+        mateMemberService.cancelApplyMate(mateUuid, request);
         return ResponseEntity.ok("디저트메이트 성공적으로 신청 취소되었습니다.");
     }
     /**
@@ -63,9 +67,9 @@ public class MateMemberController {
      * 디저트 메이트 멤버 신청 수락 api
      * */
     @PatchMapping("/apply")
-    public ResponseEntity<String> acceptMemeber(@PathVariable UUID mateUuid, UUID creatorUuid, UUID targetUuid) {
+    public ResponseEntity<String> acceptMemeber(@PathVariable UUID mateUuid, @RequestBody MateApplyMemberRequest request) {
 
-        mateMemberService.acceptMember(mateUuid, creatorUuid, targetUuid);
+        mateMemberService.acceptMember(mateUuid, request);
         return ResponseEntity.ok("팀원이 되었습니다~!");
     }
 
@@ -73,9 +77,9 @@ public class MateMemberController {
      * 디저트 메이트 멤버 신청 거절 api
      * */
     @DeleteMapping("/reject")
-    public ResponseEntity<String> rejectMemeber(@PathVariable UUID mateUuid, UUID creatorUuid, UUID targetUuid) {
+    public ResponseEntity<String> rejectMemeber(@PathVariable UUID mateUuid, @RequestBody MateApplyMemberRequest request) {
 
-        mateMemberService.rejectMember(mateUuid, creatorUuid, targetUuid);
+        mateMemberService.rejectMember(mateUuid, request);
 
         return ResponseEntity.ok("거절 되었습니다.");
     }
@@ -84,9 +88,9 @@ public class MateMemberController {
      * 디저트 메이트 멤버 강퇴 api
      * */
     @DeleteMapping("/members")
-    public ResponseEntity<String> bannedMember(@PathVariable UUID mateUuid, UUID creatorUuid, UUID targetUuid) {
+    public ResponseEntity<String> bannedMember(@PathVariable UUID mateUuid, @RequestBody MateApplyMemberRequest request) {
 
-        mateMemberService.bannedMember(mateUuid, creatorUuid, targetUuid);
+        mateMemberService.bannedMember(mateUuid, request);
 
         return ResponseEntity.ok("성공적으로 강퇴 되었습니다.");
     }
@@ -95,9 +99,9 @@ public class MateMemberController {
      * 디저트 메이트 멤버 탈퇴 api
      * */
     @DeleteMapping("/leave")
-    public ResponseEntity<String> leaveMember(@PathVariable UUID mateUuid, UUID userUuid) {
+    public ResponseEntity<String> leaveMember(@PathVariable UUID mateUuid,@RequestBody MateRequest request) {
 
-        mateMemberService.leaveMember(mateUuid, userUuid);
+        mateMemberService.leaveMember(mateUuid, request);
         return ResponseEntity.ok("성공적으로 탈퇴 되었습니다.");
     }
 }

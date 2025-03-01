@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.service.ImageService;
+import org.swyp.dessertbee.mate.dto.request.MateRequest;
 import org.swyp.dessertbee.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.mate.dto.response.MatesPageResponse;
 import org.swyp.dessertbee.mate.entity.Mate;
@@ -42,13 +43,13 @@ public class SavedMateService {
      * 디저트메이트 저장
      * */
     @Transactional
-    public void saveMate(UUID mateUuid, UUID userUuid) {
+    public void saveMate(UUID mateUuid, MateRequest request) {
 
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
                 .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
         // userUuid로 userId 조회
-        Long userId = userRepository.findIdByUserUuid(userUuid);
+        Long userId = userRepository.findIdByUserUuid(request.getUserUuid());
         if (userId == null) {
             throw new UserNotFoundExcption("존재하지 않는 유저입니다.");
         }
@@ -72,13 +73,13 @@ public class SavedMateService {
      * 디저트메이트 삭제
      * */
     @Transactional
-    public void deleteSavedMate(UUID mateUuid, UUID userUuid) {
+    public void deleteSavedMate(UUID mateUuid, MateRequest request) {
 
         Long mateId = mateRepository.findMateIdByMateUuid(mateUuid)
                 .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
         // userUuid로 userId 조회
-        Long userId = userRepository.findIdByUserUuid(userUuid);
+        Long userId = userRepository.findIdByUserUuid(request.getUserUuid());
 
 
         if (userId == null) {
@@ -96,10 +97,10 @@ public class SavedMateService {
     /**
      * 저장된 디저트메이트 조회 (userId에 해당하는 Mate만 가져오기)
      */
-    public MatesPageResponse getSavedMates(Pageable pageable, UUID userUuid) {
+    public MatesPageResponse getSavedMates(Pageable pageable, MateRequest request) {
 
 
-        Long userId = userRepository.findIdByUserUuid(userUuid);
+        Long userId = userRepository.findIdByUserUuid(request.getUserUuid());
 
 
         // 1️⃣ 현재 사용자가 저장한 SavedMate 목록을 가져오기 (페이징 처리)
