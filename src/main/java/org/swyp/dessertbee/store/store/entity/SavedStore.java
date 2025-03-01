@@ -31,7 +31,7 @@ public class SavedStore {
     @ElementCollection
     @CollectionTable(name = "saved_store_preferences", joinColumns = @JoinColumn(name = "saved_store_id"))
     @Column(name = "preference", nullable = false)
-    private List<String> userPreferences;
+    private List<Long> userPreferences;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
