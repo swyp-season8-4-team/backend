@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.auth.dto.KakaoResponse;
 import org.swyp.dessertbee.auth.dto.OAuth2Response;
 import org.swyp.dessertbee.auth.dto.login.LoginResponse;
@@ -58,7 +59,7 @@ public class KakaoOAuthService {
      * 인가 코드로 카카오 로그인 처리
      */
     @Transactional
-    public LoginResponse processKakaoLogin(String code, HttpServletResponse response) {
+    public LoginResponse processKakaoLogin(String code) {
         try {
             log.info("카카오 로그인 처리 시작 - 인가 코드: {}", code);
 
@@ -70,7 +71,7 @@ public class KakaoOAuthService {
             OAuth2Response userInfo = getKakaoUserInfo(accessToken);
             log.info("카카오 사용자 정보 획득 성공 - 이메일: {}", userInfo.getEmail());
             // 3. 사용자 정보로 회원가입/로그인 처리
-            return processUserLogin(userInfo, response);
+            return processUserLogin(userInfo);
 
         } catch (Exception e) {
             log.error("카카오 로그인 처리 중 오류 발생", e);
@@ -154,8 +155,7 @@ public class KakaoOAuthService {
     /**
      * OAuth 사용자 정보로 로그인 처리 (회원가입 또는 로그인)
      */
-    private LoginResponse processUserLogin(OAuth2Response oauth2Response,
-                                           HttpServletResponse response) {
+    private LoginResponse processUserLogin(OAuth2Response oauth2Response) {
         // 이메일로 사용자 조회
         UserEntity user = userRepository.findByEmail(oauth2Response.getEmail())
                 .orElseGet(() -> registerNewUser(oauth2Response));
@@ -178,10 +178,6 @@ public class KakaoOAuthService {
                 oauth2Response.getProvider(),
                 oauth2Response.getProviderId()
         );
-
-        // 리프레시 토큰 쿠키 설정
-        long maxAge = jwtUtil.getSHORT_REFRESH_TOKEN_EXPIRE() / 1000;
-        CookieUtil.addRefreshTokenCookie(response, refreshToken, maxAge);
 
         // 프로필 이미지 조회
         List<String> profileImages = imageService.getImagesByTypeAndId(
@@ -210,8 +206,23 @@ public class KakaoOAuthService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE,
                         "기본 사용자 역할을 찾을 수 없습니다."));
         user.addRole(role);
+        UserEntity savedUser = userRepository.save(user);
 
-        return userRepository.save(user);
+        // 카카오 프로필 이미지가 있는 경우 다운로드하여 S3에 저장
+        String profileImageUrl = oauth2Response.getImageUrl();
+        if (profileImageUrl != null && !profileImageUrl.isEmpty()) {
+            // S3 폴더 경로 설정
+            String folder = String.format("profile/%d", savedUser.getId());
+
+            // 이미지 서비스를 통해 외부 URL 이미지 다운로드 및 저장
+            imageService.downloadAndSaveImage(
+                    profileImageUrl,
+                    ImageType.PROFILE,
+                    savedUser.getId(),
+                    folder
+            );
+        }
+        return savedUser;
     }
 
     private String generateUniqueNickname(String baseNickname) {

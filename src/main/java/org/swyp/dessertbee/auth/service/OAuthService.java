@@ -26,16 +26,15 @@ public class OAuthService {
      *
      * @param code 인가 코드
      * @param provider OAuth 제공자 (kakao, naver, google 등)
-     * @param response HTTP 응답
      * @return 로그인 응답 (JWT 토큰 포함)
      */
     @Transactional
-    public LoginResponse processOAuthLogin(String code, String provider, HttpServletResponse response) {
+    public LoginResponse processOAuthLogin(String code, String provider) {
         try {
             // 제공자에 따라 적절한 서비스 호출
             switch (provider.toLowerCase()) {
                 case "kakao":
-                    return kakaoOAuthService.processKakaoLogin(code, response);
+                    return kakaoOAuthService.processKakaoLogin(code);
                 // 추후 다른 OAuth 제공자 추가
                 default:
                     throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE,
