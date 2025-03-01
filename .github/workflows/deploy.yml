@@ -23,7 +23,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build with Gradle
-        run: ./gradlew build -x
+        run: ./gradlew build -x test
 
       # 빌드된 자르 파일을 EC2 인스턴스로 전송
       - name: Deploy to EC2
