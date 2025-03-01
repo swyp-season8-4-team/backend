@@ -107,7 +107,9 @@ public class MateReplyService {
         // 다음 페이지 존재 여부
         boolean isLast = repliesPage.isLast();
 
-        return new MateReplyPageResponse(repliesResponse, isLast);
+        Long count = repliesPage.getTotalElements();
+
+        return new MateReplyPageResponse(repliesResponse, isLast, count);
     }
 
 

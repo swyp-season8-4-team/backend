@@ -13,4 +13,5 @@ public class MateReplyPageResponse {
 
     private List<MateReplyResponse> mates;
     private boolean isLast;
+    private Long count;
 }
