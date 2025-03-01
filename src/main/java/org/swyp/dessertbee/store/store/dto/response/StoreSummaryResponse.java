@@ -27,6 +27,7 @@ public class StoreSummaryResponse {
     private String address;
     private String phone;
     private String storeLink;
+    private String description;
 
     private Boolean animalYn;
     private Boolean tumblerYn;
@@ -52,6 +53,7 @@ public class StoreSummaryResponse {
                 .address(store.getAddress())
                 .phone(store.getPhone())
                 .storeLink(store.getStoreLink())
+                .description(store.getDescription())
                 .animalYn(store.getAnimalYn())
                 .tumblerYn(store.getTumblerYn())
                 .parkingYn(store.getParkingYn())
