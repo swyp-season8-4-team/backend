@@ -57,7 +57,7 @@ public class SavedMateController {
     private ResponseEntity<MatesPageResponse> getSavedMates(
             @RequestParam int from,
             @RequestParam int to,
-            @RequestBody MateRequest request
+            @ModelAttribute MateRequest request
     ){
 
         if (from >= to) {
