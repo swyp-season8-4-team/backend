@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.store.menu.dto.request.MenuCreateRequest;
@@ -45,6 +46,7 @@ public class MenuController {
 
     /** 메뉴 등록 (파일 업로드 포함) */
     @Operation(summary = "메뉴 등록", description = "가게에 메뉴를 등록합니다.")
+    @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @PostMapping
     public ResponseEntity<Void> addMenus(
             @PathVariable UUID storeUuid,
@@ -82,6 +84,7 @@ public class MenuController {
 
     /** 메뉴 수정 (파일 업로드 포함) */
     @Operation(summary = "메뉴 수정", description = "가게의 메뉴를 수정합니다.")
+    @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @PatchMapping("/{menuUuid}")
     public ResponseEntity<Void> updateMenu(
             @PathVariable UUID storeUuid,
@@ -104,6 +107,7 @@ public class MenuController {
 
     /** 메뉴 삭제 */
     @Operation(summary = "메뉴 삭제", description = "가게의 메뉴를 삭제합니다.")
+    @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @DeleteMapping("/{menuUuid}")
     public ResponseEntity<Void> deleteMenu(@PathVariable UUID storeUuid, @PathVariable UUID menuUuid) {
         menuService.deleteMenu(storeUuid, menuUuid);
