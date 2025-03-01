@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.mate.dto.request.MateCreateRequest;
+import org.swyp.dessertbee.mate.dto.request.MateReportRequest;
 import org.swyp.dessertbee.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.mate.dto.response.MatesPageResponse;
 import org.swyp.dessertbee.mate.exception.MateExceptions.*;
@@ -154,6 +155,29 @@ public class MateController {
 
 
         return ResponseEntity.ok(mateService.getMyMates(pageable, userUuid));
+    }
+
+    /**
+     * 디저트메이트 신고 기능
+     * */
+    @PostMapping("/{mateUuid}/report")
+    public ResponseEntity<String> reportMate(@PathVariable UUID mateUuid,
+                                             @RequestPart("request")  String requestJson) {
+
+        MateReportRequest request;
+
+        try {
+
+            //JSON 문자열을 MateCreateRequest 객체로 변환
+            request = objectMapper.readValue(requestJson, MateReportRequest.class);
+
+        }catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(null);
+        }
+        mateService.reportMate(mateUuid, request);
+
+        return ResponseEntity.ok("신고 되었습니다.");
     }
 
 }

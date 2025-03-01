@@ -7,25 +7,23 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
+import org.swyp.dessertbee.common.entity.ReportCategory;
+import org.swyp.dessertbee.common.repository.ReportRepository;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.mate.dto.request.MateCreateRequest;
+import org.swyp.dessertbee.mate.dto.request.MateReportRequest;
 import org.swyp.dessertbee.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.mate.dto.response.MatesPageResponse;
-import org.swyp.dessertbee.mate.entity.Mate;
-import org.swyp.dessertbee.mate.entity.MateApplyStatus;
-import org.swyp.dessertbee.mate.entity.MateMember;
-import org.swyp.dessertbee.mate.entity.SavedMate;
+import org.swyp.dessertbee.mate.entity.*;
 import org.swyp.dessertbee.mate.exception.MateExceptions;
 import org.swyp.dessertbee.mate.exception.MateExceptions.*;
-import org.swyp.dessertbee.mate.repository.MateCategoryRepository;
-import org.swyp.dessertbee.mate.repository.MateMemberRepository;
-import org.swyp.dessertbee.mate.repository.MateRepository;
-import org.swyp.dessertbee.mate.repository.SavedMateRepository;
+import org.swyp.dessertbee.mate.repository.*;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 import java.util.Collections;
 import java.util.List;
@@ -44,6 +42,8 @@ public class MateService {
     private final MateCategoryRepository mateCategoryRepository;
     private final SavedMateRepository savedMateRepository;
     private final MateMemberService mateMemberService;
+    private final MateReportRepository mateReportRepository;
+    private final ReportRepository reportRepository;
     private final StoreRepository storeRepository;
     private final ImageService imageService;
 
@@ -315,5 +315,55 @@ public class MateService {
         boolean isLast = mates.isLast();
 
         return new MatesPageResponse(matesResponses, isLast);
+    }
+
+    /**
+     * 디저트메이트 신고
+     * */
+    public void reportMate(UUID mateUuid, MateReportRequest request) {
+
+        //mateId 존재 여부 확인
+        Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
+                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+
+        Long userId = userRepository.findIdByUserUuid(request.getUserUuid());
+
+        //신고 유무 확인
+        MateReport report = mateReportRepository.findByMateIdAndUserId(mate.getMateId(), userId);
+
+        if(report != null){
+            throw new DuplicationReportException("이미 신고된 게시물입니다.");
+        }
+
+
+        // 6L로 타입 일치
+        // '기타' 신고인 경우 사용자가 입력한 코멘트를 그대로 저장
+        if (request.getReportCategoryId().equals(6L)){
+            mateReportRepository.save(
+                    MateReport.builder()
+                            .reportCategoryId(request.getReportCategoryId())
+                            .mateId(mate.getMateId())
+                            .userId(userId)
+                            .comment(request.getReportComment())
+                            .build()
+            );
+
+            return;
+        }
+
+        //신고 유형 코멘트 조회
+        ReportCategory reportCategory = reportRepository.findByReportCategoryId(request.getReportCategoryId());
+
+        // '기타'가 아닌 경우 미리 정의된 신고 유형 코멘트 조회 후 저장
+         mateReportRepository.save(
+                MateReport.builder()
+                        .reportCategoryId(request.getReportCategoryId())
+                        .mateId(mate.getMateId())
+                        .userId(userId)
+                        .comment(reportCategory.getReportComment())
+                        .build()
+        );
+
+
     }
 }

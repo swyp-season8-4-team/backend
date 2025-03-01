@@ -17,6 +17,7 @@ import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.mate.dto.request.MateCreateRequest;
 import org.swyp.dessertbee.mate.dto.request.MateReplyCreateRequest;
+import org.swyp.dessertbee.mate.dto.request.MateReportRequest;
 import org.swyp.dessertbee.mate.dto.response.MateReplyPageResponse;
 import org.swyp.dessertbee.mate.dto.response.MateReplyResponse;
 import org.swyp.dessertbee.mate.exception.MateExceptions;
@@ -132,5 +133,29 @@ public class MateReplyController {
         mateReplyService.deleteReply(mateUuid, replyId, userUuid);
 
         return ResponseEntity.ok("댓글이 성공적으로 삭제되었습니다.");
+    }
+
+    /**
+     * 디저트메이트 댓글 신고
+     * */
+    @PostMapping("/{replyId}/report")
+    public ResponseEntity<String> reportMateReply(@PathVariable UUID mateUuid,
+                                                  @PathVariable Long replyId,
+                                                  @RequestPart("request")  String requestJson) {
+
+        MateReportRequest request;
+
+        try {
+
+            //JSON 문자열을 MateCreateRequest 객체로 변환
+            request = objectMapper.readValue(requestJson, MateReportRequest.class);
+
+        }catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(null);
+        }
+        mateReplyService.reportMateReply(mateUuid, replyId, request);
+
+        return ResponseEntity.ok("신고 되었습니다.");
     }
 }

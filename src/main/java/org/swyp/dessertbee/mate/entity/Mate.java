@@ -64,9 +64,6 @@ public class Mate {
     @Column(name = "recruit_yn")
     private Boolean recruitYn;  //메이트 현재 모집 여부
 
-    @Column(nullable = true, length = 255)
-    private String report;
-
 
     @CreationTimestamp
     @Column(name = "created_at")
