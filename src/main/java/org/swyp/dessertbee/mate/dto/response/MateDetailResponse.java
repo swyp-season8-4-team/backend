@@ -30,6 +30,7 @@ public class MateDetailResponse {
     private LocalDateTime updatedAt;
     private boolean saved;
     private String applyStatus;
+    private UserEntity.Gender gender;
 
     //디저트메이트 카테고리명
     private String mateCategory;
@@ -47,6 +48,7 @@ public class MateDetailResponse {
                 .storeId(mate.getStoreId())
                 .userUuid(creator.getUserUuid())
                 .nickname(creator.getNickname())
+                .gender(creator.getGender())
                 .profileImage(profileImage)
                 .title(mate.getTitle())
                 .content(mate.getContent())

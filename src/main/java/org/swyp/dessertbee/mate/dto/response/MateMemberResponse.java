@@ -23,6 +23,7 @@ public class MateMemberResponse {
     private Boolean bannedYn;
     private List<String> profileImage;
     private String nickname;
+    private UserEntity.Gender gender;
 
     public static MateMemberResponse fromEntity(MateMember member,
                                                 UUID mateUuid,
@@ -32,6 +33,7 @@ public class MateMemberResponse {
                 .mateUuid(mateUuid)
                 .userId(user.getId())
                 .userUUid(user.getUserUuid())
+                .gender(user.getGender())
                 .grade(member.getGrade().toString())
                 .approvalYn(member.getApprovalYn())
                 .bannedYn(member.getBannedYn())

@@ -28,7 +28,7 @@ import java.util.UUID;
 
 @Tag(name = "MateReply", description = "디저트메이트 댓글 관련 API")
 @RestController
-@RequestMapping("api/mates/{mateUuid}/reply")
+@RequestMapping("/api/mates/{mateUuid}/reply")
 @RequiredArgsConstructor
 public class MateReplyController {
 
@@ -44,24 +44,12 @@ public class MateReplyController {
             @ApiResponse(responseCode = "400", description = "잘못된 요청")
     })
     @PostMapping
-    public ResponseEntity<MateReplyResponse> createReply(@RequestPart("request")  String requestJson,
+    public ResponseEntity<MateReplyResponse> createReply(@RequestBody  MateReplyCreateRequest request,
                                                          @PathVariable UUID mateUuid) {
-
-
-        MateReplyCreateRequest request;
-
-
-        try {
-
-            request = objectMapper.readValue(requestJson, MateReplyCreateRequest.class);
-
-        } catch (JsonProcessingException e) {
-
-            throw new RuntimeException(e);
-        }
 
         MateReplyResponse response = mateReplyService.createReply(mateUuid, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
     }
 
 
@@ -104,19 +92,8 @@ public class MateReplyController {
     public ResponseEntity<String> updateReply(
             @PathVariable UUID mateUuid,
             @PathVariable Long replyId,
-            @RequestPart(value = "request") String requestJson
-    ){
+            @RequestBody MateReplyCreateRequest request){
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        MateReplyCreateRequest request;
-
-            //JSON 문자열을 MateCreateRequest 객체로 변환
-        try {
-            request = objectMapper.readValue(requestJson, MateReplyCreateRequest.class);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(null);
-        }
 
         mateReplyService.updateReply(mateUuid, replyId, request);
         return ResponseEntity.ok("댓글이 성공적으로 수정되었습니다.");
@@ -141,19 +118,8 @@ public class MateReplyController {
     @PostMapping("/{replyId}/report")
     public ResponseEntity<String> reportMateReply(@PathVariable UUID mateUuid,
                                                   @PathVariable Long replyId,
-                                                  @RequestPart("request")  String requestJson) {
+                                                  @RequestBody  MateReportRequest request) {
 
-        MateReportRequest request;
-
-        try {
-
-            //JSON 문자열을 MateCreateRequest 객체로 변환
-            request = objectMapper.readValue(requestJson, MateReportRequest.class);
-
-        }catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(null);
-        }
         mateReplyService.reportMateReply(mateUuid, replyId, request);
 
         return ResponseEntity.ok("신고 되었습니다.");

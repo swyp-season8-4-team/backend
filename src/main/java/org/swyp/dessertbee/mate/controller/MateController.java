@@ -41,22 +41,12 @@ public class MateController {
             @ApiResponse(responseCode = "400", description = "잘못된 요청")
     })
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<MateDetailResponse> createMate(@RequestPart("request")  String requestJson,
+    public ResponseEntity<MateDetailResponse> createMate(@RequestPart("request")  MateCreateRequest request,
                                                          @RequestPart(value = "mateImage", required = false) MultipartFile mateImage) {
 
-        MateCreateRequest request;
-        try {
-
-            //JSON 문자열을 MateCreateRequest 객체로 변환
-            request = objectMapper.readValue(requestJson, MateCreateRequest.class);
-
-
-        }catch (Exception e) {
-            e.printStackTrace();  // 에러 로그 출력
-            return ResponseEntity.badRequest().body(null);
-        }
 
         MateDetailResponse response = mateService.createMate(request, mateImage);
+
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -91,24 +81,9 @@ public class MateController {
     @Operation(summary = "메이트 수정", description = "디저트메이트 수정합니다.")
     public ResponseEntity<String> updateMate(
             @PathVariable UUID mateUuid,
-            @RequestPart(value = "request") String requestJson,
+            @RequestPart(value = "request") MateCreateRequest request,
             @RequestPart(value = "mateImage", required = false) MultipartFile mateImage
     ){
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        MateCreateRequest request;
-
-
-        try {
-
-            //JSON 문자열을 MateCreateRequest 객체로 변환
-            request = objectMapper.readValue(requestJson, MateCreateRequest.class);
-
-        }catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(null);
-        }
-
         mateService.updateMate(mateUuid, request, mateImage);
         return ResponseEntity.ok("디저트메이트가 성공적으로 수정되었습니다.");
     }
@@ -162,19 +137,8 @@ public class MateController {
      * */
     @PostMapping("/{mateUuid}/report")
     public ResponseEntity<String> reportMate(@PathVariable UUID mateUuid,
-                                             @RequestPart("request")  String requestJson) {
+                                             @RequestBody  MateReportRequest request) {
 
-        MateReportRequest request;
-
-        try {
-
-            //JSON 문자열을 MateCreateRequest 객체로 변환
-            request = objectMapper.readValue(requestJson, MateReportRequest.class);
-
-        }catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(null);
-        }
         mateService.reportMate(mateUuid, request);
 
         return ResponseEntity.ok("신고 되었습니다.");
