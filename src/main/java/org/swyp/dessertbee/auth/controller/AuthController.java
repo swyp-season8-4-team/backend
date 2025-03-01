@@ -19,14 +19,9 @@ import org.swyp.dessertbee.auth.dto.login.LoginResponse;
 import org.swyp.dessertbee.auth.dto.logout.LogoutResponse;
 import org.swyp.dessertbee.auth.dto.passwordreset.PasswordResetRequest;
 import org.swyp.dessertbee.auth.dto.signup.SignUpRequest;
-import org.swyp.dessertbee.auth.jwt.JWTUtil;
 import org.swyp.dessertbee.auth.service.AuthService;
 import jakarta.validation.Valid;
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.swyp.dessertbee.common.exception.BusinessException;
-import org.swyp.dessertbee.common.util.CookieUtil;
 
 
 @Tag(name = "Authentication", description = "인증 관련 API")
@@ -37,7 +32,6 @@ import org.swyp.dessertbee.common.util.CookieUtil;
 public class AuthController {
 
     private final AuthService authService;
-    private final JWTUtil jwtUtil;
 
     @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다.")
     @ApiResponses({
@@ -48,9 +42,7 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<LoginResponse> signup(
             @RequestHeader("X-Email-Verification-Token") String verificationToken,
-            @Valid @RequestBody SignUpRequest request,
-            HttpServletResponse response
-
+            @Valid @RequestBody SignUpRequest request
     ) throws BadRequestException {
         log.debug("회원가입 요청: {}", request.getEmail());
 
@@ -60,7 +52,7 @@ public class AuthController {
         }
 
         // 회원가입 처리
-        LoginResponse signupResponse = authService.signup(request, verificationToken, response);
+        LoginResponse signupResponse = authService.signup(request, verificationToken);
         return ResponseEntity.ok(signupResponse);
     }
 
@@ -77,10 +69,9 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
             @Parameter(description = "로그인 정보", required = true)
-            @Valid @RequestBody LoginRequest request,
-            HttpServletResponse response
+            @Valid @RequestBody LoginRequest request
     ) {
-        LoginResponse loginResponse = authService.login(request, response);
+        LoginResponse loginResponse = authService.login(request);
         return ResponseEntity.ok(loginResponse);
     }
 
