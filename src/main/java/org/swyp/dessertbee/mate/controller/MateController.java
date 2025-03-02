@@ -61,10 +61,10 @@ public class MateController {
     @Operation(summary = "메이트 상세 정보 조회", description = "디저트메이트 상세 정보 조회합니다.")
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     @GetMapping("/{mateUuid}")
-    public ResponseEntity<MateDetailResponse> getMateDetail(@PathVariable UUID mateUuid,@AuthenticationPrincipal UserEntity user) {
+    public ResponseEntity<MateDetailResponse> getMateDetail(@PathVariable UUID mateUuid,@AuthenticationPrincipal String email) {
 
 
-        MateDetailResponse mate = mateService.getMateDetail(mateUuid, user.getUserUuid());
+        MateDetailResponse mate = mateService.getMateDetail(mateUuid, email);
         return ResponseEntity.ok(mate);
     }
 
@@ -107,7 +107,7 @@ public class MateController {
             @RequestParam(required = false, defaultValue = "10") int to,
             @RequestParam(required = false, defaultValue = "") String keyword,
             @RequestParam(required = false) Long mateCategoryId,
-            @AuthenticationPrincipal UserEntity user
+            @AuthenticationPrincipal String email
     ) {
 
         if (from >= to) {
@@ -117,7 +117,7 @@ public class MateController {
         int size = to - from;
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(mateService.getMates(pageable, user.getUserUuid(), keyword, mateCategoryId));
+        return ResponseEntity.ok(mateService.getMates(pageable, email, keyword, mateCategoryId));
     }
 
     /**
@@ -127,7 +127,7 @@ public class MateController {
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<MatesPageResponse> getMyMates( @RequestParam(required = false, defaultValue = "0") int from,
                                                          @RequestParam(required = false, defaultValue = "10") int to,
-                                                         @AuthenticationPrincipal UserEntity user){
+                                                         @AuthenticationPrincipal String email){
 
 
         if (from >= to) {
@@ -139,7 +139,7 @@ public class MateController {
         Pageable pageable = PageRequest.of(page, size);
 
 
-        return ResponseEntity.ok(mateService.getMyMates(pageable, user.getUserUuid()));
+        return ResponseEntity.ok(mateService.getMyMates(pageable, email));
     }
 
     /**

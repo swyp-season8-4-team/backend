@@ -287,4 +287,13 @@ public class UserServiceImpl implements UserService {
 
         return !userRepository.existsByNickname(nickname);
     }
+
+    /**
+     * AuthenticationPrincipal 을 위해 email로 user 조회
+     * */
+    @Override
+    public UserEntity validateUser(String email) {
+
+        return userRepository.findByEmail(email).orElseThrow(() -> new MateExceptions.UserNotFoundExcption("존재하지 않는 유저입니다."));
+    }
 }
