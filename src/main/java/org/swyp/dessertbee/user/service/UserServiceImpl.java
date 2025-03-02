@@ -119,16 +119,6 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * AuthenticationPrincipal 을 위해 email로 user 조회
-     * */
-    @Override
-    public UserEntity validateUser(String email) {
-
-        return userRepository.findByEmail(email).orElseThrow(() -> new MateExceptions.UserNotFoundExcption("존재하지 않는 유저입니다."));
-    }
-
-
-    /**
      * UserEntity를 UserDetailResponseDto로 변환합니다.
      */
     private UserDetailResponseDto convertToDetailResponse(UserEntity user) {
