@@ -222,8 +222,16 @@ public class MateService {
                         //신청했는지 유무 확인
                         MateMember applyMember = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndUserId(mate.getMateId(), userId);
 
+                        MateApplyStatus applyStatus;
+                        if (applyMember == null) {
+                            // 가입(신청) 안 했으므로, NONE 상태로 처리
+                            applyStatus = MateApplyStatus.NONE;
+                        } else {
+                            // 가입(신청)한 경우, 실제 상태를 가져옴
+                            applyStatus = applyMember.getApplyStatus();
+                        }
 
-                        return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator, profileImage, saved, applyMember.getApplyStatus());
+                        return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator, profileImage, saved, applyStatus);
 
                     })
                     .collect(Collectors.toList());
