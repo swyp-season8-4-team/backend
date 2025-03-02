@@ -25,6 +25,8 @@ import org.swyp.dessertbee.mate.service.MateMemberService;
 import org.swyp.dessertbee.mate.service.MateService;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Tag(name = "Mate", description = "디저트메이트 관련 API")
@@ -74,11 +76,14 @@ public class MateController {
      */
     @DeleteMapping("/{mateUuid}")
     @Operation(summary = "메이트 삭제", description = "디저트메이트 삭제합니다.")
-    public ResponseEntity<String> deleteMate(@PathVariable UUID mateUuid) {
+    public ResponseEntity<Map<String, String>> deleteMate(@PathVariable UUID mateUuid) {
         //디저트메이트 삭제
         mateService.deleteMate(mateUuid);
 
-        return ResponseEntity.ok("디저트메이트가 성공적으로 삭제되었습니다.");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "디저트메이트가 성공적으로 삭제되었습니다.");
+
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -86,13 +91,18 @@ public class MateController {
      * */
     @PatchMapping("/{mateUuid}")
     @Operation(summary = "메이트 수정", description = "디저트메이트 수정합니다.")
-    public ResponseEntity<String> updateMate(
+    public ResponseEntity<Map<String, String>> updateMate(
             @PathVariable UUID mateUuid,
             @RequestPart(value = "request") MateCreateRequest request,
             @RequestPart(value = "mateImage", required = false) MultipartFile mateImage
     ){
         mateService.updateMate(mateUuid, request, mateImage);
-        return ResponseEntity.ok("디저트메이트가 성공적으로 수정되었습니다.");
+
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "디저트메이트가 성공적으로 저장되었습니다.");
+
+        return ResponseEntity.ok(response);
     }
 
 
@@ -146,12 +156,17 @@ public class MateController {
      * 디저트메이트 신고 기능
      * */
     @PostMapping("/{mateUuid}/report")
-    public ResponseEntity<String> reportMate(@PathVariable UUID mateUuid,
+    public ResponseEntity<Map<String, String>> reportMate(@PathVariable UUID mateUuid,
                                              @RequestBody  MateReportRequest request) {
 
         mateService.reportMate(mateUuid, request);
 
-        return ResponseEntity.ok("신고 되었습니다.");
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "신고 되었습니다.");
+
+
+        return ResponseEntity.ok(response);
     }
 
 }

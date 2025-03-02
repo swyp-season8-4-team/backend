@@ -11,7 +11,9 @@ import org.swyp.dessertbee.mate.dto.response.MateMemberResponse;
 import org.swyp.dessertbee.mate.service.MateMemberService;
 import org.swyp.dessertbee.mate.service.MateService;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Tag(name = "MateMember", description = "디저트메이트 멤버 관련 API")
@@ -37,22 +39,29 @@ public class MateMemberController {
      * 디저트 메이트 멤버 신청 api
      * */
     @PostMapping("/apply")
-        public ResponseEntity<String> applyMate(@PathVariable UUID mateUuid, @AuthenticationPrincipal String email) {
+        public ResponseEntity<Map<String, String>> applyMate(@PathVariable UUID mateUuid, @AuthenticationPrincipal String email) {
 
 
         mateMemberService.applyMate(mateUuid ,email);
-        return ResponseEntity.ok("디저트메이트에 성공적으로 신청되었습니다.");
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "디저트메이트에 성공적으로 신청되었습니다.");
+
+        return ResponseEntity.ok(response);
     }
 
     /**
      * 디저트메이트 멤버 신청 취소 api
      * */
     @DeleteMapping("/apply")
-    public ResponseEntity<String> cancelApplyMate(@PathVariable UUID mateUuid,@AuthenticationPrincipal String email) {
+    public ResponseEntity<Map<String, String>> cancelApplyMate(@PathVariable UUID mateUuid,@AuthenticationPrincipal String email) {
 
 
         mateMemberService.cancelApplyMate(mateUuid, email);
-        return ResponseEntity.ok("디저트메이트 성공적으로 신청 취소되었습니다.");
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "디저트메이트 성공적으로 신청 취소되었습니다.");
+        return ResponseEntity.ok(response);
     }
     /**
      * 디저트 메이트 대기 멤버 전체 조회
@@ -68,41 +77,49 @@ public class MateMemberController {
      * 디저트 메이트 멤버 신청 수락 api
      * */
     @PatchMapping("/apply")
-    public ResponseEntity<String> acceptMemeber(@PathVariable UUID mateUuid, @RequestBody MateApplyMemberRequest request) {
+    public ResponseEntity<Map<String, String>> acceptMemeber(@PathVariable UUID mateUuid, @RequestBody MateApplyMemberRequest request) {
 
         mateMemberService.acceptMember(mateUuid, request);
-        return ResponseEntity.ok("팀원이 되었습니다~!");
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "팀원이 되었습니다~!");
+
+        return ResponseEntity.ok(response);
     }
 
     /**
      * 디저트 메이트 멤버 신청 거절 api
      * */
     @DeleteMapping("/reject")
-    public ResponseEntity<String> rejectMemeber(@PathVariable UUID mateUuid, @RequestBody MateApplyMemberRequest request) {
+    public ResponseEntity<Map<String, String>> rejectMemeber(@PathVariable UUID mateUuid, @RequestBody MateApplyMemberRequest request) {
 
         mateMemberService.rejectMember(mateUuid, request);
-
-        return ResponseEntity.ok("거절 되었습니다.");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "거절 되었습니다.");
+        return ResponseEntity.ok(response);
     }
 
     /**
      * 디저트 메이트 멤버 강퇴 api
      * */
     @DeleteMapping("/members")
-    public ResponseEntity<String> bannedMember(@PathVariable UUID mateUuid, @RequestBody MateApplyMemberRequest request) {
+    public ResponseEntity<Map<String, String>> bannedMember(@PathVariable UUID mateUuid, @RequestBody MateApplyMemberRequest request) {
 
         mateMemberService.bannedMember(mateUuid, request);
-
-        return ResponseEntity.ok("성공적으로 강퇴 되었습니다.");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "성공적으로 강퇴 되었습니다.");
+        return ResponseEntity.ok(response);
     }
 
     /**
      * 디저트 메이트 멤버 탈퇴 api
      * */
     @DeleteMapping("/leave")
-    public ResponseEntity<String> leaveMember(@PathVariable UUID mateUuid, @AuthenticationPrincipal String email) {
+    public ResponseEntity<Map<String, String>> leaveMember(@PathVariable UUID mateUuid, @AuthenticationPrincipal String email) {
 
         mateMemberService.leaveMember(mateUuid, email);
-        return ResponseEntity.ok("성공적으로 탈퇴 되었습니다.");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "성공적으로 탈퇴 되었습니다.");
+        return ResponseEntity.ok(response);
     }
 }

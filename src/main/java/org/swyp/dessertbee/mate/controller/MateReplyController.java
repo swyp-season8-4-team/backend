@@ -26,7 +26,9 @@ import org.swyp.dessertbee.mate.exception.MateExceptions;
 import org.swyp.dessertbee.mate.service.MateReplyService;
 import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Tag(name = "MateReply", description = "디저트메이트 댓글 관련 API")
@@ -92,14 +94,17 @@ public class MateReplyController {
      * 디저트메이트 댓글 수정
      * */
     @PatchMapping("/{replyId}")
-    public ResponseEntity<String> updateReply(
+    public ResponseEntity<Map<String, String>>  updateReply(
             @PathVariable UUID mateUuid,
             @PathVariable Long replyId,
             @RequestBody MateReplyCreateRequest request){
 
 
         mateReplyService.updateReply(mateUuid, replyId, request);
-        return ResponseEntity.ok("댓글이 성공적으로 수정되었습니다.");
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "댓글이 성공적으로 수정되었습니다.");
+        return ResponseEntity.ok(response);
 
     }
 
@@ -107,24 +112,29 @@ public class MateReplyController {
      * 디저트메이트 댓글 삭제
      * */
     @DeleteMapping("/{replyId}")
-    public ResponseEntity<String> deleteReply(@PathVariable UUID mateUuid,
+    public ResponseEntity<Map<String, String>> deleteReply(@PathVariable UUID mateUuid,
                                               @PathVariable Long replyId, @AuthenticationPrincipal String email) {
 
         mateReplyService.deleteReply(mateUuid, replyId, email);
 
-        return ResponseEntity.ok("댓글이 성공적으로 삭제되었습니다.");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "댓글이 성공적으로 삭제되었습니다.");
+        return ResponseEntity.ok(response);
     }
 
     /**
      * 디저트메이트 댓글 신고
      * */
     @PostMapping("/{replyId}/report")
-    public ResponseEntity<String> reportMateReply(@PathVariable UUID mateUuid,
+    public ResponseEntity<Map<String, String>>  reportMateReply(@PathVariable UUID mateUuid,
                                                   @PathVariable Long replyId,
                                                   @RequestBody  MateReportRequest request) {
 
         mateReplyService.reportMateReply(mateUuid, replyId, request);
 
-        return ResponseEntity.ok("신고 되었습니다.");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "댓글 신고 되었습니다.");
+
+        return ResponseEntity.ok(response);
     }
 }
