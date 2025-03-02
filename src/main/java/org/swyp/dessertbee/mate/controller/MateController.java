@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -58,8 +59,10 @@ public class MateController {
      * 메이트 상세 정보 조회
      */
     @Operation(summary = "메이트 상세 정보 조회", description = "디저트메이트 상세 정보 조회합니다.")
+    @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     @GetMapping("/{mateUuid}")
-    public ResponseEntity<MateDetailResponse> getMateDetail(@PathVariable UUID mateUuid, @AuthenticationPrincipal UserEntity user) {
+    public ResponseEntity<MateDetailResponse> getMateDetail(@PathVariable UUID mateUuid,@AuthenticationPrincipal UserEntity user) {
+
 
         MateDetailResponse mate = mateService.getMateDetail(mateUuid, user.getUserUuid());
         return ResponseEntity.ok(mate);
@@ -98,6 +101,7 @@ public class MateController {
      * */
     @GetMapping
     @Operation(summary = "메이트 전체 조회", description = "디저트메이트 전체 조회합니다.")
+    @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<MatesPageResponse> getMates(
             @RequestParam(required = false, defaultValue = "0") int from,
             @RequestParam(required = false, defaultValue = "10") int to,
@@ -120,6 +124,7 @@ public class MateController {
      * 내가 참여한 디저트메이트 조회
      * */
     @GetMapping("/me")
+    @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<MatesPageResponse> getMyMates( @RequestParam(required = false, defaultValue = "0") int from,
                                                          @RequestParam(required = false, defaultValue = "10") int to,
                                                          @AuthenticationPrincipal UserEntity user){
