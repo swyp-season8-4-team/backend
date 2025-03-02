@@ -117,6 +117,12 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Override
+    public UserEntity validateUser(String email) {
+        return userRepository.findByUserEmail(email);
+    }
+
+
     /**
      * UserEntity를 UserDetailResponseDto로 변환합니다.
      */
