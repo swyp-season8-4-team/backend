@@ -45,7 +45,7 @@ public class UserServiceImpl implements UserService {
     /**
      * Security Context에서 현재 인증된 사용자의 정보를 조회합니다.
      */
-    public UserEntity getCurrentUser() {
+    private UserEntity getCurrentUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
         return userRepository.findByEmail(email)

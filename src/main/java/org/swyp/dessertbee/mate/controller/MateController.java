@@ -24,6 +24,8 @@ import org.swyp.dessertbee.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.mate.service.MateMemberService;
 import org.swyp.dessertbee.mate.service.MateService;
 import org.swyp.dessertbee.user.entity.UserEntity;
+import org.swyp.dessertbee.user.service.UserService;
+import org.swyp.dessertbee.user.service.UserServiceImpl;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,8 +38,7 @@ import java.util.UUID;
 public class MateController {
 
     private final MateService mateService;
-    private final MateMemberService mateMemberService;
-    private final ObjectMapper objectMapper;
+    private final UserServiceImpl userService;
 
     /**
      * 메이트 등록
@@ -63,10 +64,9 @@ public class MateController {
     @Operation(summary = "메이트 상세 정보 조회", description = "디저트메이트 상세 정보 조회합니다.")
 //    @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     @GetMapping("/{mateUuid}")
-    public ResponseEntity<MateDetailResponse> getMateDetail(@PathVariable UUID mateUuid,@AuthenticationPrincipal String email) {
+    public ResponseEntity<MateDetailResponse> getMateDetail(@PathVariable UUID mateUuid) {
 
-
-        MateDetailResponse mate = mateService.getMateDetail(mateUuid, email);
+        MateDetailResponse mate = mateService.getMateDetail(mateUuid);
         return ResponseEntity.ok(mate);
     }
 
@@ -116,8 +116,7 @@ public class MateController {
             @RequestParam(required = false, defaultValue = "0") int from,
             @RequestParam(required = false, defaultValue = "10") int to,
             @RequestParam(required = false, defaultValue = "") String keyword,
-            @RequestParam(required = false) Long mateCategoryId,
-            @AuthenticationPrincipal String email
+            @RequestParam(required = false) Long mateCategoryId
     ) {
 
         if (from >= to) {
@@ -127,7 +126,7 @@ public class MateController {
         int size = to - from;
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(mateService.getMates(pageable, email, keyword, mateCategoryId));
+        return ResponseEntity.ok(mateService.getMates(pageable, keyword, mateCategoryId));
     }
 
     /**
@@ -136,9 +135,7 @@ public class MateController {
     @GetMapping("/me")
 //    @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<MatesPageResponse> getMyMates( @RequestParam(required = false, defaultValue = "0") int from,
-                                                         @RequestParam(required = false, defaultValue = "10") int to,
-                                                         @AuthenticationPrincipal String email){
-
+                                                         @RequestParam(required = false, defaultValue = "10") int to){
 
         if (from >= to) {
             throw new FromToMateException("잘못된 범위 요청입니다.");
@@ -149,7 +146,7 @@ public class MateController {
         Pageable pageable = PageRequest.of(page, size);
 
 
-        return ResponseEntity.ok(mateService.getMyMates(pageable, email));
+        return ResponseEntity.ok(mateService.getMyMates(pageable));
     }
 
     /**
