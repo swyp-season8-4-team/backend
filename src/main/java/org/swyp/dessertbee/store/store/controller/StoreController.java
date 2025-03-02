@@ -84,10 +84,9 @@ public class StoreController {
     public ResponseEntity<List<StoreMapResponse>> getStoresByMyPreferences(
             @RequestParam("latitude") Double latitude,
             @RequestParam("longitude") Double longitude,
-            @RequestParam("radius") Double radius,
-            @AuthenticationPrincipal String email) {
+            @RequestParam("radius") Double radius) {
 
-        List<StoreMapResponse> storeMapResponses = storeService.getStoresByMyPreferences(latitude, longitude, radius, email);
+        List<StoreMapResponse> storeMapResponses = storeService.getStoresByMyPreferences(latitude, longitude, radius);
         return ResponseEntity.ok(storeMapResponses);
     }
 
@@ -101,8 +100,8 @@ public class StoreController {
     /** 가게 상세 정보 조회 */
     @Operation(summary = "가게 상세 정보 조회", description = "가게의 상세한 정보를 조회합니다.")
     @GetMapping("/{storeUuid}/details")
-    public StoreDetailResponse getStoreDetails(@PathVariable UUID storeUuid, UserEntity user) {
-        return storeService.getStoreDetails(storeUuid, user);
+    public StoreDetailResponse getStoreDetails(@PathVariable UUID storeUuid) {
+        return storeService.getStoreDetails(storeUuid);
     }
 
     /** 가게 수정 */
@@ -137,10 +136,9 @@ public class StoreController {
     @Operation(summary = "가게 삭제", description = "업주가 가게를 삭제합니다.")
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @DeleteMapping("/{storeUuid}")
-    public ResponseEntity<Void> deleteStore(@PathVariable UUID storeUuid,
-                                            @AuthenticationPrincipal String email) {
+    public ResponseEntity<Void> deleteStore(@PathVariable UUID storeUuid) {
         try {
-            storeService.deleteStore(storeUuid, email);
+            storeService.deleteStore(storeUuid);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             e.printStackTrace();

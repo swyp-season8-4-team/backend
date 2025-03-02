@@ -30,6 +30,7 @@ import org.swyp.dessertbee.store.store.repository.*;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.user.service.UserService;
+import org.swyp.dessertbee.user.service.UserServiceImpl;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -58,7 +59,7 @@ public class StoreService {
     private final MenuService menuService;
     private final UserRepository userRepository;
     private final SavedMateRepository savedMateRepository;
-    private final UserService userService;
+    private final UserServiceImpl userService;
 
     /** 가게 등록 (이벤트, 쿠폰, 메뉴 + 이미지 포함) */
     public StoreDetailResponse createStore(StoreCreateRequest request,
@@ -67,9 +68,6 @@ public class StoreService {
                                            List<MultipartFile> menuImageFiles) {
 
         Long ownerId = userRepository.findIdByUserUuid(request.getUserUuid());
-        // ownerId로 UserEntity 조회 (로그인한 사용자 정보)
-        UserEntity user = userRepository.findById(ownerId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         if (menuImageFiles == null) {
             menuImageFiles = Collections.emptyList(); // menuImageFiles가 null이면 빈 리스트로 처리
@@ -152,7 +150,7 @@ public class StoreService {
             storeHolidayRepository.saveAll(holidays);
         }
 
-        return getStoreDetails(store.getStoreUuid(), user);
+        return getStoreDetails(store.getStoreUuid());
     }
 
     /** 태그 저장 (1~3개 선택) */
@@ -218,8 +216,8 @@ public class StoreService {
                 .collect(Collectors.toList());
     }
 
-    public List<StoreMapResponse> getStoresByMyPreferences(Double lat, Double lng, Double radius, String email) {
-        UserEntity user = userService.validateUser(email);
+    public List<StoreMapResponse> getStoresByMyPreferences(Double lat, Double lng, Double radius) {
+        UserEntity user = userService.getCurrentUser();
         // 인증된 사용자가 아닌 경우 예외 발생
         if (user == null) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
@@ -284,11 +282,12 @@ public class StoreService {
     }
 
     /** 가게 상세 정보 조회 */
-    public StoreDetailResponse getStoreDetails(UUID storeUuid, UserEntity user) {
+    public StoreDetailResponse getStoreDetails(UUID storeUuid) {
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
         Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
+        UserEntity user = userService.getCurrentUser();
         Long userId = Optional.ofNullable(user).map(UserEntity::getId).orElse(null);
         UUID userUuid = Optional.ofNullable(user).map(UserEntity::getUserUuid).orElse(null);
 
@@ -407,10 +406,6 @@ public class StoreService {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
         }
 
-        Long ownerId = userRepository.findIdByUserUuid(request.getUserUuid());
-        UserEntity user = userRepository.findById(ownerId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
         // 가게 기본 정보 업데이트
         store.setName(request.getName());
         store.setPhone(request.getPhone());
@@ -489,7 +484,7 @@ public class StoreService {
             storeHolidayRepository.saveAll(holidays);
         }
 
-        return getStoreDetails(store.getStoreUuid(), user);
+        return getStoreDetails(store.getStoreUuid());
     }
 
     private MenuCreateRequest convertToMenuCreateRequest(StoreUpdateRequest.MenuRequest menuRequest) {
@@ -504,8 +499,8 @@ public class StoreService {
     }
 
     /** 가게 삭제 */
-    public void deleteStore(UUID storeUuid, String email) {
-        UserEntity user = userService.validateUser(email);
+    public void deleteStore(UUID storeUuid) {
+        UserEntity user = userService.getCurrentUser();
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
         Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
