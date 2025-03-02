@@ -16,6 +16,8 @@ import org.swyp.dessertbee.mate.service.MateService;
 import org.swyp.dessertbee.mate.service.SavedMateService;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Tag(name = "SavedMate", description = "디저트메이트 저장 관련 API")
@@ -30,13 +32,16 @@ public class SavedMateController {
      * 디저트메이트 저장
      * */
     @PostMapping("/{mateUuid}")
-    public ResponseEntity<String> saveMate(@PathVariable UUID mateUuid,@AuthenticationPrincipal String email) {
+    public ResponseEntity<Map<String, String>> saveMate(@PathVariable UUID mateUuid, @AuthenticationPrincipal String email) {
 
 
         savedMateService.saveMate(mateUuid, email);
 
 
-        return ResponseEntity.ok("디저트메이트가 성공적으로 저장되었습니다.");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "디저트메이트가 성공적으로 저장되었습니다.");
+
+        return ResponseEntity.ok(response);
     }
 
 
@@ -44,11 +49,14 @@ public class SavedMateController {
      * 디저트메이트 삭제
      * */
     @DeleteMapping("/{mateUuid}")
-    public ResponseEntity<String> deleteSavedMate(@PathVariable UUID mateUuid, @AuthenticationPrincipal String email) {
+    public ResponseEntity<Map<String, String>> deleteSavedMate(@PathVariable UUID mateUuid, @AuthenticationPrincipal String email) {
 
         savedMateService.deleteSavedMate(mateUuid, email);
 
-        return ResponseEntity.ok("디저트메이트가 성공적으로 삭제되었습니다.");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "디저트메이트가 성공적으로 삭제되었습니다.");
+
+        return ResponseEntity.ok(response);
     }
 
     /**
