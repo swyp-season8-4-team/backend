@@ -2,6 +2,8 @@ package org.swyp.dessertbee.user.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,12 +47,18 @@ public class UserServiceImpl implements UserService {
     /**
      * Security Context에서 현재 인증된 사용자의 정보를 조회합니다.
      */
-    private UserEntity getCurrentUser() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-
+    public UserEntity getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() ||
+                authentication instanceof AnonymousAuthenticationToken) {
+            // 인증 정보가 없으므로 null 또는 게스트 사용자 반환
+            return null; // 또는 게스트 UserEntity 반환
+        }
+        String email = authentication.getName();
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
+
 
     /**
      * 현재 인증된 사용자의 상세 정보를 조회합니다.
