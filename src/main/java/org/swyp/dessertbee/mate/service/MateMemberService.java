@@ -313,9 +313,11 @@ public class MateMemberService {
             MateMember target = mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, targetId)
                     .orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 멤버입니다."));
 
+
+            mateMemberRepository.updateApplyStatus(MateApplyStatus.REJECTED, mateId, target.getUserId());
+            target.setApplyStatus(MateApplyStatus.REJECTED);
             try {
 
-                mateMemberRepository.updateApplyStatus(MateApplyStatus.REJECTED, mateId, target.getUserId());
                 target.softDelete();
 
                 // 변경된 모든 멤버 저장
@@ -352,8 +354,9 @@ public class MateMemberService {
             MateMember target = mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, tragetId)
                     .orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 멤버입니다."));
 
+            mateMemberRepository.updateApplyStatus(MateApplyStatus.BANNED, mateId, target.getUserId());
+            target.setApplyStatus(MateApplyStatus.BANNED);
             try {
-                mateMemberRepository.updateApplyStatus(MateApplyStatus.BANNED, mateId, target.getUserId());
 
                 target.softDelete();
 

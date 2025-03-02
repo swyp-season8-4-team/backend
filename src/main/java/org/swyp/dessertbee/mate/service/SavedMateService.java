@@ -73,13 +73,13 @@ public class SavedMateService {
      * 디저트메이트 삭제
      * */
     @Transactional
-    public void deleteSavedMate(UUID mateUuid, MateRequest request) {
+    public void deleteSavedMate(UUID mateUuid, UUID userUuid) {
 
         Long mateId = mateRepository.findMateIdByMateUuid(mateUuid)
                 .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
         // userUuid로 userId 조회
-        Long userId = userRepository.findIdByUserUuid(request.getUserUuid());
+        Long userId = userRepository.findIdByUserUuid(userUuid);
 
 
         if (userId == null) {
@@ -132,24 +132,7 @@ public class SavedMateService {
                     //신청했는지 유무 확인
                     MateMember applyMember = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndUserId(mate.getMateId(), userId);
 
-                    String applyStatus = "";
-
-                    if (applyMember == null) {
-                        applyStatus = MateApplyStatus.NONE.name();
-                    }else{
-
-
-                        if(applyMember.isPending())
-                        {
-                            applyStatus = MateApplyStatus.PENDING.name();
-                        }
-
-                        if (applyMember.isApprove()){
-                            applyStatus = MateApplyStatus.APPROVED.name();
-                        }
-
-                    }
-                    return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator, profileImage, saved, applyStatus);
+                    return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator, profileImage, saved, applyMember.getApplyStatus());
                 })
                 .collect(Collectors.toList());
 

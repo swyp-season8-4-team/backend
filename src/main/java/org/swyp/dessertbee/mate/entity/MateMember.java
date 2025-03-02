@@ -30,11 +30,12 @@ public class MateMember {
     @Column(nullable = false)
     private MateMemberGrade grade;
 
-    @Column(name = "approval_yn")
-    private  Boolean approvalYn;
+    // Setter 메서드
+    @Setter
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private MateApplyStatus applyStatus;
 
-    @Column(name = "banned_yn")
-    private Boolean bannedYn;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
@@ -44,27 +45,27 @@ public class MateMember {
         this.deletedAt = LocalDateTime.now();
     }
 
-    public void removeDelete(){
-        this.bannedYn = Boolean.TRUE;
-        this.deletedAt = LocalDateTime.now();
+    public Boolean isBanned(){
+        return applyStatus == MateApplyStatus.BANNED;
     }
 
     public Boolean isPending()
     {
-        return !this.getApprovalYn() && this.getDeletedAt() == null;
+        return this.applyStatus == MateApplyStatus.PENDING;
     }
 
     public Boolean isReject()
     {
-        return !this.getApprovalYn() && this.getDeletedAt() != null;
+        return this.applyStatus == MateApplyStatus.REJECTED;
     }
 
     public Boolean isReapply()
     {
-        return this.getApprovalYn() && this.getDeletedAt() != null ;
+        return this.applyStatus == MateApplyStatus.APPROVED && this.deletedAt != null;
     }
 
     public Boolean isApprove() {
-        return this.getApprovalYn()&& this.getDeletedAt() == null;
+        return this.applyStatus == MateApplyStatus.APPROVED && this.getDeletedAt() == null;
     }
+
 }

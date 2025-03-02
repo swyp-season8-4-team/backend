@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import org.swyp.dessertbee.mate.dto.MatePlace;
 import org.swyp.dessertbee.mate.entity.Mate;
+import org.swyp.dessertbee.mate.entity.MateApplyStatus;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.time.LocalDateTime;
@@ -29,7 +30,7 @@ public class MateDetailResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private boolean saved;
-    private String applyStatus;
+    private MateApplyStatus applyStatus;
     private UserEntity.Gender gender;
 
     //디저트메이트 카테고리명
@@ -41,7 +42,7 @@ public class MateDetailResponse {
                                                 UserEntity creator,
                                                 List<String> profileImage,
                                                 boolean saved,
-                                                String applyStatus) {
+                                                MateApplyStatus applyStatus) {
 
         return MateDetailResponse.builder()
                 .mateUuid(mate.getMateUuid())

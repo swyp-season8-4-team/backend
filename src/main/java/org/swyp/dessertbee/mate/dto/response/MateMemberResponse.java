@@ -4,6 +4,7 @@ package org.swyp.dessertbee.mate.dto.response;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import org.swyp.dessertbee.mate.entity.MateApplyStatus;
 import org.swyp.dessertbee.mate.entity.MateMember;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
@@ -23,9 +24,9 @@ public class MateMemberResponse {
     private List<String> profileImage;
     private String nickname;
     private UserEntity.Gender gender;
+    private MateApplyStatus applyStatus;
 
     public static MateMemberResponse fromEntity(MateMember member,
-                                                UUID mateUuid,
                                                 UserEntity user,
                                                 List<String> profileImage) {
         return MateMemberResponse.builder()
@@ -33,8 +34,7 @@ public class MateMemberResponse {
                 .userUUid(user.getUserUuid())
                 .gender(user.getGender())
                 .grade(member.getGrade().toString())
-                .approvalYn(member.getApprovalYn())
-                .bannedYn(member.getBannedYn())
+                .applyStatus(member.getApplyStatus())
                 .profileImage(profileImage)
                 .nickname(user.getNickname())
                 .build();
