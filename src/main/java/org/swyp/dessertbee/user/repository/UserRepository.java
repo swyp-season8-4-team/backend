@@ -42,6 +42,10 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     @Query("SELECT u.id FROM UserEntity u WHERE u.userUuid = :userUuid AND u.deletedAt IS NULL")
     Long findIdByUserUuid(UUID userUuid);
 
+
+    Optional<Long> findOptionalIdByUserUuid(UUID userUuid);
+
+
     @Query("SELECT u.id FROM UserEntity u WHERE FUNCTION('UUID_TO_BIN', u.userUuid) = :userUuid AND u.deletedAt IS NULL")
     Long findIdByUserUuidUsingUuidToBin(UUID userUuid);
 

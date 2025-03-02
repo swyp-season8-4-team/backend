@@ -25,6 +25,7 @@ import org.swyp.dessertbee.user.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.swyp.dessertbee.user.service.UserService;
+import org.swyp.dessertbee.user.service.UserServiceImpl;
 import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 import java.util.Collections;
@@ -48,13 +49,15 @@ public class MateService {
     private final ReportRepository reportRepository;
     private final StoreRepository storeRepository;
     private final ImageService imageService;
-    private final UserService userService;
+    private final UserServiceImpl userService;
+
 
     /** 메이트 등록 */
     @Transactional
     public MateDetailResponse createMate(MateCreateRequest request, MultipartFile mateImage){
+        // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
+        UserEntity user = userService.getCurrentUser();
 
-        UserEntity user = userRepository.findByUserUuid(request.getUserUuid());
 
         //userId 존재 여부 확인
         if (user == null) {
@@ -88,15 +91,14 @@ public class MateService {
         //디저트 메이트 mateId를 가진 member 데이터 생성
         mateMemberService.addCreatorAsMember(mate.getMateUuid(), user.getId());
 
-        return getMateDetail(mate.getMateUuid(), user.getEmail());
+        return getMateDetail(mate.getMateUuid());
     }
 
 
     /** 메이트 상세 정보 */
-    public MateDetailResponse getMateDetail(UUID mateUuid, String email) {
-
-        UserEntity user = userService.validateUser(email);
-
+    public MateDetailResponse getMateDetail(UUID mateUuid) {
+        // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
+        UserEntity user = userService.getCurrentUser();
         //mateId로 디저트메이트 여부 확인
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
                 .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
@@ -113,30 +115,28 @@ public class MateService {
         //작성자 프로필 조회
         List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, mate.getUserId());
 
-        //현재 접속해 있는 사용자의 user 정보
-        Long userId = userRepository.findIdByUserUuid(user.getUserUuid());
+        // 현재 접속해 있는 사용자의 user 정보 (user가 null일 수 있으므로 null 체크)
+        Long userId = (user != null) ? userRepository.findIdByUserUuid(user.getUserUuid()) : null;
 
-
-        //저장했는지 유무 확인
         SavedMate savedMate = null;
         if (userId != null) {
             savedMate = savedMateRepository.findByMate_MateIdAndUserId(mate.getMateId(), userId);
         }
         boolean saved = (savedMate != null);
 
-
-        System.out.println(userId);
-        //신청했는지 유무 확인
-        MateMember  member = mateMemberRepository.findByMateIdAndUserId(mate.getMateId(), userId)
-                .orElse(null);
+        MateMember applyMember = null;
+        if (userId != null) {
+            applyMember = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndUserId(mate.getMateId(), userId);
+        }
 
         MateApplyStatus applyStatus;
-
-        if(member == null) {
+        if (applyMember == null) {
+            // 가입(신청) 안 했거나 인증된 사용자가 아니므로, NONE 상태로 처리
             applyStatus = MateApplyStatus.NONE;
-        }else{
-            applyStatus = member.getApplyStatus();
+        } else {
+            applyStatus = applyMember.getApplyStatus();
         }
+
 
         return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, creator, profileImage, saved, applyStatus);
 
@@ -196,10 +196,10 @@ public class MateService {
      * 디저트메이트 전체 조회
      * */
     @Transactional
-    public MatesPageResponse getMates(Pageable pageable, String email, String keyword, Long mateCategoryId) {
+    public MatesPageResponse getMates(Pageable pageable, String keyword, Long mateCategoryId) {
 
-        UserEntity user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 유저입니다."));
-
+        // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
+        UserEntity user = userService.getCurrentUser();
 
 
         Page<Mate> mates = mateRepository.findByDeletedAtIsNullAndMateCategoryId( mateCategoryId, keyword,pageable);
@@ -215,8 +215,8 @@ public class MateService {
                         List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, mate.getUserId());
 
 
-                        //현재 접속해 있는 사용자의 user 정보
-                        Long userId = userRepository.findIdByUserUuid(user.getUserUuid());
+                        // 현재 접속해 있는 사용자의 user 정보 (user가 null일 수 있으므로 null 체크)
+                        Long userId = (user != null) ? userRepository.findIdByUserUuid(user.getUserUuid()) : null;
 
                         SavedMate savedMate = null;
                         if (userId != null) {
@@ -224,17 +224,19 @@ public class MateService {
                         }
                         boolean saved = (savedMate != null);
 
-                        //신청했는지 유무 확인
-                        MateMember applyMember = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndUserId(mate.getMateId(), userId);
+                        MateMember applyMember = null;
+                        if (userId != null) {
+                            applyMember = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndUserId(mate.getMateId(), userId);
+                        }
 
                         MateApplyStatus applyStatus;
                         if (applyMember == null) {
-                            // 가입(신청) 안 했으므로, NONE 상태로 처리
+                            // 가입(신청) 안 했거나 인증된 사용자가 아니므로, NONE 상태로 처리
                             applyStatus = MateApplyStatus.NONE;
                         } else {
-                            // 가입(신청)한 경우, 실제 상태를 가져옴
                             applyStatus = applyMember.getApplyStatus();
                         }
+
 
                         return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator, profileImage, saved, applyStatus);
 
@@ -251,9 +253,11 @@ public class MateService {
     /**
      * 내가 참여한 디저트메이트 조회
      * */
-    public MatesPageResponse getMyMates(Pageable pageable,String email) {
+    public MatesPageResponse getMyMates(Pageable pageable) {
 
-        UserEntity user = userService.validateUser(email);
+        // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
+        UserEntity user = userService.getCurrentUser();
+
         Long userId = userRepository.findIdByUserUuid(user.getUserUuid());
 
 
