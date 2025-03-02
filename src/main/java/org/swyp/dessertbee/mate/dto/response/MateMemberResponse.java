@@ -17,7 +17,7 @@ import java.util.UUID;
 public class MateMemberResponse {
 
     private Long userId;
-    private UUID userUUid;
+    private UUID userUuid;
     private String grade;
     private Boolean approvalYn;
     private Boolean bannedYn;
@@ -31,7 +31,7 @@ public class MateMemberResponse {
                                                 List<String> profileImage) {
         return MateMemberResponse.builder()
                 .userId(user.getId())
-                .userUUid(user.getUserUuid())
+                .userUuid(user.getUserUuid())
                 .gender(user.getGender())
                 .grade(member.getGrade().toString())
                 .applyStatus(member.getApplyStatus())
