@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.store.store.dto.response.SavedStoreResponse;
 import org.swyp.dessertbee.store.store.dto.response.UserStoreListResponse;
 import org.swyp.dessertbee.store.store.dto.response.UserStoreListSimpleResponse;
@@ -73,8 +75,13 @@ public class UserStoreController {
     @Operation(summary = "리스트에 가게 저장", description = "해당 리스트에 가게를 저장합니다.")
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
     @PostMapping("/lists/{listId}/stores/{storeUuid}")
-    public ResponseEntity<SavedStoreResponse> addStoreToList(@PathVariable Long listId, @PathVariable UUID storeUuid, @RequestBody List<Long> userPreferences) {
-        return ResponseEntity.ok(userStoreService.addStoreToList(listId, storeUuid, userPreferences));
+    public ResponseEntity<SavedStoreResponse> addStoreToList(@PathVariable Long listId, @PathVariable String storeUuid, @RequestBody List<Long> userPreferences) {
+        try {
+            UUID uuid = UUID.fromString(storeUuid); // 수동 변환
+            return ResponseEntity.ok(userStoreService.addStoreToList(listId, uuid, userPreferences));
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException(ErrorCode.INVALID_STORE_UUID);
+        }
     }
 
     /** 리스트별 저장된 가게 조회 */

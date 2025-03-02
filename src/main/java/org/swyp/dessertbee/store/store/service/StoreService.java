@@ -29,6 +29,7 @@ import org.swyp.dessertbee.store.store.entity.*;
 import org.swyp.dessertbee.store.store.repository.*;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
+import org.swyp.dessertbee.user.service.UserService;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -57,6 +58,7 @@ public class StoreService {
     private final MenuService menuService;
     private final UserRepository userRepository;
     private final SavedMateRepository savedMateRepository;
+    private final UserService userService;
 
     /** 가게 등록 (이벤트, 쿠폰, 메뉴 + 이미지 포함) */
     public StoreDetailResponse createStore(StoreCreateRequest request,
@@ -216,7 +218,8 @@ public class StoreService {
                 .collect(Collectors.toList());
     }
 
-    public List<StoreMapResponse> getStoresByMyPreferences(Double lat, Double lng, Double radius, UserEntity user) {
+    public List<StoreMapResponse> getStoresByMyPreferences(Double lat, Double lng, Double radius, String email) {
+        UserEntity user = userService.validateUser(email);
         // 인증된 사용자가 아닌 경우 예외 발생
         if (user == null) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
@@ -501,7 +504,8 @@ public class StoreService {
     }
 
     /** 가게 삭제 */
-    public void deleteStore(UUID storeUuid, UserEntity user) {
+    public void deleteStore(UUID storeUuid, String email) {
+        UserEntity user = userService.validateUser(email);
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
         Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));

@@ -85,9 +85,9 @@ public class StoreController {
             @RequestParam("latitude") Double latitude,
             @RequestParam("longitude") Double longitude,
             @RequestParam("radius") Double radius,
-            @AuthenticationPrincipal UserEntity user) {
+            @AuthenticationPrincipal String email) {
 
-        List<StoreMapResponse> storeMapResponses = storeService.getStoresByMyPreferences(latitude, longitude, radius, user);
+        List<StoreMapResponse> storeMapResponses = storeService.getStoresByMyPreferences(latitude, longitude, radius, email);
         return ResponseEntity.ok(storeMapResponses);
     }
 
@@ -138,9 +138,9 @@ public class StoreController {
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @DeleteMapping("/{storeUuid}")
     public ResponseEntity<Void> deleteStore(@PathVariable UUID storeUuid,
-                                            @AuthenticationPrincipal UserEntity user) {
+                                            @AuthenticationPrincipal String email) {
         try {
-            storeService.deleteStore(storeUuid, user);
+            storeService.deleteStore(storeUuid, email);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             e.printStackTrace();
