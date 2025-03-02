@@ -21,6 +21,7 @@ import org.swyp.dessertbee.mate.repository.MateRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.mate.exception.MateExceptions.*;
+import org.swyp.dessertbee.user.service.UserService;
 
 import java.util.List;
 import java.util.UUID;
@@ -34,6 +35,7 @@ public class MateMemberService {
     private final MateRepository mateRepository;
     private final UserRepository userRepository;
     private final ImageService imageService;
+    private final UserService userService;
 
 
     /**
@@ -133,9 +135,12 @@ public class MateMemberService {
      * @return
      */
     @Transactional
-    public void applyMate(UUID mateUuid, MateRequest request) {
+    public void applyMate(UUID mateUuid, String email) {
+
+        UserEntity user = userService.validateUser(email);
+
         //mateId,userId  유효성 검사
-        MateUserIds validate = validateMateAndUser(mateUuid, request.getUserUuid());
+        MateUserIds validate = validateMateAndUser(mateUuid, user.getUserUuid());
         Long mateId = validate.getMateId();
         Long userId = validate.getUserId();
 
@@ -203,10 +208,12 @@ public class MateMemberService {
     /**
      * 디저트메이트 신청 취소 api
      * */
-    public void cancelApplyMate(UUID mateUuid, MateRequest request) {
+    public void cancelApplyMate(UUID mateUuid, String email) {
+
+        UserEntity user = userService.validateUser(email);
 
         //mateId,userId  유효성 검사
-        MateUserIds validate = validateMateAndUser(mateUuid, request.getUserUuid());
+        MateUserIds validate = validateMateAndUser(mateUuid, user.getUserUuid());
         Long mateId = validate.getMateId();
         Long userId = validate.getUserId();
 
@@ -378,10 +385,12 @@ public class MateMemberService {
      * 디저트 메이트 멤버 탈퇴 api
      * */
     @Transactional
-    public void leaveMember (UUID mateUuid, MateRequest request) {
+    public void leaveMember (UUID mateUuid, String email) {
+
+        UserEntity user = userService.validateUser(email);
 
         //mateId,userId  유효성 검사
-        MateUserIds validate = validateMateAndUser(mateUuid, request.getUserUuid());
+        MateUserIds validate = validateMateAndUser(mateUuid, user.getUserUuid());
         Long mateId = validate.getMateId();
         Long userId = validate.getUserId();
 

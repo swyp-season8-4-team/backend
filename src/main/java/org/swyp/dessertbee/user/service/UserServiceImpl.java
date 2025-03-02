@@ -11,6 +11,7 @@ import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
+import org.swyp.dessertbee.mate.exception.MateExceptions;
 import org.swyp.dessertbee.preference.service.PreferenceService;
 import org.swyp.dessertbee.user.dto.response.UserDetailResponseDto;
 import org.swyp.dessertbee.user.dto.response.UserResponseDto;
@@ -275,5 +276,14 @@ public class UserServiceImpl implements UserService {
         }
 
         return !userRepository.existsByNickname(nickname);
+    }
+
+    /**
+     * AuthenticationPrincipal 을 위해 email로 user 조회
+     * */
+    @Override
+    public UserEntity validateUser(String email) {
+
+        return userRepository.findByEmail(email).orElseThrow(() -> new MateExceptions.UserNotFoundExcption("존재하지 않는 유저입니다."));
     }
 }

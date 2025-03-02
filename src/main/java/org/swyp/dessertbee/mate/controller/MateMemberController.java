@@ -3,6 +3,7 @@ package org.swyp.dessertbee.mate.controller;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.mate.dto.request.MateApplyMemberRequest;
 import org.swyp.dessertbee.mate.dto.request.MateRequest;
@@ -36,10 +37,10 @@ public class MateMemberController {
      * 디저트 메이트 멤버 신청 api
      * */
     @PostMapping("/apply")
-        public ResponseEntity<String> applyMate(@PathVariable UUID mateUuid,@RequestBody MateRequest request) {
+        public ResponseEntity<String> applyMate(@PathVariable UUID mateUuid, @AuthenticationPrincipal String email) {
 
 
-        mateMemberService.applyMate(mateUuid ,request);
+        mateMemberService.applyMate(mateUuid ,email);
         return ResponseEntity.ok("디저트메이트에 성공적으로 신청되었습니다.");
     }
 
@@ -47,10 +48,10 @@ public class MateMemberController {
      * 디저트메이트 멤버 신청 취소 api
      * */
     @DeleteMapping("/apply")
-    public ResponseEntity<String> cancelApplyMate(@PathVariable UUID mateUuid,@RequestBody MateRequest request) {
+    public ResponseEntity<String> cancelApplyMate(@PathVariable UUID mateUuid,@AuthenticationPrincipal String email) {
 
 
-        mateMemberService.cancelApplyMate(mateUuid, request);
+        mateMemberService.cancelApplyMate(mateUuid, email);
         return ResponseEntity.ok("디저트메이트 성공적으로 신청 취소되었습니다.");
     }
     /**
@@ -99,9 +100,9 @@ public class MateMemberController {
      * 디저트 메이트 멤버 탈퇴 api
      * */
     @DeleteMapping("/leave")
-    public ResponseEntity<String> leaveMember(@PathVariable UUID mateUuid,@RequestBody MateRequest request) {
+    public ResponseEntity<String> leaveMember(@PathVariable UUID mateUuid, @AuthenticationPrincipal String email) {
 
-        mateMemberService.leaveMember(mateUuid, request);
+        mateMemberService.leaveMember(mateUuid, email);
         return ResponseEntity.ok("성공적으로 탈퇴 되었습니다.");
     }
 }

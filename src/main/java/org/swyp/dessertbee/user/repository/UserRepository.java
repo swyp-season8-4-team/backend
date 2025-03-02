@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.user.repository;
 
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -62,4 +63,5 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     @Query("SELECT u FROM UserEntity u WHERE u.email = :email AND u.deletedAt IS NOT NULL")
     Optional<UserEntity> findDeletedAccountByEmail(String email);
 
+    UserEntity findByUserUuid(@NotNull UUID userUuid);
 }

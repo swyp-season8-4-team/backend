@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.mate.dto.request.MateCreateRequest;
@@ -23,6 +24,7 @@ import org.swyp.dessertbee.mate.dto.response.MateReplyPageResponse;
 import org.swyp.dessertbee.mate.dto.response.MateReplyResponse;
 import org.swyp.dessertbee.mate.exception.MateExceptions;
 import org.swyp.dessertbee.mate.service.MateReplyService;
+import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 import java.util.List;
 import java.util.UUID;
@@ -106,9 +108,9 @@ public class MateReplyController {
      * */
     @DeleteMapping("/{replyId}")
     public ResponseEntity<String> deleteReply(@PathVariable UUID mateUuid,
-                                              @PathVariable Long replyId, @RequestBody MateRequest request) {
+                                              @PathVariable Long replyId, @AuthenticationPrincipal String email) {
 
-        mateReplyService.deleteReply(mateUuid, replyId, request);
+        mateReplyService.deleteReply(mateUuid, replyId, email);
 
         return ResponseEntity.ok("댓글이 성공적으로 삭제되었습니다.");
     }

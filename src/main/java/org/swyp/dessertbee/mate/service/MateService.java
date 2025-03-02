@@ -24,6 +24,7 @@ import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.swyp.dessertbee.user.service.UserService;
 import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 import java.util.Collections;
@@ -47,15 +48,16 @@ public class MateService {
     private final ReportRepository reportRepository;
     private final StoreRepository storeRepository;
     private final ImageService imageService;
+    private final UserService userService;
 
     /** 메이트 등록 */
     @Transactional
     public MateDetailResponse createMate(MateCreateRequest request, MultipartFile mateImage){
 
-        Long userId = userRepository.findIdByUserUuid(request.getUserUuid());
+        UserEntity user = userRepository.findByUserUuid(request.getUserUuid());
 
         //userId 존재 여부 확인
-        if (userId == null) {
+        if (user == null) {
             throw new UserNotFoundExcption("존재하지 않는 유저입니다.");
         }
 
@@ -64,7 +66,7 @@ public class MateService {
 
         Mate mate = mateRepository.save(
                 Mate.builder()
-                        .userId(userId)
+                        .userId(user.getId())
                         .storeId(storeId)
                         .mateCategoryId(request.getMateCategoryId())
                         .title(request.getTitle())
@@ -84,20 +86,21 @@ public class MateService {
         }
 
         //디저트 메이트 mateId를 가진 member 데이터 생성
-        mateMemberService.addCreatorAsMember(mate.getMateUuid(), userId);
+        mateMemberService.addCreatorAsMember(mate.getMateUuid(), user.getId());
 
-        return getMateDetail(mate.getMateUuid(), request.getUserUuid());
+        return getMateDetail(mate.getMateUuid(), user.getEmail());
     }
 
 
     /** 메이트 상세 정보 */
-    public MateDetailResponse getMateDetail(UUID mateUuid, UUID userUuid) {
+    public MateDetailResponse getMateDetail(UUID mateUuid, String email) {
+
+        UserEntity user = userService.validateUser(email);
 
         //mateId로 디저트메이트 여부 확인
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
                 .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
-        System.out.println(userUuid);
 
         //디저트메이트 사진 조회
         List<String> mateImage = imageService.getImagesByTypeAndId(ImageType.MATE, mate.getMateId());
@@ -111,7 +114,7 @@ public class MateService {
         List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, mate.getUserId());
 
         //현재 접속해 있는 사용자의 user 정보
-        Long userId = userRepository.findIdByUserUuid(userUuid);
+        Long userId = userRepository.findIdByUserUuid(user.getUserUuid());
 
 
         //저장했는지 유무 확인
@@ -193,7 +196,9 @@ public class MateService {
      * 디저트메이트 전체 조회
      * */
     @Transactional
-    public MatesPageResponse getMates(Pageable pageable, UUID userUuid, String keyword, Long mateCategoryId) {
+    public MatesPageResponse getMates(Pageable pageable, String email, String keyword, Long mateCategoryId) {
+
+        UserEntity user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 유저입니다."));
 
 
 
@@ -211,7 +216,7 @@ public class MateService {
 
 
                         //현재 접속해 있는 사용자의 user 정보
-                        Long userId = userRepository.findIdByUserUuid(userUuid);
+                        Long userId = userRepository.findIdByUserUuid(user.getUserUuid());
 
                         SavedMate savedMate = null;
                         if (userId != null) {
@@ -246,9 +251,10 @@ public class MateService {
     /**
      * 내가 참여한 디저트메이트 조회
      * */
-    public MatesPageResponse getMyMates(Pageable pageable, UUID userUuid) {
+    public MatesPageResponse getMyMates(Pageable pageable,String email) {
 
-        Long userId = userRepository.findIdByUserUuid(userUuid);
+        UserEntity user = userService.validateUser(email);
+        Long userId = userRepository.findIdByUserUuid(user.getUserUuid());
 
 
         Page<Mate> mates = mateRepository.findByDeletedAtIsNullAndUserId(pageable, userId);
@@ -333,4 +339,5 @@ public class MateService {
 
 
     }
+
 }

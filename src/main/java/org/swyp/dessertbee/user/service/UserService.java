@@ -5,6 +5,7 @@ import org.swyp.dessertbee.user.dto.response.UserDetailResponseDto;
 import org.swyp.dessertbee.user.dto.response.UserResponseDto;
 import org.swyp.dessertbee.user.dto.request.UserUpdateRequestDto;
 import org.swyp.dessertbee.user.entity.NicknameValidationPurpose;
+import org.swyp.dessertbee.user.entity.UserEntity;
 
 public interface UserService {
     /**
@@ -44,5 +45,7 @@ public interface UserService {
      * @return 업데이트된 사용자 정보
      */
     UserDetailResponseDto updateProfileImage(MultipartFile image);
+
+    UserEntity validateUser(String email);
 
 }

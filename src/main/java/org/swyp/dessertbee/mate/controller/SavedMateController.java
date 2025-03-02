@@ -25,16 +25,15 @@ import java.util.UUID;
 public class SavedMateController {
 
     private final SavedMateService savedMateService;
-    private final MateService mateService;
 
     /**
      * 디저트메이트 저장
      * */
     @PostMapping("/{mateUuid}")
-    public ResponseEntity<String> saveMate(@PathVariable UUID mateUuid,@RequestBody MateRequest request) {
+    public ResponseEntity<String> saveMate(@PathVariable UUID mateUuid,@AuthenticationPrincipal String email) {
 
 
-        savedMateService.saveMate(mateUuid, request);
+        savedMateService.saveMate(mateUuid, email);
 
 
         return ResponseEntity.ok("디저트메이트가 성공적으로 저장되었습니다.");
@@ -45,9 +44,9 @@ public class SavedMateController {
      * 디저트메이트 삭제
      * */
     @DeleteMapping("/{mateUuid}")
-    public ResponseEntity<String> deleteSavedMate(@PathVariable UUID mateUuid, @AuthenticationPrincipal UserEntity user) {
+    public ResponseEntity<String> deleteSavedMate(@PathVariable UUID mateUuid, @AuthenticationPrincipal String email) {
 
-        savedMateService.deleteSavedMate(mateUuid, user.getUserUuid());
+        savedMateService.deleteSavedMate(mateUuid, email);
 
         return ResponseEntity.ok("디저트메이트가 성공적으로 삭제되었습니다.");
     }
@@ -59,7 +58,7 @@ public class SavedMateController {
     private ResponseEntity<MatesPageResponse> getSavedMates(
             @RequestParam int from,
             @RequestParam int to,
-            @ModelAttribute MateRequest request
+            @AuthenticationPrincipal String email
     ){
 
         if (from >= to) {
@@ -70,6 +69,6 @@ public class SavedMateController {
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
 
-        return ResponseEntity.ok(savedMateService.getSavedMates(pageable, request));
+        return ResponseEntity.ok(savedMateService.getSavedMates(pageable, email));
     }
 }
