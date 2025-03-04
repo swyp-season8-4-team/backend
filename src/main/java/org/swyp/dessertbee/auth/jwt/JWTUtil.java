@@ -43,6 +43,11 @@ public class JWTUtil {
     @Getter
     private final long LONG_REFRESH_TOKEN_EXPIRE = 30 * 24 * 60 * 60 * 1000L;   // 30일
 
+    // 개발용 토큰 만료 시간 설정 (밀리초)
+    @Getter
+    private final long DEV_ACCESS_TOKEN_EXPIRE = 3 * 60 * 1000L;  // 3분
+    @Getter
+    private final long DEV_REFRESH_TOKEN_EXPIRE = 5 * 60 * 1000L; // 5분
 
     public JWTUtil(
             @Value("${spring.jwt.secret.access}") String accessSecret,
@@ -73,6 +78,31 @@ public class JWTUtil {
         long expireTime = keepLoggedIn ? LONG_REFRESH_TOKEN_EXPIRE : SHORT_REFRESH_TOKEN_EXPIRE;
         return createToken(email, roles, refreshTokenSecretKey, expireTime);
     }
+
+    /**
+     * 개발 환경용 짧은 만료 시간을 가진 액세스 토큰 생성 (3분)
+     *
+     * @param email 사용자 이메일
+     * @param roles 사용자 권한 목록
+     * @return 생성된 개발용 액세스 토큰
+     */
+    public String createDevAccessToken(String email, List<String> roles) {
+        log.debug("개발용 액세스 토큰 생성 - 이메일: {}, 만료 시간: {}분", email, DEV_ACCESS_TOKEN_EXPIRE / (60 * 1000));
+        return createToken(email, roles, accessTokenSecretKey, DEV_ACCESS_TOKEN_EXPIRE);
+    }
+
+    /**
+     * 개발 환경용 짧은 만료 시간을 가진 리프레시 토큰 생성 (5분)
+     *
+     * @param email 사용자 이메일
+     * @param roles 사용자 권한 목록
+     * @return 생성된 개발용 리프레시 토큰
+     */
+    public String createDevRefreshToken(String email, List<String> roles) {
+        log.debug("개발용 리프레시 토큰 생성 - 이메일: {}, 만료 시간: {}분", email, DEV_REFRESH_TOKEN_EXPIRE / (60 * 1000));
+        return createToken(email, roles, refreshTokenSecretKey, DEV_REFRESH_TOKEN_EXPIRE);
+    }
+
 
     /**
      * JWT 토큰 생성 공통 메서드
