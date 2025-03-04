@@ -298,4 +298,16 @@ public class UserServiceImpl implements UserService {
 
         return userRepository.findByEmail(email).orElseThrow(() -> new MateExceptions.UserNotFoundExcption("존재하지 않는 유저입니다."));
     }
+
+    /**
+     * 이메일로 사용자 조회
+     */
+    @Override
+    public UserEntity findUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    log.warn("로그인 실패 - 존재하지 않는 이메일: {}", email);
+                    return new BusinessException(ErrorCode.USER_NOT_FOUND);
+                });
+    }
 }

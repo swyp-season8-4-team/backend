@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.user.service;
 
+import org.apache.catalina.User;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.user.dto.response.UserDetailResponseDto;
 import org.swyp.dessertbee.user.dto.response.UserResponseDto;
@@ -47,4 +48,6 @@ public interface UserService {
     UserDetailResponseDto updateProfileImage(MultipartFile image);
 
     UserEntity validateUser(String email);
+
+    UserEntity findUserByEmail(String email);
 }
