@@ -32,10 +32,10 @@ public class SavedMateController {
      * 디저트메이트 저장
      * */
     @PostMapping("/{mateUuid}")
-    public ResponseEntity<Map<String, String>> saveMate(@PathVariable UUID mateUuid, @AuthenticationPrincipal String email) {
+    public ResponseEntity<Map<String, String>> saveMate(@PathVariable UUID mateUuid) {
 
 
-        savedMateService.saveMate(mateUuid, email);
+        savedMateService.saveMate(mateUuid);
 
 
         Map<String, String> response = new HashMap<>();
@@ -49,9 +49,9 @@ public class SavedMateController {
      * 디저트메이트 삭제
      * */
     @DeleteMapping("/{mateUuid}")
-    public ResponseEntity<Map<String, String>> deleteSavedMate(@PathVariable UUID mateUuid, @AuthenticationPrincipal String email) {
+    public ResponseEntity<Map<String, String>> deleteSavedMate(@PathVariable UUID mateUuid) {
 
-        savedMateService.deleteSavedMate(mateUuid, email);
+        savedMateService.deleteSavedMate(mateUuid);
 
         Map<String, String> response = new HashMap<>();
         response.put("message", "디저트메이트가 성공적으로 삭제되었습니다.");
@@ -64,9 +64,8 @@ public class SavedMateController {
      * */
     @GetMapping
     private ResponseEntity<MatesPageResponse> getSavedMates(
-            @RequestParam int from,
-            @RequestParam int to,
-            @AuthenticationPrincipal String email
+            @RequestParam(required = false, defaultValue = "0") int from,
+            @RequestParam(required = false, defaultValue = "0") int to
     ){
 
         if (from >= to) {
@@ -77,6 +76,6 @@ public class SavedMateController {
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
 
-        return ResponseEntity.ok(savedMateService.getSavedMates(pageable, email));
+        return ResponseEntity.ok(savedMateService.getSavedMates(pageable));
     }
 }

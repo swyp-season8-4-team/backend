@@ -22,6 +22,7 @@ import org.swyp.dessertbee.mate.repository.SavedMateRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.user.service.UserService;
+import org.swyp.dessertbee.user.service.UserServiceImpl;
 
 import java.util.Collections;
 import java.util.List;
@@ -39,15 +40,17 @@ public class SavedMateService {
     private final MateMemberRepository mateMemberRepository;
     private final MateCategoryRepository mateCategoryRepository;
     private final ImageService imageService;
-    private final UserService userService;
+    private final UserServiceImpl userServiceImpl;
 
     /**
      * 디저트메이트 저장
      * */
     @Transactional
-    public void saveMate(UUID mateUuid, String email) {
+    public void saveMate(UUID mateUuid) {
 
-        UserEntity user = userService.validateUser(email);
+        // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
+        UserEntity user = userServiceImpl.getCurrentUser();
+
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
                 .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
@@ -76,9 +79,11 @@ public class SavedMateService {
      * 디저트메이트 삭제
      * */
     @Transactional
-    public void deleteSavedMate(UUID mateUuid, String email) {
+    public void deleteSavedMate(UUID mateUuid) {
 
-        UserEntity user = userService.validateUser(email);
+        // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
+        UserEntity user = userServiceImpl.getCurrentUser();
+
         Long mateId = mateRepository.findMateIdByMateUuid(mateUuid)
                 .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
@@ -101,10 +106,11 @@ public class SavedMateService {
     /**
      * 저장된 디저트메이트 조회 (userId에 해당하는 Mate만 가져오기)
      */
-    public MatesPageResponse getSavedMates(Pageable pageable, String email) {
+    public MatesPageResponse getSavedMates(Pageable pageable) {
 
+        // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
+        UserEntity user = userServiceImpl.getCurrentUser();
 
-        UserEntity user = userService.validateUser(email);
         Long userId = userRepository.findIdByUserUuid(user.getUserUuid());
 
 

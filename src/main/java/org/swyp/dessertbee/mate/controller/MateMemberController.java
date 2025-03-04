@@ -39,10 +39,10 @@ public class MateMemberController {
      * 디저트 메이트 멤버 신청 api
      * */
     @PostMapping("/apply")
-        public ResponseEntity<Map<String, String>> applyMate(@PathVariable UUID mateUuid, @AuthenticationPrincipal String email) {
+        public ResponseEntity<Map<String, String>> applyMate(@PathVariable UUID mateUuid) {
 
 
-        mateMemberService.applyMate(mateUuid ,email);
+        mateMemberService.applyMate(mateUuid);
 
         Map<String, String> response = new HashMap<>();
         response.put("message", "디저트메이트에 성공적으로 신청되었습니다.");
@@ -54,10 +54,10 @@ public class MateMemberController {
      * 디저트메이트 멤버 신청 취소 api
      * */
     @DeleteMapping("/apply")
-    public ResponseEntity<Map<String, String>> cancelApplyMate(@PathVariable UUID mateUuid,@AuthenticationPrincipal String email) {
+    public ResponseEntity<Map<String, String>> cancelApplyMate(@PathVariable UUID mateUuid) {
 
 
-        mateMemberService.cancelApplyMate(mateUuid, email);
+        mateMemberService.cancelApplyMate(mateUuid);
 
         Map<String, String> response = new HashMap<>();
         response.put("message", "디저트메이트 성공적으로 신청 취소되었습니다.");
@@ -115,9 +115,9 @@ public class MateMemberController {
      * 디저트 메이트 멤버 탈퇴 api
      * */
     @DeleteMapping("/leave")
-    public ResponseEntity<Map<String, String>> leaveMember(@PathVariable UUID mateUuid, @AuthenticationPrincipal String email) {
+    public ResponseEntity<Map<String, String>> leaveMember(@PathVariable UUID mateUuid) {
 
-        mateMemberService.leaveMember(mateUuid, email);
+        mateMemberService.leaveMember(mateUuid);
         Map<String, String> response = new HashMap<>();
         response.put("message", "성공적으로 탈퇴 되었습니다.");
         return ResponseEntity.ok(response);
