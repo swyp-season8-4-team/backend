@@ -103,42 +103,11 @@ public class MateService {
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
                 .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
-
-        //디저트메이트 사진 조회
-        List<String> mateImage = imageService.getImagesByTypeAndId(ImageType.MATE, mate.getMateId());
-
-        //mateCategoryId로 name 조회
-        String mateCategory = String.valueOf(mateCategoryRepository.findCategoryNameById( mate.getMateCategoryId()));
-        //작성자 UUID 조회
-        UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
-
-        //작성자 프로필 조회
-        List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, mate.getUserId());
-
         // 현재 접속해 있는 사용자의 user 정보 (user가 null일 수 있으므로 null 체크)
-        Long userId = (user != null) ? userRepository.findIdByUserUuid(user.getUserUuid()) : null;
-
-        SavedMate savedMate = null;
-        if (userId != null) {
-            savedMate = savedMateRepository.findByMate_MateIdAndUserId(mate.getMateId(), userId);
-        }
-        boolean saved = (savedMate != null);
-
-        MateMember applyMember = null;
-        if (userId != null) {
-            applyMember = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndUserId(mate.getMateId(), userId);
-        }
-
-        MateApplyStatus applyStatus;
-        if (applyMember == null) {
-            // 가입(신청) 안 했거나 인증된 사용자가 아니므로, NONE 상태로 처리
-            applyStatus = MateApplyStatus.NONE;
-        } else {
-            applyStatus = applyMember.getApplyStatus();
-        }
+        Long currentUserId = (user != null) ? userRepository.findIdByUserUuid(user.getUserUuid()) : null;
 
 
-        return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, creator, profileImage, saved, applyStatus);
+        return mapToMateDetailResponse(mate, currentUserId);
 
     }
 
@@ -151,20 +120,20 @@ public class MateService {
                 .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
         try {
-                mate.softDelete();
-                mateRepository.save(mate);
+            mate.softDelete();
+            mateRepository.save(mate);
 
-                //디저트메이트 멤버 삭제
-                mateMemberService.deleteAllMember(mate.getMateId());
+            //디저트메이트 멤버 삭제
+            mateMemberService.deleteAllMember(mate.getMateId());
 
-                //저장된 디저트메이트 삭제
-                savedMateRepository.deleteByMate_MateId(mate.getMateId());
+            //저장된 디저트메이트 삭제
+            savedMateRepository.deleteByMate_MateId(mate.getMateId());
 
-                imageService.deleteImagesByRefId(ImageType.MATE, mate.getMateId());
+            imageService.deleteImagesByRefId(ImageType.MATE, mate.getMateId());
 
         } catch (Exception e) {
-                System.out.println("❌ S3 이미지 삭제 중 오류 발생: " + e.getMessage());
-                throw new RuntimeException("S3 이미지 삭제 실패: " + e.getMessage(), e);
+            System.out.println("❌ S3 이미지 삭제 중 오류 발생: " + e.getMessage());
+            throw new RuntimeException("S3 이미지 삭제 실패: " + e.getMessage(), e);
         }
     }
 
@@ -201,98 +170,42 @@ public class MateService {
         // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
         UserEntity user = userService.getCurrentUser();
 
+        Long currentUserId = (user != null) ? userRepository.findIdByUserUuid(user.getUserUuid()) : null;
 
-        Page<Mate> mates = mateRepository.findByDeletedAtIsNullAndMateCategoryId( mateCategoryId, keyword,pageable);
+        // 페이지 단위로 메이트 조회 (한 번의 호출로 처리)
+        Page<Mate> matesPage = mateRepository.findByDeletedAtIsNullAndMateCategoryId(mateCategoryId, keyword, pageable);
 
-
-        List<MateDetailResponse> matesResponses = mateRepository.findByDeletedAtIsNullAndMateCategoryId( mateCategoryId, keyword, pageable)
-                    .stream()
-                    .map(mate -> {
-                        List<String> mateImages = imageService.getImagesByTypeAndId(ImageType.MATE, mate.getMateId());
-                        String mateCategory = mateCategoryRepository.findCategoryNameById(mate.getMateCategoryId());
-                        UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
-                        //사용자 프로필 조회
-                        List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, mate.getUserId());
+        // 각 메이트 엔티티를 DTO로 변환
+        List<MateDetailResponse> mates = matesPage.stream()
+                .map(mate -> mapToMateDetailResponse(mate, currentUserId))
+                .collect(Collectors.toList());
 
 
-                        // 현재 접속해 있는 사용자의 user 정보 (user가 null일 수 있으므로 null 체크)
-                        Long userId = (user != null) ? userRepository.findIdByUserUuid(user.getUserUuid()) : null;
 
-                        SavedMate savedMate = null;
-                        if (userId != null) {
-                            savedMate = savedMateRepository.findByMate_MateIdAndUserId(mate.getMateId(), userId);
-                        }
-                        boolean saved = (savedMate != null);
-
-                        MateMember applyMember = null;
-                        if (userId != null) {
-                            applyMember = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndUserId(mate.getMateId(), userId);
-                        }
-
-                        MateApplyStatus applyStatus;
-                        if (applyMember == null) {
-                            // 가입(신청) 안 했거나 인증된 사용자가 아니므로, NONE 상태로 처리
-                            applyStatus = MateApplyStatus.NONE;
-                        } else {
-                            applyStatus = applyMember.getApplyStatus();
-                        }
-
-
-                        return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator, profileImage, saved, applyStatus);
-
-                    })
-                    .collect(Collectors.toList());
-
-        // 다음 페이지 존재 여부 확인
-        boolean isLast = mates.isLast();
-
-        return new MatesPageResponse(matesResponses, isLast);
+        return new MatesPageResponse(mates, matesPage.isLast());
 
     }
 
     /**
      * 내가 참여한 디저트메이트 조회
      * */
+    @Transactional
     public MatesPageResponse getMyMates(Pageable pageable) {
-
-        // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
+        // 현재 사용자 정보 및 userId 조회
         UserEntity user = userService.getCurrentUser();
-
         Long userId = userRepository.findIdByUserUuid(user.getUserUuid());
 
+        // 페이지 단위로 참여한 Mate 조회
+        Page<Mate> matesPage = mateRepository.findByDeletedAtIsNullAndUserId(pageable, userId);
 
-        Page<Mate> mates = mateRepository.findByDeletedAtIsNullAndUserId(pageable, userId);
-
-
-        List<MateDetailResponse> matesResponses = mateRepository.findByDeletedAtIsNullAndUserId(pageable, userId)
-                .stream()
-                .map(mate -> {
-                    List<String> mateImages = imageService.getImagesByTypeAndId(ImageType.MATE, mate.getMateId());
-                    String mateCategory = mateCategoryRepository.findCategoryNameById(mate.getMateCategoryId());
-                    UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
-                    //사용자 프로필 조회
-                    List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, mate.getUserId());
-
-
-                    SavedMate savedMate = null;
-                    if (userId != null) {
-                        savedMate = savedMateRepository.findByMate_MateIdAndUserId(mate.getMateId(), userId);
-                    }
-                    boolean saved = (savedMate != null);
-
-                    //신청했는지 유무 확인
-                    MateMember applyMember = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndUserId(mate.getMateId(), userId);
-
-                    return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator, profileImage, saved, applyMember.getApplyStatus());
-
-                })
+        // 각 Mate 엔티티를 DTO로 변환
+        List<MateDetailResponse> matesResponses = matesPage.stream()
+                .map(mate -> mapToMateDetailResponse(mate, userId))
                 .collect(Collectors.toList());
 
-        // 다음 페이지 존재 여부 확인
-        boolean isLast = mates.isLast();
-
-        return new MatesPageResponse(matesResponses, isLast);
+        return new MatesPageResponse(matesResponses, matesPage.isLast());
     }
+
 
     /**
      * 디저트메이트 신고
@@ -332,7 +245,7 @@ public class MateService {
         ReportCategory reportCategory = reportRepository.findByReportCategoryId(request.getReportCategoryId());
 
         // '기타'가 아닌 경우 미리 정의된 신고 유형 코멘트 조회 후 저장
-         mateReportRepository.save(
+        mateReportRepository.save(
                 MateReport.builder()
                         .reportCategoryId(request.getReportCategoryId())
                         .mateId(mate.getMateId())
@@ -341,6 +254,39 @@ public class MateService {
                         .build()
         );
 
+
+    }
+
+    /**
+     * 디저트메이트 정보 조회 중복 코드
+     * */
+    private MateDetailResponse mapToMateDetailResponse(Mate mate, Long currentUserId) {
+
+        //디저트메이트 사진 조회
+        List<String> mateImage = imageService.getImagesByTypeAndId(ImageType.MATE, mate.getMateId());
+
+        //mateCategoryId로 name 조회
+        String mateCategory = String.valueOf(mateCategoryRepository.findCategoryNameById( mate.getMateCategoryId()));
+        //작성자 UUID 조회
+        UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
+
+        //작성자 프로필 조회
+        List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, mate.getUserId());
+
+
+        // 저장 여부 체크
+        SavedMate savedMate = (currentUserId != null)
+                ? savedMateRepository.findByMate_MateIdAndUserId(mate.getMateId(), currentUserId)
+                : null;
+        boolean saved = savedMate != null;
+
+        // 신청 상태 체크
+        MateMember applyMember = (currentUserId != null)
+                ? mateMemberRepository.findByMateIdAndDeletedAtIsNullAndUserId(mate.getMateId(), currentUserId)
+                : null;
+        MateApplyStatus applyStatus = (applyMember == null) ? MateApplyStatus.NONE : applyMember.getApplyStatus();
+
+        return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, creator, profileImage, saved, applyStatus);
 
     }
 
