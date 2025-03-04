@@ -25,6 +25,7 @@ import org.swyp.dessertbee.role.entity.RoleEntity;
 import org.swyp.dessertbee.role.repository.RoleRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
+import org.swyp.dessertbee.user.service.UserService;
 
 import java.util.Collections;
 import java.util.List;
@@ -44,6 +45,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private TokenService tokenService;
+    @Autowired
+    private UserService userService;
 
     @Override
     public TokenResponse refreshAccessToken(String refreshToken) {
@@ -116,8 +119,7 @@ public class AuthServiceImpl implements AuthService {
 
             log.info("회원가입 완료 - 이메일: {}", request.getEmail());
 
-            List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
-            String profileImageUrl = profileImages.isEmpty() ? null : profileImages.get(0);
+            String profileImageUrl = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId()).stream().findFirst().orElse(null);
 
             return LoginResponse.success(accessToken, refreshToken, expiresIn, user, profileImageUrl);
 
@@ -140,11 +142,7 @@ public class AuthServiceImpl implements AuthService {
     public LoginResponse login(LoginRequest request) {
         try {
             // 1. 사용자 조회
-            UserEntity user = userRepository.findByEmail(request.getEmail())
-                    .orElseThrow(() -> {
-                        log.warn("로그인 실패 - 존재하지 않는 이메일: {}", request.getEmail());
-                        return new InvalidCredentialsException("해당 이메일이 존재하지 않습니다.");
-                    });
+            UserEntity user = userService.findUserByEmail(request.getEmail());
 
             // 2. 비밀번호 검증
             if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
@@ -169,8 +167,7 @@ public class AuthServiceImpl implements AuthService {
             saveRefreshToken(user.getEmail(), refreshToken);
 
             // 6. 프로필 이미지
-            List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
-            String profileImageUrl = profileImages.isEmpty() ? null : profileImages.get(0);
+            String profileImageUrl = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId()).stream().findFirst().orElse(null);
 
             // 7. 선호도 설정 여부 파악
             boolean isPreferenceSet = preferenceService.isUserPreferenceSet(user);
@@ -184,6 +181,59 @@ public class AuthServiceImpl implements AuthService {
         } catch (Exception e) {
             log.error("로그인 처리 중 오류 발생 - 이메일: {}", request.getEmail(), e);
             throw new RuntimeException("로그인 처리 중 오류가 발생했습니다.", e);
+        }
+    }
+
+    /**
+     * 개발 환경용 로그인 처리
+     * 일반 로그인과 동일하지만 토큰 유효 시간이 매우 짧음 (3~5분)
+     */
+    @Override
+    @Transactional
+    public LoginResponse devLogin(LoginRequest request) {
+        try {
+            // 1. 사용자 조회
+            UserEntity user = userService.findUserByEmail(request.getEmail());
+
+            // 2. 비밀번호 검증
+            if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+                log.warn("개발 로그인 실패 - 비밀번호 불일치: {}", request.getEmail());
+                throw new InvalidCredentialsException("비밀번호가 올바르지 않습니다.");
+            }
+
+            // 3. 사용자 권한 조회
+            List<String> roles = user.getUserRoles().stream()
+                    .map(userRole -> userRole.getRole().getName().getRoleName())
+                    .collect(Collectors.toList());
+
+            // 4. 개발용 짧은 유효기간의 Access Token, Refresh Token 생성 (3~5분)
+            String accessToken = jwtUtil.createDevAccessToken(user.getEmail(), roles);
+            String refreshToken = jwtUtil.createDevRefreshToken(user.getEmail(), roles);
+
+            // 개발 환경용 토큰 만료 시간 (3분 = 180초)
+            long expiresIn = 180;
+
+            // 5. Refresh Token 저장
+            saveRefreshToken(user.getEmail(), refreshToken);
+
+            // 6. 프로필 이미지
+            List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
+            String profileImageUrl = profileImages.isEmpty() ? null : profileImages.get(0);
+
+            // 7. 선호도 설정 여부 파악
+            boolean isPreferenceSet = preferenceService.isUserPreferenceSet(user);
+
+            log.info("개발 로그인 성공 - 이메일: {}, 토큰 만료시간: {}초", request.getEmail(), expiresIn);
+
+            // 8. 로그인 응답 생성
+            return LoginResponse.success(accessToken, refreshToken, expiresIn, user, profileImageUrl, isPreferenceSet);
+
+        } catch (InvalidCredentialsException e) {
+            log.warn("개발 로그인 실패 - 이메일: {}, 사유: {}", request.getEmail(), e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("개발 로그인 처리 중 오류 발생 - 이메일: {}", request.getEmail(), e);
+            throw new RuntimeException("개발 로그인 처리 중 오류가 발생했습니다.", e);
         }
     }
 
@@ -205,11 +255,7 @@ public class AuthServiceImpl implements AuthService {
             validateEmailVerificationToken(verificationToken, request.getEmail(), EmailVerificationPurpose.PASSWORD_RESET);
 
             // 사용자 조회
-            UserEntity user = userRepository.findByEmail(request.getEmail())
-                    .orElseThrow(() -> {
-                        log.warn("비밀번호 재설정 실패 - 존재하지 않는 이메일: {}", request.getEmail());
-                        return new BusinessException(ErrorCode.INVALID_CREDENTIALS, "등록되지 않은 이메일입니다.");
-                    });
+            UserEntity user = userService.findUserByEmail(request.getEmail());
 
             // 새 비밀번호 암호화 및 저장
             user.setPassword(passwordEncoder.encode(request.getNewPassword()));
@@ -245,10 +291,8 @@ public class AuthServiceImpl implements AuthService {
         try {
             String email = jwtUtil.getEmail(token, true);
 
-            if (!userRepository.existsByEmail(email)) {
-                log.warn("로그아웃 실패 - 존재하지 않는 사용자: {}", email);
-                throw new BusinessException(ErrorCode.INVALID_CREDENTIALS, "해당 이메일의 사용자를 찾을 수 없습니다.");
-            }
+            userService.findUserByEmail(email);
+
             log.info("로그아웃 성공 - 이메일: {}", email);
             revokeRefreshToken(email);
 

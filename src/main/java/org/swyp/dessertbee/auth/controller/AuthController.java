@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.auth.dto.TokenResponse;
@@ -21,7 +20,6 @@ import org.swyp.dessertbee.auth.dto.passwordreset.PasswordResetRequest;
 import org.swyp.dessertbee.auth.dto.signup.SignUpRequest;
 import org.swyp.dessertbee.auth.service.AuthService;
 import jakarta.validation.Valid;
-import org.swyp.dessertbee.common.exception.BusinessException;
 
 
 @Tag(name = "Authentication", description = "인증 관련 API")
@@ -119,5 +117,24 @@ public class AuthController {
         TokenResponse tokenResponse = authService.refreshAccessToken(refreshToken);
         return ResponseEntity.ok(tokenResponse);
     }
+
+    @Operation(summary = "DEV 로그인", description = "이메일과 비밀번호로 로그인합니다.")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "로그인 성공",
+                    content = @Content(schema = @Schema(implementation = LoginResponse.class))
+            ),
+            @ApiResponse(responseCode = "401", description = "인증 실패")
+    })
+    @PostMapping("/dev/login")
+    public ResponseEntity<LoginResponse> devlogin(
+            @Parameter(description = "로그인 정보", required = true)
+            @Valid @RequestBody LoginRequest request
+    ) {
+        LoginResponse loginResponse = authService.devLogin(request);
+        return ResponseEntity.ok(loginResponse);
+    }
+
 }
 

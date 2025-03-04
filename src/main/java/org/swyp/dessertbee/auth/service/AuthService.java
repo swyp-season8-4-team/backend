@@ -65,4 +65,6 @@ public interface AuthService {
      * @throws InvalidCredentialsException 잘못된 인증 정보
      */
     LogoutResponse logout(String token);
+
+    LoginResponse devLogin(LoginRequest request);
 }
