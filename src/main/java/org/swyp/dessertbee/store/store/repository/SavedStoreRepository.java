@@ -3,6 +3,7 @@ package org.swyp.dessertbee.store.store.repository;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.swyp.dessertbee.store.store.entity.SavedStore;
 import org.swyp.dessertbee.store.store.entity.Store;
@@ -28,16 +29,18 @@ public interface SavedStoreRepository extends JpaRepository<SavedStore, Long> {
 
     /** 특정 가게를 저장한 사람들의 취향 태그 Top3 조회 */
     @Query(value = """
-        SELECT preference, COUNT(preference) AS preference_count
-        FROM saved_store_preferences
-        WHERE saved_store_id IN (
-            SELECT id FROM saved_store WHERE store_id = :storeId
-        )
-        GROUP BY preference
-        ORDER BY preference_count DESC
-        LIMIT 3
-    """, nativeQuery = true)
-    List<Object[]> findTop3PreferencesByStoreId(Long storeId);
+    SELECT p.preference_name, COUNT(sp.preference) AS preference_count
+    FROM saved_store_preferences sp
+    JOIN preference p ON sp.preference = p.id
+    WHERE sp.saved_store_id IN (
+        SELECT id FROM saved_store WHERE store_id = :storeId
+    )
+    GROUP BY p.preference_name
+    ORDER BY preference_count DESC
+    LIMIT 3
+""", nativeQuery = true)
+    List<Object[]> findTop3PreferencesByStoreId(@Param("storeId") Long storeId);
+
 
     /** 특정 가게를 저장한 사용자가 있다면 해당 SavedStore 엔티티 반환 */
     Optional<SavedStore> findFirstByStoreAndUserStoreList_User_Id(Store store, Long userId);
