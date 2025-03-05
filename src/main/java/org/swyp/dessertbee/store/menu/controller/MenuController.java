@@ -1,8 +1,5 @@
 package org.swyp.dessertbee.store.menu.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -50,29 +47,13 @@ public class MenuController {
     @PostMapping
     public ResponseEntity<Void> addMenus(
             @PathVariable UUID storeUuid,
-            @RequestPart("requests") String requestJson,
+            @RequestPart("requests") List<MenuCreateRequest> menuRequests,
             @RequestPart(value = "menuImages", required = false) List<MultipartFile> menuImageFiles) {
 
-        // JSON을 List<MenuCreateRequest>로 변환
-        ObjectMapper objectMapper = new ObjectMapper();
-        List<MenuCreateRequest> menuRequests;
-        try {
-            // 단일 객체 처리
-            if (requestJson.trim().startsWith("{")) {
-                MenuCreateRequest singleRequest = objectMapper.readValue(requestJson, MenuCreateRequest.class);
-                menuRequests = Collections.singletonList(singleRequest);
-            } else {
-                // 리스트 처리
-                menuRequests = objectMapper.readValue(requestJson, new TypeReference<>() {});
-            }
-        } catch (JsonProcessingException e) {
-            throw new IllegalArgumentException("JSON 파싱 오류", e);
-        }
-
-        if (menuRequests.isEmpty()) {
+        if (menuRequests == null || menuRequests.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
-        // 기존의 getName() 대신 getOriginalFilename()을 사용하여 파일 맵 생성
+
         Map<String, MultipartFile> menuImageMap = menuImageFiles != null
                 ? menuImageFiles.stream()
                 .collect(Collectors.toMap(MultipartFile::getOriginalFilename, file -> file, (a, b) -> a))
@@ -89,17 +70,8 @@ public class MenuController {
     public ResponseEntity<Void> updateMenu(
             @PathVariable UUID storeUuid,
             @PathVariable UUID menuUuid,
-            @RequestParam("request") String requestJson,
+            @RequestParam("request") MenuCreateRequest request,
             @RequestPart(value = "file", required = false) MultipartFile file) {
-
-        // JSON 데이터를 객체로 변환
-        ObjectMapper objectMapper = new ObjectMapper();
-        MenuCreateRequest request;
-        try {
-            request = objectMapper.readValue(requestJson, MenuCreateRequest.class);
-        } catch (JsonProcessingException e) {
-            throw new IllegalArgumentException("JSON 파싱 오류", e);
-        }
 
         menuService.updateMenu(storeUuid, menuUuid, request, file);
         return ResponseEntity.ok().build();

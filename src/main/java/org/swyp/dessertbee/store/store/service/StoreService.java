@@ -420,13 +420,13 @@ public class StoreService {
         store.setNotice(request.getNotice());
         storeRepository.save(store);
 
-        if (!storeImageFiles.isEmpty()) {
+        if (storeImageFiles != null && !storeImageFiles.isEmpty()) {
             List<Long> deleteStoreImageIds = request.getStoreImageDeleteIds();
             String folder = "store/" + store.getStoreId();
             imageService.updatePartialImages(deleteStoreImageIds, storeImageFiles, ImageType.STORE, store.getStoreId(), folder);
         }
 
-        if (!ownerPickImageFiles.isEmpty()) {
+        if (ownerPickImageFiles != null && !ownerPickImageFiles.isEmpty()) {
             List<Long> deleteOwnerPickImageIds = request.getOwnerPickImageDeleteIds();
             String folder = "ownerpick/" + store.getStoreId();
             imageService.updatePartialImages(deleteOwnerPickImageIds, ownerPickImageFiles, ImageType.OWNERPICK, store.getStoreId(), folder);
