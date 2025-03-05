@@ -104,9 +104,9 @@ public class MateReplyController {
      * */
     @DeleteMapping("/{replyId}")
     public ResponseEntity<Map<String, String>> deleteReply(@PathVariable UUID mateUuid,
-                                              @PathVariable Long replyId, @AuthenticationPrincipal String email) {
+                                              @PathVariable Long replyId) {
 
-        mateReplyService.deleteReply(mateUuid, replyId, email);
+        mateReplyService.deleteReply(mateUuid, replyId);
 
         Map<String, String> response = new HashMap<>();
         response.put("message", "댓글이 성공적으로 삭제되었습니다.");

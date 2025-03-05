@@ -22,6 +22,7 @@ import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.user.service.UserService;
+import org.swyp.dessertbee.user.service.UserServiceImpl;
 
 import java.util.List;
 import java.util.UUID;
@@ -36,6 +37,7 @@ public class MateMemberService {
     private final UserRepository userRepository;
     private final ImageService imageService;
     private final UserService userService;
+    private final UserServiceImpl userServiceImpl;
 
 
     /**
@@ -135,9 +137,9 @@ public class MateMemberService {
      * @return
      */
     @Transactional
-    public void applyMate(UUID mateUuid, String email) {
-
-        UserEntity user = userService.validateUser(email);
+    public void applyMate(UUID mateUuid) {
+        // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
+        UserEntity user = userServiceImpl.getCurrentUser();
 
         //mateId,userId  유효성 검사
         MateUserIds validate = validateMateAndUser(mateUuid, user.getUserUuid());
@@ -208,9 +210,10 @@ public class MateMemberService {
     /**
      * 디저트메이트 신청 취소 api
      * */
-    public void cancelApplyMate(UUID mateUuid, String email) {
+    public void cancelApplyMate(UUID mateUuid) {
 
-        UserEntity user = userService.validateUser(email);
+        // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
+        UserEntity user = userServiceImpl.getCurrentUser();
 
         //mateId,userId  유효성 검사
         MateUserIds validate = validateMateAndUser(mateUuid, user.getUserUuid());
@@ -276,7 +279,7 @@ public class MateMemberService {
 
 
         //생성자 권한을 위해 생성자 userId 조회 및 유효성 검사
-        MateUserIds creatorIds  = validateMateAndUser(mateUuid, request.getCreatorUuid());
+        MateUserIds creatorIds  = validateMateAndUser(mateUuid, request.getCreatorUserUuid());
         Long mateId = creatorIds.getMateId();
         Long creatorId = creatorIds.getUserId();
 
@@ -286,13 +289,13 @@ public class MateMemberService {
 
         if (creator.getGrade().equals(MateMemberGrade.CREATOR)) {
 
-            Long targetId = userRepository.findIdByUserUuid(request.getTargetUuid());
+            Long acceptUserId = userRepository.findIdByUserUuid(request.getAcceptUserUuid());
 
-            MateMember target = mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, targetId)
+            MateMember acceptUser = mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, acceptUserId)
                     .orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 멤버입니다."));
 
 
-            mateMemberRepository.updateApplyStatus(MateApplyStatus.APPROVED, mateId, target.getUserId());
+            mateMemberRepository.updateApplyStatus(MateApplyStatus.APPROVED, mateId, acceptUser.getUserId());
         }
 
 
@@ -305,7 +308,7 @@ public class MateMemberService {
     public void rejectMember (UUID mateUuid, MateApplyMemberRequest request) {
 
         //생성자 권한을 위해 생성자 userId 조회 및 유효성 검사
-        MateUserIds creatorIds  = validateMateAndUser(mateUuid, request.getCreatorUuid());
+        MateUserIds creatorIds  = validateMateAndUser(mateUuid, request.getCreatorUserUuid());
         Long mateId = creatorIds.getMateId();
         Long creatorId = creatorIds.getUserId();
 
@@ -315,20 +318,20 @@ public class MateMemberService {
 
         if (creator.getGrade().equals(MateMemberGrade.CREATOR)) {
 
-            Long targetId = userRepository.findIdByUserUuid(request.getTargetUuid());
+            Long rejectUserId = userRepository.findIdByUserUuid(request.getRejectUserUuid());
 
-            MateMember target = mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, targetId)
+            MateMember rejectUser = mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, rejectUserId)
                     .orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 멤버입니다."));
 
 
-            mateMemberRepository.updateApplyStatus(MateApplyStatus.REJECTED, mateId, target.getUserId());
-            target.setApplyStatus(MateApplyStatus.REJECTED);
+            mateMemberRepository.updateApplyStatus(MateApplyStatus.REJECTED, mateId, rejectUser.getUserId());
+            rejectUser.setApplyStatus(MateApplyStatus.REJECTED);
             try {
 
-                target.softDelete();
+                rejectUser.softDelete();
 
                 // 변경된 모든 멤버 저장
-                mateMemberRepository.save(target);
+                mateMemberRepository.save(rejectUser);
             } catch (Exception e) {
                 System.out.println("❌ 디저트메이트 멤버 삭제 중 오류 발생: " + e.getMessage());
                 throw new RuntimeException("디저트메이트 멤버 삭제 실패: " + e.getMessage(), e);
@@ -345,7 +348,7 @@ public class MateMemberService {
     public void bannedMember (UUID mateUuid, MateApplyMemberRequest request) {
 
         //생성자 권한을 위해 생성자 userId 조회 및 유효성 검사
-        MateUserIds creatorIds  = validateMateAndUser(mateUuid, request.getCreatorUuid());
+        MateUserIds creatorIds  = validateMateAndUser(mateUuid, request.getCreatorUserUuid());
         Long mateId = creatorIds.getMateId();
         Long creatorId = creatorIds.getUserId();
 
@@ -355,20 +358,19 @@ public class MateMemberService {
 
         if (creator.getGrade().equals(MateMemberGrade.CREATOR)) {
 
-            MateUserIds targetIds = validateMateAndUser(mateUuid, request.getTargetUuid());
-            Long tragetId = targetIds.getUserId();
+            Long banUserId = userRepository.findIdByUserUuid(request.getBanUserUuid());
 
-            MateMember target = mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, tragetId)
+            MateMember banUser = mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, banUserId)
                     .orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 멤버입니다."));
 
-            mateMemberRepository.updateApplyStatus(MateApplyStatus.BANNED, mateId, target.getUserId());
-            target.setApplyStatus(MateApplyStatus.BANNED);
+            mateMemberRepository.updateApplyStatus(MateApplyStatus.BANNED, mateId, banUser.getUserId());
+            banUser.setApplyStatus(MateApplyStatus.BANNED);
             try {
 
-                target.softDelete();
+                banUser.softDelete();
 
                 // 변경된 모든 멤버 저장
-                mateMemberRepository.save(target);
+                mateMemberRepository.save(banUser);
 
             } catch (Exception e) {
                 System.out.println("❌ 디저트메이트 멤버 강퇴 중 오류 발생: " + e.getMessage());
@@ -385,9 +387,11 @@ public class MateMemberService {
      * 디저트 메이트 멤버 탈퇴 api
      * */
     @Transactional
-    public void leaveMember (UUID mateUuid, String email) {
+    public void leaveMember (UUID mateUuid) {
 
-        UserEntity user = userService.validateUser(email);
+        // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
+        UserEntity user = userServiceImpl.getCurrentUser();
+
 
         //mateId,userId  유효성 검사
         MateUserIds validate = validateMateAndUser(mateUuid, user.getUserUuid());

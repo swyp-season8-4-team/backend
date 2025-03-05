@@ -16,8 +16,14 @@ import java.util.UUID;
 public class MateApplyMemberRequest {
 
     @NotNull
-    private UUID creatorUuid;
+    private UUID creatorUserUuid;
 
-    @NotNull
-    private UUID targetUuid;
+    //디저트메이트 거절할 때
+    private UUID rejectUserUuid;
+
+    //디저트메이트 수락할 때
+    private UUID acceptUserUuid;
+
+    //디저트메이트 강퇴 시킬 떄
+    private UUID banUserUuid;
 }

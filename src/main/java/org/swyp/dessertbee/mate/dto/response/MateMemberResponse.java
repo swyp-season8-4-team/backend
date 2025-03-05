@@ -19,8 +19,6 @@ public class MateMemberResponse {
     private Long userId;
     private UUID userUuid;
     private String grade;
-    private Boolean approvalYn;
-    private Boolean bannedYn;
     private List<String> profileImage;
     private String nickname;
     private UserEntity.Gender gender;

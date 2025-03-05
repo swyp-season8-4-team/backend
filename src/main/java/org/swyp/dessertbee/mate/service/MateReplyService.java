@@ -26,6 +26,7 @@ import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.user.service.UserService;
+import org.swyp.dessertbee.user.service.UserServiceImpl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +46,7 @@ public class MateReplyService {
     private final ReportRepository reportRepository;
     private final MateRepository mateRepository;
     private final ImageService imageService;
-    private final UserService userService;
+    private final UserServiceImpl userServiceImpl;
 
     /**
      * 디저트메이트 댓글 생성
@@ -142,8 +143,11 @@ public class MateReplyService {
      * 디저트메이트 댓글 삭제
      * */
     @Transactional
-    public void deleteReply(UUID mateUuid, Long replyId, String email) {
-        UserEntity user = userService.validateUser(email);
+    public void deleteReply(UUID mateUuid, Long replyId) {
+
+        // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
+        UserEntity user = userServiceImpl.getCurrentUser();
+
         MateUserIds mateUserIds = validateMateAndUser(mateUuid, user.getUserUuid());
         Long mateId = mateUserIds.getMateId();
 
