@@ -290,6 +290,9 @@ public class StoreService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
         UserEntity user = userService.getCurrentUser();
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
         Long userId = user.getId();
         UUID userUuid = user.getUserUuid();
 
