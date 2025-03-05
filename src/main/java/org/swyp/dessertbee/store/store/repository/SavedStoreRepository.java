@@ -46,5 +46,5 @@ public interface SavedStoreRepository extends JpaRepository<SavedStore, Long> {
             "JOIN s.userStoreList usl " +
             "JOIN usl.user u " +
             "WHERE s.store = :store AND u.id = :userId")
-    Optional<SavedStore> findFirstByStoreAndUserId(@Param("store") Store storeId, @Param("userId") Long userId);
+    Optional<SavedStore> findFirstByStoreAndUserId(@Param("store") Store store, @Param("userId") Long userId);
 }
