@@ -290,13 +290,12 @@ public class StoreService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
         UserEntity user = userService.getCurrentUser();
-        if (user == null) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
-        }
-        Long userId = user.getId();
-        UUID userUuid = user.getUserUuid();
+        Long userId = (user != null) ? user.getId() : null;
+        UUID userUuid = (user != null) ? user.getUserUuid() : null;
 
-        Optional<SavedStore> savedStoreOpt = savedStoreRepository.findFirstByStoreAndUserId(store, userId);
+        Optional<SavedStore> savedStoreOpt = (userId != null) ?
+                savedStoreRepository.findFirstByStoreAndUserId(store, userId) :
+                Optional.empty();
 
         boolean saved = savedStoreOpt.isPresent();
         Long savedListId = savedStoreOpt.map(s -> s.getUserStoreList().getId()).orElse(null);
