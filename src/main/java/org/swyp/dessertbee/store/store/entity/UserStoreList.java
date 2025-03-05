@@ -22,7 +22,7 @@ public class UserStoreList {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private UserEntity user;
 
     @Column(name = "list_name", nullable = false, length = 50)

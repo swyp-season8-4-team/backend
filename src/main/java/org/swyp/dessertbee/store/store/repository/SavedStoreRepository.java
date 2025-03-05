@@ -41,7 +41,10 @@ public interface SavedStoreRepository extends JpaRepository<SavedStore, Long> {
 """, nativeQuery = true)
     List<Object[]> findTop3PreferencesByStoreId(@Param("storeId") Long storeId);
 
-
     /** 특정 가게를 저장한 사용자가 있다면 해당 SavedStore 엔티티 반환 */
-    Optional<SavedStore> findFirstByStoreAndUserStoreList_User_Id(Store store, Long userId);
+    @Query("SELECT s FROM SavedStore s " +
+            "JOIN s.userStoreList usl " +
+            "JOIN usl.user u " +
+            "WHERE s.store = :store AND u.id = :userId")
+    Optional<SavedStore> findFirstByStoreAndUserId(@Param("store") Store store, @Param("userId") Long userId);
 }
