@@ -2,6 +2,7 @@ package org.swyp.dessertbee.store.store.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
@@ -39,6 +40,7 @@ import java.util.*;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -288,13 +290,15 @@ public class StoreService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
         UserEntity user = userService.getCurrentUser();
-        Long userId = Optional.ofNullable(user).map(UserEntity::getId).orElse(null);
-        UUID userUuid = Optional.ofNullable(user).map(UserEntity::getUserUuid).orElse(null);
+        Long userId = user.getId();
+        UUID userUuid = user.getUserUuid();
 
-        Optional<SavedStore> savedStoreOpt = Optional.ofNullable(user)
-                .flatMap(u -> savedStoreRepository.findFirstByStoreAndUserStoreList_User_Id(store, u.getId()));
+        Optional<SavedStore> savedStoreOpt = savedStoreRepository.findFirstByStoreAndUserId(store, userId);
+
         boolean saved = savedStoreOpt.isPresent();
         Long savedListId = savedStoreOpt.map(s -> s.getUserStoreList().getId()).orElse(null);
+
+        log.info("사용자가 가게를 저장했는지 여부: {}, savedListId: {}", saved, savedListId);
 
         // 가게 대표 이미지
         List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, storeId);
