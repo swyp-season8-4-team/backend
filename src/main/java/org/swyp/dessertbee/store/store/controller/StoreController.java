@@ -1,6 +1,5 @@
 package org.swyp.dessertbee.store.store.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -28,32 +27,20 @@ import java.util.*;
 public class StoreController {
 
     private final StoreService storeService;
-    private final ObjectMapper objectMapper;
 
     /** 가게 등록 */
     @Operation(summary = "가게 등록", description = "업주가 가게를 등록합니다.")
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StoreDetailResponse> createStore(
-            @RequestPart("request") String requestJson,
+            @RequestPart("request") StoreCreateRequest request,
             @RequestPart(value = "storeImageFiles", required = false) List<MultipartFile> storeImageFiles,
             @RequestPart(value = "ownerPickImageFiles", required = false) List<MultipartFile> ownerPickImageFiles,
             @RequestPart(value = "menuImageFiles", required = false) List<MultipartFile> menuImageFiles) {
 
-        try {
-            StoreCreateRequest request = objectMapper.readValue(requestJson, StoreCreateRequest.class);
-
-            storeImageFiles = storeImageFiles != null ? storeImageFiles : Collections.emptyList();
-            ownerPickImageFiles = ownerPickImageFiles != null ? ownerPickImageFiles : Collections.emptyList();
-            menuImageFiles = menuImageFiles != null ? menuImageFiles : Collections.emptyList();
-
-            // 가게 생성
-            StoreDetailResponse response = storeService.createStore(request, storeImageFiles, ownerPickImageFiles, menuImageFiles);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+        // 가게 생성
+        StoreDetailResponse response = storeService.createStore(request, storeImageFiles, ownerPickImageFiles, menuImageFiles);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     /** 반경 내 가게 조회 */
@@ -110,26 +97,14 @@ public class StoreController {
     @PatchMapping(value = "/{storeUuid}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StoreDetailResponse> updateStore(
             @PathVariable UUID storeUuid,
-            @RequestPart("request") String requestJson,
+            @RequestPart("request") StoreUpdateRequest request,
             @RequestPart(value = "storeImageFiles", required = false) List<MultipartFile> storeImageFiles,
             @RequestPart(value = "ownerPickImageFiles", required = false) List<MultipartFile> ownerPickImageFiles,
             @RequestPart(value = "menuImageFiles", required = false) List<MultipartFile> menuImageFiles) {
-        try {
-            // StoreUpdateRequest는 StoreCreateRequest와 유사한 구조를 가정합니다.
-            StoreUpdateRequest request = objectMapper.readValue(requestJson, StoreUpdateRequest.class);
 
-            // null 체크 처리
-            storeImageFiles = (storeImageFiles != null) ? storeImageFiles : Collections.emptyList();
-            ownerPickImageFiles = (ownerPickImageFiles != null) ? ownerPickImageFiles : Collections.emptyList();
-            menuImageFiles = (menuImageFiles != null) ? menuImageFiles : Collections.emptyList();
-
-            StoreDetailResponse updatedStore = storeService.updateStore(storeUuid, request,
-                    storeImageFiles, ownerPickImageFiles, menuImageFiles);
-            return ResponseEntity.ok(updatedStore);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+        StoreDetailResponse updatedStore = storeService.updateStore(storeUuid, request,
+                storeImageFiles, ownerPickImageFiles, menuImageFiles);
+        return ResponseEntity.ok(updatedStore);
     }
 
     /** 가게 삭제 */
