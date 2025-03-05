@@ -344,7 +344,7 @@ public class StoreService {
         // 한줄 리뷰
         List<StoreReview> reviews = storeReviewRepository.findByStoreIdAndDeletedAtIsNull(storeId);
         int totalReviewCount = reviews.size();
-        Map<Long, List<String>> reviewImagesMap = imageService.getImagesByTypeAndIds(ImageType.REVIEW,
+        Map<Long, List<String>> reviewImagesMap = imageService.getImagesByTypeAndIds(ImageType.SHORT,
                 reviews.stream().map(StoreReview::getReviewId).toList());
 
         List<StoreReviewResponse> reviewResponses = reviews.stream().map(review -> {
