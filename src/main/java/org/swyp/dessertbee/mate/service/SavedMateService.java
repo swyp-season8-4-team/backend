@@ -131,10 +131,10 @@ public class SavedMateService {
         List<MateDetailResponse> matesResponses = mateRepository.findByMateIdIn(savedMateIds)
                 .stream()
                 .map(mate -> {
-                    List<String> mateImages = imageService.getImagesByTypeAndId(ImageType.MATE, mate.getMateId());
+                    String mateImage = imageService.getImageByTypeAndId(ImageType.MATE, mate.getMateId());
                     String mateCategory = mateCategoryRepository.findCategoryNameById(mate.getMateCategoryId());
                     UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
-                    List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, mate.getUserId());
+                    String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, mate.getUserId());
 
                     //저장된 디저트메이트 데이터만 지고 오는거니까 true
                     boolean saved = true;
@@ -143,7 +143,7 @@ public class SavedMateService {
                     //신청했는지 유무 확인
                     MateMember applyMember = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndUserId(mate.getMateId(), userId);
 
-                    return MateDetailResponse.fromEntity(mate, mateImages, mateCategory, creator, profileImage, saved, applyMember.getApplyStatus());
+                    return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, creator, profileImage, saved, applyMember.getApplyStatus());
                 })
                 .collect(Collectors.toList());
 

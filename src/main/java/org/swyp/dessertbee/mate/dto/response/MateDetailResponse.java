@@ -24,8 +24,8 @@ public class MateDetailResponse {
     private String title;
     private String content;
     private Boolean recruitYn;
-    private List<String> mateImage;
-    private List<String> profileImage;
+    private String mateImage;
+    private String profileImage;
     private MatePlace place;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -37,10 +37,10 @@ public class MateDetailResponse {
     private String mateCategory;
 
     public static MateDetailResponse fromEntity(Mate mate,
-                                                List<String> mateImage,
+                                                String mateImage,
                                                 String category,
                                                 UserEntity creator,
-                                                List<String> profileImage,
+                                                String profileImage,
                                                 boolean saved,
                                                 MateApplyStatus applyStatus) {
 

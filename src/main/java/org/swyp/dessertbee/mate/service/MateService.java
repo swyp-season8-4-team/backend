@@ -104,7 +104,7 @@ public class MateService {
                 .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
         // 현재 접속해 있는 사용자의 user 정보 (user가 null일 수 있으므로 null 체크)
-        Long currentUserId = (user != null) ? userRepository.findIdByUserUuid(user.getUserUuid()) : null;
+        Long currentUserId = (user != null) ? user.getId() : null;
 
 
         return mapToMateDetailResponse(mate, currentUserId);
@@ -170,7 +170,7 @@ public class MateService {
         // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
         UserEntity user = userService.getCurrentUser();
 
-        Long currentUserId = (user != null) ? userRepository.findIdByUserUuid(user.getUserUuid()) : null;
+        Long currentUserId = (user != null) ? user.getId() : null;
 
         // 페이지 단위로 메이트 조회 (한 번의 호출로 처리)
         Page<Mate> matesPage = mateRepository.findByDeletedAtIsNullAndMateCategoryId(mateCategoryId, keyword, pageable);
@@ -263,7 +263,7 @@ public class MateService {
     private MateDetailResponse mapToMateDetailResponse(Mate mate, Long currentUserId) {
 
         //디저트메이트 사진 조회
-        List<String> mateImage = imageService.getImagesByTypeAndId(ImageType.MATE, mate.getMateId());
+        String mateImage = imageService.getImageByTypeAndId(ImageType.MATE, mate.getMateId());
 
         //mateCategoryId로 name 조회
         String mateCategory = String.valueOf(mateCategoryRepository.findCategoryNameById( mate.getMateCategoryId()));
@@ -271,7 +271,7 @@ public class MateService {
         UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
 
         //작성자 프로필 조회
-        List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, mate.getUserId());
+        String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, mate.getUserId());
 
 
         // 저장 여부 체크
