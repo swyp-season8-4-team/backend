@@ -1,12 +1,15 @@
 package org.swyp.dessertbee.community.review.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.community.review.dto.request.ReviewCreateRequest;
+import org.swyp.dessertbee.community.review.dto.response.ReviewPageResponse;
 import org.swyp.dessertbee.community.review.dto.response.ReviewResponse;
 import org.swyp.dessertbee.community.review.entity.Review;
 import org.swyp.dessertbee.community.review.entity.SavedReview;
@@ -20,6 +23,7 @@ import org.swyp.dessertbee.user.service.UserServiceImpl;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -63,7 +67,7 @@ public class ReviewService {
         //기존 이미지 삭제 후 새 이미지 업로드
         if (reviewImages != null && !reviewImages.isEmpty()) {
             String folder = "review/" + review.getReviewId();
-            imageService.uploadAndSaveImages(reviewImages, ImageType.REVIEW, review.getReviewCategoryId(), folder);
+            imageService.uploadAndSaveImages(reviewImages, ImageType.REVIEW, review.getReviewId(), folder);
         }
 
         return getReviewDetail(review.getReviewUuid());
@@ -87,6 +91,24 @@ public class ReviewService {
         return mapToReviewDetailResponse(review, currentUserId);
     }
 
+    /**
+     * 커뮤니티 리뷰 전체 조회
+     * */
+    public ReviewPageResponse getReviews(Pageable pageable, String keyword, Long reviewCategoryId) {
+
+        // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
+        UserEntity user = userService.getCurrentUser();
+
+        Long currentUserId = (user != null) ? user.getId() : null;
+
+        Page<Review> reviewsPage = reviewRepository.findByDeletedAtIsNullAndReviewCategoryId(pageable, keyword, reviewCategoryId);
+
+        List<ReviewResponse> reviews = reviewsPage.stream()
+                .map( review -> mapToReviewDetailResponse(review, currentUserId))
+                .collect(Collectors.toList());
+
+        return new ReviewPageResponse(reviews, reviewsPage.isLast());
+    }
 
     /**
      * 커뮤니티 리뷰 정보 조회 중복 코드
@@ -103,7 +125,7 @@ public class ReviewService {
                 .orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 유저입니다."));
 
         //작성자 프로필 조회
-        String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, review.getUserId());
+        String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, review.getReviewId());
 
         SavedReview savedReview = (currentUserId != null)
                 ? savedReviewRepository.findBySavedReviewIdAndUserId(review.getReviewId(), currentUserId)
@@ -113,4 +135,6 @@ public class ReviewService {
         return ReviewResponse.fromEntity(user, review, reviewImages, reviewCategory, profileImage, saved);
 
     }
+
+
 }

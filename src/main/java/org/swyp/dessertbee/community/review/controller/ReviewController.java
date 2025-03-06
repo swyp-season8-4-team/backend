@@ -6,12 +6,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.swyp.dessertbee.community.mate.exception.MateExceptions;
 import org.swyp.dessertbee.community.review.dto.request.ReviewCreateRequest;
+import org.swyp.dessertbee.community.review.dto.response.ReviewPageResponse;
 import org.swyp.dessertbee.community.review.dto.response.ReviewResponse;
 import org.swyp.dessertbee.community.review.service.ReviewService;
 
@@ -39,7 +43,7 @@ public class ReviewController {
     public ResponseEntity<ReviewResponse> createReview(@RequestPart("request") ReviewCreateRequest request,
                                                        @RequestPart(value = "reviewImages", required = false) List<MultipartFile> reviewImages){
 
-        System.out.println(request);
+        System.out.println(reviewImages);
         ReviewResponse response = reviewService.createReview(request, reviewImages);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -53,8 +57,28 @@ public class ReviewController {
 
         ReviewResponse response = reviewService.getReviewDetail(reviewUuid);
 
-
-
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 커뮤니티 리뷰 전체 조회
+     * */
+    @GetMapping()
+    private ResponseEntity<ReviewPageResponse> getReviews(
+            @RequestParam(required = false, defaultValue = "0") int from,
+            @RequestParam(required = false, defaultValue = "10") int to,
+            @RequestParam(required = false, defaultValue = "") String keyword,
+            @RequestParam(required = false) Long reviewCategoryId
+    ){
+
+        if (from >= to) {
+            throw new MateExceptions.FromToMateException("잘못된 범위 요청입니다.");
+        }
+
+        int size = to - from;
+        int page = from / size;
+        Pageable pageable = PageRequest.of(page, size);
+
+        return ResponseEntity.ok(reviewService.getReviews(pageable, keyword, reviewCategoryId));
     }
 }
