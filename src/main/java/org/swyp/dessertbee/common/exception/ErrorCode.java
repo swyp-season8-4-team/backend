@@ -79,6 +79,7 @@ public enum ErrorCode {
     FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "F005", "파일 크기가 제한을 초과했습니다."),
 
 
+    //디저트메이트
     MATE_NOT_FOUND(HttpStatus.NOT_FOUND,"M001" ,"존재하지 않는 디저트메이트입니다." ),
     MATES_NOT_FOUND(HttpStatus.NOT_FOUND, "M002", "해당 범위에서 메이트 데이터를 찾을 수 없습니다."),
     INVALID_RANGE(HttpStatus.BAD_REQUEST, "M003", "잘못된 범위 요청입니다."),
@@ -93,7 +94,11 @@ public enum ErrorCode {
     SAVED_STORE_DUPLICATION(HttpStatus.CONFLICT, "M012", "이미 저장된 디저트메이트입니다."),
     SAVED_MATE_NOT_FOUND(HttpStatus.NOT_FOUND,"M013" , "저장하지 않은 디저트메이트입니다."),
     MATE_RECRUIT_DONE(HttpStatus.FORBIDDEN,"M014" , "해당 디저트메이트 모집 마감입니다."),
-    DUPLICATION_REPORT(HttpStatus.CONFLICT, "M015", "이미 신고된 게시물입니다.");
+    DUPLICATION_REPORT(HttpStatus.CONFLICT, "M015", "이미 신고된 게시물입니다."),
+
+
+    //커뮤니티 리뷰
+    COMMUNITY_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "R001" , "존재하지 않는 리뷰입니다." );
 
 
     private final HttpStatus httpStatus;

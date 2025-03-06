@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.community.mate.dto.request;
+package org.swyp.dessertbee.community.review.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
-import org.swyp.dessertbee.community.mate.dto.MatePlace;
+import org.swyp.dessertbee.community.review.dto.ReviewPlace;
 
 import java.util.List;
 import java.util.UUID;
@@ -15,18 +15,15 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class MateCreateRequest {
+public class ReviewCreateRequest {
 
-    private Long mateId;
+    private Long reviewId;
 
     @NotNull
     private UUID userUuid;
 
     @NotNull
-    private Long userId;
-
-    @NotNull
-    private Long mateCategoryId;
+    private Long reviewCategoryId;
 
     @NotNull
     private String title;
@@ -34,13 +31,8 @@ public class MateCreateRequest {
     @NotNull
     private String content;
 
-    private Boolean recruitYn;
+    private ReviewPlace place;
 
-    private MatePlace place;
-
-
-    private MultipartFile mateImage; //모임 대표 이미지
-
-
+    private List<MultipartFile> reviewImages;
 
 }
