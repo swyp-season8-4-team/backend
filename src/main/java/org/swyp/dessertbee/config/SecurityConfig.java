@@ -10,6 +10,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -19,6 +20,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.swyp.dessertbee.auth.jwt.JWTFilter;
 import org.swyp.dessertbee.auth.jwt.JWTUtil;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.swyp.dessertbee.auth.service.CustomUserDetailsService;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
 import java.util.Arrays;
@@ -35,14 +37,18 @@ import java.util.Collections;
 public class SecurityConfig {
 
     private final JWTUtil jwtUtil;
-    private final UserRepository userRepository;
 
 //    @Value("${spring.graphql.cors.allowed-origins}")
 //    private String corsAllowedOrigins;
 
     @Bean
     public JWTFilter jwtFilter() {
-        return new JWTFilter(jwtUtil, userRepository);
+        return new JWTFilter(jwtUtil);
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService(UserRepository userRepository) {
+        return new CustomUserDetailsService(userRepository);
     }
 
     @Bean
