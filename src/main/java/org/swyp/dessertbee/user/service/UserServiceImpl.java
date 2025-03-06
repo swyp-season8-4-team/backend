@@ -43,10 +43,6 @@ public class UserServiceImpl implements UserService {
 
 
 
-
-    /**
-     * Security Context에서 현재 인증된 사용자의 정보를 조회합니다.
-     */
     /**
      * Security Context에서 현재 인증된 사용자의 정보를 조회합니다.
      * 비로그인 상태인 경우 null 반환
@@ -57,9 +53,14 @@ public class UserServiceImpl implements UserService {
                 authentication instanceof AnonymousAuthenticationToken) {
             return null;
         }
-        String email = authentication.getName();
-        // 사용자 없으면 예외 대신 null 반환
-        return userRepository.findByEmail(email).orElse(null);
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof UserEntity) {
+            return (UserEntity) principal;
+        } else {
+            log.warn("기대한 UserEntity 값과 일치하지 않음: {}", principal.getClass().getName());
+            return null;
+        }
     }
 
 

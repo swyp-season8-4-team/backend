@@ -13,9 +13,12 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.exception.ErrorResponse;
 import org.swyp.dessertbee.role.entity.RoleType;
+import org.swyp.dessertbee.user.entity.UserEntity;
+import org.swyp.dessertbee.user.repository.UserRepository;
 
 import java.io.IOException;
 import java.util.List;
@@ -29,6 +32,7 @@ import java.util.stream.Collectors;
 public class JWTFilter extends OncePerRequestFilter {
 
     private final JWTUtil jwtUtil;
+    private final UserRepository userRepository;
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
@@ -85,13 +89,13 @@ public class JWTFilter extends OncePerRequestFilter {
         List<String> roleNames = jwtUtil.getRoles(token, true);
 
         List<SimpleGrantedAuthority> authorities = roleNames.stream()
-                .map(roleName -> {
-                    RoleType roleType = RoleType.fromString(roleName);
-                    return new SimpleGrantedAuthority(roleType.getRoleName());
-                })
+                .map(roleName -> new SimpleGrantedAuthority(RoleType.fromString(roleName).getRoleName()))
                 .collect(Collectors.toList());
 
-        return new UsernamePasswordAuthenticationToken(email, null, authorities);
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        return new UsernamePasswordAuthenticationToken(user, null, authorities);
     }
 
     /**

@@ -19,6 +19,8 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.swyp.dessertbee.auth.jwt.JWTFilter;
 import org.swyp.dessertbee.auth.jwt.JWTUtil;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.swyp.dessertbee.user.repository.UserRepository;
+
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -33,13 +35,14 @@ import java.util.Collections;
 public class SecurityConfig {
 
     private final JWTUtil jwtUtil;
+    private final UserRepository userRepository;
 
 //    @Value("${spring.graphql.cors.allowed-origins}")
 //    private String corsAllowedOrigins;
 
     @Bean
     public JWTFilter jwtFilter() {
-        return new JWTFilter(jwtUtil);
+        return new JWTFilter(jwtUtil, userRepository);
     }
 
     @Bean
