@@ -21,18 +21,13 @@ import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.email.entity.EmailVerificationPurpose;
 import org.swyp.dessertbee.preference.service.PreferenceService;
-import org.swyp.dessertbee.role.entity.RoleEntity;
-import org.swyp.dessertbee.role.entity.RoleType;
 import org.swyp.dessertbee.role.repository.RoleRepository;
 import org.swyp.dessertbee.role.service.UserRoleService;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.user.service.UserService;
-
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
