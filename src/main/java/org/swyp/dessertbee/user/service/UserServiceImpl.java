@@ -51,16 +51,14 @@ public class UserServiceImpl implements UserService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() ||
                 authentication instanceof AnonymousAuthenticationToken) {
+            log.warn("SecurityContext에 인증 정보가 없습니다.");
             return null;
         }
+        log.debug("현재 인증된 사용자: {}", authentication.getName());
 
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof UserEntity) {
-            return (UserEntity) principal;
-        } else {
-            log.warn("기대한 UserEntity 값과 일치하지 않음: {}", principal.getClass().getName());
-            return null;
-        }
+        String email = authentication.getName();
+
+        return userRepository.findByEmail(email).orElse(null);
     }
 
 
