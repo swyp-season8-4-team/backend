@@ -22,11 +22,14 @@ import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.email.entity.EmailVerificationPurpose;
 import org.swyp.dessertbee.preference.service.PreferenceService;
 import org.swyp.dessertbee.role.entity.RoleEntity;
+import org.swyp.dessertbee.role.entity.RoleType;
 import org.swyp.dessertbee.role.repository.RoleRepository;
+import org.swyp.dessertbee.role.service.UserRoleService;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.user.service.UserService;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -47,6 +50,8 @@ public class AuthServiceImpl implements AuthService {
     private TokenService tokenService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private UserRoleService userRoleService;
 
     @Override
     public TokenResponse refreshAccessToken(String refreshToken) {
@@ -100,10 +105,13 @@ public class AuthServiceImpl implements AuthService {
                     .build();
 
             // 역할 설정
-            RoleEntity role = roleRepository.findByName(request.getRole())
-                    .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "유효하지 않은 역할입니다."));
-            user.addRole(role);
-            List<String> roles = Collections.singletonList(role.getName().getRoleName());
+            List<String> roles;
+            if (request.getRole() == null) {
+                roles = userRoleService.ensureDefaultRole(user);
+            }
+            else {
+                roles = userRoleService.setUserRoles(user, Collections.singletonList(request.getRole()));
+            }
 
             // 사용자 정보 저장
             userRepository.save(user);
@@ -151,9 +159,11 @@ public class AuthServiceImpl implements AuthService {
             }
 
             // 3. 사용자 권한 조회
-            List<String> roles = user.getUserRoles().stream()
-                    .map(userRole -> userRole.getRole().getName().getRoleName())
-                    .collect(Collectors.toList());
+            List<String> roles = userRoleService.getUserRoles(user);
+            if (roles.isEmpty()) {
+                // 역할이 비었다면 기본 역할 부여
+                roles = userRoleService.ensureDefaultRole(user);
+            }
 
             // 4. Access Token, Refresh Token 생성
             boolean keepLoggedIn = request.isKeepLoggedIn();
@@ -202,9 +212,11 @@ public class AuthServiceImpl implements AuthService {
             }
 
             // 3. 사용자 권한 조회
-            List<String> roles = user.getUserRoles().stream()
-                    .map(userRole -> userRole.getRole().getName().getRoleName())
-                    .collect(Collectors.toList());
+            List<String> roles = userRoleService.getUserRoles(user);
+            if (roles.isEmpty()) {
+                // 역할이 비었다면 기본 역할 부여
+                roles = userRoleService.ensureDefaultRole(user);
+            }
 
             // 4. 개발용 짧은 유효기간의 Access Token, Refresh Token 생성 (3~5분)
             String accessToken = jwtUtil.createDevAccessToken(user.getEmail(), roles);
@@ -291,11 +303,9 @@ public class AuthServiceImpl implements AuthService {
         try {
             String email = jwtUtil.getEmail(token, true);
 
-            userService.findUserByEmail(email);
-
-            log.info("로그아웃 성공 - 이메일: {}", email);
             revokeRefreshToken(email);
 
+            log.info("로그아웃 성공 - 이메일: {}", email);
             return LogoutResponse.success();
 
         } catch (BusinessException e) {
