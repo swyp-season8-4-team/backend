@@ -77,6 +77,9 @@ public class StoreReviewService {
     @Transactional
     public List<StoreReviewResponse> getReviewsByStoreId(UUID storeUuid) {
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
+        if (storeId == null) {
+            throw new BusinessException(ErrorCode.INVALID_STORE_UUID);
+        }
         List<StoreReview> reviews = storeReviewRepository.findByStoreIdAndDeletedAtIsNull(storeId);
 
         return reviews.stream()

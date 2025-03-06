@@ -28,10 +28,10 @@ public class StoreReviewController {
     /** 리뷰 등록 */
     @Operation(summary = "한줄 리뷰 등록", description = "한줄 리뷰를 등록합니다.")
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
-    @PostMapping
+    @PostMapping(consumes = {"multipart/form-data", "application/json"})
     public ResponseEntity<StoreReviewResponse> createReview(
             @PathVariable UUID storeUuid,
-            @RequestPart(value = "request") StoreReviewCreateRequest request,
+            @RequestBody StoreReviewCreateRequest request,
             @RequestPart(required = false) List<MultipartFile> images) {
 
         log.info("📥 요청 데이터: {}", request);
@@ -50,11 +50,11 @@ public class StoreReviewController {
     /** 리뷰 수정 */
     @Operation(summary = "한줄 리뷰 수정", description = "한줄 리뷰를 수장합니다.")
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
-    @PatchMapping("/{reviewUuid}")
+    @PatchMapping(value = "/{reviewUuid}", consumes = {"multipart/form-data", "application/json"})
     public ResponseEntity<StoreReviewResponse> updateReview(
             @PathVariable UUID storeUuid,
             @PathVariable UUID reviewUuid,
-            @RequestPart(value = "request") StoreReviewUpdateRequest request,
+            @RequestBody StoreReviewUpdateRequest request,
             @RequestPart(required = false) List<MultipartFile> newImages) {
 
         log.info("📥 요청 데이터: {}", request);
