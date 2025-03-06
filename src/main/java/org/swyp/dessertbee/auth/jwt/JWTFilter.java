@@ -13,6 +13,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.swyp.dessertbee.auth.dto.userdetails.CustomUserDetails;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.exception.ErrorResponse;
@@ -32,7 +33,6 @@ import java.util.stream.Collectors;
 public class JWTFilter extends OncePerRequestFilter {
 
     private final JWTUtil jwtUtil;
-    private final UserRepository userRepository;
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
@@ -86,16 +86,13 @@ public class JWTFilter extends OncePerRequestFilter {
      */
     private Authentication createAuthentication(String token) {
         String email = jwtUtil.getEmail(token, true);
+        log.debug("JWT에서 추출된 이메일: {}", email);
         List<String> roleNames = jwtUtil.getRoles(token, true);
 
-        List<SimpleGrantedAuthority> authorities = roleNames.stream()
-                .map(roleName -> new SimpleGrantedAuthority(RoleType.fromString(roleName).getRoleName()))
-                .collect(Collectors.toList());
+        // DB 조회 없이 CustomUserDetails 객체를 생성
+        CustomUserDetails userDetails = new CustomUserDetails(email, roleNames);
 
-        UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        return new UsernamePasswordAuthenticationToken(user, null, authorities);
+        return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
     }
 
     /**
