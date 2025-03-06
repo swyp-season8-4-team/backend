@@ -43,10 +43,6 @@ public class UserServiceImpl implements UserService {
 
 
 
-
-    /**
-     * Security Context에서 현재 인증된 사용자의 정보를 조회합니다.
-     */
     /**
      * Security Context에서 현재 인증된 사용자의 정보를 조회합니다.
      * 비로그인 상태인 경우 null 반환
@@ -55,10 +51,13 @@ public class UserServiceImpl implements UserService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() ||
                 authentication instanceof AnonymousAuthenticationToken) {
+            log.warn("SecurityContext에 인증 정보가 없습니다.");
             return null;
         }
+        log.debug("현재 인증된 사용자: {}", authentication.getName());
+
         String email = authentication.getName();
-        // 사용자 없으면 예외 대신 null 반환
+
         return userRepository.findByEmail(email).orElse(null);
     }
 
