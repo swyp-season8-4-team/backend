@@ -355,7 +355,7 @@ public class StoreService {
                     .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
             List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, reviewer.getId());
 
-            return StoreReviewResponse.fromEntity(review, reviewer.getNickname(),
+            return StoreReviewResponse.fromEntity(review, reviewer,
                     profileImage.isEmpty() ? null : profileImage.get(0),
                     reviewImagesMap.getOrDefault(review.getReviewId(), Collections.emptyList()));
         }).toList();
