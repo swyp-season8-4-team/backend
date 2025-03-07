@@ -161,7 +161,7 @@ public class TokenService {
                     .collect(Collectors.toList());
 
             boolean keepLoggedIn = false; // 로그인 유지 여부 (프론트엔드에서 전달받을 수도 있음)
-            String newAccessToken = jwtUtil.createAccessToken(email, roles, keepLoggedIn);
+            String newAccessToken = jwtUtil.createAccessToken(email, user.getUserUuid(), roles, keepLoggedIn);
 
             log.info("리프레시 토큰 검증 성공 - 새로운 액세스 토큰 발급 완료: {}", email);
 
