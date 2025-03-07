@@ -98,7 +98,8 @@ public enum ErrorCode {
 
 
     //커뮤니티 리뷰
-    COMMUNITY_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "R001" , "존재하지 않는 리뷰입니다." );
+    COMMUNITY_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "R001" , "존재하지 않는 리뷰입니다." ),
+    IMAGE_INDEX_NOT_FOUND(HttpStatus.BAD_REQUEST, "R02", "요청된 이미지 인덱스가 이미지 파일 수보다 적습니다.");
 
 
     private final HttpStatus httpStatus;

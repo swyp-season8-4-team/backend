@@ -13,6 +13,7 @@ import org.swyp.dessertbee.store.store.entity.Store;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -29,7 +30,7 @@ public class Review {
     private Long reviewId;
 
     @Column(name = "review_uuid", nullable = false, unique = true, updatable = false)
-    @UuidGenerator()
+    @UuidGenerator
     private UUID reviewUuid;
 
     @Column(name = "user_id")
@@ -43,10 +44,6 @@ public class Review {
 
     @Column(nullable = false, length = 255)
     private String title;
-
-    @Column(nullable = false, length = 1000)
-    private String content;
-
 
     @Column(name = "place_name")
     private String placeName;
@@ -70,7 +67,10 @@ public class Review {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-
+    // Review와 ReviewContent 간 1:N 관계 매핑 (unidirectional)
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "review_id", referencedColumnName = "review_id")
+    private List<ReviewContent> reviewContents;
 
     public void softDelete(){
         this.deletedAt = LocalDateTime.now();
@@ -78,7 +78,6 @@ public class Review {
 
     public void update(ReviewUpdateRequest request, Store store) {
         this.title = request.getTitle();
-        this.content = request.getContent();
         this.reviewCategoryId = request.getReviewCategoryId();
         if (store != null) {
             this.storeId = store.getStoreId();
@@ -88,5 +87,4 @@ public class Review {
             this.address = store.getAddress();
         }
     }
-
 }

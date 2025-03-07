@@ -18,4 +18,17 @@ public class ReviewException {
             super(ErrorCode.COMMUNITY_REVIEW_NOT_FOUND, message);
         }
     }
+
+    /**
+     * 커뮤니티 이미지 idx 예외
+     * */
+    public static class ImageIndexNotFoundException extends BusinessException {
+        public ImageIndexNotFoundException() {
+            super(ErrorCode.IMAGE_INDEX_NOT_FOUND);
+        }
+
+        public ImageIndexNotFoundException(String message) {
+            super(ErrorCode.IMAGE_INDEX_NOT_FOUND, message);
+        }
+    }
 }

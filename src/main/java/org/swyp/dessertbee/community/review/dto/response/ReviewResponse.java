@@ -1,17 +1,16 @@
 package org.swyp.dessertbee.community.review.dto.response;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import org.swyp.dessertbee.common.entity.Image;
-import org.swyp.dessertbee.community.review.dto.ReviewImage;
+import org.swyp.dessertbee.community.review.dto.ReviewContentDto;
 import org.swyp.dessertbee.community.review.dto.ReviewPlace;
 import org.swyp.dessertbee.community.review.entity.Review;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Data
@@ -24,9 +23,8 @@ public class ReviewResponse {
     private UUID userUuid;
     private String nickname;
     private String profileImage;
-    private String content;
-    private String title;
-    private List<ReviewImage> reviewImages;
+    // 새롭게 추가된 필드: 리뷰 콘텐츠 배열 (각 요소는 text 또는 image 타입의 정보를 담습니다)
+    private List<ReviewContentDto> contents;
     private ReviewPlace place;
     private String reviewCategory;
     private LocalDateTime createdAt;
@@ -36,11 +34,10 @@ public class ReviewResponse {
 
     public static ReviewResponse fromEntity(UserEntity user,
                                             Review review,
-                                            List<ReviewImage>  reviewImages,
+                                            List<ReviewContentDto> contents,
                                             String reviewCategory,
                                             String profileImage,
                                             boolean saved) {
-
 
         return ReviewResponse.builder()
                 .reviewUuid(review.getReviewUuid())
@@ -49,9 +46,7 @@ public class ReviewResponse {
                 .nickname(user.getNickname())
                 .gender(user.getGender())
                 .profileImage(profileImage)
-                .title(review.getTitle())
-                .content(review.getContent())
-                .reviewImages(reviewImages)
+                .contents(contents)
                 .reviewCategory(reviewCategory)
                 .place(ReviewPlace.builder()
                         .placeName(review.getPlaceName())
@@ -63,6 +58,5 @@ public class ReviewResponse {
                 .createdAt(review.getCreatedAt())
                 .updatedAt(review.getUpdatedAt())
                 .build();
-
     }
 }

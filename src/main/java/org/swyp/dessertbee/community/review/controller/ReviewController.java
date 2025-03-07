@@ -47,7 +47,6 @@ public class ReviewController {
     public ResponseEntity<ReviewResponse> createReview(@RequestPart("request") ReviewCreateRequest request,
                                                        @RequestPart(value = "reviewImages", required = false) List<MultipartFile> reviewImages){
 
-        System.out.println(reviewImages);
         ReviewResponse response = reviewService.createReview(request, reviewImages);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

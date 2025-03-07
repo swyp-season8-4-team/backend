@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
+import org.swyp.dessertbee.community.review.dto.ReviewContentDto;
 import org.swyp.dessertbee.community.review.dto.ReviewPlace;
 
 import java.util.List;
@@ -27,11 +28,11 @@ public class ReviewCreateRequest {
     @NotNull
     private String title;
 
-    @NotNull
-    private String content;
-
     private ReviewPlace place;
 
     private List<MultipartFile> reviewImages;
+
+    @NotNull
+    private List<ReviewContentDto> contents;
 
 }
