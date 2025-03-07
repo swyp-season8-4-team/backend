@@ -20,6 +20,8 @@ import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.community.mate.service.MateService;
 import org.swyp.dessertbee.user.service.UserServiceImpl;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -110,7 +112,7 @@ public class MateController {
             @RequestParam(required = false, defaultValue = "10") int to,
             @RequestParam(required = false, defaultValue = "") String keyword,
             @RequestParam(required = false) Long mateCategoryId
-    ) {
+    ) throws UnsupportedEncodingException {
 
         if (from >= to) {
             throw new FromToMateException("잘못된 범위 요청입니다.");
@@ -119,6 +121,8 @@ public class MateController {
         int size = to - from;
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
+
+        keyword = URLDecoder.decode(keyword,"UTF-8");
         return ResponseEntity.ok(mateService.getMates(pageable, keyword, mateCategoryId));
     }
 
@@ -137,7 +141,6 @@ public class MateController {
         int size = to - from;
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
-
 
         return ResponseEntity.ok(mateService.getMyMates(pageable));
     }
