@@ -9,21 +9,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.swyp.dessertbee.auth.dto.userdetails.CustomUserDetails;
-import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.exception.ErrorResponse;
-import org.swyp.dessertbee.role.entity.RoleType;
-import org.swyp.dessertbee.user.entity.UserEntity;
-import org.swyp.dessertbee.user.repository.UserRepository;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.UUID;
 /**
  * JWT 토큰을 검증하고 인증을 처리하는 필터
  * Spring Security Filter Chain에서 사용됨
@@ -88,9 +83,10 @@ public class JWTFilter extends OncePerRequestFilter {
         String email = jwtUtil.getEmail(token, true);
         log.debug("JWT에서 추출된 이메일: {}", email);
         List<String> roleNames = jwtUtil.getRoles(token, true);
+        UUID userUuid = UUID.fromString(jwtUtil.getUserUuid(token, true));
 
         // DB 조회 없이 CustomUserDetails 객체를 생성
-        CustomUserDetails userDetails = new CustomUserDetails(email, roleNames);
+        CustomUserDetails userDetails = new CustomUserDetails(email, roleNames, userUuid);
 
         return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
     }
