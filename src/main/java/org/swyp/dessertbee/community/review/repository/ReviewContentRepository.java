@@ -10,7 +10,12 @@ import java.util.Optional;
 
 @Repository
 public interface ReviewContentRepository extends JpaRepository<ReviewContent, Long> {
-    List<ReviewContent> findByReviewIdOrderByImageIndexAsc(Long reviewId);
+    List<ReviewContent> findByReviewIdOrderByReviewIdAsc(Long reviewId);
 
     Optional<ReviewContent> findByReviewIdAndDeletedAtIsNull(Long reviewId);
+
+    List<ReviewContent> findByReviewIdAndType(Long reviewId, String image);
+
+    void deleteByReviewId(Long reviewId);
+
 }

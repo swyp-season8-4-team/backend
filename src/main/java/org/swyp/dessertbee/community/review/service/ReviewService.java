@@ -92,9 +92,9 @@ public class ReviewService {
 
             // 리뷰 컨텐츠 배열 처리
             // request.getContents()는 텍스트와 이미지 타입을 모두 포함하는 리스트입니다.
+            int order = 0;
             for (ReviewContentDto contentRequest : request.getContents()) {
                 if ("text".equals(contentRequest.getType())) {
-                    // 텍스트 컨텐츠 저장
                     ReviewContent reviewContent = ReviewContent.builder()
                             .reviewId(review.getReviewId())
                             .type("text")
@@ -102,27 +102,22 @@ public class ReviewService {
                             .build();
                     reviewContentRepository.save(reviewContent);
                 } else if ("image".equals(contentRequest.getType())) {
-                    // 이미지 컨텐츠의 경우, imageIndex를 활용하여 해당 MultipartFile 선택
                     int idx = contentRequest.getImageIndex();
                     if (idx < reviewImages.size()) {
                         MultipartFile imageFile = reviewImages.get(idx);
                         String folder = "review/" + review.getReviewId();
-                        // 단건 이미지 업로드 메서드 (imageIndex도 함께 저장)
                         Image image = imageService.uploadAndSaveImages(imageFile, ImageType.REVIEW, review.getReviewId(), folder, idx);
-
-                        // 업로드된 이미지의 URL(또는 파일명)을 컨텐츠 값으로 저장
                         ReviewContent reviewContent = ReviewContent.builder()
                                 .reviewId(review.getReviewId())
                                 .type("image")
-                                .value(image.getUrl()) // 필요에 따라 image.getFileName() 등으로 변경 가능
+                                .value(image.getUrl())
                                 .imageIndex(idx)
                                 .build();
                         reviewContentRepository.save(reviewContent);
                     }
                 }
+                }
             }
-        }
-
         return getReviewDetail(review.getReviewUuid());
     }
 
@@ -166,26 +161,86 @@ public class ReviewService {
     /**
      * 커뮤니티 리뷰 수정
      * */
+    @Transactional
     public void updateReview(UUID reviewUuid, ReviewUpdateRequest request, List<MultipartFile> reviewImages) {
 
+        // 리뷰 조회 및 기본 정보 업데이트
         Review review = reviewRepository.findByReviewUuidAndDeletedAtIsNull(reviewUuid)
                 .orElseThrow(() -> new ReviewNotFoundException("존재하지 않는 리뷰입니다."));
 
-        Store store = storeRepository.findStoreIdByLongitudeAndLatitude(request.getPlace().getLongitude(), request.getPlace().getLatitude());
+        Store store = storeRepository.findStoreIdByLongitudeAndLatitude(
+                request.getPlace().getLongitude(), request.getPlace().getLatitude());
 
         review.update(request, store);
 
+        // 1. 리뷰 콘텐츠 업데이트 처리
+        // 기존 콘텐츠 삭제 (또는 별도의 비교 로직을 수행)
+        reviewContentRepository.deleteByReviewId(review.getReviewId());
 
+        // 요청에 담긴 새로운 콘텐츠 배열을 저장합니다.
+        // 이때 각 콘텐츠에는 contentOrder (또는 imageIndex) 정보가 들어있어야 합니다.
+        for (ReviewContentDto contentDto : request.getContents()) {
+            ReviewContent reviewContent = ReviewContent.builder()
+                    .reviewId(review.getReviewId())
+                    .type(contentDto.getType())
+                    .value(contentDto.getValue())
+                    .imageIndex(contentDto.getImageIndex()) // 이미지 콘텐츠일 경우 사용
+                    .build();
+            reviewContentRepository.save(reviewContent);
+        }
 
-        if (reviewImages != null && !reviewImages.isEmpty()) {
+        List<Long> deleteIds = request.getDeleteImageIds();
+        if (deleteIds != null && !deleteIds.isEmpty()) {
+            // 중복 체크: HashSet에 담아서 크기가 다르면 중복이 존재하는 것임
+            if (deleteIds.size() != new HashSet<>(deleteIds).size()) {
+                throw new deleteImageDuplicationFoundException("중복된 이미지 삭제 ID가 존재합니다.");
+            }
+        }
 
+        // 2. 이미지 업데이트 처리
+        // 이미지 삭제 후 새로운 이미지 추가
+        if ((reviewImages != null && !reviewImages.isEmpty()) ||
+                (request.getDeleteImageIds() != null && !request.getDeleteImageIds().isEmpty())) {
             String folder = "review/" + review.getReviewId();
             imageService.updatePartialImages(request.getDeleteImageIds(), reviewImages, ImageType.REVIEW, review.getReviewId(), folder);
         }
 
+        // 3. 이미지 인덱스 재정렬 처리
+        // 삭제 후 이미지 인덱스가 비연속적일 수 있으므로, DB에서 현재 이미지 목록을 새로 조회한 후 재정렬합니다.
+        List<Image> images = imageRepository.findByRefTypeAndRefId(ImageType.REVIEW, review.getReviewId());
 
+        // imageIndex가 null인 경우, Integer.MAX_VALUE로 간주하여 정렬 (null이 뒤로 오도록)
+        images.sort(Comparator.comparing(img -> img.getImageIndex() == null ? Integer.MAX_VALUE : img.getImageIndex()));
 
+        for (int newIndex = 0; newIndex < images.size(); newIndex++) {
+            Image img = images.get(newIndex);
+            // imageIndex가 null이거나, 현재 값이 재정렬된 값과 다르면 업데이트
+            if (img.getImageIndex() == null || !img.getImageIndex().equals(newIndex)) {
+                img.setImageIndex(newIndex);
+                imageRepository.save(img);
+            }
+        }
+
+        // 4. 리뷰 콘텐츠 내 이미지 인덱스 업데이트
+        // review_content 테이블에 저장된 이미지 콘텐츠들도, 재정렬된 새로운 이미지 인덱스에 맞춰 업데이트
+        List<ReviewContent> imageContents = reviewContentRepository.findByReviewIdAndType(review.getReviewId(), "image");
+        for (ReviewContent rc : imageContents) {
+            // 예를 들어, 삭제 전 rc.getImageIndex()가 였던 인덱스에 해당하는 새 인덱스를 찾는 로직
+            // (여기서는 단순화를 위해, rc.getImageIndex()를 그대로 사용하지 않고, 실제 이미지 리스트에서 매칭)
+            Optional<Image> matchingImage = images.stream()
+                    .filter(img -> img.getImageIndex().equals(rc.getImageIndex()))
+                    .findFirst();
+            if (matchingImage.isPresent()) {
+                // 만약 인덱스가 변경되었다면 업데이트합니다.
+                Integer newImageIndex = matchingImage.get().getImageIndex();
+                if (!rc.getImageIndex().equals(newImageIndex)) {
+                    rc.setImageIndex(newImageIndex);
+                    reviewContentRepository.save(rc);
+                }
+            }
+        }
     }
+
 
     /**
      * 커뮤니티 리뷰 삭제
@@ -220,7 +275,7 @@ public class ReviewService {
 
         // review 테이블의 기본 정보는 그대로 사용하고,
         // review_content 테이블에서 해당 리뷰의 콘텐츠를 순서대로 조회합니다.
-        List<ReviewContent> contents = reviewContentRepository.findByReviewIdOrderByImageIndexAsc(review.getReviewId());
+        List<ReviewContent> contents = reviewContentRepository.findByReviewIdOrderByReviewIdAsc(review.getReviewId());
 
 
         List<Image> images = imageRepository.findIdAndUrlByRefTypeAndRefId(ImageType.REVIEW, review.getReviewId());

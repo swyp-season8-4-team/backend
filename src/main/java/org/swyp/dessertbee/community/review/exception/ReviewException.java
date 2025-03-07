@@ -31,4 +31,18 @@ public class ReviewException {
             super(ErrorCode.IMAGE_INDEX_NOT_FOUND, message);
         }
     }
+
+    /**
+     * deleteImageIds 가 중복 일 때 예외
+     * */
+    public static class deleteImageDuplicationFoundException extends BusinessException {
+
+
+        public deleteImageDuplicationFoundException() {super(ErrorCode.DUPLICATE_DELETE_IMAGE_IDS);}
+
+        public deleteImageDuplicationFoundException(String message) {
+            super(ErrorCode.DUPLICATE_DELETE_IMAGE_IDS, message);
+
+        }
+    }
 }
