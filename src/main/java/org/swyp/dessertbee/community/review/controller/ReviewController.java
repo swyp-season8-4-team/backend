@@ -57,7 +57,7 @@ public class ReviewController {
      * */
     @Operation(summary = "커뮤니티 리뷰 상세 조회", description = "커뮤니티 맛집 리뷰 상세 조회합니다.")
     @GetMapping("/{reviewUuid}")
-    private ResponseEntity<ReviewResponse> getReviewDetail(@PathVariable UUID reviewUuid){
+    public ResponseEntity<ReviewResponse> getReviewDetail(@PathVariable UUID reviewUuid){
 
         ReviewResponse response = reviewService.getReviewDetail(reviewUuid);
 
@@ -68,7 +68,7 @@ public class ReviewController {
      * 커뮤니티 리뷰 전체 조회
      * */
     @GetMapping()
-    private ResponseEntity<ReviewPageResponse> getReviews(
+    public ResponseEntity<ReviewPageResponse> getReviews(
             @RequestParam(required = false, defaultValue = "0") int from,
             @RequestParam(required = false, defaultValue = "10") int to,
             @RequestParam(required = false, defaultValue = "") String keyword,
@@ -90,7 +90,7 @@ public class ReviewController {
      * 커뮤니티 리뷰 수정
      * */
     @PatchMapping("/{reviewUuid}")
-    private ResponseEntity<Map<String, String>> updateReview(
+    public ResponseEntity<Map<String, String>> updateReview(
             @PathVariable UUID reviewUuid,
             @RequestPart("request") ReviewUpdateRequest request,
             @RequestPart(value = "reviewImages", required = false) List<MultipartFile> reviewImages
@@ -105,7 +105,7 @@ public class ReviewController {
 
     /**커뮤니티 리뷰 삭제*/
     @DeleteMapping("/{reviewUuid}")
-    private ResponseEntity<Map<String, String>> deleteReview(@PathVariable UUID reviewUuid){
+    public ResponseEntity<Map<String, String>> deleteReview(@PathVariable UUID reviewUuid){
 
         reviewService.deleteReview(reviewUuid);
 

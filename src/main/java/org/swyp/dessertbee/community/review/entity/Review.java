@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name="community_reivew")
+@Table(name="community_review")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor

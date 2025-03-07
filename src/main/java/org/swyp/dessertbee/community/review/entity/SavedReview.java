@@ -9,7 +9,7 @@ import org.swyp.dessertbee.community.mate.entity.Mate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "saved_community_reivew")
+@Table(name = "saved_community_review")
 @Getter
 @Setter
 @NoArgsConstructor
