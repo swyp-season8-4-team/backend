@@ -22,4 +22,7 @@ public class RoleEntity {
     @Column(nullable = false, unique = true, length = 50)
     private RoleType name;
 
+    public String getRoleName() {
+        return name.getRoleName();
+    }
 }
