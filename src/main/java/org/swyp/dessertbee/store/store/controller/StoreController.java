@@ -18,6 +18,8 @@ import org.swyp.dessertbee.store.store.dto.response.StoreSummaryResponse;
 import org.swyp.dessertbee.store.store.service.StoreService;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Tag(name = "Store", description = "가게 관련 API")
@@ -52,6 +54,10 @@ public class StoreController {
             @RequestParam Double radius,
             @RequestParam(required = false) List<Long> preferenceTagIds,
             @RequestParam(required = false) String searchKeyword) {
+
+        if (searchKeyword != null) {
+            searchKeyword = URLDecoder.decode(searchKeyword, StandardCharsets.UTF_8);
+        }
 
         if (preferenceTagIds != null && !preferenceTagIds.isEmpty()) {
             return storeService.getStoresByLocationAndTags(latitude, longitude, radius, preferenceTagIds);
