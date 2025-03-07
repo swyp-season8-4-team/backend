@@ -9,13 +9,13 @@ import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
-import org.swyp.dessertbee.mate.dto.response.MateResponse;
-import org.swyp.dessertbee.mate.entity.Mate;
-import org.swyp.dessertbee.mate.entity.MateCategory;
-import org.swyp.dessertbee.mate.entity.SavedMate;
-import org.swyp.dessertbee.mate.repository.MateCategoryRepository;
-import org.swyp.dessertbee.mate.repository.MateRepository;
-import org.swyp.dessertbee.mate.repository.SavedMateRepository;
+import org.swyp.dessertbee.community.mate.dto.response.MateResponse;
+import org.swyp.dessertbee.community.mate.entity.Mate;
+import org.swyp.dessertbee.community.mate.entity.MateCategory;
+import org.swyp.dessertbee.community.mate.entity.SavedMate;
+import org.swyp.dessertbee.community.mate.repository.MateCategoryRepository;
+import org.swyp.dessertbee.community.mate.repository.MateRepository;
+import org.swyp.dessertbee.community.mate.repository.SavedMateRepository;
 import org.swyp.dessertbee.preference.repository.PreferenceRepository;
 import org.swyp.dessertbee.store.menu.dto.request.MenuCreateRequest;
 import org.swyp.dessertbee.store.menu.dto.response.MenuResponse;
@@ -30,14 +30,12 @@ import org.swyp.dessertbee.store.store.entity.*;
 import org.swyp.dessertbee.store.store.repository.*;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
-import org.swyp.dessertbee.user.service.UserService;
 import org.swyp.dessertbee.user.service.UserServiceImpl;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 
 @Slf4j

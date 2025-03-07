@@ -3,7 +3,7 @@ package org.swyp.dessertbee.store.store.dto.response;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import org.swyp.dessertbee.mate.dto.response.MateResponse;
+import org.swyp.dessertbee.community.mate.dto.response.MateResponse;
 import org.swyp.dessertbee.store.menu.dto.response.MenuResponse;
 import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
 import org.swyp.dessertbee.store.store.entity.Store;

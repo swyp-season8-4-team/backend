@@ -13,6 +13,7 @@ import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
+import org.swyp.dessertbee.community.mate.exception.MateExceptions;
 import org.swyp.dessertbee.preference.service.PreferenceService;
 import org.swyp.dessertbee.user.dto.response.UserDetailResponseDto;
 import org.swyp.dessertbee.user.dto.response.UserResponseDto;

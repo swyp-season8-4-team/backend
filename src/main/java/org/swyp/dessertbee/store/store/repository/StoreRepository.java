@@ -72,4 +72,7 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
 
     @Query("SELECT s.storeId FROM Store s WHERE s.name = :name")
     Long findStoreIdByName(@Param("name") String name);
+
+
+    Store findStoreIdByLongitudeAndLatitude(BigDecimal longitude, BigDecimal latitude);
 }
