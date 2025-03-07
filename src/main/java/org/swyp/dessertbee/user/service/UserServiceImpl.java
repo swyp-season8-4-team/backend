@@ -13,7 +13,6 @@ import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
-import org.swyp.dessertbee.mate.exception.MateExceptions;
 import org.swyp.dessertbee.preference.service.PreferenceService;
 import org.swyp.dessertbee.user.dto.response.UserDetailResponseDto;
 import org.swyp.dessertbee.user.dto.response.UserResponseDto;
@@ -40,6 +39,7 @@ public class UserServiceImpl implements UserService {
     private final MbtiRepository mbtiRepository;
     private final ImageService imageService;
     private final PreferenceService preferenceService;
+
 
 
 
@@ -295,7 +295,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserEntity validateUser(String email) {
 
-        return userRepository.findByEmail(email).orElseThrow(() -> new MateExceptions.UserNotFoundExcption("존재하지 않는 유저입니다."));
+        return userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 
     /**
