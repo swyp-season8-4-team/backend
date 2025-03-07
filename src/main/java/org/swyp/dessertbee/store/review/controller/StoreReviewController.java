@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +29,7 @@ public class StoreReviewController {
     /** 리뷰 등록 */
     @Operation(summary = "한줄 리뷰 등록", description = "한줄 리뷰를 등록합니다.")
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StoreReviewResponse> createReview(
             @PathVariable UUID storeUuid,
             @RequestPart(value = "request") StoreReviewCreateRequest request,
@@ -50,7 +51,7 @@ public class StoreReviewController {
     /** 리뷰 수정 */
     @Operation(summary = "한줄 리뷰 수정", description = "한줄 리뷰를 수장합니다.")
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
-    @PatchMapping("/{reviewUuid}")
+    @PatchMapping(value = "/{reviewUuid}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StoreReviewResponse> updateReview(
             @PathVariable UUID storeUuid,
             @PathVariable UUID reviewUuid,

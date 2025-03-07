@@ -69,7 +69,7 @@ public class StoreReviewService {
         // 리뷰 등록 후 평균 평점 업데이트
         storeService.updateAverageRating(storeId);
 
-        return StoreReviewResponse.fromEntity(review, reviewer.getNickname(),
+        return StoreReviewResponse.fromEntity(review, reviewer,
                 profileImage.isEmpty() ? null : profileImage.get(0), imageUrls);
     }
 
@@ -77,6 +77,9 @@ public class StoreReviewService {
     @Transactional
     public List<StoreReviewResponse> getReviewsByStoreId(UUID storeUuid) {
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
+        if (storeId == null) {
+            throw new BusinessException(ErrorCode.INVALID_STORE_UUID);
+        }
         List<StoreReview> reviews = storeReviewRepository.findByStoreIdAndDeletedAtIsNull(storeId);
 
         return reviews.stream()
@@ -88,7 +91,7 @@ public class StoreReviewService {
                             .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
                     List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, reviewer.getId());
 
-                    return StoreReviewResponse.fromEntity(review, reviewer.getNickname(),
+                    return StoreReviewResponse.fromEntity(review, reviewer,
                             profileImage.isEmpty() ? null : profileImage.get(0), images);
                 })
                 .collect(Collectors.toList());
@@ -124,7 +127,7 @@ public class StoreReviewService {
 
         storeService.updateAverageRating(storeId);
 
-        return StoreReviewResponse.fromEntity(review, reviewer.getNickname(),
+        return StoreReviewResponse.fromEntity(review, reviewer,
                 profileImage.isEmpty() ? null : profileImage.get(0), updatedImages);
     }
 
