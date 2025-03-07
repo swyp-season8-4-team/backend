@@ -75,51 +75,49 @@ public class ReviewService {
                         .build()
         );
 
-
-        // 이미지 타입 콘텐츠들 중 최대 imageIndex 계산
+        // 이미지 타입 콘텐츠들 중 최대 imageIndex 계산 (이미지가 하나라도 있는 경우에만)
         int maxImageIndex = request.getContents().stream()
                 .filter(content -> "image".equals(content.getType()))
                 .mapToInt(ReviewContentDto::getImageIndex)
                 .max()
                 .orElse(-1);
 
-        // 이미지 콘텐츠가 존재한다면, 제공된 이미지 파일 수와 인덱스 일치를 검증합니다.
+        // 이미지 콘텐츠가 있다면, 제공된 이미지 파일 수와 인덱스 일치를 검증합니다.
         if (maxImageIndex != -1) {
-            // 이미지의 총 갯수는 최대 인덱스 + 1이어야 함
             if (reviewImages == null || reviewImages.size() != (maxImageIndex + 1)) {
                 throw new ImageIndexNotFoundException("요청된 이미지 인덱스가 이미지 파일 수보다 적습니다.");
             }
+        }
 
-            // 리뷰 컨텐츠 배열 처리
-            // request.getContents()는 텍스트와 이미지 타입을 모두 포함하는 리스트입니다.
-            int order = 0;
-            for (ReviewContentDto contentRequest : request.getContents()) {
-                if ("text".equals(contentRequest.getType())) {
+        // 리뷰 콘텐츠 배열 처리 (텍스트와 이미지 모두 처리)
+        for (ReviewContentDto contentRequest : request.getContents()) {
+            if ("text".equals(contentRequest.getType())) {
+                ReviewContent reviewContent = ReviewContent.builder()
+                        .reviewId(review.getReviewId())
+                        .type("text")
+                        .value(contentRequest.getValue())
+                        .build();
+                reviewContentRepository.save(reviewContent);
+            } else if ("image".equals(contentRequest.getType())) {
+                int idx = contentRequest.getImageIndex();
+                if (idx < reviewImages.size()) {
+                    MultipartFile imageFile = reviewImages.get(idx);
+                    String folder = "review/" + review.getReviewId();
+                    Image image = imageService.uploadAndSaveImages(imageFile, ImageType.REVIEW, review.getReviewId(), folder, idx);
                     ReviewContent reviewContent = ReviewContent.builder()
                             .reviewId(review.getReviewId())
-                            .type("text")
-                            .value(contentRequest.getValue())
+                            .type("image")
+                            .value(image.getUrl())
+                            .imageIndex(idx)
                             .build();
                     reviewContentRepository.save(reviewContent);
-                } else if ("image".equals(contentRequest.getType())) {
-                    int idx = contentRequest.getImageIndex();
-                    if (idx < reviewImages.size()) {
-                        MultipartFile imageFile = reviewImages.get(idx);
-                        String folder = "review/" + review.getReviewId();
-                        Image image = imageService.uploadAndSaveImages(imageFile, ImageType.REVIEW, review.getReviewId(), folder, idx);
-                        ReviewContent reviewContent = ReviewContent.builder()
-                                .reviewId(review.getReviewId())
-                                .type("image")
-                                .value(image.getUrl())
-                                .imageIndex(idx)
-                                .build();
-                        reviewContentRepository.save(reviewContent);
-                    }
-                }
                 }
             }
+        }
+
         return getReviewDetail(review.getReviewUuid());
     }
+
 
     /**
      * 커뮤니티 리뷰 상세 조회
