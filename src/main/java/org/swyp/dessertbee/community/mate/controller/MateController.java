@@ -20,6 +20,9 @@ import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.community.mate.service.MateService;
 import org.swyp.dessertbee.user.service.UserServiceImpl;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -119,6 +122,10 @@ public class MateController {
         int size = to - from;
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
+
+        if(keyword != null) {
+            keyword = URLDecoder.decode(keyword, StandardCharsets.UTF_8);
+        }
         return ResponseEntity.ok(mateService.getMates(pageable, keyword, mateCategoryId));
     }
 
@@ -137,7 +144,6 @@ public class MateController {
         int size = to - from;
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
-
 
         return ResponseEntity.ok(mateService.getMyMates(pageable));
     }

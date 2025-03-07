@@ -21,6 +21,9 @@ import org.swyp.dessertbee.community.review.dto.response.ReviewPageResponse;
 import org.swyp.dessertbee.community.review.dto.response.ReviewResponse;
 import org.swyp.dessertbee.community.review.service.ReviewService;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,12 +75,15 @@ public class ReviewController {
             @RequestParam(required = false, defaultValue = "10") int to,
             @RequestParam(required = false, defaultValue = "") String keyword,
             @RequestParam(required = false) Long reviewCategoryId
-    ){
+    ) {
 
         if (from >= to) {
             throw new MateExceptions.FromToMateException("잘못된 범위 요청입니다.");
         }
 
+        if(keyword != null) {
+            keyword = URLDecoder.decode(keyword, StandardCharsets.UTF_8);
+        }
         int size = to - from;
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
