@@ -4,6 +4,8 @@ package org.swyp.dessertbee.community.review.dto.response;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import org.swyp.dessertbee.common.entity.Image;
+import org.swyp.dessertbee.community.review.dto.ReviewImage;
 import org.swyp.dessertbee.community.review.dto.ReviewPlace;
 import org.swyp.dessertbee.community.review.entity.Review;
 import org.swyp.dessertbee.user.entity.UserEntity;
@@ -24,7 +26,7 @@ public class ReviewResponse {
     private String profileImage;
     private String content;
     private String title;
-    private List<String> reviewImages;
+    private List<ReviewImage> reviewImages;
     private ReviewPlace place;
     private String reviewCategory;
     private LocalDateTime createdAt;
@@ -33,11 +35,11 @@ public class ReviewResponse {
     private UserEntity.Gender gender;
 
     public static ReviewResponse fromEntity(UserEntity user,
-                                                     Review review,
-                                                     List<String> reivewImages,
-                                                     String reviewCategory,
-                                                     String profileImage,
-                                                     boolean saved) {
+                                            Review review,
+                                            List<ReviewImage>  reviewImages,
+                                            String reviewCategory,
+                                            String profileImage,
+                                            boolean saved) {
 
 
         return ReviewResponse.builder()
@@ -49,7 +51,7 @@ public class ReviewResponse {
                 .profileImage(profileImage)
                 .title(review.getTitle())
                 .content(review.getContent())
-                .reviewImages(reivewImages)
+                .reviewImages(reviewImages)
                 .reviewCategory(reviewCategory)
                 .place(ReviewPlace.builder()
                         .placeName(review.getPlaceName())

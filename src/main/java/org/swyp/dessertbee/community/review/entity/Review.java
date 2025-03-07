@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
+import org.swyp.dessertbee.community.review.dto.request.ReviewUpdateRequest;
+import org.swyp.dessertbee.store.store.entity.Store;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -72,6 +74,19 @@ public class Review {
 
     public void softDelete(){
         this.deletedAt = LocalDateTime.now();
+    }
+
+    public void update(ReviewUpdateRequest request, Store store) {
+        this.title = request.getTitle();
+        this.content = request.getContent();
+        this.reviewCategoryId = request.getReviewCategoryId();
+        if (store != null) {
+            this.storeId = store.getStoreId();
+            this.placeName = store.getName();
+            this.latitude = store.getLatitude();
+            this.longitude = store.getLongitude();
+            this.address = store.getAddress();
+        }
     }
 
 }

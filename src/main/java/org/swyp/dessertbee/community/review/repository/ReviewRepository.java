@@ -27,4 +27,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
             "     OR r.placeName LIKE CONCAT('%', :keyword, '%'))) " +
             "ORDER BY r.reviewId DESC")
     Page<Review> findByDeletedAtIsNullAndReviewCategoryId(Pageable pageable, String keyword, Long reviewCategoryId);
+
+    Optional<Review> findByReviewUuidAndDeletedAtIsNull(UUID reviewUuid);
 }

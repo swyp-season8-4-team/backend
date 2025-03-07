@@ -11,15 +11,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.community.mate.exception.MateExceptions;
 import org.swyp.dessertbee.community.review.dto.request.ReviewCreateRequest;
+import org.swyp.dessertbee.community.review.dto.request.ReviewUpdateRequest;
 import org.swyp.dessertbee.community.review.dto.response.ReviewPageResponse;
 import org.swyp.dessertbee.community.review.dto.response.ReviewResponse;
 import org.swyp.dessertbee.community.review.service.ReviewService;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Tag(name = "CommunityReview", description = "커뮤니티 리뷰 관련 API")
@@ -80,5 +84,34 @@ public class ReviewController {
         Pageable pageable = PageRequest.of(page, size);
 
         return ResponseEntity.ok(reviewService.getReviews(pageable, keyword, reviewCategoryId));
+    }
+
+    /**
+     * 커뮤니티 리뷰 수정
+     * */
+    @PatchMapping("/{reviewUuid}")
+    private ResponseEntity<Map<String, String>> updateReview(
+            @PathVariable UUID reviewUuid,
+            @RequestPart("request") ReviewUpdateRequest request,
+            @RequestPart(value = "reviewImages", required = false) List<MultipartFile> reviewImages
+    ){
+        reviewService.updateReview(reviewUuid, request, reviewImages);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "리뷰가 성공적으로 수정되었습니다.");
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**커뮤니티 리뷰 삭제*/
+    @DeleteMapping("/{reviewUuid}")
+    private ResponseEntity<Map<String, String>> deleteReview(@PathVariable UUID reviewUuid){
+
+        reviewService.deleteReview(reviewUuid);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "리뷰가 성공적으로 삭제되었습니다.");
+
+        return ResponseEntity.ok(response);
     }
 }

@@ -1,14 +1,19 @@
 package org.swyp.dessertbee.community.review.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.swyp.dessertbee.common.entity.Image;
 import org.swyp.dessertbee.common.entity.ImageType;
+import org.swyp.dessertbee.common.repository.ImageRepository;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
+import org.swyp.dessertbee.community.review.dto.ReviewImage;
 import org.swyp.dessertbee.community.review.dto.request.ReviewCreateRequest;
+import org.swyp.dessertbee.community.review.dto.request.ReviewUpdateRequest;
 import org.swyp.dessertbee.community.review.dto.response.ReviewPageResponse;
 import org.swyp.dessertbee.community.review.dto.response.ReviewResponse;
 import org.swyp.dessertbee.community.review.entity.Review;
@@ -16,6 +21,7 @@ import org.swyp.dessertbee.community.review.entity.SavedReview;
 import org.swyp.dessertbee.community.review.exception.ReviewException.*;
 import org.swyp.dessertbee.community.review.repository.ReviewRepository;
 import org.swyp.dessertbee.community.review.repository.SavedReviewRepository;
+import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
@@ -36,11 +42,13 @@ public class ReviewService {
     private final ImageService imageService;
     private final UserRepository userRepository;
     private final SavedReviewRepository savedReviewRepository;
+    private final ImageRepository imageRepository;
 
 
     /**
      * 커뮤니티 리뷰 생성
      * */
+    @Transactional
     public ReviewResponse createReview(ReviewCreateRequest request, List<MultipartFile> reviewImages) {
 
         Long userId = userRepository.findIdByUserUuid(request.getUserUuid());
@@ -111,11 +119,65 @@ public class ReviewService {
     }
 
     /**
+     * 커뮤니티 리뷰 수정
+     * */
+    public void updateReview(UUID reviewUuid, ReviewUpdateRequest request, List<MultipartFile> reviewImages) {
+
+        Review review = reviewRepository.findByReviewUuidAndDeletedAtIsNull(reviewUuid)
+                .orElseThrow(() -> new ReviewNotFoundException("존재하지 않는 리뷰입니다."));
+
+        Store store = storeRepository.findStoreIdByLongitudeAndLatitude(request.getPlace().getLongitude(), request.getPlace().getLatitude());
+
+        review.update(request, store);
+
+        System.out.println(reviewImages);
+        if (reviewImages != null && !reviewImages.isEmpty()) {
+
+            String folder = "review/" + review.getReviewId();
+            imageService.updatePartialImages(request.getDeleteImageIds(), reviewImages, ImageType.REVIEW, review.getReviewId(), folder);
+        }
+
+
+
+    }
+
+    /**
+     * 커뮤니티 리뷰 삭제
+     * */
+    public void deleteReview(UUID reviewUuid) {
+        Review review = reviewRepository.findByReviewUuidAndDeletedAtIsNull(reviewUuid)
+                .orElseThrow(() -> new ReviewNotFoundException("존재하지 않는 리뷰입니다."));
+
+        try {
+            review.softDelete();
+            reviewRepository.save(review);
+
+
+            imageService.deleteImagesByRefId(ImageType.REVIEW, review.getReviewId());
+
+        } catch (Exception e)
+        {
+            System.out.println("❌ S3 이미지 삭제 중 오류 발생: " + e.getMessage());
+            throw new RuntimeException("S3 이미지 삭제 실패: " + e.getMessage(), e);
+        }
+
+    }
+
+
+    /**
      * 커뮤니티 리뷰 정보 조회 중복 코드
      * */
     private ReviewResponse mapToReviewDetailResponse(Review review, Long currentUserId) {
 
-        List<String> reviewImages = imageService.getImagesByTypeAndId(ImageType.REVIEW, review.getReviewId());
+        List<Image> images = imageRepository.findIdAndUrlByRefTypeAndRefId(ImageType.REVIEW, review.getReviewId());
+        List<ReviewImage> reviewImages = images.stream()
+                .map(image -> ReviewImage.builder()
+                        .reviewImages(image.getUrl())     // URL을 reviewImage에 매핑
+                        .reviewImageId(image.getId())      // id를 reviewImageId에 매핑
+                        .build())
+                .collect(Collectors.toList());
+
+
         //mateCategoryId로 name 조회
         String reviewCategory = String.valueOf(reviewRepository.findNameByReviewCategoryId( review.getReviewCategoryId()));
 
@@ -135,6 +197,5 @@ public class ReviewService {
         return ReviewResponse.fromEntity(user, review, reviewImages, reviewCategory, profileImage, saved);
 
     }
-
 
 }

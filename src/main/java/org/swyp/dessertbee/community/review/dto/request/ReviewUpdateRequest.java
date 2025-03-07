@@ -15,7 +15,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ReviewCreateRequest {
+public class ReviewUpdateRequest {
 
 
     @NotNull
@@ -31,6 +31,8 @@ public class ReviewCreateRequest {
     private String content;
 
     private ReviewPlace place;
+
+    private List<Long> deleteImageIds;
 
     private List<MultipartFile> reviewImages;
 

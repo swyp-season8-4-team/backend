@@ -14,4 +14,6 @@ public interface ImageRepository extends JpaRepository<Image, Long> {
 
     // 여러 refId의 이미지 한 번에 조회
     List<Image> findByRefTypeAndRefIdIn(ImageType refType, List<Long> refIds);
+
+    List<Image> findIdAndUrlByRefTypeAndRefId(ImageType imageType, Long reviewId);
 }
