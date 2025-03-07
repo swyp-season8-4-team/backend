@@ -32,6 +32,6 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .map(userRole -> userRole.getRole().getRoleName())
                 .toList();
 
-        return new CustomUserDetails(user.getEmail(), roles);
+        return new CustomUserDetails(user.getEmail(), roles, user.getUserUuid());
     }
 }

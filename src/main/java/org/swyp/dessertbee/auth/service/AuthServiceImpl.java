@@ -112,8 +112,8 @@ public class AuthServiceImpl implements AuthService {
             userRepository.save(user);
 
             // Access Token, Refresh Token 생성
-            String accessToken = jwtUtil.createAccessToken(user.getEmail(), roles, false);
-            String refreshToken = jwtUtil.createRefreshToken(user.getEmail(), roles, false);
+            String accessToken = jwtUtil.createAccessToken(user.getEmail(), user.getUserUuid(), roles, false);
+            String refreshToken = jwtUtil.createRefreshToken(user.getEmail(), user.getUserUuid(), roles, false);
             long expiresIn = jwtUtil.getSHORT_ACCESS_TOKEN_EXPIRE();
 
 
@@ -162,8 +162,8 @@ public class AuthServiceImpl implements AuthService {
 
             // 4. Access Token, Refresh Token 생성
             boolean keepLoggedIn = request.isKeepLoggedIn();
-            String accessToken = jwtUtil.createAccessToken(user.getEmail(), roles, keepLoggedIn);
-            String refreshToken = jwtUtil.createRefreshToken(user.getEmail(), roles, keepLoggedIn);
+            String accessToken = jwtUtil.createAccessToken(user.getEmail(), user.getUserUuid(), roles, keepLoggedIn);
+            String refreshToken = jwtUtil.createRefreshToken(user.getEmail(), user.getUserUuid(), roles, keepLoggedIn);
             long expiresIn = keepLoggedIn ?
                     jwtUtil.getLONG_ACCESS_TOKEN_EXPIRE() :
                     jwtUtil.getSHORT_ACCESS_TOKEN_EXPIRE();
@@ -214,8 +214,8 @@ public class AuthServiceImpl implements AuthService {
             }
 
             // 4. 개발용 짧은 유효기간의 Access Token, Refresh Token 생성 (3~5분)
-            String accessToken = jwtUtil.createDevAccessToken(user.getEmail(), roles);
-            String refreshToken = jwtUtil.createDevRefreshToken(user.getEmail(), roles);
+            String accessToken = jwtUtil.createDevAccessToken(user.getEmail(), user.getUserUuid(), roles);
+            String refreshToken = jwtUtil.createDevRefreshToken(user.getEmail(), user.getUserUuid(), roles);
 
             // 개발 환경용 토큰 만료 시간 (3분 = 180초)
             long expiresIn = 180;

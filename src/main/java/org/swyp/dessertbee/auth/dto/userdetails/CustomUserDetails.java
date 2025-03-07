@@ -5,6 +5,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -16,9 +17,11 @@ public class CustomUserDetails implements UserDetails {
 
     private final String email;
     private final List<GrantedAuthority> authorities;
+    private final UUID userUuid;
 
-    public CustomUserDetails(String email, List<String> roleNames) {
+    public CustomUserDetails(String email, List<String> roleNames, UUID userUuid) {
         this.email = email;
+        this.userUuid = userUuid;
         this.authorities = roleNames.stream()
                 .map(role -> (GrantedAuthority) () -> role) // SimpleGrantedAuthority 대체
                 .collect(Collectors.toList());

@@ -4,7 +4,6 @@ import io.jsonwebtoken.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.email.entity.EmailVerificationPurpose;
@@ -17,6 +16,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * JWT 토큰 생성 및 검증을 담당하는 유틸리티 클래스
@@ -63,20 +63,23 @@ public class JWTUtil {
         );
     }
 
+    private record TokenPayload(String email, List<String> roles, UUID userUuid) {
+    }
+
     /**
      * Access Token 생성
      */
-    public String createAccessToken(String email, List<String> roles, boolean keepLoggedIn) {
+    public String createAccessToken(String email, UUID userUuid, List<String> roles, boolean keepLoggedIn) {
         long expireTime = keepLoggedIn ? LONG_ACCESS_TOKEN_EXPIRE : SHORT_ACCESS_TOKEN_EXPIRE;
-        return createToken(email, roles, accessTokenSecretKey, expireTime);
+        return createToken(new TokenPayload(email, roles, userUuid), accessTokenSecretKey, expireTime);
     }
 
     /**
      * Refresh Token 생성
      */
-    public String createRefreshToken(String email, List<String> roles, boolean keepLoggedIn) {
+    public String createRefreshToken(String email, UUID userUuid, List<String> roles, boolean keepLoggedIn) {
         long expireTime = keepLoggedIn ? LONG_REFRESH_TOKEN_EXPIRE : SHORT_REFRESH_TOKEN_EXPIRE;
-        return createToken(email, roles, refreshTokenSecretKey, expireTime);
+        return createToken(new TokenPayload(email, roles, userUuid), refreshTokenSecretKey, expireTime);
     }
 
     /**
@@ -86,10 +89,11 @@ public class JWTUtil {
      * @param roles 사용자 권한 목록
      * @return 생성된 개발용 액세스 토큰
      */
-    public String createDevAccessToken(String email, List<String> roles) {
+    public String createDevAccessToken(String email, UUID userUuid, List<String> roles) {
         log.debug("개발용 액세스 토큰 생성 - 이메일: {}, 만료 시간: {}분", email, DEV_ACCESS_TOKEN_EXPIRE / (60 * 1000));
-        return createToken(email, roles, accessTokenSecretKey, DEV_ACCESS_TOKEN_EXPIRE);
+        return createToken(new TokenPayload(email, roles, userUuid), accessTokenSecretKey, DEV_ACCESS_TOKEN_EXPIRE);
     }
+
 
     /**
      * 개발 환경용 짧은 만료 시간을 가진 리프레시 토큰 생성 (5분)
@@ -98,23 +102,23 @@ public class JWTUtil {
      * @param roles 사용자 권한 목록
      * @return 생성된 개발용 리프레시 토큰
      */
-    public String createDevRefreshToken(String email, List<String> roles) {
+    public String createDevRefreshToken(String email, UUID userUuid, List<String> roles) {
         log.debug("개발용 리프레시 토큰 생성 - 이메일: {}, 만료 시간: {}분", email, DEV_REFRESH_TOKEN_EXPIRE / (60 * 1000));
-        return createToken(email, roles, refreshTokenSecretKey, DEV_REFRESH_TOKEN_EXPIRE);
+        return createToken(new TokenPayload(email, roles, userUuid), refreshTokenSecretKey, DEV_REFRESH_TOKEN_EXPIRE);
     }
 
 
     /**
      * JWT 토큰 생성 공통 메서드
      */
-    private String createToken(String email, List<String> roles, SecretKey secretKey, long expireTime) {
-        // 현재 시간을 KST로 가져오기
+    private String createToken(TokenPayload payload, SecretKey secretKey, long expireTime) {
         ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
         ZonedDateTime expirationTime = now.plus(Duration.ofMillis(expireTime));
 
         return Jwts.builder()
-                .claim("email", email)
-                .claim("roles", roles)
+                .claim("email", payload.email())
+                .claim("roles", payload.roles())
+                .claim("userUuid", payload.userUuid())
                 .issuedAt(Date.from(now.toInstant()))
                 .expiration(Date.from(expirationTime.toInstant()))
                 .signWith(secretKey)
@@ -174,6 +178,16 @@ public class JWTUtil {
         return (List<String>) parseClaims(token, key)
                 .get("roles", List.class);
     }
+
+    /**
+     * 토큰에서 uuid 정보 추출
+     */
+    public String getUserUuid(String token, boolean isAccessToken) {
+        SecretKey key = isAccessToken ? accessTokenSecretKey : refreshTokenSecretKey;
+        return parseClaims(token, key)
+                .get("userUuid", String.class);
+    }
+
 
     /**
      * Claims 파싱
