@@ -25,6 +25,7 @@ public class ReviewResponse {
     private String profileImage;
     // 새롭게 추가된 필드: 리뷰 콘텐츠 배열 (각 요소는 text 또는 image 타입의 정보를 담습니다)
     private List<ReviewContentDto> contents;
+    private String title;
     private ReviewPlace place;
     private String reviewCategory;
     private LocalDateTime createdAt;
@@ -47,6 +48,7 @@ public class ReviewResponse {
                 .gender(user.getGender())
                 .profileImage(profileImage)
                 .contents(contents)
+                .title(review.getTitle())
                 .reviewCategory(reviewCategory)
                 .place(ReviewPlace.builder()
                         .placeName(review.getPlaceName())
