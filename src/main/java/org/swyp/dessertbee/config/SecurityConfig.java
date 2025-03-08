@@ -52,7 +52,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, JWTFilter jwtFilter) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session ->
@@ -77,7 +77,7 @@ public class SecurityConfig {
                                 endpoint.baseUri("/api/oauth2/authorization"))
                         .loginProcessingUrl("/api/oauth2/code")
                 )
-                .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 //        // CORS 설정 추가
 //        http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
         // CORS 설정 비활성화 (NGINX에서 처리)
