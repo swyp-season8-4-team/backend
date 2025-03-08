@@ -82,7 +82,7 @@ public class MateReplyService {
 
 
         // 사용자별 프로필 이미지 조회
-        List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
+        String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, user.getId());
 
         return MateReplyResponse.fromEntity(mateReply, mateUuid, user, profileImage);
     }

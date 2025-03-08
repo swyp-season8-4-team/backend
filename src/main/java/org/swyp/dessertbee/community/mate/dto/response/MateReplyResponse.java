@@ -22,7 +22,7 @@ public class MateReplyResponse {
     private String nickname;
     private UUID userUuid;
     private String content;
-    private List<String> profileImage;
+    private String profileImage;
     private UserEntity.Gender gender;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -31,7 +31,7 @@ public class MateReplyResponse {
     public static MateReplyResponse fromEntity(MateReply reply,
                                                UUID mateUuid,
                                                UserEntity user,
-                                               List<String> profileImage
+                                               String profileImage
                                                ) {
 
         return MateReplyResponse.builder()

@@ -120,7 +120,7 @@ public class MateMemberService {
                     }
 
                     // 사용자별 프로필 이미지 조회
-                    List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
+                    String profileImages = imageService.getImageByTypeAndId(ImageType.PROFILE, user.getId());
 
                     // MateMemberResponse 생성
                     return MateMemberResponse.fromEntity(mateMember, user, profileImages);
@@ -259,7 +259,7 @@ public class MateMemberService {
                     }
 
                     // 사용자별 프로필 이미지 조회
-                    List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
+                   String profileImages = imageService.getImageByTypeAndId(ImageType.PROFILE, user.getId());
 
                     // MateMemberResponse 생성
                     return MateMemberResponse.fromEntity(mateMember, user, profileImages);

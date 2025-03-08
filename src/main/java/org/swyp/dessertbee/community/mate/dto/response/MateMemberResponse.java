@@ -19,14 +19,14 @@ public class MateMemberResponse {
     private Long userId;
     private UUID userUuid;
     private String grade;
-    private List<String> profileImage;
+    private String profileImage;
     private String nickname;
     private UserEntity.Gender gender;
     private MateApplyStatus applyStatus;
 
     public static MateMemberResponse fromEntity(MateMember member,
                                                 UserEntity user,
-                                                List<String> profileImage) {
+                                                String profileImage) {
         return MateMemberResponse.builder()
                 .userId(user.getId())
                 .userUuid(user.getUserUuid())
