@@ -32,12 +32,15 @@ public class ReviewResponse {
     private LocalDateTime updatedAt;
     private boolean saved;
     private UserEntity.Gender gender;
+    private Integer views;
+
 
     public static ReviewResponse fromEntity(UserEntity user,
                                             Review review,
                                             List<ReviewContentDto> contents,
                                             String reviewCategory,
                                             String profileImage,
+                                            int views,
                                             boolean saved) {
 
         return ReviewResponse.builder()
@@ -57,6 +60,7 @@ public class ReviewResponse {
                         .address(review.getAddress())
                         .build())
                 .saved(saved)
+                .views(views)
                 .createdAt(review.getCreatedAt())
                 .updatedAt(review.getUpdatedAt())
                 .build();

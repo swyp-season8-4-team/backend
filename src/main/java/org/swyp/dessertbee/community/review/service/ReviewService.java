@@ -19,10 +19,12 @@ import org.swyp.dessertbee.community.review.dto.response.ReviewPageResponse;
 import org.swyp.dessertbee.community.review.dto.response.ReviewResponse;
 import org.swyp.dessertbee.community.review.entity.Review;
 import org.swyp.dessertbee.community.review.entity.ReviewContent;
+import org.swyp.dessertbee.community.review.entity.ReviewStatistics;
 import org.swyp.dessertbee.community.review.entity.SavedReview;
 import org.swyp.dessertbee.community.review.exception.ReviewException.*;
 import org.swyp.dessertbee.community.review.repository.ReviewContentRepository;
 import org.swyp.dessertbee.community.review.repository.ReviewRepository;
+import org.swyp.dessertbee.community.review.repository.ReviewStatisticsRepository;
 import org.swyp.dessertbee.community.review.repository.SavedReviewRepository;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
@@ -46,6 +48,7 @@ public class ReviewService {
     private final SavedReviewRepository savedReviewRepository;
     private final ImageRepository imageRepository;
     private final ReviewContentRepository reviewContentRepository;
+    private final ReviewStatisticsRepository reviewStatisticsRepository;
 
 
     /**
@@ -115,6 +118,16 @@ public class ReviewService {
             }
         }
 
+        //리뷰 통계 초기화
+        reviewStatisticsRepository.save(
+                ReviewStatistics.builder()
+                        .reviewId(review.getReviewId())
+                        .views(0)
+                        .saves(0)
+                        .reviews(0)
+                        .build()
+        );
+
         return getReviewDetail(review.getReviewUuid());
     }
 
@@ -133,8 +146,12 @@ public class ReviewService {
         // 현재 접속해 있는 사용자의 user 정보 (user가 null일 수 있으므로 null 체크)
         Long currentUserId = (user != null) ? user.getId() : null;
 
+        ReviewStatistics reviewStatistics = reviewStatisticsRepository.findByReviewId(review.getReviewId());
 
-        return mapToReviewDetailResponse(review, currentUserId);
+        int views = reviewStatistics.getViews() + 1;
+        reviewStatistics.count(views);
+
+        return mapToReviewDetailResponse(review, currentUserId, views);
     }
 
     /**
@@ -149,9 +166,14 @@ public class ReviewService {
 
         Page<Review> reviewsPage = reviewRepository.findByDeletedAtIsNullAndReviewCategoryId(pageable, keyword, reviewCategoryId);
 
+
         List<ReviewResponse> reviews = reviewsPage.stream()
-                .map( review -> mapToReviewDetailResponse(review, currentUserId))
+                .map(review -> {
+                    ReviewStatistics reviewStatistics = reviewStatisticsRepository.findByReviewId(review.getReviewId());
+                    return mapToReviewDetailResponse(review, currentUserId, reviewStatistics.getViews());
+                })
                 .collect(Collectors.toList());
+
 
         return new ReviewPageResponse(reviews, reviewsPage.isLast());
     }
@@ -269,7 +291,7 @@ public class ReviewService {
     /**
      * 커뮤니티 리뷰 정보 조회 중복 코드
      * */
-    private ReviewResponse mapToReviewDetailResponse(Review review, Long currentUserId) {
+    private ReviewResponse mapToReviewDetailResponse(Review review, Long currentUserId, int views) {
 
         // review 테이블의 기본 정보는 그대로 사용하고,
         // review_content 테이블에서 해당 리뷰의 콘텐츠를 순서대로 조회합니다.
@@ -312,7 +334,7 @@ public class ReviewService {
         boolean saved = savedReview != null;
 
         // ReviewResponse에 contentList(리뷰 콘텐츠 배열)를 포함시킵니다.
-        return ReviewResponse.fromEntity(user, review, contentList, reviewCategory, profileImage, saved);
+        return ReviewResponse.fromEntity(user, review, contentList, reviewCategory, profileImage, views, saved);
     }
 
 
