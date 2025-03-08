@@ -14,12 +14,14 @@ import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.exception.ErrorResponse;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
+import org.swyp.dessertbee.user.service.UserService;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,21 +32,17 @@ public class TokenService {
     private final UserRepository userRepository;
     private final JWTUtil jwtUtil;
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+    private final UserService userService;
 
     /**
      * 리프레시 토큰을 저장하거나 업데이트
      */
     @Transactional
-    public void saveRefreshToken(String email, String refreshToken, String provider, String providerId) {
+    public void saveRefreshToken(UUID userUuid, String refreshToken, String provider, String providerId) {
+        UserEntity user = userService.findByUserUuid(userUuid);
+        String email = user.getEmail();
+
         try {
-
-            // 사용자 조회
-            UserEntity user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> {
-                        log.warn("리프레시 토큰 저장 실패 - 존재하지 않는 사용자: {}", email);
-                        return new BusinessException(ErrorCode.INVALID_CREDENTIALS, "해당 이메일의 사용자를 찾을 수 없습니다.");
-                    });
-
             // provider가 null인 경우 'local'로 기본 설정
             String safeProvider = Optional.ofNullable(provider).orElse("local");
 
@@ -79,17 +77,11 @@ public class TokenService {
      * 리프레시 토큰 무효화 (로그아웃)
      */
     @Transactional
-    public void revokeRefreshToken(String email) {
+    public void revokeRefreshToken(UUID userUuid) {
+        UserEntity user = userService.findByUserUuid(userUuid);
+        String email = user.getEmail();
+
         try {
-            Optional<UserEntity> userOpt = userRepository.findByEmail(email);
-
-            if (userOpt.isEmpty()) {
-                log.warn("리프레시 토큰 무효화 실패 - 존재하지 않는 사용자: {}", email);
-                throw new BusinessException(ErrorCode.INVALID_CREDENTIALS, "해당 이메일의 사용자를 찾을 수 없습니다.");
-            }
-
-            UserEntity user = userOpt.get();
-
             Optional<AuthEntity> authOpt = authRepository.findByUserAndProvider(Optional.of(user), "local");
 
             if (authOpt.isEmpty()) {
@@ -127,15 +119,11 @@ public class TokenService {
             }
 
             // 토큰에서 이메일 추출
-            String email = jwtUtil.getEmail(refreshToken, false);
+            UUID userUuid = jwtUtil.getUserUuid(refreshToken, false);
 
             // 사용자 조회
-            UserEntity user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> {
-                        log.warn("리프레시 토큰 검증 실패 - 존재하지 않는 사용자: {}", email);
-                        return new BusinessException(ErrorCode.INVALID_CREDENTIALS, "해당 이메일의 사용자를 찾을 수 없습니다.");
-                    });
-
+            UserEntity user = userService.findByUserUuid(userUuid);
+            String email = user.getEmail();
             // DB에서 리프레시 토큰 조회
             AuthEntity auth = authRepository.findByUserAndProvider(Optional.of(user), "local")
                     .orElseThrow(() -> {
@@ -161,7 +149,7 @@ public class TokenService {
                     .collect(Collectors.toList());
 
             boolean keepLoggedIn = false; // 로그인 유지 여부 (프론트엔드에서 전달받을 수도 있음)
-            String newAccessToken = jwtUtil.createAccessToken(email, user.getUserUuid(), roles, keepLoggedIn);
+            String newAccessToken = jwtUtil.createAccessToken(user.getUserUuid(), roles, keepLoggedIn);
 
             log.info("리프레시 토큰 검증 성공 - 새로운 액세스 토큰 발급 완료: {}", email);
 

@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.swyp.dessertbee.auth.enums.TokenType;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.email.entity.EmailVerificationPurpose;
 
@@ -63,67 +64,96 @@ public class JWTUtil {
         );
     }
 
-    private record TokenPayload(String email, List<String> roles, UUID userUuid) {
-    }
-
     /**
      * Access Token 생성
      */
-    public String createAccessToken(String email, UUID userUuid, List<String> roles, boolean keepLoggedIn) {
+    public String createAccessToken(UUID userUuid, List<String> roles, boolean keepLoggedIn) {
         long expireTime = keepLoggedIn ? LONG_ACCESS_TOKEN_EXPIRE : SHORT_ACCESS_TOKEN_EXPIRE;
-        return createToken(new TokenPayload(email, roles, userUuid), accessTokenSecretKey, expireTime);
+        return buildToken(TokenType.ACCESS, userUuid, roles, null, null, accessTokenSecretKey, expireTime);
     }
 
     /**
      * Refresh Token 생성
      */
-    public String createRefreshToken(String email, UUID userUuid, List<String> roles, boolean keepLoggedIn) {
+    public String createRefreshToken(UUID userUuid, boolean keepLoggedIn) {
         long expireTime = keepLoggedIn ? LONG_REFRESH_TOKEN_EXPIRE : SHORT_REFRESH_TOKEN_EXPIRE;
-        return createToken(new TokenPayload(email, roles, userUuid), refreshTokenSecretKey, expireTime);
+        return buildToken(TokenType.REFRESH, userUuid, null, null,null, refreshTokenSecretKey, expireTime);
     }
 
     /**
      * 개발 환경용 짧은 만료 시간을 가진 액세스 토큰 생성 (3분)
      *
-     * @param email 사용자 이메일
      * @param roles 사용자 권한 목록
      * @return 생성된 개발용 액세스 토큰
      */
-    public String createDevAccessToken(String email, UUID userUuid, List<String> roles) {
-        log.debug("개발용 액세스 토큰 생성 - 이메일: {}, 만료 시간: {}분", email, DEV_ACCESS_TOKEN_EXPIRE / (60 * 1000));
-        return createToken(new TokenPayload(email, roles, userUuid), accessTokenSecretKey, DEV_ACCESS_TOKEN_EXPIRE);
+    public String createDevAccessToken(UUID userUuid, List<String> roles) {
+        log.debug("개발용 액세스 토큰 생성 - 만료 시간: {}분", DEV_ACCESS_TOKEN_EXPIRE / (60 * 1000));
+        return buildToken(TokenType.ACCESS, userUuid, roles, null, null, accessTokenSecretKey, DEV_ACCESS_TOKEN_EXPIRE);
     }
 
 
     /**
      * 개발 환경용 짧은 만료 시간을 가진 리프레시 토큰 생성 (5분)
      *
-     * @param email 사용자 이메일
-     * @param roles 사용자 권한 목록
      * @return 생성된 개발용 리프레시 토큰
      */
-    public String createDevRefreshToken(String email, UUID userUuid, List<String> roles) {
-        log.debug("개발용 리프레시 토큰 생성 - 이메일: {}, 만료 시간: {}분", email, DEV_REFRESH_TOKEN_EXPIRE / (60 * 1000));
-        return createToken(new TokenPayload(email, roles, userUuid), refreshTokenSecretKey, DEV_REFRESH_TOKEN_EXPIRE);
+    public String createDevRefreshToken(UUID userUuid) {
+        log.debug("개발용 리프레시 토큰 생성 - 만료 시간: {}분", DEV_REFRESH_TOKEN_EXPIRE / (60 * 1000));
+        return buildToken(TokenType.REFRESH, userUuid, null, null, null, refreshTokenSecretKey, DEV_REFRESH_TOKEN_EXPIRE);
     }
 
+    /**
+     * 이메일 인증 토큰 생성
+     */
+    public String createEmailVerificationToken(Long verificationId, EmailVerificationPurpose purpose) {
+        return buildToken(TokenType.EMAIL_VERIFICATION, null, null, verificationId, purpose, accessTokenSecretKey, EMAIL_VERIFICATION_TOKEN_EXPIRE_TIME);
+    }
 
     /**
      * JWT 토큰 생성 공통 메서드
      */
-    private String createToken(TokenPayload payload, SecretKey secretKey, long expireTime) {
+    private String buildToken(
+            TokenType tokenType,
+            UUID userUuid,
+            List<String> roles,
+            Long verificationId,
+            EmailVerificationPurpose purpose,
+            SecretKey secretKey,
+            long expireTime
+    ) {
         ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
         ZonedDateTime expirationTime = now.plus(Duration.ofMillis(expireTime));
 
-        return Jwts.builder()
-                .claim("email", payload.email())
-                .claim("roles", payload.roles())
-                .claim("userUuid", payload.userUuid())
-                .issuedAt(Date.from(now.toInstant()))
-                .expiration(Date.from(expirationTime.toInstant()))
-                .signWith(secretKey)
-                .compact();
+        JwtBuilder builder = Jwts.builder()
+                // 공통 표준 클레임
+                .issuer("dessertbee.com")                          // iss: 토큰 발급자
+                .issuedAt(Date.from(now.toInstant()))              // iat: 발급 시간
+                .expiration(Date.from(expirationTime.toInstant())) // exp: 만료 시간
+                .id(UUID.randomUUID().toString())                  // jti: 토큰 고유 식별자
+                .claim("type", tokenType.name());                  // 토큰 유형
+
+        // 토큰 유형별 특정 클레임 추가
+        switch (tokenType) {
+            case ACCESS:
+                builder.subject(userUuid.toString());              // sub: 사용자 UUID
+                builder.claim("roles", roles);                     // 역할 정보
+                break;
+
+            case REFRESH:
+                builder.subject(userUuid.toString());              // sub: 사용자 UUID (식별용)
+                break;
+
+            case EMAIL_VERIFICATION:
+                builder.subject("EMAIL_VERIFICATION_" + purpose.name()); // sub: 이메일 인증 목적
+                if (verificationId != null) {
+                    builder.claim("verificationId", verificationId); // 인증 ID 추가
+                }
+                break;
+        }
+
+        return builder.signWith(secretKey).compact();
     }
+
 
     /**
      * 토큰 유효성 검증
@@ -160,14 +190,6 @@ public class JWTUtil {
             return ErrorCode.AUTHENTICATION_FAILED;
         }
     }
-    /**
-     * 토큰에서 이메일 추출
-     */
-    public String getEmail(String token, boolean isAccessToken) {
-        SecretKey key = isAccessToken ? accessTokenSecretKey : refreshTokenSecretKey;
-        return parseClaims(token, key)
-                .get("email", String.class);
-    }
 
     /**
      * 토큰에서 권한 정보 추출
@@ -182,12 +204,19 @@ public class JWTUtil {
     /**
      * 토큰에서 uuid 정보 추출
      */
-    public String getUserUuid(String token, boolean isAccessToken) {
+    public UUID getUserUuid(String token, boolean isAccessToken) {
         SecretKey key = isAccessToken ? accessTokenSecretKey : refreshTokenSecretKey;
-        return parseClaims(token, key)
-                .get("userUuid", String.class);
-    }
+        Claims claims = parseClaims(token, key);
 
+        // 토큰 유형 확인
+        String tokenType = claims.get("type", String.class);
+        if (tokenType == null ||
+                !(tokenType.equals(TokenType.ACCESS.name()) || tokenType.equals(TokenType.REFRESH.name()))) {
+            throw new IllegalArgumentException("유효한 사용자 토큰이 아닙니다");
+        }
+
+        return UUID.fromString(claims.getSubject());
+    }
 
     /**
      * Claims 파싱
@@ -204,39 +233,40 @@ public class JWTUtil {
         }
     }
 
-    /**
-     * 토큰 만료시간 확인
-     */
-    public long getTokenTimeToLive(String token, boolean isAccessToken) {
-        SecretKey key = isAccessToken ? accessTokenSecretKey : refreshTokenSecretKey;
-        Date expiration = parseClaims(token, key).getExpiration();
-        // 현재 시간도 KST 기준으로 가져오기
-        return expiration.getTime() - ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toInstant().toEpochMilli();
-    }
-
-    /**
-     * 이메일 인증 토큰 생성
-     * @param email 인증된 이메일
-     * @param purpose 인증 목적
-     */
-    public String createEmailVerificationToken(String email, EmailVerificationPurpose purpose) {
-        ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
-        ZonedDateTime expirationTime = now.plus(Duration.ofMillis(EMAIL_VERIFICATION_TOKEN_EXPIRE_TIME));
-
-        return Jwts.builder()
-                .claim("email", email)
-                .claim("purpose", purpose.name())
-                .issuedAt(Date.from(now.toInstant()))
-                .expiration(Date.from(expirationTime.toInstant()))
-                .signWith(accessTokenSecretKey)
-                .compact();
-    }
 
     /**
      * 이메일 인증 토큰에서 목적 추출
      */
     public EmailVerificationPurpose getVerificationPurpose(String token) {
         Claims claims = parseClaims(token, accessTokenSecretKey);
-        return EmailVerificationPurpose.valueOf(claims.get("purpose", String.class));
+
+        // 이메일 인증 토큰인지 확인
+        String tokenType = claims.get("type", String.class);
+        if (tokenType == null || !tokenType.equals(TokenType.EMAIL_VERIFICATION.name())) {
+            throw new IllegalArgumentException("유효한 이메일 인증 토큰이 아닙니다");
+        }
+
+        String subject = claims.getSubject();
+        if (subject != null && subject.startsWith("EMAIL_VERIFICATION_")) {
+            String purposeName = subject.substring("EMAIL_VERIFICATION_".length());
+            return EmailVerificationPurpose.valueOf(purposeName);
+        }
+
+        throw new IllegalArgumentException("이메일 인증 목적을 찾을 수 없습니다");
+    }
+
+    /**
+     * 이메일 인증 토큰에서 인증 ID 추출
+     */
+    public Long getVerificationId(String token) {
+        Claims claims = parseClaims(token, accessTokenSecretKey);
+
+        // 이메일 인증 토큰인지 확인
+        String tokenType = claims.get("type", String.class);
+        if (tokenType == null || !tokenType.equals(TokenType.EMAIL_VERIFICATION.name())) {
+            throw new IllegalArgumentException("유효한 이메일 인증 토큰이 아닙니다");
+        }
+
+        return claims.get("verificationId", Long.class);
     }
 }

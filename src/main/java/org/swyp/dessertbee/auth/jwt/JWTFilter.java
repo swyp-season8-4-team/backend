@@ -80,15 +80,13 @@ public class JWTFilter extends OncePerRequestFilter {
      * JWT 토큰으로부터 인증 객체 생성
      */
     private Authentication createAuthentication(String token) {
-        String email = jwtUtil.getEmail(token, true);
-        log.debug("JWT에서 추출된 이메일: {}", email);
         List<String> roleNames = jwtUtil.getRoles(token, true);
-        UUID userUuid = UUID.fromString(jwtUtil.getUserUuid(token, true));
+        UUID userUuid = jwtUtil.getUserUuid(token, true);
 
         // DB 조회 없이 CustomUserDetails 객체를 생성
-        CustomUserDetails userDetails = new CustomUserDetails(email, roleNames, userUuid);
+        CustomUserDetails userDetails = new CustomUserDetails(roleNames, userUuid);
 
-        return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        return new UsernamePasswordAuthenticationToken(userUuid, null, userDetails.getAuthorities());
     }
 
     /**

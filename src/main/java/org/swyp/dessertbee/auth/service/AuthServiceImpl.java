@@ -20,14 +20,15 @@ import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.email.entity.EmailVerificationPurpose;
+import org.swyp.dessertbee.email.service.EmailVerificationService;
 import org.swyp.dessertbee.preference.service.PreferenceService;
-import org.swyp.dessertbee.role.repository.RoleRepository;
 import org.swyp.dessertbee.role.service.UserRoleService;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.user.service.UserService;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +40,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final ImageService imageService;
     private final PreferenceService preferenceService;
+    private final EmailVerificationService emailVerificationService;
 
     @Autowired
     private TokenService tokenService;
@@ -53,13 +55,13 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void saveRefreshToken(String email, String refreshToken) {
-        tokenService.saveRefreshToken(email, refreshToken, "local", null);
+    public void saveRefreshToken(UUID userUuid, String refreshToken) {
+        tokenService.saveRefreshToken(userUuid, refreshToken, "local", null);
     }
 
     @Override
-    public void revokeRefreshToken(String email) {
-        tokenService.revokeRefreshToken(email);
+    public void revokeRefreshToken(UUID userUuid) {
+        tokenService.revokeRefreshToken(userUuid);
     }
 
     /**
@@ -70,7 +72,7 @@ public class AuthServiceImpl implements AuthService {
     public LoginResponse signup(SignUpRequest request, String verificationToken) {
         try {
             // 메일 인증 토큰 검증
-            validateEmailVerificationToken(verificationToken, request.getEmail(), EmailVerificationPurpose.SIGNUP);
+            emailVerificationService.validateEmailVerificationToken(verificationToken, request.getEmail(), EmailVerificationPurpose.SIGNUP);
 
             // 이메일 중복 검사
             if (userRepository.existsByEmail(request.getEmail())) {
@@ -111,13 +113,13 @@ public class AuthServiceImpl implements AuthService {
             userRepository.save(user);
 
             // Access Token, Refresh Token 생성
-            String accessToken = jwtUtil.createAccessToken(user.getEmail(), user.getUserUuid(), roles, false);
-            String refreshToken = jwtUtil.createRefreshToken(user.getEmail(), user.getUserUuid(), roles, false);
+            String accessToken = jwtUtil.createAccessToken(user.getUserUuid(), roles, false);
+            String refreshToken = jwtUtil.createRefreshToken(user.getUserUuid(), false);
             long expiresIn = jwtUtil.getSHORT_ACCESS_TOKEN_EXPIRE();
 
 
             // Refresh Token 저장
-            saveRefreshToken(user.getEmail(), refreshToken);
+            saveRefreshToken(user.getUserUuid(), refreshToken);
 
             log.info("회원가입 완료 - 이메일: {}", request.getEmail());
 
@@ -161,14 +163,14 @@ public class AuthServiceImpl implements AuthService {
 
             // 4. Access Token, Refresh Token 생성
             boolean keepLoggedIn = request.isKeepLoggedIn();
-            String accessToken = jwtUtil.createAccessToken(user.getEmail(), user.getUserUuid(), roles, keepLoggedIn);
-            String refreshToken = jwtUtil.createRefreshToken(user.getEmail(), user.getUserUuid(), roles, keepLoggedIn);
+            String accessToken = jwtUtil.createAccessToken(user.getUserUuid(), roles, keepLoggedIn);
+            String refreshToken = jwtUtil.createRefreshToken(user.getUserUuid(), keepLoggedIn);
             long expiresIn = keepLoggedIn ?
                     jwtUtil.getLONG_ACCESS_TOKEN_EXPIRE() :
                     jwtUtil.getSHORT_ACCESS_TOKEN_EXPIRE();
 
             // 5. Refresh Token 저장
-            saveRefreshToken(user.getEmail(), refreshToken);
+            saveRefreshToken(user.getUserUuid(), refreshToken);
 
             // 6. 프로필 이미지
             String profileImageUrl = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId()).stream().findFirst().orElse(null);
@@ -213,14 +215,14 @@ public class AuthServiceImpl implements AuthService {
             }
 
             // 4. 개발용 짧은 유효기간의 Access Token, Refresh Token 생성 (3~5분)
-            String accessToken = jwtUtil.createDevAccessToken(user.getEmail(), user.getUserUuid(), roles);
-            String refreshToken = jwtUtil.createDevRefreshToken(user.getEmail(), user.getUserUuid(), roles);
+            String accessToken = jwtUtil.createDevAccessToken(user.getUserUuid(), roles);
+            String refreshToken = jwtUtil.createDevRefreshToken(user.getUserUuid());
 
             // 개발 환경용 토큰 만료 시간 (3분 = 180초)
             long expiresIn = 180;
 
             // 5. Refresh Token 저장
-            saveRefreshToken(user.getEmail(), refreshToken);
+            saveRefreshToken(user.getUserUuid(), refreshToken);
 
             // 6. 프로필 이미지
             List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
@@ -258,7 +260,7 @@ public class AuthServiceImpl implements AuthService {
         try {
 
             // 토큰 유효성 검사
-            validateEmailVerificationToken(verificationToken, request.getEmail(), EmailVerificationPurpose.PASSWORD_RESET);
+            emailVerificationService.validateEmailVerificationToken(verificationToken, request.getEmail(), EmailVerificationPurpose.PASSWORD_RESET);
 
             // 사용자 조회
             UserEntity user = userService.findUserByEmail(request.getEmail());
@@ -268,7 +270,7 @@ public class AuthServiceImpl implements AuthService {
             userRepository.save(user);
 
             // 로그아웃 처리 (기존 토큰 무효화)
-            revokeRefreshToken(request.getEmail());
+            revokeRefreshToken(user.getUserUuid());
 
             log.info("비밀번호 재설정 완료 - 이메일: {}", request.getEmail());
 
@@ -288,60 +290,25 @@ public class AuthServiceImpl implements AuthService {
      * 1. 액세스 토큰에서 이메일 추출
      * 2. 리프레시 토큰 무효화
      *
-     * @param token 액세스 토큰
+     * @param accessToken 액세스 토큰
      * @return 로그아웃 응답
      */
     @Transactional
     @Override
-    public LogoutResponse logout(String token) {
+    public LogoutResponse logout(String accessToken) {
+        UUID userUuid = jwtUtil.getUserUuid(accessToken, true);
+        UserEntity user = userService.findByUserUuid(userUuid);
         try {
-            String email = jwtUtil.getEmail(token, true);
+            revokeRefreshToken(userUuid);
 
-            revokeRefreshToken(email);
-
-            log.info("로그아웃 성공 - 이메일: {}", email);
+            log.info("로그아웃 성공 - userUuid: {}", userUuid);
             return LogoutResponse.success();
 
         } catch (BusinessException e) {
             log.warn("로그아웃 실패 - 사유: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("로그아웃 처리 중 알 수 없는 오류 발생 - 토큰: {}", token, e);
-            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    private void validateEmailVerificationToken(String token, String requestEmail, EmailVerificationPurpose expectedPurpose) {
-        try {
-
-            // 토큰 유효성 검사
-            if (jwtUtil.validateToken(token, true) != null) {
-                log.warn("토큰 검증 실패 - 만료되거나 유효하지 않은 인증 토큰: {}", token);
-                throw new InvalidVerificationTokenException("만료되었거나 유효하지 않은 이메일 인증 토큰입니다.");
-            }
-
-            // 토큰에서 이메일 추출
-            String verifiedEmail = jwtUtil.getEmail(token, true);
-            if (!verifiedEmail.equals(requestEmail)) {
-                log.warn("토큰 검증 실패 - 토큰의 이메일({})과 요청한 이메일({}) 불일치", verifiedEmail, requestEmail);
-                throw new InvalidVerificationTokenException("인증된 이메일과 요청한 이메일이 일치하지 않습니다.");
-            }
-
-            // 토큰의 용도 확인
-            EmailVerificationPurpose purpose = jwtUtil.getVerificationPurpose(token);
-            if (purpose != expectedPurpose) {
-                log.warn("토큰 검증 실패 - 예상된 목적({})과 토큰의 목적({}) 불일치", expectedPurpose, purpose);
-                throw new InvalidVerificationTokenException("유효하지 않은 인증 토큰입니다.");
-            }
-
-            // 검증 성공 로그 추가
-            log.info("토큰 검증 성공 - 이메일: {}, 용도: {}", verifiedEmail, expectedPurpose);
-
-        } catch (InvalidVerificationTokenException e) {
-            log.warn("이메일 인증 토큰 검증 실패 - 사유: {}", e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("이메일 인증 토큰 검증 중 알 수 없는 오류 발생", e);
+            log.error("로그아웃 처리 중 알 수 없는 오류 발생 - 이메일 : {}", user.getEmail(), e);
             throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
