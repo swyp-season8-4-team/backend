@@ -69,6 +69,7 @@ public class SecurityConfig {
                                 // OAuth2 인증이 필요한 엔드포인트만 지정
                                 .requestMatchers("/api/oauth2/authorization/**").authenticated()
                                 .requestMatchers("/api/oauth2/code/**").authenticated()
+                                .requestMatchers("/api/auth/**").authenticated()
                                 // 나머지 모든 요청 허용
                                 .anyRequest().permitAll()
                 )
