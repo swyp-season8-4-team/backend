@@ -10,6 +10,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 import org.swyp.dessertbee.community.mate.dto.request.MateCreateRequest;
+import org.swyp.dessertbee.store.store.entity.Store;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -76,13 +77,18 @@ public class Mate {
     private LocalDateTime deletedAt;
 
 
-    public void update(MateCreateRequest request, Long storeId) {
+    public void update(MateCreateRequest request, Store store) {
         this.title = request.getTitle();
         this.content = request.getContent();
         this.recruitYn = request.getRecruitYn();
         this.mateCategoryId = request.getMateCategoryId();
-        this.storeId = storeId;
-        this.placeName = request.getPlace().getPlaceName();
+        if (store != null) {
+            this.storeId = store.getStoreId();
+            this.placeName = store.getName();
+            this.latitude = store.getLatitude();
+            this.longitude = store.getLongitude();
+            this.address = store.getAddress();
+        }
     }
 
     public void softDelete(){

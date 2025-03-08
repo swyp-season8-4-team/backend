@@ -152,7 +152,7 @@ public class MateService {
         //위도,경도로 storeId 조회
         Store store = storeRepository.findStoreIdByLongitudeAndLatitude(request.getPlace().getLongitude(), request.getPlace().getLatitude());
 
-        mate.update(request, store.getStoreId());
+        mate.update(request, store);
 
 
 

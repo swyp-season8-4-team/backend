@@ -96,7 +96,7 @@ public class MateController {
 
 
         Map<String, String> response = new HashMap<>();
-        response.put("message", "디저트메이트가 성공적으로 저장되었습니다.");
+        response.put("message", "디저트메이트가 성공적으로 수정되었습니다.");
 
         return ResponseEntity.ok(response);
     }
