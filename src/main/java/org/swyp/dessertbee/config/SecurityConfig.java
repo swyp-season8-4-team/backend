@@ -77,7 +77,8 @@ public class SecurityConfig {
                                 endpoint.baseUri("/api/oauth2/authorization"))
                         .loginProcessingUrl("/api/oauth2/code")
                 )
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .anonymous(AbstractHttpConfigurer::disable);
 //        // CORS 설정 추가
 //        http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
         // CORS 설정 비활성화 (NGINX에서 처리)
