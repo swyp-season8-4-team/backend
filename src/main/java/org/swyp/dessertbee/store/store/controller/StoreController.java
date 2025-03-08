@@ -93,9 +93,8 @@ public class StoreController {
     /** 가게 상세 정보 조회 */
     @Operation(summary = "가게 상세 정보 조회", description = "가게의 상세한 정보를 조회합니다.")
     @GetMapping("/{storeUuid}/details")
-    public StoreDetailResponse getStoreDetails(@PathVariable UUID storeUuid,
-                                               @RequestParam(required = false) UUID userUuid) {
-        return storeService.getStoreDetails(storeUuid, userUuid);
+    public StoreDetailResponse getStoreDetails(@PathVariable UUID storeUuid) {
+        return storeService.getStoreDetails(storeUuid);
     }
 
     /** 가게 수정 */

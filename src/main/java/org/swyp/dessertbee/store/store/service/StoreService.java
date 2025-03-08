@@ -150,7 +150,7 @@ public class StoreService {
             storeHolidayRepository.saveAll(holidays);
         }
 
-        return getStoreDetails(store.getStoreUuid(), request.getUserUuid());
+        return getStoreDetails(store.getStoreUuid());
     }
 
     /** 태그 저장 (1~3개 선택) */
@@ -282,15 +282,14 @@ public class StoreService {
     }
 
     /** 가게 상세 정보 조회 */
-    public StoreDetailResponse getStoreDetails(UUID storeUuid, UUID userUuid) {
+    public StoreDetailResponse getStoreDetails(UUID storeUuid) {
         Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
         Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
-/*        UserEntity user = userService.getCurrentUser();
+        UserEntity user = userService.getCurrentUser();
         Long userId = (user != null) ? user.getId() : null;
-        UUID userUuid = (user != null) ? user.getUserUuid() : null;*/
-        Long userId = userRepository.findIdByUserUuid(userUuid);
+        UUID userUuid = (user != null) ? user.getUserUuid() : null;
 
         Optional<SavedStore> savedStoreOpt = (userId != null) ?
                 savedStoreRepository.findFirstByStoreAndUserId(store, userId) :
@@ -489,7 +488,7 @@ public class StoreService {
             storeHolidayRepository.saveAll(holidays);
         }
 
-        return getStoreDetails(store.getStoreUuid(), request.getUserUuid());
+        return getStoreDetails(store.getStoreUuid());
     }
 
     private MenuCreateRequest convertToMenuCreateRequest(StoreUpdateRequest.MenuRequest menuRequest) {
