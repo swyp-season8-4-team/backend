@@ -13,7 +13,6 @@ import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
-import org.swyp.dessertbee.community.mate.exception.MateExceptions;
 import org.swyp.dessertbee.preference.service.PreferenceService;
 import org.swyp.dessertbee.user.dto.response.UserDetailResponseDto;
 import org.swyp.dessertbee.user.dto.response.UserResponseDto;
@@ -55,11 +54,17 @@ public class UserServiceImpl implements UserService {
             log.warn("SecurityContext에 인증 정보가 없습니다.");
             return null;
         }
-        log.debug("현재 인증된 사용자: {}", authentication.getName());
 
-        String email = authentication.getName();
+        String userUuidStr = authentication.getName();
+        log.debug("현재 인증된 사용자 UUID: {}", userUuidStr);
 
-        return userRepository.findByEmail(email).orElse(null);
+        try {
+            UUID userUuid = UUID.fromString(userUuidStr);
+            return userRepository.findByUserUuid(userUuid).orElse(null);
+        } catch (IllegalArgumentException e) {
+            log.error("유효하지 않은 UUID 형식: {}", userUuidStr);
+            return null;
+        }
     }
 
 
@@ -70,7 +75,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDetailResponseDto getMyUserInfo() {
         UserEntity user = getCurrentUser();
-
         return convertToDetailResponse(user);
     }
 
@@ -311,5 +315,11 @@ public class UserServiceImpl implements UserService {
                     log.warn("로그인 실패 - 존재하지 않는 이메일: {}", email);
                     return new BusinessException(ErrorCode.USER_NOT_FOUND);
                 });
+    }
+
+    public UserEntity findByUserUuid(UUID userUuid) {
+        return userRepository.findByUserUuid(userUuid)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND,
+                        "UUID가 " + userUuid + "인 사용자를 찾을 수 없습니다."));
     }
 }
