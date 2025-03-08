@@ -164,13 +164,13 @@ public class KakaoOAuthService {
 
         // 토큰 발급
         boolean keepLoggedIn = false; // 기본값
-        String accessToken = jwtUtil.createAccessToken(user.getEmail(), user.getUserUuid(), roles, keepLoggedIn);
-        String refreshToken = jwtUtil.createRefreshToken(user.getEmail(), user.getUserUuid(), roles, keepLoggedIn);
+        String accessToken = jwtUtil.createAccessToken(user.getUserUuid(), roles, keepLoggedIn);
+        String refreshToken = jwtUtil.createRefreshToken(user.getUserUuid(), keepLoggedIn);
         long expiresIn = jwtUtil.getSHORT_ACCESS_TOKEN_EXPIRE();
 
         // 리프레시 토큰 저장
         tokenService.saveRefreshToken(
-                user.getEmail(),
+                user.getUserUuid(),
                 refreshToken,
                 oauth2Response.getProvider(),
                 oauth2Response.getProviderId()

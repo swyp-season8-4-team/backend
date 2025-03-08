@@ -15,12 +15,10 @@ import java.util.stream.Collectors;
 @Getter
 public class CustomUserDetails implements UserDetails {
 
-    private final String email;
     private final List<GrantedAuthority> authorities;
     private final UUID userUuid;
 
-    public CustomUserDetails(String email, List<String> roleNames, UUID userUuid) {
-        this.email = email;
+    public CustomUserDetails(List<String> roleNames, UUID userUuid) {
         this.userUuid = userUuid;
         this.authorities = roleNames.stream()
                 .map(role -> (GrantedAuthority) () -> role) // SimpleGrantedAuthority 대체
@@ -39,7 +37,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        return email;
+        return String.valueOf(userUuid);
     }
 
     @Override

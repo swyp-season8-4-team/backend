@@ -7,16 +7,19 @@ import org.swyp.dessertbee.auth.dto.logout.LogoutResponse;
 import org.swyp.dessertbee.auth.dto.signup.SignUpRequest;
 import org.swyp.dessertbee.auth.dto.passwordreset.PasswordResetRequest;
 import org.swyp.dessertbee.auth.exception.AuthExceptions.*;
+
+import java.util.UUID;
+
 /**
  * 인증 관련 서비스 인터페이스
  */
 public interface AuthService {
     /**
      * 리프레시 토큰을 저장하거나 업데이트
-     * @param email 사용자 이메일
+     * @param userUuid 사용자 uuid
      * @param refreshToken 리프레시 토큰
      */
-    void saveRefreshToken(String email, String refreshToken);
+    void saveRefreshToken(UUID userUuid, String refreshToken);
 
     /**
      * 리프레시 토큰을 통해 새로운 액세스 토큰 발급
@@ -27,9 +30,9 @@ public interface AuthService {
 
     /**
      * 리프레시 토큰 무효화 (로그아웃)
-     * @param email 사용자 이메일
+     * @param userUuid 사용자 uuid
      */
-    void revokeRefreshToken(String email);
+    void revokeRefreshToken(UUID userUuid);
 
     /**
      * 회원가입 처리
