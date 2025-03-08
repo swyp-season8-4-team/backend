@@ -17,6 +17,8 @@ import org.swyp.dessertbee.community.mate.repository.MateCategoryRepository;
 import org.swyp.dessertbee.community.mate.repository.MateMemberRepository;
 import org.swyp.dessertbee.community.mate.repository.MateRepository;
 import org.swyp.dessertbee.community.mate.repository.SavedMateRepository;
+import org.swyp.dessertbee.store.store.entity.Store;
+import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.user.service.UserServiceImpl;
@@ -37,6 +39,7 @@ public class SavedMateService {
     private final MateCategoryRepository mateCategoryRepository;
     private final ImageService imageService;
     private final UserServiceImpl userServiceImpl;
+    private final StoreRepository storeRepository;
 
     /**
      * 디저트메이트 저장
@@ -132,6 +135,9 @@ public class SavedMateService {
                     UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
                     String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, mate.getUserId());
 
+
+                    Store store = storeRepository.findByName(mate.getPlaceName());
+
                     //저장된 디저트메이트 데이터만 지고 오는거니까 true
                     boolean saved = true;
 
@@ -139,7 +145,7 @@ public class SavedMateService {
                     //신청했는지 유무 확인
                     MateMember applyMember = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndUserId(mate.getMateId(), userId);
 
-                    return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, creator, profileImage, saved, applyMember.getApplyStatus());
+                    return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, creator, profileImage, saved, applyMember.getApplyStatus(), store);
                 })
                 .collect(Collectors.toList());
 

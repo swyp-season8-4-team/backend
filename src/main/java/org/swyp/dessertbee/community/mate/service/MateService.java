@@ -273,6 +273,7 @@ public class MateService {
         //작성자 프로필 조회
         String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, mate.getUserId());
 
+        Store store = storeRepository.findByName(mate.getPlaceName());
 
         // 저장 여부 체크
         SavedMate savedMate = (currentUserId != null)
@@ -286,7 +287,7 @@ public class MateService {
                 : null;
         MateApplyStatus applyStatus = (applyMember == null) ? MateApplyStatus.NONE : applyMember.getApplyStatus();
 
-        return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, creator, profileImage, saved, applyStatus);
+        return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, creator, profileImage, saved, applyStatus, store);
 
     }
 

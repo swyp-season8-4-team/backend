@@ -6,6 +6,7 @@ import lombok.Data;
 import org.swyp.dessertbee.community.mate.dto.MatePlace;
 import org.swyp.dessertbee.community.mate.entity.Mate;
 import org.swyp.dessertbee.community.mate.entity.MateApplyStatus;
+import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.time.LocalDateTime;
@@ -41,7 +42,8 @@ public class MateDetailResponse {
                                                 UserEntity creator,
                                                 String profileImage,
                                                 boolean saved,
-                                                MateApplyStatus applyStatus) {
+                                                MateApplyStatus applyStatus,
+                                                Store store) {
 
         return MateDetailResponse.builder()
                 .mateUuid(mate.getMateUuid())
@@ -56,10 +58,10 @@ public class MateDetailResponse {
                 .mateImage(mateImage)
                 .mateCategory(category)
                 .place(MatePlace.builder()
-                        .placeName(mate.getPlaceName())
-                        .longitude(mate.getLongitude())
-                        .latitude(mate.getLatitude())
-                        .address(mate.getAddress())
+                        .placeName(store != null ? store.getName() : null)
+                        .longitude(store != null ? store.getLongitude() : null)
+                        .latitude(store != null ? store.getLatitude() : null)
+                        .address(store != null ? store.getAddress() : null)
                         .build())
                 .createdAt(mate.getCreatedAt())
                 .updatedAt(mate.getUpdatedAt())
@@ -67,5 +69,6 @@ public class MateDetailResponse {
                 .applyStatus(applyStatus)
                 .build();
     }
+
 
 }
