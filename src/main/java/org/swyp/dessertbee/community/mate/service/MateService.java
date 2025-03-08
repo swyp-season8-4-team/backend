@@ -17,6 +17,7 @@ import org.swyp.dessertbee.community.mate.dto.response.MatesPageResponse;
 import org.swyp.dessertbee.community.mate.entity.*;
 import org.swyp.dessertbee.community.mate.repository.*;
 import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
+import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
@@ -56,18 +57,20 @@ public class MateService {
             throw new UserNotFoundExcption("존재하지 않는 유저입니다.");
         }
 
-        //장소명으로 storeId 조회
-        Long storeId = storeRepository.findStoreIdByName(request.getPlace().getPlaceName());
+        //위도,경도로 storeId 조회
+        Store store = storeRepository.findStoreIdByLongitudeAndLatitude(request.getPlace().getLongitude(), request.getPlace().getLatitude());
 
         Mate mate = mateRepository.save(
                 Mate.builder()
                         .userId(user.getId())
-                        .storeId(storeId)
+                        .storeId(store.getStoreId())
                         .mateCategoryId(request.getMateCategoryId())
                         .title(request.getTitle())
                         .content(request.getContent())
                         .recruitYn(Boolean.TRUE.equals(request.getRecruitYn()))
                         .placeName(request.getPlace().getPlaceName())
+                        .latitude(request.getPlace().getLatitude())
+                        .longitude(request.getPlace().getLongitude())
                         .updatedAt(null)
                         .build()
         );
@@ -139,10 +142,10 @@ public class MateService {
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
                 .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
-        //장소명으로 storeId 조회
-        Long storeId = storeRepository.findStoreIdByName(request.getPlace().getPlaceName());
+        //위도,경도로 storeId 조회
+        Store store = storeRepository.findStoreIdByLongitudeAndLatitude(request.getPlace().getLongitude(), request.getPlace().getLatitude());
 
-        mate.update(request, storeId);
+        mate.update(request, store.getStoreId());
 
 
 
