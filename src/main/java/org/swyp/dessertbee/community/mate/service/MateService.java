@@ -58,12 +58,19 @@ public class MateService {
         }
 
         //위도,경도로 storeId 조회
-        Store store = storeRepository.findStoreIdByLongitudeAndLatitude(request.getPlace().getLongitude(), request.getPlace().getLatitude());
+        // 위도, 경도로 store 조회
+        Store store = storeRepository.findStoreIdByLongitudeAndLatitude(
+                request.getPlace().getLongitude(),
+                request.getPlace().getLatitude()
+        );
+
+        // store가 null이면 storeId는 null, 아니면 store.getStoreId() 할당
+        Long storeId = (store != null) ? store.getStoreId() : null;
 
         Mate mate = mateRepository.save(
                 Mate.builder()
                         .userId(user.getId())
-                        .storeId(store.getStoreId())
+                        .storeId(storeId)
                         .mateCategoryId(request.getMateCategoryId())
                         .title(request.getTitle())
                         .content(request.getContent())
