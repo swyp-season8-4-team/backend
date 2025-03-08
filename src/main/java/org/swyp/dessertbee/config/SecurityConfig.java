@@ -64,7 +64,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/stores/map/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/stores/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/review/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/mates").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/mates/**").permitAll()
                         // 나머지 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
