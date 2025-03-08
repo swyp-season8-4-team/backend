@@ -20,6 +20,8 @@ import org.swyp.dessertbee.auth.dto.passwordreset.PasswordResetRequest;
 import org.swyp.dessertbee.auth.dto.signup.SignUpRequest;
 import org.swyp.dessertbee.auth.service.AuthService;
 import jakarta.validation.Valid;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 
 
 @Tag(name = "Authentication", description = "인증 관련 API")
@@ -105,7 +107,7 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
-    @Operation(summary = "토큰 재발급", description = "HTTP-only 쿠키의 리프레시 토큰을 사용하여 새로운 액세스 토큰을 발급받습니다.")
+    @Operation(summary = "토큰 재발급", description = "Authorization 헤더의 리프레시 토큰을 사용하여 새로운 액세스 토큰을 발급받습니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "토큰 재발급 성공",
                     content = @Content(schema = @Schema(implementation = TokenResponse.class))),
@@ -113,7 +115,19 @@ public class AuthController {
     })
     @PostMapping("/token/refresh")
     public ResponseEntity<TokenResponse> refreshToken(
-            @CookieValue(name = "refreshToken", required = true) String refreshToken) {
+            @Parameter(description = "리프레시 토큰 (Bearer 형식)", required = true)
+            @RequestHeader("Authorization") String authHeader) {
+
+        // Bearer 접두사 검증 및 제거
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            log.error("유효하지 않은 Authorization 헤더 형식: {}", authHeader);
+            throw new BusinessException(ErrorCode.JWT_TOKEN_MALFORMED, "유효한 Bearer 토큰이 필요합니다");
+        }
+
+        // Bearer 접두사 제거하여 토큰만 추출
+        String refreshToken = authHeader.substring(7);
+        log.debug("리프레시 토큰 추출 성공");
+
         TokenResponse tokenResponse = authService.refreshAccessToken(refreshToken);
         return ResponseEntity.ok(tokenResponse);
     }

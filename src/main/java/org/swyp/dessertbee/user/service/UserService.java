@@ -8,6 +8,9 @@ import org.swyp.dessertbee.user.dto.request.UserUpdateRequestDto;
 import org.swyp.dessertbee.user.entity.NicknameValidationPurpose;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
+import java.util.Optional;
+import java.util.UUID;
+
 public interface UserService {
     /**
      * 현재 인증된 사용자의 상세 정보를 조회
@@ -50,4 +53,6 @@ public interface UserService {
     UserEntity validateUser(String email);
 
     UserEntity findUserByEmail(String email);
+
+    UserEntity findByUserUuid(UUID userUuid);
 }
