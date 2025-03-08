@@ -188,7 +188,7 @@ public class ReviewService {
         Review review = reviewRepository.findByReviewUuidAndDeletedAtIsNull(reviewUuid)
                 .orElseThrow(() -> new ReviewNotFoundException("존재하지 않는 리뷰입니다."));
 
-        Store store = storeRepository.findStoreIdByLongitudeAndLatitude(
+        Store store = storeRepository.findByLongitudeAndLatitude(
                 request.getPlace().getLongitude(), request.getPlace().getLatitude());
 
         review.update(request, store);
