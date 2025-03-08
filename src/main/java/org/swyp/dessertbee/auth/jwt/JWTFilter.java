@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -40,6 +41,7 @@ public class JWTFilter extends OncePerRequestFilter {
             FilterChain filterChain) throws ServletException, IOException {
 
         log.debug("요청 시작: {}", request.getRequestURI());
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
 
         String token = extractTokenFromHeader(request);
         log.debug("추출된 토큰: {}", token);
@@ -50,9 +52,11 @@ public class JWTFilter extends OncePerRequestFilter {
             if (errorCode == null) {
                 // 토큰이 유효한 경우 인증 처리
                 Authentication authentication = createAuthentication(token);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                context.setAuthentication(authentication);
+                SecurityContextHolder.setContext(context);
+                // SecurityContextHolder.getContext().setAuthentication(authentication);
                 log.debug("인증 성공: '{}'", maskToken(token));
-                log.debug("SecurityContext에 저장된 Authentication: {}", SecurityContextHolder.getContext().getAuthentication());
+                log.info("SecurityContext에 저장된 Authentication: {}", SecurityContextHolder.getContext().getAuthentication());
             } else {
                 // 토큰 검증 실패 - 구체적인 오류 코드로 응답
                 log.warn("JWT 검증 실패: {}", errorCode);
