@@ -39,7 +39,10 @@ public class JWTFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
 
+        log.debug("요청 시작: {}", request.getRequestURI());
+
         String token = extractTokenFromHeader(request);
+        log.debug("추출된 토큰: {}", token);
 
         if (token != null) {
             ErrorCode errorCode = jwtUtil.validateToken(token, true);
@@ -49,14 +52,17 @@ public class JWTFilter extends OncePerRequestFilter {
                 Authentication authentication = createAuthentication(token);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 log.debug("인증 성공: '{}'", maskToken(token));
+                log.debug("SecurityContext에 저장된 Authentication: {}", SecurityContextHolder.getContext().getAuthentication());
             } else {
                 // 토큰 검증 실패 - 구체적인 오류 코드로 응답
+                log.warn("JWT 검증 실패: {}", errorCode);
                 SecurityContextHolder.clearContext();
                 handleJwtException(response, errorCode);
                 return; // 필터 체인 중단
             }
         }
         filterChain.doFilter(request, response);
+        log.debug("필터 체인 실행 후 SecurityContext: {}", SecurityContextHolder.getContext().getAuthentication());
     }
 
     /**

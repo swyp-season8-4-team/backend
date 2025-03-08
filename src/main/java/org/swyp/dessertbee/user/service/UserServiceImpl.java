@@ -49,6 +49,7 @@ public class UserServiceImpl implements UserService {
      */
     public UserEntity getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        log.debug("getCurrentUser() 호출 시 SecurityContext Authentication: {}", authentication);
         if (authentication == null || !authentication.isAuthenticated() ||
                 authentication instanceof AnonymousAuthenticationToken) {
             log.warn("SecurityContext에 인증 정보가 없습니다.");
