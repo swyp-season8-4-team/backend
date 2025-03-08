@@ -59,8 +59,8 @@ public class MateService {
 
         //위도,경도로 storeId 조회
         // 위도, 경도로 store 조회
-        Store store = storeRepository.findByLongitudeAndLatitude(
-                request.getPlace().getLongitude(), request.getPlace().getLatitude());
+        Store store = storeRepository.findByName(request.getPlace().getPlaceName());
+
 
         // store가 null이면 storeId는 null, 아니면 store.getStoreId() 할당
         Long storeId = (store != null) ? store.getStoreId() : null;
@@ -148,7 +148,7 @@ public class MateService {
                 .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
         //위도,경도로 storeId 조회
-        Store store = storeRepository.findByLongitudeAndLatitude(request.getPlace().getLongitude(), request.getPlace().getLatitude());
+        Store store = storeRepository.findByName(request.getPlace().getPlaceName());
 
         mate.update(request, store);
 

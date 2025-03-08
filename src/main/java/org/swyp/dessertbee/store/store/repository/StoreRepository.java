@@ -74,5 +74,5 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
     Long findStoreIdByName(@Param("name") String name);
 
 
-    Store findByLongitudeAndLatitude(BigDecimal longitude, BigDecimal latitude);
+    Store findByName(String placeName);
 }
