@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -58,26 +59,17 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-//                        // OAuth2 관련 엔드포인트 명확히 지정
-//                        .requestMatchers("/api/oauth2/authorization").permitAll()
-//                        .requestMatchers("/api/oauth2/code").permitAll()
-//                        // 다른 public API 엔드포인트
-//                        .requestMatchers("/api/auth/**").permitAll()
-//                        .requestMatchers("/api/public/**").permitAll()
-//                        // 나머지 요청은 인증 필요
-//                        .anyRequest().authenticated()
-                                // OAuth2 인증이 필요한 엔드포인트만 지정
-                                .requestMatchers("/api/oauth2/authorization/**").authenticated()
-                                .requestMatchers("/api/oauth2/code/**").authenticated()
-                                // 나머지 모든 요청 허용
-                                .anyRequest().permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/public/**").permitAll()
+                        .requestMatchers("/api/stores/map/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/stores/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/review/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/mates").permitAll()
+                        // 나머지 요청은 인증 필요
+                        .anyRequest().authenticated()
                 )
-                .oauth2Login(oauth2 -> oauth2
-                        .authorizationEndpoint(endpoint ->
-                                endpoint.baseUri("/api/oauth2/authorization"))
-                        .loginProcessingUrl("/api/oauth2/code")
-                )
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .anonymous(AbstractHttpConfigurer::disable);
 //        // CORS 설정 추가
 //        http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
         // CORS 설정 비활성화 (NGINX에서 처리)
