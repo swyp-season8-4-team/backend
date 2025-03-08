@@ -35,7 +35,6 @@ import java.util.List;
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
     private final JWTUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final ImageService imageService;
