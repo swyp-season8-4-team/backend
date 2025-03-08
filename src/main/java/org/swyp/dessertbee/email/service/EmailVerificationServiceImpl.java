@@ -136,8 +136,8 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
 
             // 인증 토큰 생성
             String verificationToken = jwtUtil.createEmailVerificationToken(
-                    request.getEmail(),
-                    request.getPurpose()
+                    verification.getId(),  // 인증 ID 전달
+                    request.getPurpose()   // 인증 목적 전달
             );
 
             return EmailVerifyResponseDto.builder()
@@ -243,6 +243,61 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
             });
             emailVerificationRepository.saveAll(existingVerifications);
             log.debug("기존 인증 코드 만료 처리 완료 - 이메일: {}, 처리 건수: {}", email, existingVerifications.size());
+        }
+    }
+
+    /**
+     * 이메일 인증 토큰 검증
+    */
+     @Override
+    @Transactional(readOnly = true)
+    public void validateEmailVerificationToken(String token, String email, EmailVerificationPurpose purpose) {
+        try {
+            // 토큰 유효성 검사
+            if (jwtUtil.validateToken(token, true) != null) {
+                log.warn("토큰 검증 실패 - 만료되거나 유효하지 않은 인증 토큰: {}", token);
+                throw new BusinessException(ErrorCode.INVALID_VERIFICATION_TOKEN, "만료되었거나 유효하지 않은 이메일 인증 토큰입니다.");
+            }
+
+            // 토큰에서 인증 ID 추출
+            Long verificationId = jwtUtil.getVerificationId(token);
+
+            // 인증 정보 조회
+            EmailVerificationEntity verification = emailVerificationRepository
+                    .findById(verificationId)
+                    .orElseThrow(() -> {
+                        log.warn("토큰 검증 실패 - 존재하지 않는 인증 ID: {}", verificationId);
+                        return new BusinessException(ErrorCode.INVALID_VERIFICATION_TOKEN, "유효하지 않은 인증 토큰입니다.");
+                    });
+
+            // 이메일 일치 여부 확인
+            if (!verification.getEmail().equals(email)) {
+                log.warn("토큰 검증 실패 - 저장된 이메일({})과 요청한 이메일({}) 불일치",
+                        verification.getEmail(), email);
+                throw new BusinessException(ErrorCode.INVALID_VERIFICATION_TOKEN, "인증된 이메일과 요청한 이메일이 일치하지 않습니다.");
+            }
+
+            // 인증 목적 확인
+            if (verification.getPurpose() != purpose) {
+                log.warn("토큰 검증 실패 - 예상된 목적({})과 인증의 목적({}) 불일치",
+                        purpose, verification.getPurpose());
+                throw new BusinessException(ErrorCode.INVALID_VERIFICATION_TOKEN, "유효하지 않은 인증 토큰입니다.");
+            }
+
+            // 인증 확인
+            if (!verification.isVerified()) {
+                log.warn("토큰 검증 실패 - 인증되지 않은 이메일: {}", verification.getEmail());
+                throw new BusinessException(ErrorCode.INVALID_VERIFICATION_TOKEN, "이메일 인증이 완료되지 않았습니다.");
+            }
+
+            // 검증 성공 로그 추가
+            log.info("토큰 검증 성공 - 이메일: {}, 용도: {}", verification.getEmail(), verification.getPurpose());
+
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("이메일 인증 토큰 검증 중 알 수 없는 오류 발생", e);
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 }
