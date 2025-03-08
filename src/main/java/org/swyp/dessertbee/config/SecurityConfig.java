@@ -69,7 +69,6 @@ public class SecurityConfig {
                                 // OAuth2 인증이 필요한 엔드포인트만 지정
                                 .requestMatchers("/api/oauth2/authorization/**").authenticated()
                                 .requestMatchers("/api/oauth2/code/**").authenticated()
-                                .requestMatchers("/api/auth/**").authenticated()
                                 // 나머지 모든 요청 허용
                                 .anyRequest().permitAll()
                 )
@@ -78,8 +77,7 @@ public class SecurityConfig {
                                 endpoint.baseUri("/api/oauth2/authorization"))
                         .loginProcessingUrl("/api/oauth2/code")
                 )
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                .anonymous(AbstractHttpConfigurer::disable);
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 //        // CORS 설정 추가
 //        http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
         // CORS 설정 비활성화 (NGINX에서 처리)
