@@ -325,7 +325,6 @@ public class UserServiceImpl implements UserService {
                         "UUID가 " + userUuid + "인 사용자를 찾을 수 없습니다."));
     }
 
-
     @Override
     public boolean isEmailExists(String email) {
         return userRepository.existsByEmail(email);
