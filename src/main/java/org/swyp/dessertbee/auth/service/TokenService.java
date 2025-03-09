@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TokenService {
     private final AuthRepository authRepository;
-    private final UserRepository userRepository;
     private final JWTUtil jwtUtil;
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
     private final UserService userService;
