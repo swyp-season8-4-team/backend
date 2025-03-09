@@ -75,7 +75,7 @@ public class AuthServiceImpl implements AuthService {
             emailVerificationService.validateEmailVerificationToken(verificationToken, request.getEmail(), EmailVerificationPurpose.SIGNUP);
 
             // 이메일 중복 검사
-            if (userRepository.existsByEmail(request.getEmail())) {
+            if (userService.isEmailExists(request.getEmail())) {
                 throw new DuplicateEmailException("이미 등록된 이메일입니다.");
             }
 
