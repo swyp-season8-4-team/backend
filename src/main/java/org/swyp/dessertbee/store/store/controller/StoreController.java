@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.swyp.dessertbee.common.service.SearchService;
 import org.swyp.dessertbee.store.store.dto.request.StoreCreateRequest;
 import org.swyp.dessertbee.store.store.dto.request.StoreUpdateRequest;
 import org.swyp.dessertbee.store.store.dto.response.StoreDetailResponse;
@@ -17,6 +18,7 @@ import org.swyp.dessertbee.store.store.dto.response.StoreMapResponse;
 import org.swyp.dessertbee.store.store.dto.response.StoreSummaryResponse;
 import org.swyp.dessertbee.store.store.service.StoreService;
 import org.swyp.dessertbee.user.entity.UserEntity;
+import org.swyp.dessertbee.user.service.UserService;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -29,6 +31,8 @@ import java.util.*;
 public class StoreController {
 
     private final StoreService storeService;
+    private final SearchService searchService;
+    private final UserService userService;
 
     /** 가게 등록 */
     @Operation(summary = "가게 등록", description = "업주가 가게를 등록합니다.")
@@ -57,6 +61,12 @@ public class StoreController {
 
         if (searchKeyword != null) {
             searchKeyword = URLDecoder.decode(searchKeyword, StandardCharsets.UTF_8);
+
+            UserEntity user = userService.getCurrentUser();
+            // 인증된 사용자일 경우 >> 최근 검색어 저장
+            if (user != null) {
+                searchService.saveRecentSearch(user.getId(), searchKeyword);
+            }
         }
 
         if (preferenceTagIds != null && !preferenceTagIds.isEmpty()) {
