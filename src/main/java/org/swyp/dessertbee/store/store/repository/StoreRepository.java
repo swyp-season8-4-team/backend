@@ -40,7 +40,7 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
             GROUP BY ss.store_id, sp.preference
         ) AS top_pref ON s.store_id = top_pref.store_id
         WHERE top_pref.rn <= 3
-          AND top_pref.preference IN (:preferenceNames)
+          AND top_pref.preference IN (:preferenceTagIds)
           AND ST_Distance_Sphere(point(:lng, :lat), point(s.longitude, s.latitude)) <= :radius
           AND s.deleted_at IS NULL
     """, nativeQuery = true)
