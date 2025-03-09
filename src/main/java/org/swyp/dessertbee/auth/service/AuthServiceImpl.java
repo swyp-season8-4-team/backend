@@ -296,20 +296,26 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     @Override
     public LogoutResponse logout(String accessToken) {
-        UUID userUuid = jwtUtil.getUserUuid(accessToken, true);
-        UserEntity user = userService.findByUserUuid(userUuid);
         try {
+            // 유효한 토큰에서 사용자 UUID 추출
+            UUID userUuid;
+            try {
+                userUuid = jwtUtil.getUserUuid(accessToken, true);
+            } catch (Exception e) {
+                log.error("액세스 토큰에서 사용자 UUID 추출 실패", e);
+                throw new BusinessException(ErrorCode.JWT_TOKEN_MALFORMED, "액세스 토큰에서 사용자 정보를 추출할 수 없습니다.");
+            }
+            UserEntity user = userService.findByUserUuid(userUuid);
             revokeRefreshToken(userUuid);
-
-            log.info("로그아웃 성공 - userUuid: {}", userUuid);
+            log.info("로그아웃 성공 - 사용자: {}, UUID: {}", user.getEmail(), userUuid);
             return LogoutResponse.success();
 
         } catch (BusinessException e) {
             log.warn("로그아웃 실패 - 사유: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("로그아웃 처리 중 알 수 없는 오류 발생 - 이메일 : {}", user.getEmail(), e);
-            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+            log.error("로그아웃 처리 중 알 수 없는 오류 발생", e);
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "로그아웃 실패");
         }
     }
 }
