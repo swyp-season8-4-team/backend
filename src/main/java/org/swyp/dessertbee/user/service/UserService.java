@@ -61,4 +61,7 @@ public interface UserService {
     UserEntity findUserByEmail(String email);
 
     UserEntity findByUserUuid(UUID userUuid);
+
+    boolean isEmailExists(String email);
+
 }
