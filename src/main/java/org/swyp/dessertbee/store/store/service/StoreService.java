@@ -375,19 +375,21 @@ public class StoreService {
             List<String> profileImageList = imageService.getImagesByTypeAndId(ImageType.PROFILE, reviewer.getId());
             String profileImage = profileImageList.isEmpty() ? null : profileImageList.get(0);
 
-            // 리뷰의 첫 번째 이미지 찾기
-            String thumbnail = review.getReviewContents().stream()
-                    .filter(content -> "image".equals(content.getType()))
-                    .map(ReviewContent::getValue)
-                    .findFirst()
-                    .orElse(null);
+            String thumbnail = null;
+            String content = "";
 
-            // 리뷰의 대표 텍스트 찾기 (첫 번째 "text" 타입의 값)
-            String content = review.getReviewContents().stream()
-                    .filter(contentItem -> "text".equals(contentItem.getType()))
-                    .map(ReviewContent::getValue)
-                    .findFirst()
-                    .orElse("");
+            for (ReviewContent contentItem : review.getReviewContents()) {
+                if (thumbnail == null && "image".equals(contentItem.getType())) {
+                    thumbnail = contentItem.getValue();
+                } else if (content.isEmpty() && "text".equals(contentItem.getType())) {
+                    content = contentItem.getValue();
+                }
+
+                // 두 값이 모두 설정되면 반복문 끝
+                if (thumbnail != null && !content.isEmpty()) {
+                    break;
+                }
+            }
 
             return ReviewSummaryResponse.builder()
                     .reviewUuid(review.getReviewUuid())
