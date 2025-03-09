@@ -81,16 +81,19 @@ public class TokenService {
         String email = user.getEmail();
 
         try {
-            Optional<AuthEntity> authOpt = authRepository.findByUserAndProvider(Optional.of(user), "local");
+            List<AuthEntity> authEntities = authRepository.findAllByUser(user);
 
-            if (authOpt.isEmpty()) {
+            if (authEntities.isEmpty()) {
                 log.warn("리프레시 토큰 무효화 실패 - 사용자({})에 대한 인증 정보 없음", email);
                 throw new BusinessException(ErrorCode.INVALID_CREDENTIALS, "리프레시 토큰이 존재하지 않습니다.");
             }
 
-            AuthEntity auth = authOpt.get();
-            auth.deactivate();
-            authRepository.save(auth);
+            // 모든 인증 엔티티에 대해 토큰 비활성화 처리
+            for (AuthEntity auth : authEntities) {
+                auth.deactivate();
+            }
+
+            authRepository.saveAll(authEntities);
 
             log.info("리프레시 토큰 무효화 완료 - 이메일: {}", email);
         } catch (BusinessException e) {
