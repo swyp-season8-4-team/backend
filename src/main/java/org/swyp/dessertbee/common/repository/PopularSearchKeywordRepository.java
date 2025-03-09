@@ -8,15 +8,14 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.swyp.dessertbee.common.entity.PopularSearchKeyword;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface PopularSearchKeywordRepository extends JpaRepository<PopularSearchKeyword, Long> {
 
-    Optional<PopularSearchKeyword> findByKeyword(String keyword);
+    @Query("SELECT p FROM PopularSearchKeyword p ORDER BY p.searchCount DESC LIMIT :limit")
+    List<PopularSearchKeyword> findTopKeywords(@Param("limit") int limit);
 
-    @Modifying
-    @Transactional
-    @Query("UPDATE PopularSearchKeyword p SET p.searchCount = p.searchCount + :count WHERE p.keyword = :keyword")
-    void incrementSearchCount(@Param("keyword") String keyword, @Param("count") int count);
+    Optional<PopularSearchKeyword> findByKeyword(String keyword);
 }

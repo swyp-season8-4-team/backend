@@ -2,20 +2,26 @@ package org.swyp.dessertbee.common.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.swyp.dessertbee.common.dto.PopularSearchResponse;
+import org.swyp.dessertbee.common.entity.PopularSearchKeyword;
 import org.swyp.dessertbee.common.entity.UserSearchHistory;
 import org.swyp.dessertbee.common.repository.PopularSearchKeywordRepository;
 import org.swyp.dessertbee.common.repository.UserSearchHistoryRepository;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SearchService {
@@ -89,22 +95,40 @@ public class SearchService {
         return zSetOps.reverseRange(POPULAR_SEARCH_KEY, 0, limit - 1); // 상위 limit개 인기 검색어 가져오기
     }
 
+    public List<PopularSearchResponse> getPopularSearchesFromDB(int limit) {
+        return popularSearchKeywordRepository.findTopKeywords(limit)
+                .stream()
+                .map(p -> new PopularSearchResponse(p.getKeyword(), p.getSearchCount()))
+                .collect(Collectors.toList());
+    }
+
     /** 인기 검색어 동기화 (Redis → MySQL) */
-    @Scheduled(fixedRate = 60000) // 1분마다 실행 (1분 = 60 * 1000 ms)
+    @Scheduled(fixedRate = 60000) // 1분마다 실행
     @Transactional
     public void syncPopularSearchesToDB() {
+        log.info("인기 검색어 동기화 시작");
+
         Set<String> keywords = redisTemplate.opsForZSet().reverseRange(POPULAR_SEARCH_KEY, 0, 49);
         if (keywords == null || keywords.isEmpty()) {
+            log.info("Redis에 인기 검색어 없음");
             return;
         }
 
         for (String keyword : keywords) {
             Double score = redisTemplate.opsForZSet().score(POPULAR_SEARCH_KEY, keyword);
             if (score != null) {
-                popularSearchKeywordRepository.incrementSearchCount(keyword, score.intValue());
+                log.info("MySQL 업데이트: " + keyword + " (" + score.intValue() + ")");
+
+                // 조회 후 저장
+                PopularSearchKeyword existingKeyword = popularSearchKeywordRepository.findByKeyword(keyword)
+                        .orElse(PopularSearchKeyword.create(keyword));
+
+                existingKeyword.incrementCount(score.intValue()); // 기존 값 증가
+                popularSearchKeywordRepository.save(existingKeyword);
             }
-            // 동기화된 검색어만 제거
-            redisTemplate.opsForZSet().remove(POPULAR_SEARCH_KEY, keyword);
         }
+
+        redisTemplate.opsForZSet().remove(POPULAR_SEARCH_KEY, keywords.toArray());
+        log.info("인기 검색어 동기화 완료");
     }
 }

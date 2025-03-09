@@ -41,15 +41,7 @@ public class SearchController {
     public ResponseEntity<List<PopularSearchResponse>> getPopularSearches(
             @RequestParam(defaultValue = "10") int limit
     ) {
-        Set<String> keywords = searchService.getPopularSearches(limit);
-
-        List<PopularSearchResponse> response = new ArrayList<>();
-        int rank = 1;
-        for (String keyword : keywords) {
-            response.add(new PopularSearchResponse(keyword, rank++));
-        }
-
+        List<PopularSearchResponse> response = searchService.getPopularSearchesFromDB(limit);
         return ResponseEntity.ok(response);
     }
-
 }

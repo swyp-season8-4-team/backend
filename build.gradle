@@ -59,9 +59,7 @@ dependencies {
 
     // Spring Data Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-
-    // Lettuce Redis Client
-    implementation 'io.lettuce.core:lettuce-core'
+    implementation 'redis.clients:jedis:4.3.1'
 
     implementation 'software.amazon.awssdk:s3:2.20.86'
     implementation 'org.springframework.boot:spring-boot-starter-test'
