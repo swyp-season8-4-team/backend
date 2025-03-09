@@ -113,8 +113,8 @@ public class StoreReviewService {
         review.setRating(request.getRating());
 
         // 이미지 처리
-        imageService.deleteImagesByRefId(ImageType.SHORT, reviewId);
         if (newImages != null && !newImages.isEmpty()) {
+            imageService.deleteImagesByRefId(ImageType.SHORT, reviewId);
             imageService.uploadAndSaveImages(newImages, ImageType.SHORT, reviewId, "short/" + review.getReviewId());
         }
 
