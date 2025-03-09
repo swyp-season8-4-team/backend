@@ -2,7 +2,6 @@ package org.swyp.dessertbee.auth.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.auth.dto.TokenResponse;
@@ -11,11 +10,9 @@ import org.swyp.dessertbee.auth.jwt.JWTUtil;
 import org.swyp.dessertbee.auth.repository.AuthRepository;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
-import org.swyp.dessertbee.common.exception.ErrorResponse;
 import org.swyp.dessertbee.user.entity.UserEntity;
-import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.user.service.UserService;
-
+import org.swyp.dessertbee.auth.exception.AuthExceptions.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -29,7 +26,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TokenService {
     private final AuthRepository authRepository;
-    private final UserRepository userRepository;
     private final JWTUtil jwtUtil;
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
     private final UserService userService;
@@ -70,7 +66,7 @@ public class TokenService {
             throw e;
         } catch (Exception e) {
             log.error("리프레시 토큰 저장 중 오류 발생 - 이메일: {}", email, e);
-            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+            throw new AuthServiceException();
         }
     }
     /**
@@ -82,16 +78,19 @@ public class TokenService {
         String email = user.getEmail();
 
         try {
-            Optional<AuthEntity> authOpt = authRepository.findByUserAndProvider(Optional.of(user), "local");
+            List<AuthEntity> authEntities = authRepository.findAllByUser(user);
 
-            if (authOpt.isEmpty()) {
+            if (authEntities.isEmpty()) {
                 log.warn("리프레시 토큰 무효화 실패 - 사용자({})에 대한 인증 정보 없음", email);
-                throw new BusinessException(ErrorCode.INVALID_CREDENTIALS, "리프레시 토큰이 존재하지 않습니다.");
+                throw new JwtTokenException(ErrorCode.INVALID_CREDENTIALS, "리프레시 토큰이 존재하지 않습니다.");
             }
 
-            AuthEntity auth = authOpt.get();
-            auth.deactivate();
-            authRepository.save(auth);
+            // 모든 인증 엔티티에 대해 토큰 비활성화 처리
+            for (AuthEntity auth : authEntities) {
+                auth.deactivate();
+            }
+
+            authRepository.saveAll(authEntities);
 
             log.info("리프레시 토큰 무효화 완료 - 이메일: {}", email);
         } catch (BusinessException e) {
@@ -99,7 +98,7 @@ public class TokenService {
             throw e;
         } catch (Exception e) {
             log.error("리프레시 토큰 무효화 처리 중 알 수 없는 오류 발생 - 이메일: {}", email, e);
-            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+            throw new AuthServiceException();
         }
     }
 
@@ -115,7 +114,7 @@ public class TokenService {
             ErrorCode errorCode = jwtUtil.validateToken(refreshToken, false);
             if (errorCode != null) {
                 log.warn("리프레시 토큰 검증 실패 - 유효하지 않은 토큰");
-                throw new BusinessException(errorCode, "유효하지 않은 리프레시 토큰입니다.");
+                throw new JwtTokenException(errorCode, "유효하지 않은 리프레시 토큰입니다.");
             }
 
             // 토큰에서 이메일 추출
@@ -128,19 +127,19 @@ public class TokenService {
             AuthEntity auth = authRepository.findByUserAndProvider(Optional.of(user), "local")
                     .orElseThrow(() -> {
                         log.warn("리프레시 토큰 검증 실패 - 사용자({})에 대한 인증 정보 없음", email);
-                        return new BusinessException(ErrorCode.INVALID_CREDENTIALS, "리프레시 토큰이 존재하지 않습니다.");
+                        return new JwtTokenException(ErrorCode.INVALID_CREDENTIALS, "리프레시 토큰이 존재하지 않습니다.");
                     });
 
             // DB에 저장된 토큰과 요청된 토큰 비교
             if (!refreshToken.equals(auth.getRefreshToken())) {
                 log.warn("리프레시 토큰 검증 실패 - 토큰 불일치: {}", email);
-                throw new BusinessException(ErrorCode.INVALID_VERIFICATION_TOKEN, "유효하지 않은 리프레시 토큰입니다.");
+                throw new JwtTokenException(ErrorCode.INVALID_VERIFICATION_TOKEN, "유효하지 않은 리프레시 토큰입니다.");
             }
 
             // 리프레시 토큰 만료 여부 KST 기준으로 확인
             if (auth.getRefreshTokenExpiresAt().isBefore(LocalDateTime.now(KST))) {
                 log.warn("리프레시 토큰 검증 실패 - 만료된 토큰: {}", email);
-                throw new BusinessException(ErrorCode.EXPIRED_VERIFICATION_TOKEN, "리프레시 토큰이 만료되었습니다.");
+                throw new JwtTokenException(ErrorCode.EXPIRED_VERIFICATION_TOKEN, "리프레시 토큰이 만료되었습니다.");
             }
 
             // 새로운 Access Token 생성
@@ -164,7 +163,7 @@ public class TokenService {
             throw e;
         } catch (Exception e) {
             log.error("리프레시 토큰 검증 중 알 수 없는 오류 발생", e);
-            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+            throw new AuthServiceException();
         }
     }
 }

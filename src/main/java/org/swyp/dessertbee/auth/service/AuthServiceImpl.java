@@ -75,7 +75,7 @@ public class AuthServiceImpl implements AuthService {
             emailVerificationService.validateEmailVerificationToken(verificationToken, request.getEmail(), EmailVerificationPurpose.SIGNUP);
 
             // 이메일 중복 검사
-            if (userRepository.existsByEmail(request.getEmail())) {
+            if (userService.isEmailExists(request.getEmail())) {
                 throw new DuplicateEmailException("이미 등록된 이메일입니다.");
             }
 
@@ -132,7 +132,7 @@ public class AuthServiceImpl implements AuthService {
             throw e;
         } catch (Exception e) {
             log.error("회원가입 처리 중 오류 발생 - 이메일: {}", request.getEmail(), e);
-            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+            throw new AuthServiceException("회원가입 처리 중 오류가 발생했습니다.");
         }
     }
 
@@ -186,7 +186,8 @@ public class AuthServiceImpl implements AuthService {
             throw e;
         } catch (Exception e) {
             log.error("로그인 처리 중 오류 발생 - 이메일: {}", request.getEmail(), e);
-            throw new RuntimeException("로그인 처리 중 오류가 발생했습니다.", e);
+            throw new AuthServiceException("로그인 처리 중 오류가 발생했습니다.");
+
         }
     }
 
@@ -241,7 +242,7 @@ public class AuthServiceImpl implements AuthService {
             throw e;
         } catch (Exception e) {
             log.error("개발 로그인 처리 중 오류 발생 - 이메일: {}", request.getEmail(), e);
-            throw new RuntimeException("개발 로그인 처리 중 오류가 발생했습니다.", e);
+            throw new AuthServiceException("개발 로그인 처리 중 오류가 발생했습니다.");
         }
     }
 
@@ -279,7 +280,7 @@ public class AuthServiceImpl implements AuthService {
             throw e;
         } catch (Exception e) {
             log.error("비밀번호 재설정 처리 중 오류 발생 - 이메일: {}", request.getEmail(), e);
-            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+            throw new AuthServiceException("비밀번호 재설정 처리 중 오류가 발생했습니다.");
         }
     }
 
@@ -296,20 +297,26 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     @Override
     public LogoutResponse logout(String accessToken) {
-        UUID userUuid = jwtUtil.getUserUuid(accessToken, true);
-        UserEntity user = userService.findByUserUuid(userUuid);
         try {
+            // 유효한 토큰에서 사용자 UUID 추출
+            UUID userUuid;
+            try {
+                userUuid = jwtUtil.getUserUuid(accessToken, true);
+            } catch (Exception e) {
+                log.error("액세스 토큰에서 사용자 UUID 추출 실패", e);
+                throw new JwtTokenException(ErrorCode.JWT_TOKEN_MALFORMED, "액세스 토큰에서 사용자 정보를 추출할 수 없습니다.");
+            }
+            UserEntity user = userService.findByUserUuid(userUuid);
             revokeRefreshToken(userUuid);
-
-            log.info("로그아웃 성공 - userUuid: {}", userUuid);
+            log.info("로그아웃 성공 - 사용자: {}, UUID: {}", user.getEmail(), userUuid);
             return LogoutResponse.success();
 
         } catch (BusinessException e) {
             log.warn("로그아웃 실패 - 사유: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("로그아웃 처리 중 알 수 없는 오류 발생 - 이메일 : {}", user.getEmail(), e);
-            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+            log.error("로그아웃 처리 중 알 수 없는 오류 발생", e);
+            throw new AuthServiceException("로그아웃 처리 중 오류가 발생했습니다.");
         }
     }
 }

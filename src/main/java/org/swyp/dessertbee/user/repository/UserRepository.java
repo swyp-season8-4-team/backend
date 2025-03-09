@@ -21,11 +21,11 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     @Query("SELECT u FROM UserEntity u WHERE u.email = :email AND u.deletedAt IS NULL")
     Optional<UserEntity> findByEmail(String email);
     /**
-     * 이메일 존재 여부 확인 (삭제되지 않은 계정만)
+     * 이메일 존재 여부 확인 (삭제된 계정 포함.)
      * @param email 사용자 이메일
      * @return boolean
      */
-    @Query("SELECT COUNT(u) > 0 FROM UserEntity u WHERE u.email = :email AND u.deletedAt IS NULL")
+    @Query("SELECT COUNT(u) > 0 FROM UserEntity u WHERE u.email = :email")
     boolean existsByEmail(String email);
 
     /**

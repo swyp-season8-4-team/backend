@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.auth.dto;
+package org.swyp.dessertbee.auth.dto.oauth2;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
