@@ -62,6 +62,12 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/api/stores/map/**").permitAll()
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-resources/**",
+                                "/webjars/**"
+                        ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/preferences/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/mbtis/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/stores/**").permitAll()
