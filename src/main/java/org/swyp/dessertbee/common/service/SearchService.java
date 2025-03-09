@@ -19,6 +19,10 @@ public class SearchService {
 
     private static final int MAX_RECENT_SEARCHES = 10;
 
+    public String removeTrailingSpaces(String input) {
+        return input.replaceAll("\\s+$", ""); // 문자열 끝부분의 공백만 제거
+    }
+
     /** 최근 검색어 저장 (인증된 사용자만) */
     @Transactional
     public void saveRecentSearch(Long userId, String keyword) {

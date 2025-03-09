@@ -61,6 +61,7 @@ public class StoreController {
 
         if (searchKeyword != null) {
             searchKeyword = URLDecoder.decode(searchKeyword, StandardCharsets.UTF_8);
+            searchKeyword = searchService.removeTrailingSpaces(searchKeyword);
 
             UserEntity user = userService.getCurrentUser();
             // 인증된 사용자일 경우 >> 최근 검색어 저장
