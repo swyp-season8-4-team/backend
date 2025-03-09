@@ -37,7 +37,6 @@ public class UserStoreService {
     private final SavedStoreRepository savedStoreRepository;
     private final UserRepository userRepository;
     private final StoreRepository storeRepository;
-    private final PreferenceRepository preferenceRepository;
     private final ImageService imageService;
 
     /** 저장 리스트 전체 조회 */
