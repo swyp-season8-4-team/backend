@@ -23,7 +23,7 @@ import org.swyp.dessertbee.role.entity.RoleType;
 import org.swyp.dessertbee.role.repository.RoleRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
-
+import org.swyp.dessertbee.auth.exception.AuthExceptions.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -72,8 +72,7 @@ public class KakaoOAuthService {
 
         } catch (Exception e) {
             log.error("카카오 로그인 처리 중 오류 발생", e);
-            throw new BusinessException(ErrorCode.AUTHENTICATION_FAILED,
-                    "카카오 로그인 처리 중 오류가 발생했습니다.");
+            throw new OAuthServiceException("카카오 로그인 처리 중 오류가 발생했습니다.");
         }
     }
 
@@ -110,8 +109,7 @@ public class KakaoOAuthService {
         // 응답에서 액세스 토큰 추출
         Map<String, Object> responseBody = response.getBody();
         if (responseBody == null || !responseBody.containsKey("access_token")) {
-            throw new BusinessException(ErrorCode.AUTHENTICATION_FAILED,
-                    "카카오 액세스 토큰을 획득하는데 실패했습니다.");
+            throw new OAuthAuthenticationException("카카오 액세스 토큰을 획득하는데 실패했습니다.");
         }
 
         return (String) responseBody.get("access_token");
@@ -142,8 +140,7 @@ public class KakaoOAuthService {
         // 응답에서 사용자 정보 추출
         Map<String, Object> userAttributes = response.getBody();
         if (userAttributes == null) {
-            throw new BusinessException(ErrorCode.AUTHENTICATION_FAILED,
-                    "카카오 사용자 정보를 획득하는데 실패했습니다.");
+            throw new OAuthAuthenticationException("카카오 사용자 정보를 획득하는데 실패했습니다.");
         }
 
         return new KakaoResponse(userAttributes);
@@ -237,7 +234,7 @@ public class KakaoOAuthService {
         }
 
         // 100번 시도 후에도 고유한 닉네임을 찾지 못한 경우 예외 발생
-        throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME, "고유한 닉네임을 생성할 수 없습니다.");
+        throw new DuplicateNicknameException("고유한 닉네임을 생성할 수 없습니다.");
     }
 
     private String generateRandomNumber() {

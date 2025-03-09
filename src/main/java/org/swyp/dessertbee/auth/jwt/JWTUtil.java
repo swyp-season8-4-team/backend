@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.swyp.dessertbee.auth.enums.TokenType;
+import org.swyp.dessertbee.auth.exception.AuthExceptions;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.email.entity.EmailVerificationPurpose;
 
@@ -212,7 +213,7 @@ public class JWTUtil {
         String tokenType = claims.get("type", String.class);
         if (tokenType == null ||
                 !(tokenType.equals(TokenType.ACCESS.name()) || tokenType.equals(TokenType.REFRESH.name()))) {
-            throw new IllegalArgumentException("유효한 사용자 토큰이 아닙니다");
+            throw new AuthExceptions.InvalidVerificationTokenException("유효한 사용자 토큰이 아닙니다");
         }
 
         return UUID.fromString(claims.getSubject());
@@ -243,16 +244,20 @@ public class JWTUtil {
         // 이메일 인증 토큰인지 확인
         String tokenType = claims.get("type", String.class);
         if (tokenType == null || !tokenType.equals(TokenType.EMAIL_VERIFICATION.name())) {
-            throw new IllegalArgumentException("유효한 이메일 인증 토큰이 아닙니다");
+            throw new AuthExceptions.InvalidVerificationTokenException("유효한 이메일 인증 토큰이 아닙니다");
         }
 
         String subject = claims.getSubject();
         if (subject != null && subject.startsWith("EMAIL_VERIFICATION_")) {
             String purposeName = subject.substring("EMAIL_VERIFICATION_".length());
-            return EmailVerificationPurpose.valueOf(purposeName);
+            try {
+                return EmailVerificationPurpose.valueOf(purposeName);
+            } catch (Exception e) {
+                throw new AuthExceptions.InvalidVerificationTokenException("이메일 인증 목적을 찾을 수 없습니다");
+            }
         }
 
-        throw new IllegalArgumentException("이메일 인증 목적을 찾을 수 없습니다");
+        throw new AuthExceptions.InvalidVerificationTokenException("이메일 인증 목적을 찾을 수 없습니다");
     }
 
     /**
@@ -264,7 +269,7 @@ public class JWTUtil {
         // 이메일 인증 토큰인지 확인
         String tokenType = claims.get("type", String.class);
         if (tokenType == null || !tokenType.equals(TokenType.EMAIL_VERIFICATION.name())) {
-            throw new IllegalArgumentException("유효한 이메일 인증 토큰이 아닙니다");
+            throw new AuthExceptions.InvalidVerificationTokenException("유효한 이메일 인증 토큰이 아닙니다");
         }
 
         return claims.get("verificationId", Long.class);
