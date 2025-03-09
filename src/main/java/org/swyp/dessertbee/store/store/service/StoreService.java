@@ -34,7 +34,7 @@ import org.swyp.dessertbee.store.store.entity.*;
 import org.swyp.dessertbee.store.store.repository.*;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
-import org.swyp.dessertbee.user.service.UserServiceImpl;
+import org.swyp.dessertbee.user.service.UserService;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -63,7 +63,7 @@ public class StoreService {
     private final MenuService menuService;
     private final UserRepository userRepository;
     private final SavedMateRepository savedMateRepository;
-    private final UserServiceImpl userService;
+    private final UserService userService;
     private final ReviewRepository reviewRepository;
 
     /** 가게 등록 (이벤트, 쿠폰, 메뉴 + 이미지 포함) */

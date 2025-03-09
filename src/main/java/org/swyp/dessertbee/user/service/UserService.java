@@ -13,6 +13,12 @@ import java.util.UUID;
 
 public interface UserService {
     /**
+     * Security Context에서 현재 인증된 사용자의 정보를 조회
+     * 비로그인 상태인 경우 null 반환
+     */
+    UserEntity getCurrentUser();
+
+    /**
      * 현재 인증된 사용자의 상세 정보를 조회
      * @return 사용자 상세 정보 DTO
      */
