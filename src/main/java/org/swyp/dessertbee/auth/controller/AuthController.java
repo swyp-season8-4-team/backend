@@ -20,8 +20,6 @@ import org.swyp.dessertbee.auth.dto.passwordreset.PasswordResetRequest;
 import org.swyp.dessertbee.auth.dto.signup.SignUpRequest;
 import org.swyp.dessertbee.auth.service.AuthService;
 import jakarta.validation.Valid;
-import org.swyp.dessertbee.common.exception.BusinessException;
-import org.swyp.dessertbee.common.exception.ErrorCode;
 
 
 @Tag(name = "Authentication", description = "인증 관련 API")
@@ -83,8 +81,9 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<LogoutResponse> logout(
             @Parameter(description = "JWT 액세스 토큰", required = true)
-            @RequestHeader("Authorization") String token) {
-        String accessToken = token.substring(7);
+            @RequestHeader("Authorization") String authHeader) {
+        // Bearer 접두사 제거
+        String accessToken = authHeader.substring(7);
         LogoutResponse logoutResponse = authService.logout(accessToken);
 
         return ResponseEntity.ok(logoutResponse);
@@ -117,12 +116,6 @@ public class AuthController {
     public ResponseEntity<TokenResponse> refreshToken(
             @Parameter(description = "리프레시 토큰 (Bearer 형식)", required = true)
             @RequestHeader("Authorization") String authHeader) {
-
-        // Bearer 접두사 검증 및 제거
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            log.error("유효하지 않은 Authorization 헤더 형식: {}", authHeader);
-            throw new BusinessException(ErrorCode.JWT_TOKEN_MALFORMED, "유효한 Bearer 토큰이 필요합니다");
-        }
 
         // Bearer 접두사 제거하여 토큰만 추출
         String refreshToken = authHeader.substring(7);
