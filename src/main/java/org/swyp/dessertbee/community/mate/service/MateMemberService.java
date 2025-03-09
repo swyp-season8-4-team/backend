@@ -34,7 +34,6 @@ public class MateMemberService {
     private final UserRepository userRepository;
     private final ImageService imageService;
     private final UserService userService;
-    private final UserServiceImpl userServiceImpl;
 
 
     /**
@@ -136,7 +135,7 @@ public class MateMemberService {
     @Transactional
     public void applyMate(UUID mateUuid) {
         // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
-        UserEntity user = userServiceImpl.getCurrentUser();
+        UserEntity user = userService.getCurrentUser();
 
         //mateId,userId  유효성 검사
         MateUserIds validate = validateMateAndUser(mateUuid, user.getUserUuid());
@@ -210,7 +209,7 @@ public class MateMemberService {
     public void cancelApplyMate(UUID mateUuid) {
 
         // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
-        UserEntity user = userServiceImpl.getCurrentUser();
+        UserEntity user = userService.getCurrentUser();
 
         //mateId,userId  유효성 검사
         MateUserIds validate = validateMateAndUser(mateUuid, user.getUserUuid());
@@ -387,7 +386,7 @@ public class MateMemberService {
     public void leaveMember (UUID mateUuid) {
 
         // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
-        UserEntity user = userServiceImpl.getCurrentUser();
+        UserEntity user = userService.getCurrentUser();
 
 
         //mateId,userId  유효성 검사

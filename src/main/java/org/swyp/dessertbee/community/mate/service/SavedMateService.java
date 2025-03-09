@@ -21,7 +21,7 @@ import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
-import org.swyp.dessertbee.user.service.UserServiceImpl;
+import org.swyp.dessertbee.user.service.UserService;
 
 import java.util.Collections;
 import java.util.List;
@@ -38,7 +38,7 @@ public class SavedMateService {
     private final MateMemberRepository mateMemberRepository;
     private final MateCategoryRepository mateCategoryRepository;
     private final ImageService imageService;
-    private final UserServiceImpl userServiceImpl;
+    private final UserService userService;
     private final StoreRepository storeRepository;
 
     /**
@@ -48,7 +48,7 @@ public class SavedMateService {
     public void saveMate(UUID mateUuid) {
 
         // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
-        UserEntity user = userServiceImpl.getCurrentUser();
+        UserEntity user = userService.getCurrentUser();
 
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
                 .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
@@ -81,7 +81,7 @@ public class SavedMateService {
     public void deleteSavedMate(UUID mateUuid) {
 
         // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
-        UserEntity user = userServiceImpl.getCurrentUser();
+        UserEntity user = userService.getCurrentUser();
 
         Long mateId = mateRepository.findMateIdByMateUuid(mateUuid)
                 .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
@@ -108,7 +108,7 @@ public class SavedMateService {
     public MatesPageResponse getSavedMates(Pageable pageable) {
 
         // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
-        UserEntity user = userServiceImpl.getCurrentUser();
+        UserEntity user = userService.getCurrentUser();
 
         Long userId = userRepository.findIdByUserUuid(user.getUserUuid());
 
