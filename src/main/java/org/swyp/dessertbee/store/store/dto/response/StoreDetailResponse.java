@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import org.swyp.dessertbee.community.mate.dto.response.MateResponse;
+import org.swyp.dessertbee.community.review.dto.response.ReviewSummaryResponse;
 import org.swyp.dessertbee.store.menu.dto.response.MenuResponse;
 import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
 import org.swyp.dessertbee.store.store.entity.Store;
@@ -43,6 +44,7 @@ public class StoreDetailResponse {
     private List<OperatingHourResponse> operatingHours;
     private List<HolidayResponse> holidays;
     private List<String> topPreferences;
+    private List<ReviewSummaryResponse> communityReviews;
     private List<MateResponse> mate;
     private boolean saved;
     private Long savedListId;
@@ -57,6 +59,7 @@ public class StoreDetailResponse {
                                                  List<String> topPreferences,
                                                  List<StoreReviewResponse> storeReviews,
                                                  List<String> tags,
+                                                 List<ReviewSummaryResponse> communityReviews,
                                                  List<MateResponse> mate,
                                                  boolean saved,
                                                  Long savedListId) {
@@ -88,6 +91,7 @@ public class StoreDetailResponse {
                 .totalReviewCount(totalReviewCount)
                 .storeReviews(storeReviews)
                 .tags(tags)
+                .communityReviews(communityReviews)
                 .mate(mate)
                 .saved(saved)
                 .savedListId(savedListId)
