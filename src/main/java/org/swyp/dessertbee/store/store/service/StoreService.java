@@ -16,6 +16,10 @@ import org.swyp.dessertbee.community.mate.entity.SavedMate;
 import org.swyp.dessertbee.community.mate.repository.MateCategoryRepository;
 import org.swyp.dessertbee.community.mate.repository.MateRepository;
 import org.swyp.dessertbee.community.mate.repository.SavedMateRepository;
+import org.swyp.dessertbee.community.review.dto.response.ReviewSummaryResponse;
+import org.swyp.dessertbee.community.review.entity.Review;
+import org.swyp.dessertbee.community.review.entity.ReviewContent;
+import org.swyp.dessertbee.community.review.repository.ReviewRepository;
 import org.swyp.dessertbee.preference.repository.PreferenceRepository;
 import org.swyp.dessertbee.store.menu.dto.request.MenuCreateRequest;
 import org.swyp.dessertbee.store.menu.dto.response.MenuResponse;
@@ -60,6 +64,7 @@ public class StoreService {
     private final UserRepository userRepository;
     private final SavedMateRepository savedMateRepository;
     private final UserServiceImpl userService;
+    private final ReviewRepository reviewRepository;
 
     /** 가게 등록 (이벤트, 쿠폰, 메뉴 + 이미지 포함) */
     public StoreDetailResponse createStore(StoreCreateRequest request,
@@ -358,6 +363,47 @@ public class StoreService {
                     reviewImagesMap.getOrDefault(review.getReviewId(), Collections.emptyList()));
         }).toList();
 
+        // 가게의 리뷰 목록 가져오기
+        List<Review> storeReviews = reviewRepository.findByStoreIdAndDeletedAtIsNull(storeId);
+
+        // 커뮤니티 리뷰 응답 DTO 변환
+        List<ReviewSummaryResponse> communityResponses = storeReviews.stream().map(review -> {
+            // 리뷰 작성자 정보 조회
+            UserEntity reviewer = userRepository.findById(review.getUserId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+            List<String> profileImageList = imageService.getImagesByTypeAndId(ImageType.PROFILE, reviewer.getId());
+            String profileImage = profileImageList.isEmpty() ? null : profileImageList.get(0);
+
+            String thumbnail = null;
+            String content = "";
+
+            for (ReviewContent contentItem : review.getReviewContents()) {
+                if (thumbnail == null && "image".equals(contentItem.getType())) {
+                    thumbnail = contentItem.getValue();
+                } else if (content.isEmpty() && "text".equals(contentItem.getType())) {
+                    content = contentItem.getValue();
+                }
+
+                // 두 값이 모두 설정되면 반복문 끝
+                if (thumbnail != null && !content.isEmpty()) {
+                    break;
+                }
+            }
+
+            return ReviewSummaryResponse.builder()
+                    .reviewUuid(review.getReviewUuid())
+                    .userUuid(reviewer.getUserUuid())
+                    .nickname(reviewer.getNickname())
+                    .profileImage(profileImage)
+                    .thumbnail(thumbnail)
+                    .title(review.getTitle())
+                    .content(content)
+                    .createdAt(review.getCreatedAt())
+                    .updatedAt(review.getUpdatedAt())
+                    .build();
+        }).collect(Collectors.toList());
+
         // 디저트 메이트
         List<Mate> mates = mateRepository.findByStoreIdAndDeletedAtIsNull(storeId);
         List<MateResponse> mateResponses = mates.stream().map(mate -> {
@@ -385,7 +431,7 @@ public class StoreService {
         }).toList();
 
         return StoreDetailResponse.fromEntity(store, userId, userUuid, totalReviewCount, operatingHourResponses, holidayResponses, menus,
-                storeImages, ownerPickImages, topPreferences, reviewResponses, tags, mateResponses, saved, savedListId);
+                storeImages, ownerPickImages, topPreferences, reviewResponses, tags, communityResponses, mateResponses, saved, savedListId);
     }
 
     /** 가게의 평균 평점 업데이트 (리뷰 등록,수정,삭제 시 호출) */
