@@ -20,7 +20,7 @@ public class SearchController {
     private final SearchService searchService;
     private final UserService userService;
 
-    /** 🔹 최근 검색어 조회 API */
+    /** 최근 검색어 조회 API */
     @GetMapping("/recent")
     public ResponseEntity<List<String>> getRecentSearches() {
         UserEntity user = userService.getCurrentUser();

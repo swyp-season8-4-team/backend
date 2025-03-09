@@ -32,11 +32,11 @@ public class SearchService {
         // 새 검색어 저장
         searchHistoryRepository.save(UserSearchHistory.create(userId, keyword));
 
-        // 최대 10개 유지 (초과 시 오래된 검색어 삭제)
+        // 검색어 최대 10개 유지
         deleteOldSearches(userId);
     }
 
-    /** 🔹 초과 검색어 삭제 (최신 10개 유지) */
+    /** 검색어 10개 초과 시 예전 검색어 삭제 */
     @Transactional
     public void deleteOldSearches(Long userId) {
         Pageable pageable = PageRequest.of(0, MAX_RECENT_SEARCHES);
