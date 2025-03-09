@@ -19,7 +19,8 @@ public interface StoreReviewRepository extends JpaRepository<StoreReview, Long> 
     BigDecimal findAverageRatingByStoreId(@Param("storeId") Long storeId);
 
     /** 특정 가게에 존재하는 리뷰 목록 조회 **/
-    List<StoreReview> findByStoreIdAndDeletedAtIsNull(Long storeId);
+    @Query("SELECT sr FROM StoreReview sr WHERE sr.storeId = :storeId AND sr.deletedAt IS NULL ORDER BY sr.createdAt DESC")
+    List<StoreReview> findByStoreIdAndDeletedAtIsNull(@Param("storeId") Long storeId);
 
     Optional<StoreReview> findByReviewIdAndDeletedAtIsNull(Long reviewId);
 
