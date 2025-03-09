@@ -198,14 +198,8 @@ public class StoreService {
             throw new BusinessException(ErrorCode.PREFERENCES_NOT_FOUND);
         }
 
-        // 존재하지 않는 preferenceTagId가 있는지 검증
-        List<String> preferenceNames = preferenceRepository.findPreferenceNamesByIds(preferenceTagIds);
-        if (preferenceNames.isEmpty()) {
-            throw new BusinessException(ErrorCode.PREFERENCES_NOT_FOUND);
-        }
-
         // 여러 태그 중 하나라도 매칭되는 가게를 조회
-        List<Store> stores = storeRepository.findStoresByLocationAndTags(lat, lng, radius, preferenceNames);
+        List<Store> stores = storeRepository.findStoresByLocationAndTags(lat, lng, radius, preferenceTagIds);
 
         return stores.stream()
                 .map(StoreMapResponse::fromEntity)
@@ -229,17 +223,17 @@ public class StoreService {
         }
 
         // 해당 사용자에게 취향(preference) 값이 존재하는지 확인
-        List<String> userPreferenceNames = user.getUserPreferences().stream()
-                .map(up -> up.getPreference().getPreferenceName())
+        List<Long> preferenceTagIds = user.getUserPreferences().stream()
+                .map(up -> up.getPreference().getId())
                 .distinct()
                 .collect(Collectors.toList());
 
-        if (userPreferenceNames.isEmpty()) {
+        if (preferenceTagIds.isEmpty()) {
             throw new BusinessException(ErrorCode.USER_PREFERENCES_NOT_FOUND);
         }
 
         // 사용자의 취향 태그 중 하나라도 매칭되는 가게 조회
-        List<Store> stores = storeRepository.findStoresByLocationAndTags(lng, lat, radius, userPreferenceNames);
+        List<Store> stores = storeRepository.findStoresByLocationAndTags(lng, lat, radius, preferenceTagIds);
 
         return stores.stream()
                 .map(StoreMapResponse::fromEntity)
