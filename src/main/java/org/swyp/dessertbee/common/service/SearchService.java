@@ -211,16 +211,13 @@ public class SearchService {
             int redisCount = tuple.getScore().intValue();
 
             // MySQL에서 기존 searchCount 가져오기
-            int dbCount = popularSearchKeywordRepository.findByKeyword(keyword)
-                    .map(PopularSearchKeyword::getSearchCount)
-                    .orElse(0);
+            Optional<PopularSearchKeyword> optionalKeyword = popularSearchKeywordRepository.findByKeyword(keyword);
+            int dbCount = optionalKeyword.map(PopularSearchKeyword::getSearchCount).orElse(0);
 
             int increment = Math.max(0, redisCount - dbCount);
 
             if (increment > 0) {
-                PopularSearchKeyword existingKeyword = popularSearchKeywordRepository.findByKeyword(keyword)
-                        .orElse(PopularSearchKeyword.create(keyword));
-
+                PopularSearchKeyword existingKeyword = optionalKeyword.orElse(PopularSearchKeyword.create(keyword));
                 existingKeyword.incrementCount(increment);
                 popularSearchKeywordRepository.save(existingKeyword);
             }
