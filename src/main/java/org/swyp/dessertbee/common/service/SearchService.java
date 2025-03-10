@@ -17,6 +17,7 @@ import org.swyp.dessertbee.common.repository.UserSearchHistoryRepository;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.*;
 
 @Slf4j
@@ -170,6 +171,21 @@ public class SearchService {
     @Scheduled(fixedRate = 60000)
     @Transactional
     public void syncPopularSearchesToDB() {
+        // 자정 동기화 중이라면 실행하지 않음
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(SYNC_LOCK_KEY))) {
+            log.info("⏳ 자정 동기화가 진행 중이므로 1분 동기화를 중단합니다.");
+            return;
+        }
+
+        // 현재 시간이 23:59 ~ 00:01 사이라면 동기화 중단
+        int currentHour = Instant.now().atZone(ZoneId.of("Asia/Seoul")).getHour();
+        int currentMinute = Instant.now().atZone(ZoneId.of("Asia/Seoul")).getMinute();
+
+        if (currentHour == 23 && currentMinute >= 59 || currentHour == 0 && currentMinute < 1) {
+            log.info("⏸️ 자정 동기화 시간(23:59 ~ 00:01)이므로 1분 동기화 중단");
+            return;
+        }
+
         log.info("실시간 인기 검색어 동기화 시작");
 
         ZSetOperations<String, String> zSetOps = redisTemplate.opsForZSet();
@@ -225,7 +241,7 @@ public class SearchService {
     @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
     @Transactional
     public void midnightSyncPopularSearchesToDB() {
-        log.info("인기 검색어 백업 및 초기화 시작");
+        log.info("자정 인기 검색어 백업 및 초기화 시작");
 
         // 락 설정
         if (!acquireLock(SYNC_LOCK_KEY, SYNC_LOCK_TIMEOUT)) {
@@ -234,9 +250,14 @@ public class SearchService {
         }
 
         try {
-            Set<String> keywords = redisTemplate.opsForZSet().reverseRange(POPULAR_SEARCH_KEY, 0, -1);
+            ZSetOperations<String, String> zSetOps = redisTemplate.opsForZSet();
+
+            // 기존 동기화된 인기 검색어 데이터 백업
+            Set<ZSetOperations.TypedTuple<String>> backupSyncedData = zSetOps.reverseRangeWithScores(SYNCED_POPULAR_SEARCH_KEY, 0, -1);
+
+            Set<String> keywords = zSetOps.reverseRange(POPULAR_SEARCH_KEY, 0, -1);
             if (keywords == null || keywords.isEmpty()) {
-                log.info("백업할 인기 검색어 없음");
+                log.info("⏸️ 백업할 인기 검색어 없음");
                 return;
             }
 
@@ -251,6 +272,14 @@ public class SearchService {
                 }
             }
 
+            // 기존 동기화된 데이터 복원
+            if (backupSyncedData != null) {
+                for (ZSetOperations.TypedTuple<String> tuple : backupSyncedData) {
+                    redisTemplate.opsForZSet().add(SYNCED_POPULAR_SEARCH_KEY, tuple.getValue(), tuple.getScore());
+                }
+            }
+
+            // 동기화가 성공한 경우에만 Redis 초기화
             clearPopularSearchCache();
 
             log.info("인기 검색어 백업 및 초기화 완료");
