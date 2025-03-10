@@ -86,4 +86,57 @@ public class AuthExceptions {
             super(ErrorCode.INVALID_CREDENTIALS, message);
         }
     }
+
+    /**
+     * 인증 서비스 오류 예외
+     */
+    public static class AuthServiceException extends BusinessException {
+        public AuthServiceException() {
+            super(ErrorCode.AUTH_SERVICE_ERROR);
+        }
+
+        public AuthServiceException(String message) {
+            super(ErrorCode.AUTH_SERVICE_ERROR, message);
+        }
+    }
+
+    /**
+     * OAuth 인증 서비스 오류 예외
+     */
+    public static class OAuthServiceException extends BusinessException {
+        public OAuthServiceException() {
+            super(ErrorCode.AUTH_SERVICE_ERROR);
+        }
+
+        public OAuthServiceException(String message) {
+            super(ErrorCode.AUTH_SERVICE_ERROR, message);
+        }
+    }
+
+    /**
+     * OAuth 인증 서비스 오류 예외
+     */
+    public static class OAuthAuthenticationException extends BusinessException {
+        public OAuthAuthenticationException() {
+            super(ErrorCode.AUTHENTICATION_FAILED);
+        }
+
+        public OAuthAuthenticationException(String message) {
+            super(ErrorCode.AUTHENTICATION_FAILED, message);
+        }
+    }
+
+    /**
+     * JWT 토큰 오류 예외
+     */
+    public static class JwtTokenException extends BusinessException {
+        public JwtTokenException(ErrorCode errorCode) {
+            super(errorCode);
+        }
+
+        public JwtTokenException(ErrorCode errorCode, String message) {
+            super(errorCode, message);
+        }
+    }
+
 }

@@ -318,9 +318,16 @@ public class UserServiceImpl implements UserService {
                 });
     }
 
+    @Override
     public UserEntity findByUserUuid(UUID userUuid) {
         return userRepository.findByUserUuid(userUuid)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND,
                         "UUID가 " + userUuid + "인 사용자를 찾을 수 없습니다."));
     }
+
+    @Override
+    public boolean isEmailExists(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
 }

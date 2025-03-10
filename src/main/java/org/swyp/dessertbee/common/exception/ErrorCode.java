@@ -14,6 +14,7 @@ public enum ErrorCode {
     // Common
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "C001", "잘못된 입력값입니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "C002", "서버 에러가 발생했습니다."),
+
     // Auth
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "A001", "이미 등록된 이메일입니다."),
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "A002", "이미 사용중인 닉네임입니다."),
@@ -24,6 +25,9 @@ public enum ErrorCode {
     AUTHENTICATION_FAILED(HttpStatus.UNAUTHORIZED, "A007", "인증에 실패했습니다."),
     SIGNUP_RESTRICTED_DELETED_ACCOUNT(HttpStatus.FORBIDDEN, "A007", "탈퇴한 계정은 30일 이후에 재가입이 가능합니다."),
     ROLE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "U010", "해당 권한으로는 접근이 불가합니다."),
+    AUTH_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "A008", "인증 서비스 처리 중 오류가 발생했습니다."),
+    OAUTH_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "A008", "소셜 인증 서비스 처리 중 오류가 발생했습니다."),
+
 
     // JWT
     JWT_SIGNATURE_INVALID(HttpStatus.UNAUTHORIZED, "J001", "유효하지 않은 JWT 서명입니다."),
