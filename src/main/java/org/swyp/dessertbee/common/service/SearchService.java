@@ -15,6 +15,7 @@ import org.swyp.dessertbee.common.entity.UserSearchHistory;
 import org.swyp.dessertbee.common.repository.PopularSearchKeywordRepository;
 import org.swyp.dessertbee.common.repository.UserSearchHistoryRepository;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
@@ -31,6 +32,18 @@ public class SearchService {
     private static final String POPULAR_SEARCH_KEY = "popular_search_keywords";
     private static final String SYNCED_POPULAR_SEARCH_KEY = "synced_popular_search_keywords"; // 동기화된 데이터 저장용
     private static final String POPULAR_SEARCH_UPDATE_TIME = "popular_search_update_time"; // 업데이트 시간
+
+    private static final String SYNC_LOCK_KEY = "sync_lock"; // 동기화 중 여부를 체크하는 Redis 키
+    private static final long SYNC_LOCK_TIMEOUT = 60; // 락 유지 시간 (초)
+
+    public boolean acquireLock(String key, long timeout) {
+        Boolean success = redisTemplate.opsForValue().setIfAbsent(key, "LOCKED", Duration.ofSeconds(timeout));
+        return Boolean.TRUE.equals(success);
+    }
+
+    public void releaseLock(String key) {
+        redisTemplate.delete(key);
+    }
 
     public String removeTrailingSpaces(String input) {
         return input.replaceAll("\\s+$", ""); // 문자열 끝부분의 공백만 제거
@@ -84,6 +97,12 @@ public class SearchService {
             return;
         }
         keyword = keyword.trim();
+
+        // 동기화 중이면 검색어 저장하지 않음
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(SYNC_LOCK_KEY))) {
+            log.info("⏳ 동기화 중이므로 검색어 저장이 제한됩니다.");
+            return;
+        }
 
         redisTemplate.opsForZSet().incrementScore(POPULAR_SEARCH_KEY, keyword, 1);
     }
@@ -208,26 +227,40 @@ public class SearchService {
     public void midnightSyncPopularSearchesToDB() {
         log.info("인기 검색어 백업 및 초기화 시작");
 
-        Set<String> keywords = redisTemplate.opsForZSet().reverseRange(POPULAR_SEARCH_KEY, 0, -1);
-        if (keywords == null || keywords.isEmpty()) {
-            log.info("백업할 인기 검색어 없음");
+        // 락 설정
+        if (!acquireLock(SYNC_LOCK_KEY, SYNC_LOCK_TIMEOUT)) {
+            log.info("이미 동기화가 진행 중이므로 실행하지 않습니다.");
             return;
         }
 
-        for (String keyword : keywords) {
-            Double score = redisTemplate.opsForZSet().score(POPULAR_SEARCH_KEY, keyword);
-            if (score != null) {
-                PopularSearchKeyword existingKeyword = popularSearchKeywordRepository.findByKeyword(keyword)
-                        .orElse(PopularSearchKeyword.create(keyword));
-
-                existingKeyword.incrementCount(score.intValue());
-                popularSearchKeywordRepository.save(existingKeyword);
+        try {
+            Set<String> keywords = redisTemplate.opsForZSet().reverseRange(POPULAR_SEARCH_KEY, 0, -1);
+            if (keywords == null || keywords.isEmpty()) {
+                log.info("백업할 인기 검색어 없음");
+                return;
             }
+
+            for (String keyword : keywords) {
+                Double score = redisTemplate.opsForZSet().score(POPULAR_SEARCH_KEY, keyword);
+                if (score != null) {
+                    PopularSearchKeyword existingKeyword = popularSearchKeywordRepository.findByKeyword(keyword)
+                            .orElse(PopularSearchKeyword.create(keyword));
+
+                    existingKeyword.incrementCount(score.intValue());
+                    popularSearchKeywordRepository.save(existingKeyword);
+                }
+            }
+
+            clearPopularSearchCache();
+
+            log.info("인기 검색어 백업 및 초기화 완료");
+
+        } catch (Exception e) {
+            log.error("인기 검색어 동기화 중 오류 발생, Redis 초기화 중단", e);
+        } finally {
+            // 락 해제
+            releaseLock(SYNC_LOCK_KEY);
         }
-
-        clearPopularSearchCache();
-
-        log.info("인기 검색어 백업 및 초기화 완료");
     }
 
     /**
