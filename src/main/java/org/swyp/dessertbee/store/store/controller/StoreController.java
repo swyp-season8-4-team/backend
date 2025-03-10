@@ -68,6 +68,8 @@ public class StoreController {
             if (user != null) {
                 searchService.saveRecentSearch(user.getId(), searchKeyword);
             }
+            // 인증 여부와 관계없이 인기 검색어 저장
+            searchService.savePopularSearch(searchKeyword);
         }
 
         if (preferenceTagIds != null && !preferenceTagIds.isEmpty()) {
