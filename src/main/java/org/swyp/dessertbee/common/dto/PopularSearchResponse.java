@@ -7,5 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class PopularSearchResponse {
     private String keyword;
+    private int searchCount;
     private int rank;
+    private int difference;
 }

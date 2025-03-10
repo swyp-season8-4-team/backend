@@ -15,11 +15,8 @@ import org.swyp.dessertbee.common.entity.UserSearchHistory;
 import org.swyp.dessertbee.common.repository.PopularSearchKeywordRepository;
 import org.swyp.dessertbee.common.repository.UserSearchHistoryRepository;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.time.Instant;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -32,6 +29,8 @@ public class SearchService {
 
     private static final int MAX_RECENT_SEARCHES = 10;
     private static final String POPULAR_SEARCH_KEY = "popular_search_keywords";
+    private static final String SYNCED_POPULAR_SEARCH_KEY = "synced_popular_search_keywords"; // 동기화된 데이터 저장용
+    private static final String POPULAR_SEARCH_UPDATE_TIME = "popular_search_update_time"; // 업데이트 시간
 
     public String removeTrailingSpaces(String input) {
         return input.replaceAll("\\s+$", ""); // 문자열 끝부분의 공백만 제거
@@ -77,58 +76,172 @@ public class SearchService {
                 .toList();
     }
 
-
-    /** 인기 검색어 저장 (모든 사용자) */
+    /**
+     * 검색어 저장 (Redis)
+     */
     public void savePopularSearch(String keyword) {
-        if (keyword == null || keyword.isBlank()) { // 공백 체크
+        if (keyword == null || keyword.isBlank()) {
             return;
         }
+        keyword = keyword.trim();
 
-        keyword = keyword.trim(); // 공백 제거
         redisTemplate.opsForZSet().incrementScore(POPULAR_SEARCH_KEY, keyword, 1);
     }
 
-
-    /** 인기 검색어 가져오기 */
-    public Set<String> getPopularSearches(int limit) {
+    /**
+     * 실시간 인기 검색어 조회 (이전 검색 횟수 차이 포함)
+     */
+    public Map<String, Object> getPopularSearchesWithDifference(int limit) {
         ZSetOperations<String, String> zSetOps = redisTemplate.opsForZSet();
-        return zSetOps.reverseRange(POPULAR_SEARCH_KEY, 0, limit - 1); // 상위 limit개 인기 검색어 가져오기
+
+        // 현재 인기 검색어 순위 조회 (검색 횟수 포함)
+        Set<ZSetOperations.TypedTuple<String>> currentTopSearches = zSetOps.reverseRangeWithScores(POPULAR_SEARCH_KEY, 0, limit - 1);
+        Set<ZSetOperations.TypedTuple<String>> syncedTopSearches = zSetOps.reverseRangeWithScores(SYNCED_POPULAR_SEARCH_KEY, 0, limit - 1);
+
+        log.info("현재 인기 검색어 데이터 (POPULAR_SEARCH_KEY): {}", currentTopSearches);
+        log.info("이전 인기 검색어 데이터 (SYNCED_POPULAR_SEARCH_KEY): {}", syncedTopSearches);
+
+        // 이전 인기 검색어 목록을 리스트로 변환하여 순위 매핑
+        Map<String, Integer> previousRanks = new HashMap<>();
+        if (syncedTopSearches != null) {
+            List<String> previousRankList = syncedTopSearches.stream()
+                    .map(ZSetOperations.TypedTuple::getValue)
+                    .toList();
+            for (int i = 0; i < previousRankList.size(); i++) {
+                previousRanks.put(previousRankList.get(i), i + 1); // 1위부터 시작
+            }
+        }
+
+        List<PopularSearchResponse> responseList = new ArrayList<>();
+        if (currentTopSearches != null) {
+            List<String> currentRankList = currentTopSearches.stream()
+                    .map(ZSetOperations.TypedTuple::getValue)
+                    .toList();
+
+            for (int i = 0; i < currentRankList.size(); i++) {
+                String keyword = currentRankList.get(i);
+                int currentRank = i + 1; // 1위부터 시작
+                int previousRank = previousRanks.getOrDefault(keyword, 0); // 이전 순위 (없으면 0)
+                int difference = (previousRank == 0) ? 0 : previousRank - currentRank; // 순위 변동량
+
+                // 현재 검색 횟수 가져오기
+                Double score = zSetOps.score(POPULAR_SEARCH_KEY, keyword);
+                int searchCount = (score != null) ? score.intValue() : 0;
+
+                responseList.add(new PopularSearchResponse(keyword, searchCount, currentRank, difference));
+            }
+        }
+
+        // Redis에서 마지막 업데이트 시간 가져오기
+        String lastUpdatedTime = redisTemplate.opsForValue().get(POPULAR_SEARCH_UPDATE_TIME);
+        if (lastUpdatedTime == null) {
+            lastUpdatedTime = Instant.now().toString(); // 기본값 설정
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("lastUpdatedTime", lastUpdatedTime);
+        response.put("searches", responseList);
+
+        return response;
     }
 
-    public List<PopularSearchResponse> getPopularSearchesFromDB(int limit) {
-        return popularSearchKeywordRepository.findTopKeywords(limit)
-                .stream()
-                .map(p -> new PopularSearchResponse(p.getKeyword(), p.getSearchCount()))
-                .collect(Collectors.toList());
-    }
-
-    /** 인기 검색어 동기화 (Redis → MySQL) */
-    @Scheduled(fixedRate = 60000) // 1분마다 실행
+    /**
+     * 1분마다 MySQL에 Redis 데이터 동기화 (초기화 X)
+     */
+    @Scheduled(fixedRate = 60000)
     @Transactional
     public void syncPopularSearchesToDB() {
-        log.info("인기 검색어 동기화 시작");
+        log.info("실시간 인기 검색어 동기화 시작");
 
-        Set<String> keywords = redisTemplate.opsForZSet().reverseRange(POPULAR_SEARCH_KEY, 0, 49);
+        ZSetOperations<String, String> zSetOps = redisTemplate.opsForZSet();
+        Set<ZSetOperations.TypedTuple<String>> topKeywords = zSetOps.reverseRangeWithScores(POPULAR_SEARCH_KEY, 0, 49);
+
+        if (topKeywords == null || topKeywords.isEmpty()) {
+            log.info("Redis에 저장된 검색어 없음");
+            return;
+        }
+
+        // 이전 동기화된 Redis 값 가져오기
+        Set<ZSetOperations.TypedTuple<String>> syncedTopKeywords = zSetOps.reverseRangeWithScores(SYNCED_POPULAR_SEARCH_KEY, 0, 49);
+        Map<String, Integer> syncedCounts = new HashMap<>();
+
+        if (syncedTopKeywords != null) {
+            for (ZSetOperations.TypedTuple<String> tuple : syncedTopKeywords) {
+                syncedCounts.put(tuple.getValue(), tuple.getScore().intValue());
+            }
+        }
+
+        for (ZSetOperations.TypedTuple<String> tuple : topKeywords) {
+            String keyword = tuple.getValue();
+            int redisCount = tuple.getScore().intValue();
+
+            // MySQL에서 기존 searchCount 가져오기
+            int dbCount = popularSearchKeywordRepository.findByKeyword(keyword)
+                    .map(PopularSearchKeyword::getSearchCount)
+                    .orElse(0);
+
+            int increment = Math.max(0, redisCount - dbCount);
+
+            if (increment > 0) {
+                PopularSearchKeyword existingKeyword = popularSearchKeywordRepository.findByKeyword(keyword)
+                        .orElse(PopularSearchKeyword.create(keyword));
+
+                existingKeyword.incrementCount(increment);
+                popularSearchKeywordRepository.save(existingKeyword);
+            }
+
+            // 현재 Redis 값 저장
+            zSetOps.add(SYNCED_POPULAR_SEARCH_KEY, keyword, redisCount);
+        }
+
+        // 최신 업데이트 시간 저장
+        redisTemplate.opsForValue().set(POPULAR_SEARCH_UPDATE_TIME, Instant.now().toString());
+
+        log.info("✅ 실시간 인기 검색어 동기화 완료");
+    }
+
+    /**
+     * 매일 자정 MySQL로 데이터 이전 후 Redis 초기화
+     */
+    @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
+    @Transactional
+    public void midnightSyncPopularSearchesToDB() {
+        log.info("인기 검색어 백업 및 초기화 시작");
+
+        Set<String> keywords = redisTemplate.opsForZSet().reverseRange(POPULAR_SEARCH_KEY, 0, -1);
         if (keywords == null || keywords.isEmpty()) {
-            log.info("Redis에 인기 검색어 없음");
+            log.info("백업할 인기 검색어 없음");
             return;
         }
 
         for (String keyword : keywords) {
             Double score = redisTemplate.opsForZSet().score(POPULAR_SEARCH_KEY, keyword);
             if (score != null) {
-                log.info("MySQL 업데이트: " + keyword + " (" + score.intValue() + ")");
-
-                // 조회 후 저장
                 PopularSearchKeyword existingKeyword = popularSearchKeywordRepository.findByKeyword(keyword)
                         .orElse(PopularSearchKeyword.create(keyword));
 
-                existingKeyword.incrementCount(score.intValue()); // 기존 값 증가
+                existingKeyword.incrementCount(score.intValue());
                 popularSearchKeywordRepository.save(existingKeyword);
             }
         }
 
-        redisTemplate.opsForZSet().remove(POPULAR_SEARCH_KEY, keywords.toArray());
-        log.info("인기 검색어 동기화 완료");
+        clearPopularSearchCache();
+
+        log.info("인기 검색어 백업 및 초기화 완료");
     }
+
+    /**
+     * Redis 인기 검색어 데이터 초기화 (테스트용)
+     */
+    @Transactional
+    public void clearPopularSearchCache() {
+        log.info("🔥 Redis 인기 검색어 데이터 초기화 실행");
+
+        redisTemplate.delete(POPULAR_SEARCH_KEY);
+        redisTemplate.delete(SYNCED_POPULAR_SEARCH_KEY);
+        redisTemplate.delete(POPULAR_SEARCH_UPDATE_TIME);
+
+        log.info("✅ Redis 데이터가 성공적으로 초기화되었습니다.");
+    }
+
 }

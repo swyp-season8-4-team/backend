@@ -28,7 +28,7 @@ public class PopularSearchKeyword {
     public static PopularSearchKeyword create(String keyword) {
         return PopularSearchKeyword.builder()
                 .keyword(keyword)
-                .searchCount(1)
+                .searchCount(0)
                 .build();
     }
 }

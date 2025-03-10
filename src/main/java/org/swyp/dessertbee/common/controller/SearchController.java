@@ -12,9 +12,8 @@ import org.swyp.dessertbee.common.service.SearchService;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.service.UserService;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/search")
@@ -36,12 +35,20 @@ public class SearchController {
         return ResponseEntity.ok(recentSearches);
     }
 
-    /** 실시간 인기 검색어 조회 API */
+    /** 실시간 인기 검색어 조회 API (이전 검색 횟수 차이 + 업데이트 시간 포함) */
     @GetMapping("/popular")
-    public ResponseEntity<List<PopularSearchResponse>> getPopularSearches(
+    public ResponseEntity<Map<String, Object>> getPopularSearches(
             @RequestParam(defaultValue = "10") int limit
     ) {
-        List<PopularSearchResponse> response = searchService.getPopularSearchesFromDB(limit);
+        Map<String, Object> response = searchService.getPopularSearchesWithDifference(limit);
         return ResponseEntity.ok(response);
     }
+
+    /** Redis 인기 검색어 초기화 API (테스트용) */
+    @GetMapping("/popular/clear")
+    public ResponseEntity<String> clearPopularSearchCache() {
+        searchService.clearPopularSearchCache();
+        return ResponseEntity.ok("✅ Redis 캐싱된 인기 검색어 데이터가 초기화되었습니다.");
+    }
+
 }
