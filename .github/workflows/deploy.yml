@@ -2,11 +2,12 @@ name: Deploy DessertBee Application
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [ main, dev, release ]
   workflow_dispatch:
 
 jobs:
   build-and-deploy:
+    # 작업 실행 환경 : 깃허브에서 빌드하고 자르파일만 넣기 위함입니다~
     runs-on: ubuntu-latest
 
     steps:
