@@ -45,4 +45,15 @@ public class ReviewException {
 
         }
     }
+
+    public static class ReviewReplyNotFoundException extends BusinessException {
+
+        public ReviewReplyNotFoundException() {
+            super(ErrorCode.REVIEW_REPLY_NOT_FOUND);
+        }
+
+        public ReviewReplyNotFoundException(String message) {
+            super(ErrorCode.REVIEW_REPLY_NOT_FOUND, message);
+        }
+    }
 }

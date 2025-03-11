@@ -163,7 +163,7 @@ public class MateReplyService {
 
         } catch (Exception e) {
 
-            System.out.println("❌ 디저트메이트 멤버 탈퇴 중 오류 발생: " + e.getMessage());
+            System.out.println("❌ 디저트메이트 댓글 삭제 중 오류 발생: " + e.getMessage());
             throw new RuntimeException("디저트메이트 댓글 삭제 실패: " + e.getMessage(), e);
         }
     }
