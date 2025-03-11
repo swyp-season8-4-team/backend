@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${PROD_DB_URL}
+    username: ${PROD_DB_USERNAME}
+    password: ${PROD_DB_PASSWORD}
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            redirect-uri: ${KAKAO_REDIRECT_URI_PROD}
+#  graphql:
+#    cors:
+#      allowed-origins: "https://desserbee.com,https://www.desserbee.com,http://desserbee.com,http://www.desserbee.com,https://api.desserbee.com,https://frontend-desserbee-web-git-vercel-test-eepyzs-projects.vercel.app/"
+app:    # 추가
+  client:    # 추가
+    redirect-url: "https://desserbee.com"    # 추가

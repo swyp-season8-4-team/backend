@@ -2,7 +2,7 @@ name: Deploy DesserBee Application
 
 on:
   push:
-    branches: [ main, dev ]  # main 또는 dev 브랜치에 푸시될 때만 실행
+    branches: [ main, release ]  # main 또는 dev 브랜치에 푸시될 때만 실행
   workflow_dispatch:
 
 jobs:
@@ -19,27 +19,79 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
           cache: 'gradle'
+
+      # 브랜치에 따라 환경 변수 설정
+      - name: Set environment variables
+        id: env-vars
+        run: |
+          if [[ $GITHUB_REF == "refs/heads/release" ]]; then
+            echo "DEPLOY_HOST=${{ secrets.RELEASE_EC2_HOST }}" >> $GITHUB_ENV
+            echo "SPRING_PROFILES_ACTIVE=release" >> $GITHUB_ENV
+            echo "DB_URL=${{ secrets.RELEASE_DB_URL }}" >> $GITHUB_ENV
+            echo "DB_USERNAME=${{ secrets.RELEASE_DB_USERNAME }}" >> $GITHUB_ENV
+            echo "DB_PASSWORD=${{ secrets.RELEASE_DB_PASSWORD }}" >> $GITHUB_ENV
+            echo "KAKAO_REDIRECT_URI=${{ secrets.KAKAO_REDIRECT_URI_PREVIEW }}" >> $GITHUB_ENV
+            echo "SERVER_PORT=8080" >> $GITHUB_ENV
+          else
+            echo "DEPLOY_HOST=${{ secrets.EC2_HOST }}" >> $GITHUB_ENV
+            echo "SPRING_PROFILES_ACTIVE=prod" >> $GITHUB_ENV
+            echo "DB_URL=${{ secrets.MAIN_DB_URL }}" >> $GITHUB_ENV
+            echo "DB_USERNAME=${{ secrets.MAIN_DB_USERNAME }}" >> $GITHUB_ENV
+            echo "DB_PASSWORD=${{ secrets.MAIN_DB_PASSWORD }}" >> $GITHUB_ENV
+            echo "KAKAO_REDIRECT_URI=${{ secrets.KAKAO_REDIRECT_URI_PROD }}" >> $GITHUB_ENV
+            echo "SERVER_PORT=8080" >> $GITHUB_ENV
+          fi
+
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
       - name: Build with Gradle
         run: ./gradlew build -x test
 
+      # 환경 변수 파일 생성
+      - name: Create environment file
+        run: |
+          cat > .env << EOL
+          SPRING_PROFILES_ACTIVE=${{ env.SPRING_PROFILES_ACTIVE }}
+          DB_URL=${{ env.DB_URL }}
+          DB_USERNAME=${{ env.DB_USERNAME }}
+          DB_PASSWORD=${{ env.DB_PASSWORD }}
+          SERVER_PORT=${{ env.SERVER_PORT }}
+          JWT_SECRET_ACCESS=${{ secrets.JWT_SECRET_ACCESS }}
+          JWT_SECRET_REFRESH=${{ secrets.JWT_SECRET_REFRESH }}
+          KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
+          KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
+          S3_ACCESS_KEY=${{ secrets.S3_ACCESS_KEY }}
+          S3_BASE_URL=${{ secrets.S3_BASE_URL }}
+          S3_SECRET_KEY=${{ secrets.S3_SECRET_KEY }}
+          GOOGLE_MAIL_USERNAME=${{ secrets.GOOGLE_MAIL_USERNAME }}
+          GOOGLE_MAIL_APP_PASSWORD=${{ secrets.GOOGLE_MAIL_APP_PASSWORD }}
+          EOL
+
       # 빌드된 자르 파일을 EC2 인스턴스로 전송
-      - name: Deploy to EC2
+      - name: Deploy JAR to EC2
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host: ${{ env.DEPLOY_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           source: "build/libs/dessertBee-0.0.1-SNAPSHOT.jar"
           target: "/home/ec2-user"
           strip_components: 2  # 경로에서 처음 2개 컴포넌트(build/libs/) 제거하고 파일만 전송
 
+      - name: Deploy ENV file to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ env.DEPLOY_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          source: ".env"
+          target: "/home/ec2-user"
+
       - name: Execute deployment commands
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host: ${{ env.DEPLOY_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: | 
@@ -47,12 +99,68 @@ jobs:
             echo "Stopping application..."
             sudo systemctl stop myapp.service
             
+            # Java 설치 확인 및 설치
+            if ! command -v java &> /dev/null; then
+            echo "Java not found. Installing Java 17..."
+            sudo amazon-linux-extras install java-openjdk17 -y || sudo yum install java-17-amazon-corretto -y
+            java -version
+            fi
+            
             # 필요한 디렉토리 구조 확인 및 생성
-            if [ ! -d "/home/ec2-user/backend" ]; then
-              echo "Creating backend directory..."
-              mkdir -p /home/ec2-user/backend
+            echo "Creating required directories..."
+            mkdir -p /home/ec2-user/backend/logs
+            mkdir -p /home/ec2-user/backend/backup
+            
+            # 기존 배포가 있을 경우 백업.
+            if [ -f "/home/ec2-user/backend/app.jar" ]; then
+              echo "Backing up existing deployment..."
+              BACKUP_TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+              cp /home/ec2-user/backend/app.jar /home/ec2-user/backend/backup/app_${BACKUP_TIMESTAMP}.jar
+              if [ -f "/home/ec2-user/backend/.env" ]; then
+                cp /home/ec2-user/backend/.env /home/ec2-user/backend/backup/.env_${BACKUP_TIMESTAMP}
+              fi
             fi
                         
+            # .env 파일을 백엔드 디렉토리로 이동
+            echo "Moving .env file to backend directory..."
+            mv /home/ec2-user/.env /home/ec2-user/backend/.env
+            
+            # JAR 파일 이동 및 이름 변경
+            echo "Moving JAR file to backend directory..."
+            mv /home/ec2-user/dessertBee-0.0.1-SNAPSHOT.jar /home/ec2-user/backend/app.jar
+               
+            # 파일 권한 설정
+            echo "Setting file permissions..."
+            chmod 750 /home/ec2-user/backend/app.jar
+            chmod 640 /home/ec2-user/backend/.env
+            sudo chown -R ec2-user:ec2-user /home/ec2-user/backend
+            
+            # systemd 서비스 파일 생성 또는 업데이트 (EnvironmentFile 설정 포함)
+            if [ ! -f "/etc/systemd/system/myapp.service" ]; then
+              echo "Creating systemd service file..."
+              cat > /tmp/myapp.service << 'EOL'
+            [Unit]
+            Description=DesserBee Spring Boot Application
+            After=network.target
+
+            [Service]
+            User=ec2-user
+            WorkingDirectory=/home/ec2-user/backend
+            EnvironmentFile=/home/ec2-user/backend/.env
+            ExecStart=/usr/bin/java -Xms512m -Xmx1024m -jar app.jar
+            SuccessExitStatus=143
+            TimeoutStopSec=10
+            Restart=on-failure
+            RestartSec=5
+            StandardOutput=append:/home/ec2-user/backend/logs/myapp.log
+            StandardError=append:/home/ec2-user/backend/logs/myapp-error.log
+  
+            [Install]
+            WantedBy=multi-user.target
+            EOL
+              sudo mv /tmp/myapp.service /etc/systemd/system/
+            fi
+            
             # systemd 설정 변경 감지를 위한 데몬 리로드
             echo "Reloading systemd daemon..."
             sudo systemctl daemon-reload
@@ -65,11 +173,48 @@ jobs:
             echo "Checking service status..."
             sudo systemctl status myapp.service
             
+            # 애플리케이션 시작 확인 (최대 30초 대기)
+            echo "Waiting for application to start..."
+            MAX_WAIT=30
+            COUNTER=0
+            until curl -s http://localhost:8080/actuator/health &> /dev/null || [ $COUNTER -eq $MAX_WAIT ]; do
+              echo "Waiting for application to start... ($COUNTER/$MAX_WAIT)"
+              sleep 1
+              ((COUNTER++))
+            done
+            
             # 시스템 부팅 시 서비스 자동 시작 설정
+            if [ $COUNTER -lt $MAX_WAIT ]; then
+              echo "Application started successfully!"
+            else
+              echo "Warning: Application start timeout reached. Check logs for issues."
+              tail -n 50 /home/ec2-user/backend/logs/myapp.log
+            fi
+            
             if ! sudo systemctl is-enabled myapp.service; then
               echo "Enabling service to start on boot..."
               sudo systemctl enable myapp.service
             fi
             
-            # 배포 완료 메시지와 타임스탬프 출력
-            echo "Deployment completed at $(date)"
+            # 로그 순환 설정
+            if [ ! -f "/etc/logrotate.d/desserbee" ]; then
+              echo "Setting up log rotation..."
+              cat > /tmp/desserbee-logrotate << 'EOL'
+            /home/ec2-user/backend/logs/*.log {
+              daily # 매일 수행
+              rotate 7 # 7개의 순환된 로그 파일 유지 (7일치) 
+              compress # 오래된 로그 파일 압축
+              missingok # 로그 파일이 없어도 에러 발생하지 않음
+              notifempty # 빈 로그 파일은 순환하지 않음
+              create 0640 ec2-user ec2-user # 새 로그 파일 생성 시 권한과 소유자 설정
+            }
+            EOL
+              sudo mv /tmp/desserbee-logrotate /etc/logrotate.d/desserbee
+            fi
+  
+            # 배포 완료 메시지 출력
+            if [[ "$GITHUB_REF" == "refs/heads/release" ]]; then
+              echo "Release environment deployment completed at $(date)"
+            else
+              echo "Production environment deployment completed at $(date)"
+            fi
