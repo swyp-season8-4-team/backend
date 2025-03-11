@@ -1,18 +1,30 @@
+# 릴리스(스테이징) 환경 특정 설정
+
 spring:
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${PROD_DB_URL}
-    username: ${PROD_DB_USERNAME}
-    password: ${PROD_DB_PASSWORD}
-  security:
-    oauth2:
-      client:
-        registration:
-          kakao:
-            redirect-uri: ${KAKAO_REDIRECT_URI_PROD}
-#  graphql:
-#    cors:
-#      allowed-origins: "https://desserbee.com,https://www.desserbee.com,http://desserbee.com,http://www.desserbee.com,https://api.desserbee.com,https://frontend-desserbee-web-git-vercel-test-eepyzs-projects.vercel.app/"
-app:    # 추가
-  client:    # 추가
-    redirect-url: "https://desserbee.com"    # 추가
+  # 스테이징 환경에서는 스키마 검증만 수행
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+  
+  # 개발 도구 비활성화
+  devtools:
+    restart:
+      enabled: false
+    livereload:
+      enabled: false
+
+logging:
+  level:
+    root: info
+    org:
+      hibernate:
+        SQL: info  # SQL 로깅은 info 레벨
+    com:
+      dessertbee: debug  # 애플리케이션 로그는 debug
+# 스웨거도 활서이ㅓ하ㅗ
+springdoc:
+  swagger-ui:
+    enabled: true
