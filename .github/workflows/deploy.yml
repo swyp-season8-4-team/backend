@@ -25,7 +25,7 @@ jobs:
         id: env-vars
         run: |
           if [[ $GITHUB_REF == "refs/heads/release" ]]; then
-            echo "DEPLOY_HOST=${{ secrets.RELEASE_EC2_HOST }}" >> $GITHUB_ENV
+            echo "DEPLOY_HOST=${{ secrets.EC2_RELEASE_HOST }}" >> $GITHUB_ENV
             echo "SPRING_PROFILES_ACTIVE=release" >> $GITHUB_ENV
             echo "DB_URL=${{ secrets.RELEASE_DB_URL }}" >> $GITHUB_ENV
             echo "DB_USERNAME=${{ secrets.RELEASE_DB_USERNAME }}" >> $GITHUB_ENV
