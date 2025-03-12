@@ -159,7 +159,7 @@ jobs:
             [Install]
             WantedBy=multi-user.target
             EOL
-              sudo mv /tmp/myapp.service /etc/systemd/system/
+              sudo mv /tmp/myapp.service /etc/systemd/system/myapp.service
             fi
             
             # systemd 설정 변경 감지를 위한 데몬 리로드
