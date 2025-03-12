@@ -24,7 +24,7 @@ logging:
         SQL: info  # SQL 로깅은 info 레벨
     com:
       dessertbee: debug  # 애플리케이션 로그는 debug
-# 스웨거도 활서이ㅓ하ㅗ
+# 스웨거도 활성화
 springdoc:
   swagger-ui:
     enabled: true
