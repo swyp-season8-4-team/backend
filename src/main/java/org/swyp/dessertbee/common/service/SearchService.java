@@ -92,13 +92,15 @@ public class SearchService {
     }
 
     @Transactional
-    public void deleteRecentSearch(Long userId, Long searchId) {
-        searchHistoryRepository.deleteByUserIdAndId(userId, searchId);
+    public boolean deleteRecentSearch(Long userId, Long searchId) {
+        int deletedCount = searchHistoryRepository.deleteByUserIdAndId(userId, searchId);
+        return deletedCount > 0;
     }
 
     @Transactional
-    public void deleteAllRecentSearches(Long userId) {
-        searchHistoryRepository.deleteByUserId(userId);
+    public boolean deleteAllRecentSearches(Long userId) {
+        int deletedCount = searchHistoryRepository.deleteByUserId(userId);
+        return deletedCount > 0;
     }
 
     /**

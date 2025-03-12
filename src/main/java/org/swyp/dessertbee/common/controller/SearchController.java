@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.common.controller;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -7,6 +8,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.common.dto.PopularSearchResponse;
 import org.swyp.dessertbee.common.dto.UserSearchHistoryDto;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.SearchService;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.service.UserService;
@@ -38,7 +41,11 @@ public class SearchController {
     public ResponseEntity<Void> deleteRecentSearch(@PathVariable Long searchId) {
         UserEntity user = userService.getCurrentUser();
 
-        searchService.deleteRecentSearch(user.getId(), searchId);
+        boolean deleted = searchService.deleteRecentSearch(user.getId(), searchId);
+        if (!deleted) {
+            throw new BusinessException(ErrorCode.SEARCH_KEYWORD_NOT_FOUND);
+        }
+
         return ResponseEntity.noContent().build();
     }
 
@@ -48,7 +55,11 @@ public class SearchController {
     public ResponseEntity<Void> deleteAllRecentSearches() {
         UserEntity user = userService.getCurrentUser();
 
-        searchService.deleteAllRecentSearches(user.getId());
+        boolean deleted = searchService.deleteAllRecentSearches(user.getId());
+        if (!deleted) {
+            throw new BusinessException(ErrorCode.SEARCH_KEYWORD_DELETE_ERROR);
+        }
+
         return ResponseEntity.noContent().build();
     }
 
