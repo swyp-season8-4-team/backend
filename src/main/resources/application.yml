@@ -63,10 +63,6 @@ spring:
           starttls:
             enable: true
 
-  data:
-    redis:
-      client-type: jedis
-
 logging:
   level:
     org:
