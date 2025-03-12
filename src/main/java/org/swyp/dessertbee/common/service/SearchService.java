@@ -10,6 +10,7 @@ import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.swyp.dessertbee.common.dto.PopularSearchResponse;
+import org.swyp.dessertbee.common.dto.UserSearchHistoryDto;
 import org.swyp.dessertbee.common.entity.PopularSearchKeyword;
 import org.swyp.dessertbee.common.entity.UserSearchHistory;
 import org.swyp.dessertbee.common.repository.PopularSearchKeywordRepository;
@@ -79,15 +80,27 @@ public class SearchService {
     }
 
     /** 최근 검색어 조회 */
-    public List<String> getRecentSearches(Long userId) {
+    public List<UserSearchHistoryDto> getRecentSearches(Long userId) {
         if (userId == null) {
             return Collections.emptyList(); // 로그인되지 않은 경우 빈 리스트 반환
         }
 
         return searchHistoryRepository.findTop10ByUserIdOrderByCreatedAtDesc(userId)
                 .stream()
-                .map(UserSearchHistory::getKeyword)
+                .map(UserSearchHistoryDto::fromEntity)
                 .toList();
+    }
+
+    @Transactional
+    public boolean deleteRecentSearch(Long userId, Long searchId) {
+        int deletedCount = searchHistoryRepository.deleteByUserIdAndId(userId, searchId);
+        return deletedCount > 0;
+    }
+
+    @Transactional
+    public boolean deleteAllRecentSearches(Long userId) {
+        int deletedCount = searchHistoryRepository.deleteByUserId(userId);
+        return deletedCount > 0;
     }
 
     /**

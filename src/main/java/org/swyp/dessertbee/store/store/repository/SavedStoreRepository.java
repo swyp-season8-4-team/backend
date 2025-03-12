@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.swyp.dessertbee.store.store.dto.response.StoreListLocationResponse;
 import org.swyp.dessertbee.store.store.entity.SavedStore;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.entity.UserStoreList;
@@ -16,6 +17,17 @@ import java.util.Optional;
 public interface SavedStoreRepository extends JpaRepository<SavedStore, Long> {
     List<SavedStore> findByUserStoreList(UserStoreList userStoreList);
     Optional<SavedStore> findByUserStoreListAndStore(UserStoreList userStoreList, Store store);
+
+    @Query("""
+        SELECT new org.swyp.dessertbee.store.store.dto.response.StoreListLocationResponse(
+            usl.id, usl.iconColorId, s.storeId, s.name, s.latitude, s.longitude
+        )
+        FROM SavedStore ss
+        JOIN ss.userStoreList usl
+        JOIN ss.store s
+        WHERE usl.id = :listId
+    """)
+    List<StoreListLocationResponse> findStoresByListId(Long listId);
 
     /** 여러 저장 리스트에 포함된 모든 가게 조회 */
     List<SavedStore> findByUserStoreListIn(List<UserStoreList> userStoreLists);

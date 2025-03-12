@@ -7,10 +7,8 @@ import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
-import org.swyp.dessertbee.preference.entity.PreferenceEntity;
-import org.swyp.dessertbee.preference.entity.UserPreferenceEntity;
-import org.swyp.dessertbee.preference.repository.PreferenceRepository;
 import org.swyp.dessertbee.store.store.dto.response.SavedStoreResponse;
+import org.swyp.dessertbee.store.store.dto.response.StoreListLocationResponse;
 import org.swyp.dessertbee.store.store.dto.response.UserStoreListResponse;
 import org.swyp.dessertbee.store.store.dto.response.UserStoreListSimpleResponse;
 import org.swyp.dessertbee.store.store.entity.SavedStore;
@@ -173,9 +171,16 @@ public class UserStoreService {
                 list.getListName(),
                 store.getName(),
                 store.getAddress(),
+                store.getLatitude(),
+                store.getLongitude(),
                 imageService.getImagesByTypeAndId(ImageType.STORE, store.getStoreId()),
                 savedStore.getUserPreferences()
         );
+    }
+
+    /** 리스트별 저장된 가게들의 위도, 경도 조회 */
+    public List<StoreListLocationResponse> getStoresByListId(Long listId) {
+        return savedStoreRepository.findStoresByListId(listId);
     }
 
     /** 리스트별 저장된 가게 조회 */
@@ -193,6 +198,8 @@ public class UserStoreService {
                         .listName(list.getListName())
                         .storeName(savedStore.getStore().getName())
                         .storeAddress(savedStore.getStore().getAddress())
+                        .latitude(savedStore.getStore().getLatitude())
+                        .longitude(savedStore.getStore().getLongitude())
                         .imageUrls(imageService.getImagesByTypeAndId(ImageType.STORE, savedStore.getStore().getStoreId()))
                         .userPreferences(savedStore.getUserPreferences())
                         .build())
