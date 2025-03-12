@@ -36,6 +36,24 @@ public class S3Service {
 
         String fileName = folder + UUID.randomUUID() + "-" + file.getOriginalFilename();
 
+        // 파일의 Content-Type 결정 (MultipartFile의 getContentType() 값이 없으면 확장자로 판단)
+        String contentType = file.getContentType();
+        if (contentType == null || contentType.isEmpty()) {
+            String originalName = file.getOriginalFilename();
+            if (originalName != null) {
+                String lowerName = originalName.toLowerCase();
+                if (lowerName.endsWith(".png")) {
+                    contentType = "image/png";
+                } else if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg")) {
+                    contentType = "image/jpeg";
+                }  else {
+                    contentType = "application/octet-stream";
+                }
+            } else {
+                contentType = "application/octet-stream";
+            }
+        }
+
         try {
             s3Client.putObject(
                     PutObjectRequest.builder()
