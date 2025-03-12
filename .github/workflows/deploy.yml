@@ -1,4 +1,4 @@
-name: Deploy DessertBee Application
+name: Deploy DesserBee Application
 
 on:
   push:
