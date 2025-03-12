@@ -121,10 +121,10 @@ public class MateExceptions {
      * */
     public static class NotCommentAuthorException extends BusinessException {
         public NotCommentAuthorException(){
-            super(ErrorCode.MATE_REPLY_NOT_AUTHOR);
+            super(ErrorCode.REPLY_NOT_AUTHOR);
         }
         public NotCommentAuthorException(String message) {
-            super(ErrorCode.MATE_REPLY_NOT_AUTHOR, message);
+            super(ErrorCode.REPLY_NOT_AUTHOR, message);
         }
     }
 

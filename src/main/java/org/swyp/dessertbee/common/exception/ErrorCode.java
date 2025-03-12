@@ -94,7 +94,7 @@ public enum ErrorCode {
     MATE_PERMISSION_DENIED(HttpStatus.FORBIDDEN, "M008","메이트 관리자 권한이 없습니다."),
     MATE_REPLY_NOT_FOUND(HttpStatus.NOT_FOUND, "M009" , "존재하지 않는 댓글입니다."),
     MATE_MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "M010", "디저트메이트 멤버가 아닙니다."),
-    MATE_REPLY_NOT_AUTHOR(HttpStatus.FORBIDDEN, "M011", "댓글 작성자가 아닙니다."),
+    REPLY_NOT_AUTHOR(HttpStatus.FORBIDDEN, "M011", "댓글 작성자가 아닙니다."),
     SAVED_STORE_DUPLICATION(HttpStatus.CONFLICT, "M012", "이미 저장된 디저트메이트입니다."),
     SAVED_MATE_NOT_FOUND(HttpStatus.NOT_FOUND,"M013" , "저장하지 않은 디저트메이트입니다."),
     MATE_RECRUIT_DONE(HttpStatus.FORBIDDEN,"M014" , "해당 디저트메이트 모집 마감입니다."),

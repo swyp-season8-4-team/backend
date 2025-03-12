@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.Image;
 import org.swyp.dessertbee.common.entity.ImageType;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.repository.ImageRepository;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
@@ -21,7 +23,6 @@ import org.swyp.dessertbee.community.review.entity.Review;
 import org.swyp.dessertbee.community.review.entity.ReviewContent;
 import org.swyp.dessertbee.community.review.entity.ReviewStatistics;
 import org.swyp.dessertbee.community.review.entity.SavedReview;
-import org.swyp.dessertbee.community.review.exception.ReviewException.*;
 import org.swyp.dessertbee.community.review.repository.ReviewContentRepository;
 import org.swyp.dessertbee.community.review.repository.ReviewRepository;
 import org.swyp.dessertbee.community.review.repository.ReviewStatisticsRepository;
@@ -59,7 +60,7 @@ public class ReviewService {
 
         Long userId = userRepository.findIdByUserUuid(request.getUserUuid());
         if (userId == null) {
-            throw new UserNotFoundExcption("존재하지 않는 유저입니다.");
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
         // 장소명으로 storeId 조회
@@ -88,7 +89,7 @@ public class ReviewService {
         // 이미지 콘텐츠가 있다면, 제공된 이미지 파일 수와 인덱스 일치를 검증합니다.
         if (maxImageIndex != -1) {
             if (reviewImages == null || reviewImages.size() != (maxImageIndex + 1)) {
-                throw new ImageIndexNotFoundException("요청된 이미지 인덱스가 이미지 파일 수보다 적습니다.");
+                throw new BusinessException(ErrorCode.IMAGE_INDEX_NOT_FOUND);
             }
         }
 
@@ -141,7 +142,7 @@ public class ReviewService {
         UserEntity user = userService.getCurrentUser();
 
         Review review = reviewRepository.findByReviewUuid(reviewUuid)
-                .orElseThrow(() -> new ReviewNotFoundException("존재하지 않는 리뷰입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.COMMUNITY_REVIEW_NOT_FOUND));
 
         // 현재 접속해 있는 사용자의 user 정보 (user가 null일 수 있으므로 null 체크)
         Long currentUserId = (user != null) ? user.getId() : null;
@@ -185,8 +186,8 @@ public class ReviewService {
     public void updateReview(UUID reviewUuid, ReviewUpdateRequest request, List<MultipartFile> reviewImages) {
 
         // 리뷰 조회 및 기본 정보 업데이트
-        Review review = reviewRepository.findByReviewUuidAndDeletedAtIsNull(reviewUuid)
-                .orElseThrow(() -> new ReviewNotFoundException("존재하지 않는 리뷰입니다."));
+        Review review = reviewRepository.findByReviewUuid(reviewUuid)
+                .orElseThrow(() -> new BusinessException(ErrorCode.COMMUNITY_REVIEW_NOT_FOUND));
 
         Store store = storeRepository.findByName(request.getPlace().getPlaceName());
 
@@ -212,7 +213,7 @@ public class ReviewService {
         if (deleteIds != null && !deleteIds.isEmpty()) {
             // 중복 체크: HashSet에 담아서 크기가 다르면 중복이 존재하는 것임
             if (deleteIds.size() != new HashSet<>(deleteIds).size()) {
-                throw new deleteImageDuplicationFoundException("중복된 이미지 삭제 ID가 존재합니다.");
+                throw new BusinessException(ErrorCode.COMMUNITY_REVIEW_NOT_FOUND);
             }
         }
 
@@ -265,11 +266,11 @@ public class ReviewService {
      * 커뮤니티 리뷰 삭제
      * */
     public void deleteReview(UUID reviewUuid) {
-        Review review = reviewRepository.findByReviewUuidAndDeletedAtIsNull(reviewUuid)
-                .orElseThrow(() -> new ReviewNotFoundException("존재하지 않는 리뷰입니다."));
+        Review review = reviewRepository.findByReviewUuid(reviewUuid)
+                .orElseThrow(() -> new BusinessException(ErrorCode.COMMUNITY_REVIEW_NOT_FOUND));
 
         ReviewContent reviewContent = reviewContentRepository.findByReviewIdAndDeletedAtIsNull(review.getReviewId())
-                .orElseThrow(() -> new ReviewNotFoundException("존재하지 않는 리뷰입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.COMMUNITY_REVIEW_NOT_FOUND));
         try {
             review.softDelete();
             reviewContent.softDelete();
@@ -323,7 +324,7 @@ public class ReviewService {
         String reviewCategory = String.valueOf(reviewRepository.findNameByReviewCategoryId(review.getReviewCategoryId()));
 
         UserEntity user = userRepository.findById(review.getUserId())
-                .orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 유저입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, review.getReviewId());
 

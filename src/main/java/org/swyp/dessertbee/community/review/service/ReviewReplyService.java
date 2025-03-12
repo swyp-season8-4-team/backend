@@ -7,6 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.swyp.dessertbee.common.entity.ImageType;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.community.review.dto.ReviewUserIds;
@@ -15,7 +17,6 @@ import org.swyp.dessertbee.community.review.dto.response.ReviewReplyPageResponse
 import org.swyp.dessertbee.community.review.dto.response.ReviewReplyResponse;
 import org.swyp.dessertbee.community.review.entity.Review;
 import org.swyp.dessertbee.community.review.entity.ReviewReply;
-import org.swyp.dessertbee.community.review.exception.ReviewException.*;
 import org.swyp.dessertbee.community.review.repository.ReviewReplyRepository;
 import org.swyp.dessertbee.community.review.repository.ReviewRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
@@ -39,14 +40,15 @@ public class ReviewReplyService {
 
     public ReviewReplyResponse createReply(UUID reviewUuid, ReviewReplyCreateRequest request) {
 
-        ReviewUserIds reviewUserIds = validateReviewAndUser(reviewUuid, request.getUserUuid());
-        Long reviewId = reviewUserIds.getReivewId();
-        Long userId = reviewUserIds.getUserId();
+        Long reviewId = validateReview(reviewUuid);
+
+        // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
+        UserEntity user = userService.getCurrentUser();
 
         ReviewReply reviewReply = reviewReplyRepository.save(
                 ReviewReply.builder()
                         .reviewId(reviewId)
-                        .userId(userId)
+                        .userId(user.getId())
                         .content(request.getContent())
                 .build()
         );
@@ -63,10 +65,9 @@ public class ReviewReplyService {
         validateReview(reviewUuid);
 
         ReviewReply reviewReply = reviewReplyRepository.findByReviewReplyUuid(reviewReplyUuid)
-                .orElseThrow(() -> new ReviewReplyNotFoundException("존재하지 않는 리뷰 댓글입니다."));
-
+                .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_REPLY_NOT_FOUND));
         UserEntity user = userRepository.findById(reviewReply.getUserId())
-                .orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 유저입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         // 사용자별 프로필 이미지 조회
 
 
@@ -81,8 +82,7 @@ public class ReviewReplyService {
     @Transactional
     public ReviewReplyPageResponse getReplies(UUID reviewUuid, Pageable pageable) {
 
-        ReviewUserIds reviewUserIds = validateReview(reviewUuid);
-        Long reviewId = reviewUserIds.getReivewId();
+        Long reviewId = validateReview(reviewUuid);
 
         Page<ReviewReply> repliesPage = reviewReplyRepository.findAllByDeletedAtIsNull(reviewId, pageable);
 
@@ -105,14 +105,16 @@ public class ReviewReplyService {
     @Transactional
     public void updateReply(UUID reviewUuid, UUID reviewReplyUuid, ReviewReplyCreateRequest request) {
 
-        ReviewUserIds reviewUserIds = validateReviewAndUser(reviewUuid, request.getUserUuid());
-        Long reviewId = reviewUserIds.getReivewId();
+        Long reviewId = validateReview(reviewUuid);
+
+        // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
+        UserEntity user = userService.getCurrentUser();
 
         ReviewReply reviewReply = reviewReplyRepository.findByReviewIdAndReviewReplyUuidAndDeletedAtIsNull(reviewId, reviewReplyUuid)
-                .orElseThrow(() -> new ReviewReplyNotFoundException("존재하지 않는 리뷰 댓글입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_REPLY_NOT_FOUND));
 
-        if(!reviewReply.getUserId().equals(reviewUserIds.getUserId())) {
-            throw new NotCommentAuthorException("댓글 작성자가 아닙니다.");
+        if(!reviewReply.getUserId().equals(user.getId())) {
+            throw new BusinessException(ErrorCode.REPLY_NOT_AUTHOR);
         }
 
         reviewReply.update(request.getContent());
@@ -127,14 +129,14 @@ public class ReviewReplyService {
         // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
         UserEntity user = userService.getCurrentUser();
 
-        ReviewUserIds reviewUserIds = validateReviewAndUser(reviewUuid, user.getUserUuid());
-        Long reviewId = reviewUserIds.getReivewId();
+        Long reviewId = validateReview(reviewUuid);
+
 
         ReviewReply reviewReply = reviewReplyRepository.findByReviewIdAndReviewReplyUuidAndDeletedAtIsNull(reviewId, reviewReplyUuid)
-                .orElseThrow(() -> new ReviewReplyNotFoundException("존재하지 않는 리뷰 댓글입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_REPLY_NOT_FOUND));
 
-        if(!reviewReply.getUserId().equals(reviewUserIds.getUserId())) {
-            throw new NotCommentAuthorException("댓글 작성자가 아닙니다.");
+        if(!reviewReply.getUserId().equals(user.getId())) {
+            throw new BusinessException(ErrorCode.REPLY_NOT_AUTHOR);
         }
 
         try {
@@ -150,33 +152,15 @@ public class ReviewReplyService {
 
     }
 
-
-    /**
-     * Review와 User 한번에 유효성 검사
-     * */
-    private ReviewUserIds validateReviewAndUser(UUID reviewUuid, UUID userUuid) {
-
-        Review review = reviewRepository.findByReviewUuid(reviewUuid)
-                .orElseThrow(() -> new ReviewNotFoundException("존재하지 않은 리뷰입니다."));
-
-        // userUuid로 userId 조회
-        Long userId = userRepository.findIdByUserUuid(userUuid);
-        if (userId == null) {
-            throw new UserNotFoundExcption("존재하지 않는 유저입니다.");
-        }
-
-        return new ReviewUserIds(review.getReviewId(), userId);
-    }
-
     /**
      * Review만 유효성 검사
      * */
-    public ReviewUserIds validateReview(UUID reviewUuid) {
+    public Long validateReview(UUID reviewUuid) {
 
         Review review = reviewRepository.findByReviewUuid(reviewUuid)
-                .orElseThrow(() -> new ReviewNotFoundException("존재하지 않은 리뷰입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_REPLY_NOT_FOUND));
 
-        return new ReviewUserIds(review.getReviewId(), null);
+        return review.getReviewId();
     }
 
 
