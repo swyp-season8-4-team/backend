@@ -26,20 +26,26 @@ public class SearchController {
     private final UserService userService;
 
     /** 최근 검색어 조회 API */
-    @PreAuthorize("isAuthenticated()")
     @GetMapping("/recent")
     public ResponseEntity<List<UserSearchHistoryDto>> getRecentSearches() {
         UserEntity user = userService.getCurrentUser();
+
+        if(user==null){
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
 
         List<UserSearchHistoryDto> recentSearches = searchService.getRecentSearches(user.getId());
         return ResponseEntity.ok(recentSearches);
     }
 
     /** 특정 검색어 삭제 */
-    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/recent/{searchId}")
     public ResponseEntity<Void> deleteRecentSearch(@PathVariable Long searchId) {
         UserEntity user = userService.getCurrentUser();
+
+        if(user==null){
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
 
         boolean deleted = searchService.deleteRecentSearch(user.getId(), searchId);
         if (!deleted) {
@@ -50,10 +56,13 @@ public class SearchController {
     }
 
     /** 모든 검색어 삭제 */
-    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/recent/all")
     public ResponseEntity<Void> deleteAllRecentSearches() {
         UserEntity user = userService.getCurrentUser();
+
+        if(user==null){
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
 
         boolean deleted = searchService.deleteAllRecentSearches(user.getId());
         if (!deleted) {
