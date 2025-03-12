@@ -51,6 +51,10 @@ public enum ErrorCode {
     PREFERENCES_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "존재하지 않는 취향 태그입니다."),
     USER_PREFERENCES_NOT_FOUND(HttpStatus.NOT_FOUND, "P002", "취향을 등록하지 않은 사용자입니다."),
 
+    // Search Keyword
+    SEARCH_KEYWORD_NOT_FOUND(HttpStatus.NOT_FOUND, "K001", "해당 검색 기록을 찾을 수 없습니다."),
+    SEARCH_KEYWORD_DELETE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "K002", "검색 기록 삭제에 실패했습니다."),
+
     // Store
     STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "존재하지 않는 가게입니다."),
     STORE_CREATION_FAILED(HttpStatus.BAD_REQUEST, "S002", "가게 생성에 실패했습니다."),
@@ -104,11 +108,7 @@ public enum ErrorCode {
     //커뮤니티 리뷰
     COMMUNITY_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "R001" , "존재하지 않는 리뷰입니다." ),
     IMAGE_INDEX_NOT_FOUND(HttpStatus.BAD_REQUEST, "R02", "요청된 이미지 인덱스가 이미지 파일 수보다 적습니다."),
-    DUPLICATE_DELETE_IMAGE_IDS(HttpStatus.BAD_REQUEST,"R03" , "중복된 이미지 삭제 ID가 존재합니다."),
-
-    // 검색어
-    SEARCH_KEYWORD_NOT_FOUND(HttpStatus.NOT_FOUND, "K001", "해당 검색 기록을 찾을 수 없습니다."),
-    SEARCH_KEYWORD_DELETE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "K002", "검색 기록 삭제에 실패했습니다.");
+    DUPLICATE_DELETE_IMAGE_IDS(HttpStatus.BAD_REQUEST,"R03" , "중복된 이미지 삭제 ID가 존재합니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
