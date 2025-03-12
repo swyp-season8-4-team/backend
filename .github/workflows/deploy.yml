@@ -66,6 +66,7 @@ jobs:
           S3_SECRET_KEY=${{ secrets.S3_SECRET_KEY }}
           GOOGLE_MAIL_USERNAME=${{ secrets.GOOGLE_MAIL_USERNAME }}
           GOOGLE_MAIL_APP_PASSWORD=${{ secrets.GOOGLE_MAIL_APP_PASSWORD }}
+          KAKAO_REDIRECT_URI=${{ env.KAKAO_REDIRECT_URI }}
           EOL
 
       # 빌드된 자르 파일을 EC2 인스턴스로 전송
