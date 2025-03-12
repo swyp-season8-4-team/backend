@@ -3,6 +3,7 @@ package org.swyp.dessertbee.common.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.common.dto.PopularSearchResponse;
 import org.swyp.dessertbee.common.dto.UserSearchHistoryDto;
@@ -22,36 +23,30 @@ public class SearchController {
     private final UserService userService;
 
     /** 최근 검색어 조회 API */
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/recent")
     public ResponseEntity<List<UserSearchHistoryDto>> getRecentSearches() {
         UserEntity user = userService.getCurrentUser();
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
 
         List<UserSearchHistoryDto> recentSearches = searchService.getRecentSearches(user.getId());
         return ResponseEntity.ok(recentSearches);
     }
 
     /** 특정 검색어 삭제 */
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/recent/{searchId}")
     public ResponseEntity<Void> deleteRecentSearch(@PathVariable Long searchId) {
         UserEntity user = userService.getCurrentUser();
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
 
         searchService.deleteRecentSearch(user.getId(), searchId);
         return ResponseEntity.noContent().build();
     }
 
     /** 모든 검색어 삭제 */
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/recent/all")
     public ResponseEntity<Void> deleteAllRecentSearches() {
         UserEntity user = userService.getCurrentUser();
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
 
         searchService.deleteAllRecentSearches(user.getId());
         return ResponseEntity.noContent().build();
