@@ -268,21 +268,27 @@ public class ReviewService {
         Review review = reviewRepository.findByReviewUuidAndDeletedAtIsNull(reviewUuid)
                 .orElseThrow(() -> new ReviewNotFoundException("존재하지 않는 리뷰입니다."));
 
-        ReviewContent reviewContent = reviewContentRepository.findByReviewIdAndDeletedAtIsNull(review.getReviewId())
-                .orElseThrow(() -> new ReviewNotFoundException("존재하지 않는 리뷰입니다."));
+        List<ReviewContent> reviewContent = reviewContentRepository.findByReviewIdAndDeletedAtIsNull(review.getReviewId());
+        List<ReviewContent> reviewContents = reviewContentRepository.findByReviewIdAndDeletedAtIsNull(review.getReviewId());
         try {
+            // 리뷰 soft delete
             review.softDelete();
-            reviewContent.softDelete();
+
+            // 각 ReviewContent 엔티티에 대해 softDelete 호출
+            for (ReviewContent content : reviewContents) {
+                content.softDelete();
+            }
+
+            // 수정된 엔티티 저장
             reviewRepository.save(review);
-            reviewContentRepository.save(reviewContent);
+            reviewContentRepository.saveAll(reviewContents);
 
             imageService.deleteImagesByRefId(ImageType.REVIEW, review.getReviewId());
-
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             System.out.println("❌ S3 이미지 삭제 중 오류 발생: " + e.getMessage());
             throw new RuntimeException("S3 이미지 삭제 실패: " + e.getMessage(), e);
         }
+
 
     }
 
