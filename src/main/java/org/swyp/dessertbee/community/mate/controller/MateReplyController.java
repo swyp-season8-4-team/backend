@@ -10,11 +10,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.community.mate.dto.request.MateReplyCreateRequest;
 import org.swyp.dessertbee.community.mate.dto.request.MateReportRequest;
 import org.swyp.dessertbee.community.mate.dto.response.MateReplyPageResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MateReplyResponse;
-import org.swyp.dessertbee.community.mate.exception.MateExceptions;
 import org.swyp.dessertbee.community.mate.service.MateReplyService;
 
 import java.util.HashMap;
@@ -69,7 +70,7 @@ public class MateReplyController {
                                                             @RequestParam(required = false, defaultValue = "10") int to) {
 
         if (from >= to) {
-            throw new MateExceptions.FromToMateException("잘못된 범위 요청입니다.");
+            throw new BusinessException(ErrorCode.INVALID_RANGE);
         }
 
         int size = to - from;

@@ -10,8 +10,6 @@ import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
-import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
-import org.swyp.dessertbee.community.review.dto.ReviewUserIds;
 import org.swyp.dessertbee.community.review.dto.request.ReviewReplyCreateRequest;
 import org.swyp.dessertbee.community.review.dto.response.ReviewReplyPageResponse;
 import org.swyp.dessertbee.community.review.dto.response.ReviewReplyResponse;

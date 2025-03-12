@@ -14,7 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.swyp.dessertbee.community.mate.exception.MateExceptions;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.community.review.dto.request.ReviewCreateRequest;
 import org.swyp.dessertbee.community.review.dto.request.ReviewUpdateRequest;
 import org.swyp.dessertbee.community.review.dto.response.ReviewPageResponse;
@@ -78,7 +79,7 @@ public class ReviewController {
     ) {
 
         if (from >= to) {
-            throw new MateExceptions.FromToMateException("잘못된 범위 요청입니다.");
+            throw new BusinessException(ErrorCode.INVALID_RANGE);
         }
 
         if(keyword != null) {

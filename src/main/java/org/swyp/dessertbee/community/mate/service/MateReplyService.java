@@ -7,6 +7,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.entity.ReportCategory;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.repository.ReportRepository;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.community.mate.dto.MateUserIds;
@@ -17,13 +19,13 @@ import org.swyp.dessertbee.community.mate.dto.response.MateReplyResponse;
 import org.swyp.dessertbee.community.mate.entity.Mate;
 import org.swyp.dessertbee.community.mate.entity.MateReply;
 import org.swyp.dessertbee.community.mate.entity.MateReport;
+import org.swyp.dessertbee.community.mate.entity.SavedMate;
 import org.swyp.dessertbee.community.mate.repository.MateMemberRepository;
 import org.swyp.dessertbee.community.mate.repository.MateReplyRepository;
 import org.swyp.dessertbee.community.mate.repository.MateReportRepository;
 import org.swyp.dessertbee.community.mate.repository.MateRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
-import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.user.service.UserService;
 
 import java.util.List;
@@ -76,10 +78,10 @@ public class MateReplyService {
         validateMate(mateUuid);
 
         MateReply mateReply = mateReplyRepository.findById(replyId)
-                .orElseThrow(() -> new MateReplyNotFoundException("존재하지 않는 댓글입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_REPLY_NOT_FOUND));
 
        UserEntity user = userRepository.findById(mateReply.getUserId())
-                .orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 유저입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
 
         // 사용자별 프로필 이미지 조회
@@ -124,12 +126,12 @@ public class MateReplyService {
         Long mateId = mateUserIds.getMateId();
 
         //replyId 존재 여부 확인
-        MateReply mateReply = mateReplyRepository.findByMateIdAndMateReplyIdAndDeletedAtIsNull(mateId,replyId)
-                .orElseThrow(() -> new MateReplyNotFoundException("존재하지 않는 댓글입니다."));
+        MateReply mateReply = mateReplyRepository.findById(replyId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_REPLY_NOT_FOUND));
 
-        if(!mateReply.getUserId().equals(mateUserIds.getUserId())) {
-            throw new NotCommentAuthorException("댓글 작성자가 아닙니다.");
-        }
+        UserEntity user = userRepository.findById(mateReply.getUserId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
 
         mateReply.update(request.getContent());
 
@@ -148,11 +150,11 @@ public class MateReplyService {
         MateUserIds mateUserIds = validateMateAndUser(mateUuid, user.getUserUuid());
         Long mateId = mateUserIds.getMateId();
 
-        MateReply mateReply = mateReplyRepository.findByMateIdAndMateReplyIdAndDeletedAtIsNull(mateId, replyId)
-                .orElseThrow(() -> new MateReplyNotFoundException("존재하지 않는 댓글입니다."));
+        MateReply mateReply = mateReplyRepository.findById(replyId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_REPLY_NOT_FOUND));
 
         if(!mateReply.getUserId().equals(mateUserIds.getUserId())) {
-            throw new NotCommentAuthorException("댓글 작성자가 아닙니다.");
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
         try {
@@ -177,14 +179,14 @@ public class MateReplyService {
         Long userId = mateUserIds.getUserId();
 
         MateReply mateReply = mateReplyRepository.findByMateIdAndMateReplyIdAndDeletedAtIsNull(mateId, replyId)
-                .orElseThrow(() -> new MateReplyNotFoundException("존재하지 않는 댓글입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_REPLY_NOT_FOUND));
 
 
         //신고 유무 확인
         MateReport report = mateReportRepository.findByMateReplyIdAndUserId(replyId, userId);
 
         if(report != null){
-            throw new DuplicationReportException("이미 신고된 게시물입니다.");
+            throw new BusinessException(ErrorCode.DUPLICATION_REPORT);
         }
 
         // 6L로 타입 일치
@@ -224,20 +226,26 @@ public class MateReplyService {
 
 
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
 
         // userUuid로 userId 조회
         Long userId = userRepository.findIdByUserUuid(userUuid);
-        if (userId == null) {
-            throw new UserNotFoundExcption("존재하지 않는 유저입니다.");
+
+        try {
+            userService.getUserById(userId);
+
+            //디저트 메이트 멤버인지 확인
+            mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mate.getMateId(), userId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.MATE_MEMBER_NOT_FOUND));
+
+
+            return new MateUserIds(mate.getMateId(), userId);
+        } catch (BusinessException e) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
-        //디저트 메이트 멤버인지 확인
-        mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mate.getMateId(), userId)
-                .orElseThrow(() -> new MateMemberNotFoundExcption("디저트메이트 멤버가 아닙니다."));
 
 
-        return new MateUserIds(mate.getMateId(), userId);
     }
 
     /**
@@ -247,7 +255,7 @@ public class MateReplyService {
 
 
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
 
 
         return new MateUserIds(mate.getMateId(), null);

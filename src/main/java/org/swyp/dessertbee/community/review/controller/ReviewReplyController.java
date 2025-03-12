@@ -12,7 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.community.review.dto.request.ReviewReplyCreateRequest;
 import org.swyp.dessertbee.community.review.dto.response.ReviewReplyPageResponse;
 import org.swyp.dessertbee.community.review.dto.response.ReviewReplyResponse;
@@ -65,7 +66,7 @@ public class ReviewReplyController {
                                                               @RequestParam(required = false, defaultValue = "10") int to) {
 
         if (from >= to) {
-            throw new FromToMateException("잘못된 범위 요청입니다.");
+            throw new BusinessException(ErrorCode.INVALID_RANGE);
         }
 
         int size = to - from;

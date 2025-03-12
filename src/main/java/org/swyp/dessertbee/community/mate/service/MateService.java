@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.entity.ReportCategory;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.repository.ReportRepository;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.community.mate.dto.request.MateCreateRequest;
@@ -16,7 +18,6 @@ import org.swyp.dessertbee.community.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MatesPageResponse;
 import org.swyp.dessertbee.community.mate.entity.*;
 import org.swyp.dessertbee.community.mate.repository.*;
-import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
@@ -52,46 +53,50 @@ public class MateService {
         UserEntity user = userService.getCurrentUser();
 
 
-        //userId 존재 여부 확인
-        if (user == null) {
-            throw new UserNotFoundExcption("존재하지 않는 유저입니다.");
+        try {
+            userService.getUserById(user.getId());
+
+
+            //위도,경도로 storeId 조회
+            // 위도, 경도로 store 조회
+            Store store = storeRepository.findByName(request.getPlace().getPlaceName());
+
+
+            // store가 null이면 storeId는 null, 아니면 store.getStoreId() 할당
+            Long storeId = (store != null) ? store.getStoreId() : null;
+
+            Mate mate = mateRepository.save(
+                    Mate.builder()
+                            .userId(user.getId())
+                            .storeId(storeId)
+                            .mateCategoryId(request.getMateCategoryId())
+                            .title(request.getTitle())
+                            .content(request.getContent())
+                            .recruitYn(Boolean.TRUE.equals(request.getRecruitYn()))
+                            .placeName(request.getPlace().getPlaceName())
+                            .latitude(request.getPlace().getLatitude())
+                            .longitude(request.getPlace().getLongitude())
+                            .updatedAt(null)
+                            .build()
+            );
+
+
+
+            //기존 이미지 삭제 후 새 이미지 업로드
+            if (mateImage != null && !mateImage.isEmpty()) {
+                String folder = "mate/" + mate.getMateId();
+                imageService.uploadAndSaveImage(mateImage, ImageType.MATE, mate.getMateId(), folder);
+            }
+
+            //디저트 메이트 mateId를 가진 member 데이터 생성
+            mateMemberService.addCreatorAsMember(mate.getMateUuid(), user.getId());
+
+            return getMateDetail(mate.getMateUuid());
+
+        }catch (BusinessException e) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
-        //위도,경도로 storeId 조회
-        // 위도, 경도로 store 조회
-        Store store = storeRepository.findByName(request.getPlace().getPlaceName());
-
-
-        // store가 null이면 storeId는 null, 아니면 store.getStoreId() 할당
-        Long storeId = (store != null) ? store.getStoreId() : null;
-
-        Mate mate = mateRepository.save(
-                Mate.builder()
-                        .userId(user.getId())
-                        .storeId(storeId)
-                        .mateCategoryId(request.getMateCategoryId())
-                        .title(request.getTitle())
-                        .content(request.getContent())
-                        .recruitYn(Boolean.TRUE.equals(request.getRecruitYn()))
-                        .placeName(request.getPlace().getPlaceName())
-                        .latitude(request.getPlace().getLatitude())
-                        .longitude(request.getPlace().getLongitude())
-                        .updatedAt(null)
-                        .build()
-        );
-
-
-
-        //기존 이미지 삭제 후 새 이미지 업로드
-        if (mateImage != null && !mateImage.isEmpty()) {
-            String folder = "mate/" + mate.getMateId();
-            imageService.uploadAndSaveImage(mateImage, ImageType.MATE, mate.getMateId(), folder);
-        }
-
-        //디저트 메이트 mateId를 가진 member 데이터 생성
-        mateMemberService.addCreatorAsMember(mate.getMateUuid(), user.getId());
-
-        return getMateDetail(mate.getMateUuid());
     }
 
 
@@ -101,7 +106,7 @@ public class MateService {
         UserEntity user = userService.getCurrentUser();
         //mateId로 디저트메이트 여부 확인
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
 
         // 현재 접속해 있는 사용자의 user 정보 (user가 null일 수 있으므로 null 체크)
         Long currentUserId = (user != null) ? user.getId() : null;
@@ -117,7 +122,7 @@ public class MateService {
 
         //mateId로 디저트메이트 여부 확인
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
 
         try {
             mate.softDelete();
@@ -145,7 +150,7 @@ public class MateService {
 
         //mateId 존재 여부 확인
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
 
         //위도,경도로 storeId 조회
         Store store = storeRepository.findByName(request.getPlace().getPlaceName());
@@ -214,7 +219,7 @@ public class MateService {
 
         //mateId 존재 여부 확인
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
 
         Long userId = userRepository.findIdByUserUuid(request.getUserUuid());
 
@@ -222,7 +227,7 @@ public class MateService {
         MateReport report = mateReportRepository.findByMateIdAndUserId(mate.getMateId(), userId);
 
         if(report != null){
-            throw new DuplicationReportException("이미 신고된 게시물입니다.");
+            throw new BusinessException(ErrorCode.DUPLICATION_REPORT);
         }
 
 

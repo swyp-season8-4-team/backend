@@ -95,10 +95,11 @@ public enum ErrorCode {
     MATE_REPLY_NOT_FOUND(HttpStatus.NOT_FOUND, "M009" , "존재하지 않는 댓글입니다."),
     MATE_MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "M010", "디저트메이트 멤버가 아닙니다."),
     REPLY_NOT_AUTHOR(HttpStatus.FORBIDDEN, "M011", "댓글 작성자가 아닙니다."),
-    SAVED_STORE_DUPLICATION(HttpStatus.CONFLICT, "M012", "이미 저장된 디저트메이트입니다."),
+    DUPLICATION_SAVED_STORE(HttpStatus.CONFLICT, "M012", "이미 저장된 디저트메이트입니다."),
     SAVED_MATE_NOT_FOUND(HttpStatus.NOT_FOUND,"M013" , "저장하지 않은 디저트메이트입니다."),
     MATE_RECRUIT_DONE(HttpStatus.FORBIDDEN,"M014" , "해당 디저트메이트 모집 마감입니다."),
     DUPLICATION_REPORT(HttpStatus.CONFLICT, "M015", "이미 신고된 게시물입니다."),
+    MATE_NOT_PENDING_MEMBER(HttpStatus.NOT_FOUND, "M016",  "디저트메이트 신청하신 분이 아닙니다."),
 
 
     //커뮤니티 리뷰
