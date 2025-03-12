@@ -4,7 +4,7 @@ spring:
   # 스테이징 환경에서는 스키마 검증만 수행
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: false
