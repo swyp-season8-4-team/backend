@@ -21,7 +21,6 @@ import org.swyp.dessertbee.community.mate.repository.SavedMateRepository;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
-import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.user.service.UserService;
 
 import java.util.Collections;
@@ -34,7 +33,6 @@ import java.util.stream.Collectors;
 public class SavedMateService {
 
     private final MateRepository mateRepository;
-    private final UserRepository userRepository;
     private final SavedMateRepository savedMateRepository;
     private final MateMemberRepository mateMemberRepository;
     private final MateCategoryRepository mateCategoryRepository;
@@ -54,11 +52,10 @@ public class SavedMateService {
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
 
-        // userUuid로 userId 조회
-        Long userId = userRepository.findIdByUserUuid(user.getUserUuid());
 
+        Long userId = user.getId();
         try {
-            userService.getUserById(userId);
+            userService.findById(userId);
 
             SavedMate savedMate = savedMateRepository.findByMate_MateIdAndUserId(mate.getMateId(), userId);
             if(savedMate != null) {
@@ -68,7 +65,7 @@ public class SavedMateService {
             savedMateRepository.save(
                     SavedMate.builder()
                             .mate(mate)
-                            .userId(userId)
+                            .userId(user.getId())
                             .build()
             );
 
@@ -91,13 +88,12 @@ public class SavedMateService {
         Long mateId = mateRepository.findMateIdByMateUuid(mateUuid)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
 
-        // userUuid로 userId 조회
-        Long userId = userRepository.findIdByUserUuid(user.getUserUuid());
+        Long userId = user.getId();
 
 
 
         try {
-            userService.getUserById(userId);
+            userService.findById(userId);
 
             SavedMate savedMate = savedMateRepository.findByMate_MateIdAndUserId(mateId, userId);
             if(savedMate == null) {
@@ -119,7 +115,7 @@ public class SavedMateService {
         // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
         UserEntity user = userService.getCurrentUser();
 
-        Long userId = userRepository.findIdByUserUuid(user.getUserUuid());
+        Long userId = user.getId();
 
 
         // 1️⃣ 현재 사용자가 저장한 SavedMate 목록을 가져오기 (페이징 처리)

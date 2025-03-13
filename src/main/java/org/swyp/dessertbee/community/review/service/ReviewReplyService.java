@@ -3,6 +3,7 @@ package org.swyp.dessertbee.community.review.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -18,19 +19,18 @@ import org.swyp.dessertbee.community.review.entity.ReviewReply;
 import org.swyp.dessertbee.community.review.repository.ReviewReplyRepository;
 import org.swyp.dessertbee.community.review.repository.ReviewRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
-import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.user.service.UserService;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReviewReplyService {
 
     private final ReviewRepository reviewRepository;
-    private final UserRepository userRepository;
     private final ReviewReplyRepository reviewReplyRepository;
     private final ImageService imageService;
     private final UserService userService;
@@ -64,14 +64,18 @@ public class ReviewReplyService {
 
         ReviewReply reviewReply = reviewReplyRepository.findByReviewReplyUuid(reviewReplyUuid)
                 .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_REPLY_NOT_FOUND));
-        UserEntity user = userRepository.findById(reviewReply.getUserId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        // 사용자별 프로필 이미지 조회
 
+        try{
+            UserEntity user = userService.findById(reviewReply.getUserId());
 
-        String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, user.getId());
+            String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, user.getId());
 
-        return ReviewReplyResponse.fromEntity(reviewReply, reviewUuid, user, profileImage);
+            return ReviewReplyResponse.fromEntity(reviewReply, reviewUuid, user, profileImage);
+
+        }catch (BusinessException e) {
+            throw new BusinessException(ErrorCode.REVIEW_REPLY_NOT_FOUND);
+        }
+
     }
 
     /**
@@ -144,7 +148,7 @@ public class ReviewReplyService {
             reviewReplyRepository.save(reviewReply);
         }catch (Exception e) {
 
-            System.out.println("❌ 커뮤니티 댓글 삭제 중 오류 발생: " + e.getMessage());
+            log.error("❌ 커뮤니티 댓글 삭제 중 오류 발생: " + e.getMessage());
             throw new RuntimeException("커뮤니티 댓글 삭제 실패: " + e.getMessage(), e);
         }
 

@@ -331,8 +331,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserEntity getUserById(Long userId){
+    public UserEntity findById(Long userId){
         return userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
+
+
 }

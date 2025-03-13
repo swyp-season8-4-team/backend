@@ -2,6 +2,7 @@ package org.swyp.dessertbee.community.mate.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -21,19 +22,17 @@ import org.swyp.dessertbee.community.mate.repository.*;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
-import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.user.service.UserServiceImpl;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MateService {
 
-    private final UserRepository userRepository;
     private final MateRepository mateRepository;
     private final MateMemberRepository mateMemberRepository;
     private final MateCategoryRepository mateCategoryRepository;
@@ -54,7 +53,7 @@ public class MateService {
 
 
         try {
-            userService.getUserById(user.getId());
+            userService.findById(user.getId());
 
 
             //위도,경도로 storeId 조회
@@ -137,7 +136,7 @@ public class MateService {
             imageService.deleteImagesByRefId(ImageType.MATE, mate.getMateId());
 
         } catch (Exception e) {
-            System.out.println("❌ S3 이미지 삭제 중 오류 발생: " + e.getMessage());
+            log.error("❌ S3 이미지 삭제 중 오류 발생: " + e.getMessage());
             throw new RuntimeException("S3 이미지 삭제 실패: " + e.getMessage(), e);
         }
     }
@@ -198,7 +197,7 @@ public class MateService {
     public MatesPageResponse getMyMates(Pageable pageable) {
         // 현재 사용자 정보 및 userId 조회
         UserEntity user = userService.getCurrentUser();
-        Long userId = userRepository.findIdByUserUuid(user.getUserUuid());
+        Long userId = user.getId();
 
         // 페이지 단위로 참여한 Mate 조회
         Page<Mate> matesPage = mateRepository.findByDeletedAtIsNullAndUserId(pageable, userId);
@@ -217,11 +216,13 @@ public class MateService {
      * */
     public void reportMate(UUID mateUuid, MateReportRequest request) {
 
+        UserEntity user = userService.getCurrentUser();
+
         //mateId 존재 여부 확인
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
 
-        Long userId = userRepository.findIdByUserUuid(request.getUserUuid());
+        Long userId = user.getId();
 
         //신고 유무 확인
         MateReport report = mateReportRepository.findByMateIdAndUserId(mate.getMateId(), userId);

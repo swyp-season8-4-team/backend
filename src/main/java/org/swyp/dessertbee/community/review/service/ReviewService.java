@@ -2,6 +2,7 @@ package org.swyp.dessertbee.community.review.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -34,7 +35,7 @@ import org.swyp.dessertbee.user.service.UserServiceImpl;
 import java.util.*;
 import java.util.stream.Collectors;
 
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReviewService {
@@ -58,7 +59,7 @@ public class ReviewService {
 
         Long userId = userRepository.findIdByUserUuid(request.getUserUuid());
         try {
-            userService.getUserById(userId);
+            userService.findById(userId);
 
 
             // 장소명으로 storeId 조회
@@ -284,7 +285,7 @@ public class ReviewService {
 
         } catch (Exception e)
         {
-            System.out.println("❌ S3 이미지 삭제 중 오류 발생: " + e.getMessage());
+            log.error("❌ S3 이미지 삭제 중 오류 발생: " + e.getMessage());
             throw new RuntimeException("S3 이미지 삭제 실패: " + e.getMessage(), e);
         }
 
