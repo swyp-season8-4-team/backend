@@ -14,7 +14,6 @@ public interface ReviewContentRepository extends JpaRepository<ReviewContent, Lo
 
     List<ReviewContent> findByReviewIdAndDeletedAtIsNull(Long reviewId);
 
-    List<ReviewContent> findByReviewIdAndType(Long reviewId, String image);
 
     void deleteByReviewId(Long reviewId);
 

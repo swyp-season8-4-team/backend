@@ -111,7 +111,6 @@ public class ReviewService {
                                 .reviewId(review.getReviewId())
                                 .type("image")
                                 .value(image.getUrl())
-                                .imageIndex(idx)
                                 .build();
                         reviewContentRepository.save(reviewContent);
                     }
@@ -208,7 +207,6 @@ public class ReviewService {
                     .reviewId(review.getReviewId())
                     .type(contentDto.getType())
                     .value(contentDto.getValue())
-                    .imageIndex(contentDto.getImageIndex()) // 이미지 콘텐츠일 경우 사용
                     .build();
             reviewContentRepository.save(reviewContent);
         }
@@ -227,41 +225,7 @@ public class ReviewService {
                 (request.getDeleteImageIds() != null && !request.getDeleteImageIds().isEmpty())) {
             String folder = "review/" + review.getReviewId();
             imageService.updatePartialImages(request.getDeleteImageIds(), reviewImages, ImageType.REVIEW, review.getReviewId(), folder);
-        }
 
-        // 3. 이미지 인덱스 재정렬 처리
-        // 삭제 후 이미지 인덱스가 비연속적일 수 있으므로, DB에서 현재 이미지 목록을 새로 조회한 후 재정렬합니다.
-        List<Image> images = imageRepository.findByRefTypeAndRefId(ImageType.REVIEW, review.getReviewId());
-
-        // imageIndex가 null인 경우, Integer.MAX_VALUE로 간주하여 정렬 (null이 뒤로 오도록)
-        images.sort(Comparator.comparing(img -> img.getImageIndex() == null ? Integer.MAX_VALUE : img.getImageIndex()));
-
-        for (int newIndex = 0; newIndex < images.size(); newIndex++) {
-            Image img = images.get(newIndex);
-            // imageIndex가 null이거나, 현재 값이 재정렬된 값과 다르면 업데이트
-            if (img.getImageIndex() == null || !img.getImageIndex().equals(newIndex)) {
-                img.setImageIndex(newIndex);
-                imageRepository.save(img);
-            }
-        }
-
-        // 4. 리뷰 콘텐츠 내 이미지 인덱스 업데이트
-        // review_content 테이블에 저장된 이미지 콘텐츠들도, 재정렬된 새로운 이미지 인덱스에 맞춰 업데이트
-        List<ReviewContent> imageContents = reviewContentRepository.findByReviewIdAndType(review.getReviewId(), "image");
-        for (ReviewContent rc : imageContents) {
-            // 예를 들어, 삭제 전 rc.getImageIndex()가 였던 인덱스에 해당하는 새 인덱스를 찾는 로직
-            // (여기서는 단순화를 위해, rc.getImageIndex()를 그대로 사용하지 않고, 실제 이미지 리스트에서 매칭)
-            Optional<Image> matchingImage = images.stream()
-                    .filter(img -> img.getImageIndex().equals(rc.getImageIndex()))
-                    .findFirst();
-            if (matchingImage.isPresent()) {
-                // 만약 인덱스가 변경되었다면 업데이트합니다.
-                Integer newImageIndex = matchingImage.get().getImageIndex();
-                if (!rc.getImageIndex().equals(newImageIndex)) {
-                    rc.setImageIndex(newImageIndex);
-                    reviewContentRepository.save(rc);
-                }
-            }
         }
     }
 
@@ -273,16 +237,18 @@ public class ReviewService {
         Review review = reviewRepository.findByReviewUuid(reviewUuid)
                 .orElseThrow(() -> new BusinessException(ErrorCode.COMMUNITY_REVIEW_NOT_FOUND));
 
-        ReviewContent reviewContent = reviewContentRepository.findByReviewIdAndDeletedAtIsNull(review.getReviewId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.COMMUNITY_REVIEW_NOT_FOUND));
         try {
-            review.softDelete();
-            reviewContent.softDelete();
+
+            List<ReviewContent> reviewContents = reviewContentRepository.findByReviewIdAndDeletedAtIsNull(review.getReviewId());
+
+            for (ReviewContent reviewContent : reviewContents) {
+                reviewContent.softDelete();
+            }
+
             reviewRepository.save(review);
-            reviewContentRepository.save(reviewContent);
+            reviewContentRepository.saveAll(reviewContents);
 
             imageService.deleteImagesByRefId(ImageType.REVIEW, review.getReviewId());
-
         } catch (Exception e)
         {
             log.error("❌ S3 이미지 삭제 중 오류 발생: " + e.getMessage());
@@ -308,12 +274,10 @@ public class ReviewService {
                 .map(content -> {
                     ReviewContentDto dto = new ReviewContentDto();
                     dto.setType(content.getType());
-                    dto.setImageIndex(content.getImageIndex());
                     if ("text".equals(content.getType())) {
                         dto.setValue(content.getValue());
                     } else if ("image".equals(content.getType())) {
                         Optional<Image> matchingImage = images.stream()
-                                .filter(img -> img.getImageIndex().equals(content.getImageIndex()))
                                 .findFirst();
                         dto.setImageUrl(matchingImage.map(Image::getUrl).orElse(null));
                         dto.setImageId(matchingImage.map(Image::getId).orElse(null));

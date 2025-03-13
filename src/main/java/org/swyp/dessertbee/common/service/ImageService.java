@@ -279,7 +279,6 @@ public class ImageService {
                     .path(folder)
                     .fileName(file.getOriginalFilename())
                     .url(url)
-                    .imageIndex(idx)
                     .build();
 
             imageRepository.save(image);

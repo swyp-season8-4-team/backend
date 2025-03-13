@@ -32,7 +32,4 @@ public class Image {
     @Column(nullable = false)
     private String url;
 
-    @Column(name = "image_index")
-    private Integer imageIndex;
-
 }

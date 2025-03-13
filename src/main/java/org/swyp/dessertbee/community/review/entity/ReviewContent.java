@@ -28,8 +28,8 @@ public class ReviewContent {
     @Column(length = 1000)
     private String value; // 텍스트 내용 또는 이미지 URL 등
 
-    @Column(name = "image_index")
-    private Integer imageIndex;
+    @Column(name = "image_Uuid")
+    private Integer imageUuid;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
