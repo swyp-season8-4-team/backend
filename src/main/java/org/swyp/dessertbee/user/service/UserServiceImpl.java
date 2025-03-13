@@ -139,11 +139,9 @@ public class UserServiceImpl implements UserService {
      * UserEntity를 UserDetailResponseDto로 변환합니다.
      */
     private UserDetailResponseDto convertToDetailResponse(UserEntity user) {
-
         // 프로필 이미지 URL 조회
         List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
         String profileImageUrl = profileImages.isEmpty() ? null : profileImages.get(0);
-
 
         return UserDetailResponseDto.detailBuilder()
                 .userUuid(user.getUserUuid().toString())
@@ -156,6 +154,7 @@ public class UserServiceImpl implements UserService {
                 .profileImage(profileImageUrl)  // imageId 대신 imageUrl 사용
                 .preferences(preferenceService.convertToPreferenceIds(user.getUserPreferences()))
                 .mbti(user.getMbti() != null ? user.getMbti().getMbtiType() : null)
+                .isPreferencesSet(user.isPreferenceSetFlag())  // preferenceSetFlag 값을 사용
                 .build();
     }
 
