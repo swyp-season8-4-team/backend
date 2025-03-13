@@ -26,4 +26,7 @@ public interface StoreReviewRepository extends JpaRepository<StoreReview, Long> 
 
     @Query("SELECT r.reviewId FROM StoreReview r WHERE r.reviewUuid = :reviewUuid")
     Long findReviewIdByReviewUuid(@Param("reviewUuid") UUID reviewUuid);
+
+    @Query("SELECT COUNT(r) FROM StoreReview r WHERE r.storeId = :storeId AND r.deletedAt IS NULL")
+    int countByStoreIdAndDeletedAtIsNull(@Param("storeId") Long storeId);
 }

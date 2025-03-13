@@ -58,7 +58,6 @@ public class StoreService {
     private final SavedStoreRepository savedStoreRepository;
     private final MateCategoryRepository mateCategoryRepository;
     private final MateRepository mateRepository;
-    private final PreferenceRepository preferenceRepository;
     private final ImageService imageService;
     private final MenuService menuService;
     private final UserRepository userRepository;
@@ -188,7 +187,7 @@ public class StoreService {
         List<Store> stores = storeRepository.findStoresByLocation(lat, lng, radius);
 
         return stores.stream()
-                .map(StoreMapResponse::fromEntity)
+                .map(this::convertToStoreMapResponse)
                 .collect(Collectors.toList());
     }
 
@@ -202,7 +201,7 @@ public class StoreService {
         List<Store> stores = storeRepository.findStoresByLocationAndTags(lat, lng, radius, preferenceTagIds);
 
         return stores.stream()
-                .map(StoreMapResponse::fromEntity)
+                .map(this::convertToStoreMapResponse)
                 .collect(Collectors.toList());
     }
 
@@ -211,7 +210,7 @@ public class StoreService {
         List<Store> stores = storeRepository.findStoresByLocationAndKeyword(lat, lng, radius, searchKeyword);
 
         return stores.stream()
-                .map(StoreMapResponse::fromEntity)
+                .map(this::convertToStoreMapResponse)
                 .collect(Collectors.toList());
     }
 
@@ -236,8 +235,18 @@ public class StoreService {
         List<Store> stores = storeRepository.findStoresByLocationAndTags(lng, lat, radius, preferenceTagIds);
 
         return stores.stream()
-                .map(StoreMapResponse::fromEntity)
+                .map(this::convertToStoreMapResponse)
                 .collect(Collectors.toList());
+    }
+
+    /** Store 엔티티를 StoreMapResponse DTO로 변환 */
+    private StoreMapResponse convertToStoreMapResponse(Store store) {
+        List<StoreOperatingHour> operatingHours = storeOperatingHourRepository.findByStoreId(store.getStoreId()); // 변환 없이 그대로 전달
+        int totalReviewCount = storeReviewRepository.countByStoreIdAndDeletedAtIsNull(store.getStoreId());
+        List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(store.getStoreId());
+        List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, store.getStoreId());
+
+        return StoreMapResponse.fromEntity(store, operatingHours, totalReviewCount, tags, storeImages);
     }
 
     /** 가게 간략 정보 조회 */
@@ -248,7 +257,7 @@ public class StoreService {
 
         List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, storeId);
         List<String> ownerPickImages = imageService.getImagesByTypeAndId(ImageType.OWNERPICK, storeId);
-        List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(storeUuid);
+        List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(storeId);
 
         // 운영 시간
         List<StoreOperatingHour> operatingHours = storeOperatingHourRepository.findByStoreId(storeId);
@@ -306,7 +315,7 @@ public class StoreService {
         List<String> ownerPickImages = imageService.getImagesByTypeAndId(ImageType.OWNERPICK, storeId);
 
         // 태그 조회
-        List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(storeUuid);
+        List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(storeId);
 
         // 운영 시간
         List<StoreOperatingHour> operatingHours = storeOperatingHourRepository.findByStoreId(storeId);

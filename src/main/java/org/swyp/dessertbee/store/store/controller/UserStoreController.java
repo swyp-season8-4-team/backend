@@ -9,10 +9,9 @@ import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.store.store.dto.response.SavedStoreResponse;
+import org.swyp.dessertbee.store.store.dto.response.StoreListLocationResponse;
 import org.swyp.dessertbee.store.store.dto.response.UserStoreListResponse;
 import org.swyp.dessertbee.store.store.dto.response.UserStoreListSimpleResponse;
-import org.swyp.dessertbee.store.store.entity.SavedStore;
-import org.swyp.dessertbee.store.store.entity.UserStoreList;
 import org.swyp.dessertbee.store.store.service.UserStoreService;
 
 import java.util.List;
@@ -82,6 +81,14 @@ public class UserStoreController {
         } catch (IllegalArgumentException e) {
             throw new BusinessException(ErrorCode.INVALID_STORE_UUID);
         }
+    }
+
+    /** 리스트별 저장된 가게 위치 조회 */
+    @Operation(summary = "저장 리스트 내 가게 위치 조회", description = "특정 리스트에 저장된 가게들의 storeId, name, latitude, longitude, listId, iconColorId를 반환합니다.")
+    @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
+    @GetMapping("/lists/{listId}/stores/locations")
+    public ResponseEntity<List<StoreListLocationResponse>> getStoresByListId(@PathVariable Long listId) {
+        return ResponseEntity.ok(userStoreService.getStoresByListId(listId));
     }
 
     /** 리스트별 저장된 가게 조회 */

@@ -18,8 +18,8 @@ public interface StoreTagRelationRepository extends JpaRepository<StoreTagRelati
     List<StoreTagRelation> findByStore(Store store);
 
     // 가게 ID를 기반으로 태그 목록 조회
-    @Query("SELECT t.name FROM StoreTagRelation str JOIN str.tag t WHERE str.store.storeUuid = :storeUuid")
-    List<String> findTagNamesByStoreId(@Param("storeUuid") UUID storeUuid);
+    @Query("SELECT t.name FROM StoreTagRelation str JOIN str.tag t WHERE str.store.storeId = :storeId")
+    List<String> findTagNamesByStoreId(@Param("storeId") Long storeId);
 
     @Transactional
     @Modifying

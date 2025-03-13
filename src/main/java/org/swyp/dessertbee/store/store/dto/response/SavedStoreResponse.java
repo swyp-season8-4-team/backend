@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,6 +18,8 @@ public class SavedStoreResponse {
     private String listName;
     private String storeName;
     private String storeAddress;
+    private BigDecimal latitude;
+    private BigDecimal longitude;
     private List<String> imageUrls;
     private List<Long> userPreferences;
 }

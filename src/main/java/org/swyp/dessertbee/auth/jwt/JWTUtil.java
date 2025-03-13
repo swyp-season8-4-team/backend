@@ -49,7 +49,7 @@ public class JWTUtil {
     @Getter
     private final long DEV_ACCESS_TOKEN_EXPIRE = 3 * 60 * 1000L;  // 3분
     @Getter
-    private final long DEV_REFRESH_TOKEN_EXPIRE = 5 * 60 * 1000L; // 5분
+    private final long DEV_REFRESH_TOKEN_EXPIRE = 10 * 60 * 1000L; // 5분
 
     public JWTUtil(
             @Value("${spring.jwt.secret.access}") String accessSecret,
