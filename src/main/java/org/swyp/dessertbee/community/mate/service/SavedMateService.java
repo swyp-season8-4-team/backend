@@ -10,6 +10,7 @@ import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.community.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MatesPageResponse;
 import org.swyp.dessertbee.community.mate.entity.Mate;
+import org.swyp.dessertbee.community.mate.entity.MateApplyStatus;
 import org.swyp.dessertbee.community.mate.entity.MateMember;
 import org.swyp.dessertbee.community.mate.entity.SavedMate;
 import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
@@ -142,10 +143,10 @@ public class SavedMateService {
                     boolean saved = true;
 
 
-                    //신청했는지 유무 확인
                     MateMember applyMember = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndUserId(mate.getMateId(), userId);
+                    MateApplyStatus applyStatus = (applyMember == null) ? null : applyMember.getApplyStatus();
 
-                    return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, creator, profileImage, saved, applyMember.getApplyStatus(), store);
+                    return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, creator, profileImage, saved,applyStatus , store);
                 })
                 .collect(Collectors.toList());
 
