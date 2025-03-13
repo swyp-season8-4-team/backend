@@ -60,7 +60,7 @@ public class SavedMateController {
     @GetMapping
     private ResponseEntity<MatesPageResponse> getSavedMates(
             @RequestParam(required = false, defaultValue = "0") int from,
-            @RequestParam(required = false, defaultValue = "0") int to
+            @RequestParam(required = false, defaultValue = "10") int to
     ){
 
         if (from >= to) {
