@@ -88,6 +88,11 @@ public class UserEntity {
     @JoinColumn(name = "mbti_id", nullable = true)
     private MbtiEntity mbti;
 
+    // 의도적으로 선호도 설정을 안하겠다는 의미로 사용
+    @Column(name = "preference_set_flag", nullable = false)
+    private boolean preferenceSetFlag = false;
+
+
     public void addRole(RoleEntity role) {
         UserRoleEntity userRole = UserRoleEntity.builder()
                 .user(this)
