@@ -47,9 +47,6 @@ public class JWTFilter extends OncePerRequestFilter {
         String token = extractTokenFromHeader(request);
         log.debug("추출된 토큰: {}", token);
 
-        if (token == null) {
-            token = extractTokenFromCookie(request);
-        }
 
         if (token != null) {
             ErrorCode errorCode = jwtUtil.validateToken(token, true);
@@ -145,17 +142,4 @@ public class JWTFilter extends OncePerRequestFilter {
         objectMapper.writeValue(response.getWriter(), errorResponse);
     }
 
-    /**
-     * 헤더로 넘어오는 쿠키에서 토큰 추출
-     * */
-    private String extractTokenFromCookie(HttpServletRequest request) {
-        if (request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
-                if ("accessToken".equals(cookie.getName())) { // 쿠키 이름이 accessToken이라고 가정
-                    return cookie.getValue();
-                }
-            }
-        }
-        return null;
-    }
 }

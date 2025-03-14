@@ -94,7 +94,7 @@ public class MateMemberService {
         //mateId 유효성 검사
         MateUserIds validateMate = validateMate(mateUuid);
 
-        List<MateMember> mateMembers = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndApplyStatus(validateMate.getMateId(), MateApplyStatus.APPROVED);
+        List<MateMember> mateMembers = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndApplyStatusAndGrade_Normal(validateMate.getMateId(), MateApplyStatus.APPROVED, MateMemberGrade.NORMAL);
 
         //userId로 userUuid 조회
         List<UserEntity> users = mateMembers.stream()

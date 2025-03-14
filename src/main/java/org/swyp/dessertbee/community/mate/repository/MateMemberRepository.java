@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.swyp.dessertbee.community.mate.entity.MateApplyStatus;
 import org.swyp.dessertbee.community.mate.entity.MateMember;
+import org.swyp.dessertbee.community.mate.entity.MateMemberGrade;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.util.List;
@@ -35,4 +36,9 @@ public interface MateMemberRepository extends JpaRepository<MateMember, Long> {
     MateMember findByMateIdAndDeletedAtIsNullAndUserId(Long mateId, Long userId);
 
     List<MateMember> findByMateIdAndDeletedAtIsNullAndApplyStatus(Long mateId, MateApplyStatus applyStatus);
+
+    @Query("SELECT m FROM MateMember m WHERE m.mateId = :mateId " +
+            "AND m.deletedAt IS NULL " +
+            "AND m.applyStatus = 'APPROVED' AND m.grade = 'NORMAL'")
+    List<MateMember> findByMateIdAndDeletedAtIsNullAndApplyStatusAndGrade_Normal(Long mateId, MateApplyStatus mateApplyStatus, MateMemberGrade mateMemberGrade);
 }

@@ -74,7 +74,7 @@ public class MateMemberController {
      * 디저트 메이트 멤버 신청 수락 api
      * */
     @PatchMapping("/apply")
-    public ResponseEntity<Map<String, String>> acceptMemeber(@PathVariable UUID mateUuid, @RequestBody MateApplyMemberRequest request) {
+    public ResponseEntity<Map<String, String>> acceptMember(@PathVariable UUID mateUuid, @RequestBody MateApplyMemberRequest request) {
 
         mateMemberService.acceptMember(mateUuid, request);
 
