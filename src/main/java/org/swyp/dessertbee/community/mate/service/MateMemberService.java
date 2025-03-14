@@ -3,8 +3,11 @@ package org.swyp.dessertbee.community.mate.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.swyp.dessertbee.common.entity.ImageType;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.community.mate.dto.MateUserIds;
 import org.swyp.dessertbee.community.mate.dto.request.MateApplyMemberRequest;
@@ -16,14 +19,12 @@ import org.swyp.dessertbee.community.mate.entity.MateMemberGrade;
 import org.swyp.dessertbee.community.mate.repository.MateMemberRepository;
 import org.swyp.dessertbee.community.mate.repository.MateRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
-import org.swyp.dessertbee.user.repository.UserRepository;
-import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.user.service.UserService;
-import org.swyp.dessertbee.user.service.UserServiceImpl;
 
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MateMemberService {
@@ -31,7 +32,6 @@ public class MateMemberService {
 
     private final MateMemberRepository mateMemberRepository;
     private final MateRepository mateRepository;
-    private final UserRepository userRepository;
     private final ImageService imageService;
     private final UserService userService;
 
@@ -43,7 +43,7 @@ public class MateMemberService {
     public void addCreatorAsMember(UUID mateUuid, Long userId) {
 
         Long mateId = mateRepository.findMateIdByMateUuid(mateUuid)
-                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_REPLY_NOT_FOUND));
 
         //mateMember 테이블에 생성자 등록
         mateMemberRepository.save(
@@ -78,7 +78,7 @@ public class MateMemberService {
 
 
         } catch (Exception e) {
-            System.out.println("❌ 디저트메이트 멤버 삭제 중 오류 발생: " + e.getMessage());
+            log.error("❌ 디저트메이트 멤버 삭제 중 오류 발생: " + e.getMessage());
             throw new RuntimeException("디저트메이트 멤버 삭제 실패: " + e.getMessage(), e);
         }
 
@@ -98,10 +98,9 @@ public class MateMemberService {
 
         //userId로 userUuid 조회
         List<UserEntity> users = mateMembers.stream()
-                .flatMap(mateMember ->
-                        userRepository.findAllUserUuidAndNicknameById(mateMember.getUserId()).stream()
-                )
+                .map(mateMember -> userService.findById(mateMember.getUserId()))
                 .toList();
+
 
 
         // MateMember와 UserEntity를 매칭하여 MateMemberResponse 생성
@@ -110,11 +109,11 @@ public class MateMemberService {
                     // 사용자 정보 찾기
                     UserEntity user = null;
                     try {
-                        user = users.stream()
+                       user = users.stream()
                                 .filter(u -> u.getId().equals(mateMember.getUserId()))
                                 .findFirst()
-                                .orElseThrow(() -> new UserNotFoundExcption("사용자 정보를 찾을 수 없습니다."));
-                    } catch (UserNotFoundExcption e) {
+                                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+                    } catch (BusinessException e) {
                         throw new RuntimeException(e);
                     }
 
@@ -142,10 +141,10 @@ public class MateMemberService {
         Long mateId = validate.getMateId();
         Long userId = validate.getUserId();
 
-        Mate mate = mateRepository.findById(mateId).orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+        Mate mate = mateRepository.findById(mateId).orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
 
         if(!mate.getRecruitYn()){
-            throw new MateRecruitDoneException("해당 디저트메이트 모집 마감입니다.");
+            throw new BusinessException(ErrorCode.MATE_RECRUIT_DONE);
         }
 
         MateMember mateMember = mateMemberRepository.findByMateIdAndUserId(mateId, userId)
@@ -166,15 +165,15 @@ public class MateMemberService {
         }
 
         if (mateMember.isBanned()) {
-            throw new MateApplyBannedException("디저트메이트 강퇴 당한 사람입니다. 신청 불가능합니다.");
+            throw new BusinessException(ErrorCode.MATE_APPLY_BANNED);
         }
 
         if (mateMember.isPending()) {
-            throw new MateApplyWaitException("메이트 신청 대기 중입니다.");
+            throw new BusinessException(ErrorCode.MATE_APPLY_WAIT);
         }
 
         if (mateMember.isReject()) {
-            throw new MateApplyRejectException("거절 된 메이트입니다. 신청 불가능합니다.");
+            throw new BusinessException(ErrorCode.MATE_APPLY_REJECT);
         }
 
 
@@ -196,7 +195,7 @@ public class MateMemberService {
 
         }
 
-        throw new AlreadyTeamMemberException("해당 사용자는 이미 팀원입니다.");
+        throw new BusinessException(ErrorCode.ALREADY_TEAM_MEMBER);
 
 
 
@@ -217,7 +216,8 @@ public class MateMemberService {
         Long userId = validate.getUserId();
 
         MateMember mateMember = mateMemberRepository.findByMateIdAndUserId(mateId, userId)
-                .orElseThrow(() ->  new MateNotFoundException("디저트메이트 신청하신 분이 아닙니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_PENDING_MEMBER));
+
 
         assert mateMember != null;
         if(mateMember.isPending()){
@@ -237,9 +237,7 @@ public class MateMemberService {
 
         //userId로 userUuid 조회
         List<UserEntity> users = mateMembers.stream()
-                .flatMap(mateMember ->
-                        userRepository.findAllUserUuidAndNicknameById(mateMember.getUserId()).stream()
-                )
+                .map(mateMember -> userService.findById(mateMember.getUserId()))
                 .toList();
 
 
@@ -252,8 +250,8 @@ public class MateMemberService {
                         user = users.stream()
                                 .filter(u -> u.getId().equals(mateMember.getUserId()))
                                 .findFirst()
-                                .orElseThrow(() -> new UserNotFoundExcption("사용자 정보를 찾을 수 없습니다."));
-                    } catch (UserNotFoundExcption e) {
+                                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+                    } catch (BusinessException e) {
                         throw new RuntimeException(e);
                     }
 
@@ -281,14 +279,15 @@ public class MateMemberService {
 
         //mateMember 테이블에서 생성자 조회
         MateMember creator = mateMemberRepository.findGradeByMateIdAndUserIdAndDeletedAtIsNull(mateId, creatorId)
-                .orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 멤버입니다."));
-
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_MEMBER_NOT_FOUND));
         if (creator.getGrade().equals(MateMemberGrade.CREATOR)) {
 
-            Long acceptUserId = userRepository.findIdByUserUuid(request.getAcceptUserUuid());
+            UserEntity acceptUserEntity = userService.findByUserUuid(request.getAcceptUserUuid());
+
+            Long acceptUserId = acceptUserEntity.getId();
 
             MateMember acceptUser = mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, acceptUserId)
-                    .orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 멤버입니다."));
+                    .orElseThrow(() -> new BusinessException(ErrorCode.MATE_MEMBER_NOT_FOUND));
 
 
             mateMemberRepository.updateApplyStatus(MateApplyStatus.APPROVED, mateId, acceptUser.getUserId());
@@ -310,26 +309,32 @@ public class MateMemberService {
 
         //mateMember 테이블에서 생성자 조회
         MateMember creator = mateMemberRepository.findGradeByMateIdAndUserIdAndDeletedAtIsNull(mateId, creatorId)
-                .orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 멤버입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_MEMBER_NOT_FOUND));
 
         if (creator.getGrade().equals(MateMemberGrade.CREATOR)) {
 
-            Long rejectUserId = userRepository.findIdByUserUuid(request.getRejectUserUuid());
 
-            MateMember rejectUser = mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, rejectUserId)
-                    .orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 멤버입니다."));
-
-
-            mateMemberRepository.updateApplyStatus(MateApplyStatus.REJECTED, mateId, rejectUser.getUserId());
-            rejectUser.setApplyStatus(MateApplyStatus.REJECTED);
             try {
+
+                UserEntity rejectUserEntity = userService.findByUserUuid(request.getRejectUserUuid());
+
+                Long rejectUserId = rejectUserEntity.getId();
+
+                MateMember rejectUser = mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, rejectUserId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.MATE_MEMBER_NOT_FOUND));
+
+
+                mateMemberRepository.updateApplyStatus(MateApplyStatus.REJECTED, mateId, rejectUser.getUserId());
+                rejectUser.setApplyStatus(MateApplyStatus.REJECTED);
 
                 rejectUser.softDelete();
 
                 // 변경된 모든 멤버 저장
                 mateMemberRepository.save(rejectUser);
-            } catch (Exception e) {
-                System.out.println("❌ 디저트메이트 멤버 삭제 중 오류 발생: " + e.getMessage());
+            } catch (BusinessException e){
+                throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+            }catch (Exception e) {
+                log.error("❌ 디저트메이트 멤버 삭제 중 오류 발생: " + e.getMessage());
                 throw new RuntimeException("디저트메이트 멤버 삭제 실패: " + e.getMessage(), e);
             }
         }
@@ -350,30 +355,36 @@ public class MateMemberService {
 
         //mateMember 테이블에서 생성자 조회
         MateMember creator = mateMemberRepository.findGradeByMateIdAndUserIdAndDeletedAtIsNull(mateId, creatorId)
-                .orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 멤버입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_MEMBER_NOT_FOUND));
 
         if (creator.getGrade().equals(MateMemberGrade.CREATOR)) {
 
-            Long banUserId = userRepository.findIdByUserUuid(request.getBanUserUuid());
 
-            MateMember banUser = mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, banUserId)
-                    .orElseThrow(() -> new UserNotFoundExcption("존재하지 않는 멤버입니다."));
-
-            mateMemberRepository.updateApplyStatus(MateApplyStatus.BANNED, mateId, banUser.getUserId());
-            banUser.setApplyStatus(MateApplyStatus.BANNED);
             try {
+
+                UserEntity banUserEntity = userService.findByUserUuid(request.getBanUserUuid());
+
+                Long banUserId = banUserEntity.getId();
+
+                MateMember banUser = mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, banUserId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.MATE_MEMBER_NOT_FOUND));
+
+                mateMemberRepository.updateApplyStatus(MateApplyStatus.BANNED, mateId, banUser.getUserId());
+                banUser.setApplyStatus(MateApplyStatus.BANNED);
 
                 banUser.softDelete();
 
                 // 변경된 모든 멤버 저장
                 mateMemberRepository.save(banUser);
 
+            }  catch (BusinessException e){
+                throw new BusinessException(ErrorCode.USER_NOT_FOUND);
             } catch (Exception e) {
-                System.out.println("❌ 디저트메이트 멤버 강퇴 중 오류 발생: " + e.getMessage());
+                log.error("❌ 디저트메이트 멤버 강퇴 중 오류 발생: " + e.getMessage());
                 throw new RuntimeException("디저트메이트 멤버 강퇴 실패: " + e.getMessage(), e);
             }
         } else {
-            throw new PermissionDeniedException("메이트 관리자 권한이 없습니다.");
+            throw new BusinessException(ErrorCode.MATE_PERMISSION_DENIED);
         }
     }
 
@@ -396,18 +407,18 @@ public class MateMemberService {
 
         //디저트 메이트 멤버인지 확인
         mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, userId)
-                .orElseThrow(() -> new MateMemberNotFoundExcption("디저트메이트 멤버가 아닙니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_MEMBER_NOT_FOUND));
 
 
         MateMember mateMember = mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, userId)
-                .orElseThrow(() -> new MateMemberNotFoundExcption("존재하지 않는 멤버입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_MEMBER_NOT_FOUND));
         try {
             mateMember.softDelete();
 
             mateMemberRepository.save(mateMember);
 
         } catch (Exception e) {
-            System.out.println("❌ 디저트메이트 멤버 탈퇴 중 오류 발생: " + e.getMessage());
+            log.error("❌ 디저트메이트 멤버 탈퇴 중 오류 발생: " + e.getMessage());
             throw new RuntimeException("디저트메이트 멤버 탈퇴 실패: " + e.getMessage(), e);
 
         }
@@ -422,7 +433,7 @@ public class MateMemberService {
 
         // mateUuid로 mateId 조회
         Long mateId = mateRepository.findMateIdByMateUuid(mateUuid)
-                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
 
 
         return new MateUserIds(mateId, null);
@@ -434,13 +445,18 @@ public class MateMemberService {
      * */
     public MateUserIds validateUser (UUID userUuid){
 
-        // userUuid로 userId 조회
-        Long userId = userRepository.findIdByUserUuid(userUuid);
 
-        if (userId == null) {
-            throw new UserNotFoundExcption("존재하지 않는 유저입니다.");
+        try {
+            // userUuid로 userId 조회
+            UserEntity user = userService.findByUserUuid(userUuid);
+            Long userId = user.getId();
+
+            return new MateUserIds(null, userId);
+
+        } catch (BusinessException e) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
-        return new MateUserIds(null, userId);
+
     }
 
 
@@ -452,16 +468,21 @@ public class MateMemberService {
 
         // mateUuid로 mateId 조회
         Long mateId = mateRepository.findMateIdByMateUuid(mateUuid)
-                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
 
 
-        // userUuid로 userId 조회
-        Long userId = userRepository.findIdByUserUuid(userUuid);
-        if (userId == null) {
-            throw new UserNotFoundExcption("존재하지 않는 유저입니다.");
+        try {
+            // userUuid로 userId 조회
+            UserEntity user = userService.findByUserUuid(userUuid);
+            Long userId = user.getId();
+
+
+            return new MateUserIds(mateId, userId);
+
+        } catch (BusinessException e) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
-        return new MateUserIds(mateId, userId);
     }
 
 

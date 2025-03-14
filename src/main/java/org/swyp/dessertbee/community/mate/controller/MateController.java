@@ -12,11 +12,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.community.mate.dto.request.MateCreateRequest;
 import org.swyp.dessertbee.community.mate.dto.request.MateReportRequest;
 import org.swyp.dessertbee.community.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MatesPageResponse;
-import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.community.mate.service.MateService;
 import org.swyp.dessertbee.user.service.UserServiceImpl;
 
@@ -116,7 +117,7 @@ public class MateController {
     ) {
 
         if (from >= to) {
-            throw new FromToMateException("잘못된 범위 요청입니다.");
+            throw new BusinessException(ErrorCode.INVALID_RANGE);
         }
 
         int size = to - from;
@@ -138,9 +139,8 @@ public class MateController {
                                                          @RequestParam(required = false, defaultValue = "10") int to){
 
         if (from >= to) {
-            throw new FromToMateException("잘못된 범위 요청입니다.");
+            throw new BusinessException(ErrorCode.INVALID_RANGE);
         }
-
         int size = to - from;
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);

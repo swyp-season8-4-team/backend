@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.community.mate.dto.request;
+package org.swyp.dessertbee.community.review.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -12,8 +12,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class MateReplyCreateRequest {
-
+public class ReviewReplyCreateRequest {
 
     @NotNull
     private UUID userUuid;
@@ -22,6 +21,4 @@ public class MateReplyCreateRequest {
     private String content;
 
     private String report;
-
-
 }

@@ -6,6 +6,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.swyp.dessertbee.common.entity.ImageType;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.community.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MatesPageResponse;
@@ -13,7 +15,6 @@ import org.swyp.dessertbee.community.mate.entity.Mate;
 import org.swyp.dessertbee.community.mate.entity.MateApplyStatus;
 import org.swyp.dessertbee.community.mate.entity.MateMember;
 import org.swyp.dessertbee.community.mate.entity.SavedMate;
-import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.community.mate.repository.MateCategoryRepository;
 import org.swyp.dessertbee.community.mate.repository.MateMemberRepository;
 import org.swyp.dessertbee.community.mate.repository.MateRepository;
@@ -21,7 +22,6 @@ import org.swyp.dessertbee.community.mate.repository.SavedMateRepository;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
-import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.user.service.UserService;
 
 import java.util.Collections;
@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
 public class SavedMateService {
 
     private final MateRepository mateRepository;
-    private final UserRepository userRepository;
     private final SavedMateRepository savedMateRepository;
     private final MateMemberRepository mateMemberRepository;
     private final MateCategoryRepository mateCategoryRepository;
@@ -52,25 +51,28 @@ public class SavedMateService {
         UserEntity user = userService.getCurrentUser();
 
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
 
-        // userUuid로 userId 조회
-        Long userId = userRepository.findIdByUserUuid(user.getUserUuid());
-        if (userId == null) {
-            throw new UserNotFoundExcption("존재하지 않는 유저입니다.");
+
+        Long userId = user.getId();
+        try {
+            userService.findById(userId);
+
+            SavedMate savedMate = savedMateRepository.findByMate_MateIdAndUserId(mate.getMateId(), userId);
+            if(savedMate != null) {
+                throw new BusinessException(ErrorCode.DUPLICATION_SAVED_STORE);
+            }
+
+            savedMateRepository.save(
+                    SavedMate.builder()
+                            .mate(mate)
+                            .userId(user.getId())
+                            .build()
+            );
+
+        } catch (BusinessException e) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
-
-        SavedMate savedMate = savedMateRepository.findByMate_MateIdAndUserId(mate.getMateId(), userId);
-        if(savedMate != null) {
-            throw new DuplicationSavedMateException("이미 저장된 디저트메이트입니다.");
-        }
-
-        savedMateRepository.save(
-                SavedMate.builder()
-                        .mate(mate)
-                        .userId(userId)
-                        .build()
-        );
 
 
     }
@@ -85,22 +87,25 @@ public class SavedMateService {
         UserEntity user = userService.getCurrentUser();
 
         Long mateId = mateRepository.findMateIdByMateUuid(mateUuid)
-                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
 
-        // userUuid로 userId 조회
-        Long userId = userRepository.findIdByUserUuid(user.getUserUuid());
+        Long userId = user.getId();
 
 
-        if (userId == null) {
-            throw new UserNotFoundExcption("존재하지 않는 유저입니다.");
+
+        try {
+            userService.findById(userId);
+
+            SavedMate savedMate = savedMateRepository.findByMate_MateIdAndUserId(mateId, userId);
+            if(savedMate == null) {
+                throw new BusinessException(ErrorCode.SAVED_MATE_NOT_FOUND);
+            }
+
+            savedMateRepository.delete(savedMate);
+        } catch (BusinessException e) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
-        SavedMate savedMate = savedMateRepository.findByMate_MateIdAndUserId(mateId, userId);
-        if(savedMate == null) {
-            throw new SavedMateNotFoundException("저장하지 않은 디저트메이트입니다.");
-        }
-
-        savedMateRepository.delete(savedMate);
     }
 
     /**
@@ -111,7 +116,7 @@ public class SavedMateService {
         // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
         UserEntity user = userService.getCurrentUser();
 
-        Long userId = userRepository.findIdByUserUuid(user.getUserUuid());
+        Long userId = user.getId();
 
 
         // 1️⃣ 현재 사용자가 저장한 SavedMate 목록을 가져오기 (페이징 처리)

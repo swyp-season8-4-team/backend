@@ -13,6 +13,7 @@ import org.swyp.dessertbee.role.entity.UserRoleEntity;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Stream;
 
 @Entity
 @Table(

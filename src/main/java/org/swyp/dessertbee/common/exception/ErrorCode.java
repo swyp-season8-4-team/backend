@@ -98,17 +98,20 @@ public enum ErrorCode {
     MATE_PERMISSION_DENIED(HttpStatus.FORBIDDEN, "M008","메이트 관리자 권한이 없습니다."),
     MATE_REPLY_NOT_FOUND(HttpStatus.NOT_FOUND, "M009" , "존재하지 않는 댓글입니다."),
     MATE_MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "M010", "디저트메이트 멤버가 아닙니다."),
-    MATE_REPLY_NOT_AUTHOR(HttpStatus.FORBIDDEN, "M011", "댓글 작성자가 아닙니다."),
-    SAVED_STORE_DUPLICATION(HttpStatus.CONFLICT, "M012", "이미 저장된 디저트메이트입니다."),
+    REPLY_NOT_AUTHOR(HttpStatus.FORBIDDEN, "M011", "댓글 작성자가 아닙니다."),
+    DUPLICATION_SAVED_STORE(HttpStatus.CONFLICT, "M012", "이미 저장된 디저트메이트입니다."),
     SAVED_MATE_NOT_FOUND(HttpStatus.NOT_FOUND,"M013" , "저장하지 않은 디저트메이트입니다."),
     MATE_RECRUIT_DONE(HttpStatus.FORBIDDEN,"M014" , "해당 디저트메이트 모집 마감입니다."),
     DUPLICATION_REPORT(HttpStatus.CONFLICT, "M015", "이미 신고된 게시물입니다."),
+    MATE_NOT_PENDING_MEMBER(HttpStatus.NOT_FOUND, "M016",  "디저트메이트 신청하신 분이 아닙니다."),
 
 
     //커뮤니티 리뷰
     COMMUNITY_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "R001" , "존재하지 않는 리뷰입니다." ),
-    IMAGE_INDEX_NOT_FOUND(HttpStatus.BAD_REQUEST, "R02", "요청된 이미지 인덱스가 이미지 파일 수보다 적습니다."),
-    DUPLICATE_DELETE_IMAGE_IDS(HttpStatus.BAD_REQUEST,"R03" , "중복된 이미지 삭제 ID가 존재합니다.");
+    IMAGE_INDEX_NOT_FOUND(HttpStatus.BAD_REQUEST, "R002", "요청된 이미지 인덱스가 이미지 파일 수보다 적습니다."),
+    DUPLICATE_DELETE_IMAGE_IDS(HttpStatus.BAD_REQUEST,"R003" , "중복된 이미지 삭제 ID가 존재합니다."),
+    REVIEW_REPLY_NOT_FOUND(HttpStatus.NOT_FOUND, "R004", "존재하지 않는 리뷰 댓글입니다.");
+
 
     private final HttpStatus httpStatus;
     private final String code;

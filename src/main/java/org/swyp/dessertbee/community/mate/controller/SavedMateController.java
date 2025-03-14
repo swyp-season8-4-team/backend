@@ -7,8 +7,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.community.mate.dto.response.MatesPageResponse;
-import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.community.mate.service.SavedMateService;
 
 import java.util.HashMap;
@@ -64,7 +65,7 @@ public class SavedMateController {
     ){
 
         if (from >= to) {
-            throw new FromToMateException("잘못된 범위 요청입니다.");
+            throw new BusinessException(ErrorCode.INVALID_RANGE);
         }
 
         int size = to - from;
