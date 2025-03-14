@@ -322,11 +322,8 @@ public class ReviewService {
      * 커뮤니티 리뷰 정보 조회 중복 코드
      * */
     public ReviewResponse mapToReviewDetailResponse(Review review, Long currentUserId, int views) {
-
-        // review 테이블의 기본 정보는 그대로 사용하고,
-        // review_content 테이블에서 해당 리뷰의 콘텐츠를 순서대로 조회합니다.
+        // review 테이블의 기본 정보 사용
         List<ReviewContent> contents = reviewContentRepository.findByReviewIdOrderByReviewIdAsc(review.getReviewId());
-
 
         List<Image> images = imageRepository.findIdAndUrlByRefTypeAndRefId(ImageType.REVIEW, review.getReviewId());
 
@@ -337,10 +334,8 @@ public class ReviewService {
                     if ("text".equals(content.getType())) {
                         dto.setValue(content.getValue());
                     } else if ("image".equals(content.getType())) {
-                        // reviewContent에 저장된 이미지 URL과 imageUuid 사용
                         dto.setImageUrl(content.getValue());
                         dto.setImageUuid(content.getImageUuid());
-                        // 이미지 테이블에서 imageUuid에 해당하는 이미지 ID를 찾아서 설정합니다.
                         Optional<Image> matchingImage = images.stream()
                                 .filter(image -> image.getUrl().equals(content.getValue()))
                                 .findFirst();
@@ -350,10 +345,7 @@ public class ReviewService {
                 })
                 .collect(Collectors.toList());
 
-
-
-
-        // 나머지 메타데이터 처리 (예: 리뷰 카테고리, 작성자, 프로필 이미지 등)
+        // 리뷰 카테고리 및 작성자 정보 조회
         String reviewCategory = String.valueOf(reviewRepository.findNameByReviewCategoryId(review.getReviewCategoryId()));
 
         UserEntity user = userRepository.findById(review.getUserId())
@@ -361,12 +353,13 @@ public class ReviewService {
 
         String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, review.getReviewId());
 
-        SavedReview savedReview = (currentUserId != null)
-                ? savedReviewRepository.findBySavedReviewIdAndUserId(review.getReviewId(), currentUserId)
-                : null;
-        boolean saved = savedReview != null;
+        // ✅ 저장된 리뷰 확인하는 로직 수정
+        boolean saved = false;
+        if (currentUserId != null) {
+            SavedReview savedReview = savedReviewRepository.findByReview_ReviewIdAndUserId(review.getReviewId(), currentUserId);
+            saved = savedReview != null;
+        }
 
-        // ReviewResponse에 contentList(리뷰 콘텐츠 배열)를 포함시킵니다.
         return ReviewResponse.fromEntity(user, review, contentList, reviewCategory, profileImage, views, saved);
     }
 

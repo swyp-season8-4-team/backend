@@ -106,18 +106,20 @@ public class SavedReviewService {
      * 커뮤니티 리뷰 저장 전체보기
      * */
     public ReviewPageResponse getSavedReviews(Pageable pageable) {
-
-        // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
         UserEntity user = userService.getCurrentUser();
         Long currentUserId = (user != null) ? user.getId() : null;
 
         Page<SavedReview> reviewsPage = savedReviewRepository.findByUserId(pageable, currentUserId);
 
-
         List<ReviewResponse> reviews = reviewsPage.stream()
-                .map(review -> {
-                    ReviewStatistics reviewStatistics = reviewStatisticsRepository.findByReviewId(review.getReview().getReviewId());
-                    return reviewService.mapToReviewDetailResponse(review.getReview(), currentUserId, reviewStatistics.getViews());
+                .map(savedReview -> {
+                    Review review = savedReview.getReview();
+                    ReviewStatistics reviewStatistics = reviewStatisticsRepository.findByReviewId(review.getReviewId());
+
+                    // ✅ 저장한 리뷰 목록에서는 saved를 무조건 true로 설정
+                    ReviewResponse response = reviewService.mapToReviewDetailResponse(review, currentUserId, reviewStatistics.getViews());
+                    response.setSaved(true);
+                    return response;
                 })
                 .toList();
 
