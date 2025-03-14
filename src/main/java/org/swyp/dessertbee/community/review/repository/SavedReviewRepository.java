@@ -8,4 +8,6 @@ import org.swyp.dessertbee.community.review.entity.SavedReview;
 @Repository
 public interface SavedReviewRepository extends JpaRepository<SavedReview, Long> {
     SavedReview findBySavedReviewIdAndUserId(Long reviewId, Long userId);
+
+    SavedReview findByReview_ReviewIdAndUserId(Long reviewId, Long userId);
 }

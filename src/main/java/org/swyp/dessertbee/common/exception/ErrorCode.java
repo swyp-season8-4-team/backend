@@ -104,7 +104,7 @@ public enum ErrorCode {
     MATE_RECRUIT_DONE(HttpStatus.FORBIDDEN,"M014" , "해당 디저트메이트 모집 마감입니다."),
     DUPLICATION_REPORT(HttpStatus.CONFLICT, "M015", "이미 신고된 게시물입니다."),
     MATE_NOT_PENDING_MEMBER(HttpStatus.NOT_FOUND, "M016",  "디저트메이트 신청하신 분이 아닙니다."),
-
+    DUPLICATION_SAVED_MATE(HttpStatus.CONFLICT, "M017", "이미 저장된 디저트메이트입니다."),
 
     //커뮤니티 리뷰
     COMMUNITY_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "R001" , "존재하지 않는 리뷰입니다." ),
@@ -112,7 +112,9 @@ public enum ErrorCode {
     DUPLICATE_DELETE_IMAGE_IDS(HttpStatus.BAD_REQUEST,"R003" , "중복된 이미지 삭제 ID가 존재합니다."),
     REVIEW_REPLY_NOT_FOUND(HttpStatus.NOT_FOUND, "R004", "존재하지 않는 리뷰 댓글입니다."),
     IMAGE_UUID_NOT_FOUND(HttpStatus.NOT_FOUND, "R005", "존재하지 않는 이미지 UUID 입니다."),
-    IMAGE_UPLOAD_FAILED(HttpStatus.CONFLICT, "R006", "이미지 업로드 시 문제가 생겼습니다.");
+    IMAGE_UPLOAD_FAILED(HttpStatus.CONFLICT, "R006", "이미지 업로드 시 문제가 생겼습니다."),
+    DUPLICATION_SAVED_REVIEW(HttpStatus.CONFLICT, "R007", "이미 저장된 커뮤니티 리뷰입니다."),
+    SAVED_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "R008", "저장된 커뮤니티 리뷰가 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

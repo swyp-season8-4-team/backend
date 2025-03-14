@@ -60,7 +60,7 @@ public class SavedMateService {
 
             SavedMate savedMate = savedMateRepository.findByMate_MateIdAndUserId(mate.getMateId(), userId);
             if(savedMate != null) {
-                throw new BusinessException(ErrorCode.DUPLICATION_SAVED_STORE);
+                throw new BusinessException(ErrorCode.DUPLICATION_SAVED_MATE);
             }
 
             savedMateRepository.save(
