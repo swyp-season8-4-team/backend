@@ -19,6 +19,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 
@@ -266,9 +267,9 @@ public class ImageService {
     }
 
     /**
-     * 다중 이미지 순서 넣고 업로드
+     * 이미지 업로드 uuid 추가
      */
-    public Image uploadAndSaveImages(MultipartFile file, ImageType refType, Long refId, String folder, Integer idx) {
+    public Image reviewUploadAndSaveImage(MultipartFile file, ImageType refType, Long refId, String folder) {
         if (file == null) return null;
 
         try {
@@ -279,7 +280,6 @@ public class ImageService {
                     .path(folder)
                     .fileName(file.getOriginalFilename())
                     .url(url)
-                    .imageIndex(idx)
                     .build();
 
             imageRepository.save(image);
@@ -290,5 +290,15 @@ public class ImageService {
             log.error("이미지 업로드 실패 - type: {}, refId: {}", refType, refId, e);
             throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR);
         }
+    }
+
+    @Transactional
+    public Image updatePartialImage(List<Long> deleteImageIds, MultipartFile newFiles, ImageType refType, Long refId, String folder) {
+        if (deleteImageIds != null && !deleteImageIds.isEmpty()) {
+            deleteImagesByIds(deleteImageIds);
+        }
+
+        return reviewUploadAndSaveImage(newFiles, refType, refId, folder);
+
     }
 }
