@@ -321,7 +321,7 @@ public class ReviewService {
     /**
      * 커뮤니티 리뷰 정보 조회 중복 코드
      * */
-    private ReviewResponse mapToReviewDetailResponse(Review review, Long currentUserId, int views) {
+    public ReviewResponse mapToReviewDetailResponse(Review review, Long currentUserId, int views) {
 
         // review 테이블의 기본 정보는 그대로 사용하고,
         // review_content 테이블에서 해당 리뷰의 콘텐츠를 순서대로 조회합니다.
