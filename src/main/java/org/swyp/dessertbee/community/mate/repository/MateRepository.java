@@ -38,7 +38,7 @@ public interface MateRepository extends JpaRepository<Mate, Long> {
             "AND (:keyword IS NULL OR (m.title LIKE CONCAT('%', :keyword, '%') " +
             "     OR m.content LIKE CONCAT('%', :keyword, '%') " +
             "     OR m.placeName LIKE CONCAT('%', :keyword, '%'))) " +
-            "ORDER BY m.mateId DESC")
+            "ORDER BY m.createdAt DESC")
     Page<Mate> findByDeletedAtIsNullAndMateCategoryId(@Param("mateCategoryId") Long mateCategoryId,
                                                       @Param("keyword") String keyword,
                                                       Pageable pageable);
