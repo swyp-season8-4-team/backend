@@ -51,7 +51,7 @@ public class PreferenceService {
      */
     public boolean isUserPreferenceSet(UserEntity user) {
         // 사용자의 선호도 설정이 존재하고 비어있지 않은 경우 true 반환
-        return user.getUserPreferences() != null && !user.getUserPreferences().isEmpty();
+        return user.isPreferenceSetFlag();
     }
 
     /**
@@ -64,7 +64,14 @@ public class PreferenceService {
         user.getUserPreferences().clear();
 
         // 새로운 선호도가 없는 경우 종료
-        if (newPreferenceIds == null || newPreferenceIds.isEmpty()) {
+        if (newPreferenceIds != null && newPreferenceIds.isEmpty()) {
+            user.setPreferenceSetFlag(true);
+            updateSavedStoresPreferences(user, new HashSet<>());
+            return;
+        }
+
+        if (newPreferenceIds == null) {
+            user.setPreferenceSetFlag(false);
             return;
         }
 
@@ -84,7 +91,7 @@ public class PreferenceService {
                     .build();
             user.getUserPreferences().add(userPreference);
         });
-
+        user.setPreferenceSetFlag(true);
         // 유저가 저장한 가게(SavedStore)의 선호도도 업데이트
         updateSavedStoresPreferences(user, preferences);
     }
@@ -102,10 +109,10 @@ public class PreferenceService {
 
         // 모든 저장된 가게의 선호도를 새로운 선호도로 업데이트
         for (SavedStore savedStore : savedStores) {
-            savedStore.getUserPreferences().clear();
-            savedStore.setUserPreferences(newPreferences.stream()
+            List<Long> preferenceIds = newPreferences.stream()
                     .map(PreferenceEntity::getId)
-                    .toList());
+                    .collect(Collectors.toList());
+            savedStore.setUserPreferences(preferenceIds);
         }
 
         // 변경된 가게 선호도 저장

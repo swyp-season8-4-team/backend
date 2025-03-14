@@ -296,16 +296,17 @@ public class ReviewService {
         Review review = reviewRepository.findByReviewUuid(reviewUuid)
                 .orElseThrow(() -> new BusinessException(ErrorCode.COMMUNITY_REVIEW_NOT_FOUND));
 
+        List<ReviewContent> reviewContents = reviewContentRepository.findByReviewIdAndDeletedAtIsNull(review.getReviewId());
+        if (reviewContents.isEmpty()) {
+            throw new BusinessException(ErrorCode.COMMUNITY_REVIEW_NOT_FOUND);
+        }
         try {
-
-            List<ReviewContent> reviewContents = reviewContentRepository.findByReviewIdAndDeletedAtIsNull(review.getReviewId());
-
+            review.softDelete();
+            reviewRepository.save(review);
             for (ReviewContent reviewContent : reviewContents) {
                 reviewContent.softDelete();
+                reviewContentRepository.save(reviewContent);
             }
-
-            reviewRepository.save(review);
-            reviewContentRepository.saveAll(reviewContents);
 
             imageService.deleteImagesByRefId(ImageType.REVIEW, review.getReviewId());
         } catch (Exception e)
