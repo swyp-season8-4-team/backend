@@ -3,6 +3,8 @@ package org.swyp.dessertbee.common.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.UUID;
+
 @Entity
 @Getter
 @Setter
@@ -31,5 +33,9 @@ public class Image {
 
     @Column(nullable = false)
     private String url;
+
+    @Column
+    private UUID imageUuid;
+
 
 }

@@ -108,10 +108,11 @@ public enum ErrorCode {
 
     //커뮤니티 리뷰
     COMMUNITY_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "R001" , "존재하지 않는 리뷰입니다." ),
-    IMAGE_INDEX_NOT_FOUND(HttpStatus.BAD_REQUEST, "R002", "요청된 이미지 인덱스가 이미지 파일 수보다 적습니다."),
+    IMAGE_COUNT_MISMATCH(HttpStatus.BAD_REQUEST, "R002", "요청된 이미지 인덱스가 이미지 파일 수보다 적습니다."),
     DUPLICATE_DELETE_IMAGE_IDS(HttpStatus.BAD_REQUEST,"R003" , "중복된 이미지 삭제 ID가 존재합니다."),
-    REVIEW_REPLY_NOT_FOUND(HttpStatus.NOT_FOUND, "R004", "존재하지 않는 리뷰 댓글입니다.");
-
+    REVIEW_REPLY_NOT_FOUND(HttpStatus.NOT_FOUND, "R004", "존재하지 않는 리뷰 댓글입니다."),
+    IMAGE_UUID_NOT_FOUND(HttpStatus.NOT_FOUND, "R005", "존재하지 않는 이미지 UUID 입니다."),
+    IMAGE_UPLOAD_FAILED(HttpStatus.CONFLICT, "R006", "이미지 업로드 시 문제가 생겼습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

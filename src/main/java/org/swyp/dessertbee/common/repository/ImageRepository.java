@@ -6,6 +6,7 @@ import org.swyp.dessertbee.common.entity.Image;
 import org.swyp.dessertbee.common.entity.ImageType;
 
 import java.util.List;
+import java.util.UUID;
 
 @Repository
 public interface ImageRepository extends JpaRepository<Image, Long> {
@@ -16,4 +17,7 @@ public interface ImageRepository extends JpaRepository<Image, Long> {
     List<Image> findByRefTypeAndRefIdIn(ImageType refType, List<Long> refIds);
 
     List<Image> findIdAndUrlByRefTypeAndRefId(ImageType imageType, Long reviewId);
+
+
+    Image findByRefIdAndImageUuid(Long reviewId, UUID imageUuid);
 }

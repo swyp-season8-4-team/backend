@@ -14,6 +14,7 @@ import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.repository.ImageRepository;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.community.review.dto.ReviewContentDto;
+import org.swyp.dessertbee.community.review.dto.ReviewImage;
 import org.swyp.dessertbee.community.review.dto.request.ReviewCreateRequest;
 import org.swyp.dessertbee.community.review.dto.request.ReviewUpdateRequest;
 import org.swyp.dessertbee.community.review.dto.response.ReviewPageResponse;
@@ -56,84 +57,75 @@ public class ReviewService {
      * */
     @Transactional
     public ReviewResponse createReview(ReviewCreateRequest request, List<MultipartFile> reviewImages) {
-
+        // 1. 사용자 확인
         Long userId = userRepository.findIdByUserUuid(request.getUserUuid());
-        try {
-            userService.findById(userId);
-
-
-            // 장소명으로 storeId 조회
-            Long storeId = storeRepository.findStoreIdByName(request.getPlace().getPlaceName());
-
-            Review review = reviewRepository.save(
-                    Review.builder()
-                            .userId(userId)
-                            .storeId(storeId)
-                            .reviewCategoryId(request.getReviewCategoryId())
-                            .title(request.getTitle())
-                            .placeName(request.getPlace().getPlaceName())
-                            .latitude(request.getPlace().getLatitude())
-                            .longitude(request.getPlace().getLongitude())
-                            .address(request.getPlace().getAddress())
-                            .build()
-            );
-
-            // 이미지 타입 콘텐츠들 중 최대 imageIndex 계산 (이미지가 하나라도 있는 경우에만)
-            int maxImageIndex = request.getContents().stream()
-                    .filter(content -> "image".equals(content.getType()))
-                    .mapToInt(ReviewContentDto::getImageIndex)
-                    .max()
-                    .orElse(-1);
-
-            // 이미지 콘텐츠가 있다면, 제공된 이미지 파일 수와 인덱스 일치를 검증합니다.
-            if (maxImageIndex != -1) {
-                if (reviewImages == null || reviewImages.size() != (maxImageIndex + 1)) {
-                    throw new BusinessException(ErrorCode.IMAGE_INDEX_NOT_FOUND);
-                }
-            }
-
-            // 리뷰 콘텐츠 배열 처리 (텍스트와 이미지 모두 처리)
-            for (ReviewContentDto contentRequest : request.getContents()) {
-                if ("text".equals(contentRequest.getType())) {
-                    ReviewContent reviewContent = ReviewContent.builder()
-                            .reviewId(review.getReviewId())
-                            .type("text")
-                            .value(contentRequest.getValue())
-                            .build();
-                    reviewContentRepository.save(reviewContent);
-                } else if ("image".equals(contentRequest.getType())) {
-                    int idx = contentRequest.getImageIndex();
-                    if (idx < reviewImages.size()) {
-                        MultipartFile imageFile = reviewImages.get(idx);
-                        String folder = "review/" + review.getReviewId();
-                        Image image = imageService.uploadAndSaveImages(imageFile, ImageType.REVIEW, review.getReviewId(), folder, idx);
-                        ReviewContent reviewContent = ReviewContent.builder()
-                                .reviewId(review.getReviewId())
-                                .type("image")
-                                .value(image.getUrl())
-                                .build();
-                        reviewContentRepository.save(reviewContent);
-                    }
-                }
-            }
-
-            //리뷰 통계 초기화
-            reviewStatisticsRepository.save(
-                    ReviewStatistics.builder()
-                            .reviewId(review.getReviewId())
-                            .views(0)
-                            .saves(0)
-                            .reviews(0)
-                            .build()
-            );
-
-            return getReviewDetail(review.getReviewUuid());
-
-        } catch (BusinessException e) {
+        if (userId == null) {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
+        userService.findById(userId);
 
+        // 2. 장소명으로 storeId 조회 후 리뷰 저장
+        Long storeId = storeRepository.findStoreIdByName(request.getPlace().getPlaceName());
+        Review review = reviewRepository.save(
+                Review.builder()
+                        .userId(userId)
+                        .storeId(storeId)
+                        .reviewCategoryId(request.getReviewCategoryId())
+                        .title(request.getTitle())
+                        .placeName(request.getPlace().getPlaceName())
+                        .latitude(request.getPlace().getLatitude())
+                        .longitude(request.getPlace().getLongitude())
+                        .address(request.getPlace().getAddress())
+                        .build()
+        );
+
+        // 3. 콘텐츠 순회하여 리뷰 내용 저장 (텍스트와 이미지 처리)
+        int imageCounter = 0;
+        for (ReviewContentDto contentRequest : request.getContents()) {
+            if ("text".equals(contentRequest.getType())) {
+                ReviewContent reviewContent = ReviewContent.builder()
+                        .reviewId(review.getReviewId())
+                        .type("text")
+                        .value(contentRequest.getValue())
+                        .build();
+                reviewContentRepository.save(reviewContent);
+            } else if ("image".equals(contentRequest.getType())) {
+                // 전달된 이미지 파일이 부족하면 예외 처리
+                if (imageCounter >= reviewImages.size()) {
+                    throw new BusinessException(ErrorCode.IMAGE_COUNT_MISMATCH);
+                }
+
+                // reviewImages에서 순차적으로 이미지를 하나씩 가져옵니다.
+                MultipartFile reviewImage = reviewImages.get(imageCounter);
+
+                String folder = "review/" + review.getReviewId();
+                // imageUuid는 JSON 요청의 해당 필드 값을 사용합니다.
+                Image image = imageService.uploadAndSaveImage(reviewImage, ImageType.REVIEW, review.getReviewId(), folder, contentRequest.getImageUuid());
+                if (image == null) {
+                    throw new BusinessException(ErrorCode.IMAGE_UPLOAD_FAILED);
+                }
+                ReviewContent reviewContent = ReviewContent.builder()
+                        .reviewId(review.getReviewId())
+                        .type("image")
+                        .value(image.getUrl())
+                        .build();
+                reviewContentRepository.save(reviewContent);
+            }
+        }
+
+        // 4. 리뷰 통계 초기화
+        reviewStatisticsRepository.save(
+                ReviewStatistics.builder()
+                        .reviewId(review.getReviewId())
+                        .views(0)
+                        .saves(0)
+                        .reviews(0)
+                        .build()
+        );
+
+        return getReviewDetail(review.getReviewUuid());
     }
+
 
 
     /**
@@ -277,10 +269,10 @@ public class ReviewService {
                     if ("text".equals(content.getType())) {
                         dto.setValue(content.getValue());
                     } else if ("image".equals(content.getType())) {
-                        Optional<Image> matchingImage = images.stream()
-                                .findFirst();
+                        Optional<Image> matchingImage = images.stream().findFirst();
                         dto.setImageUrl(matchingImage.map(Image::getUrl).orElse(null));
                         dto.setImageId(matchingImage.map(Image::getId).orElse(null));
+                        dto.setImageUuid(matchingImage.map(Image::getImageUuid).orElse(null));
                     }
                     return dto;
                 })

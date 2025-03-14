@@ -19,6 +19,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 
@@ -266,9 +267,9 @@ public class ImageService {
     }
 
     /**
-     * 다중 이미지 순서 넣고 업로드
+     * 이미지 업로드 uuid 추가
      */
-    public Image uploadAndSaveImages(MultipartFile file, ImageType refType, Long refId, String folder, Integer idx) {
+    public Image uploadAndSaveImage(MultipartFile file, ImageType refType, Long refId, String folder, UUID imageUuid) {
         if (file == null) return null;
 
         try {
@@ -279,6 +280,7 @@ public class ImageService {
                     .path(folder)
                     .fileName(file.getOriginalFilename())
                     .url(url)
+                    .imageUuid(imageUuid)
                     .build();
 
             imageRepository.save(image);
