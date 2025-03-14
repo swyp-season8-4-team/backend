@@ -269,7 +269,7 @@ public class ImageService {
     /**
      * 이미지 업로드 uuid 추가
      */
-    public Image uploadAndSaveImage(MultipartFile file, ImageType refType, Long refId, String folder, UUID imageUuid) {
+    public Image reviewUploadAndSaveImage(MultipartFile file, ImageType refType, Long refId, String folder) {
         if (file == null) return null;
 
         try {
@@ -280,7 +280,6 @@ public class ImageService {
                     .path(folder)
                     .fileName(file.getOriginalFilename())
                     .url(url)
-                    .imageUuid(imageUuid)
                     .build();
 
             imageRepository.save(image);
@@ -291,5 +290,15 @@ public class ImageService {
             log.error("이미지 업로드 실패 - type: {}, refId: {}", refType, refId, e);
             throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR);
         }
+    }
+
+    @Transactional
+    public Image updatePartialImage(List<Long> deleteImageIds, MultipartFile newFiles, ImageType refType, Long refId, String folder) {
+        if (deleteImageIds != null && !deleteImageIds.isEmpty()) {
+            deleteImagesByIds(deleteImageIds);
+        }
+
+        return reviewUploadAndSaveImage(newFiles, refType, refId, folder);
+
     }
 }

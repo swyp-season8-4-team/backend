@@ -2,8 +2,10 @@ package org.swyp.dessertbee.community.review.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.swyp.dessertbee.community.review.dto.request.ReviewUpdateRequest;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 
 @Entity
@@ -29,12 +31,16 @@ public class ReviewContent {
     private String value; // 텍스트 내용 또는 이미지 URL 등
 
     @Column(name = "image_Uuid")
-    private Integer imageUuid;
+    private UUID imageUuid;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
     public void softDelete(){
         this.deletedAt = LocalDateTime.now();
+    }
+
+    public void update(String value) {
+        this.value = value;
     }
 }

@@ -12,6 +12,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReviewContentDto {
+    private Long id;
     private String type; // "text" 또는 "image"
     private String value; // 텍스트 내용 (type이 "text"인 경우)
     private Long imageId;
