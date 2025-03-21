@@ -6,7 +6,6 @@ import lombok.*;
 @Entity
 @Table(name = "banner_click")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

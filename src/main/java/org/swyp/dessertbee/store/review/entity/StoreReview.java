@@ -12,7 +12,6 @@ import java.util.UUID;
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -45,6 +44,11 @@ public class StoreReview {
     private LocalDateTime updatedAt;
 
     private LocalDateTime deletedAt;
+
+    public void updateContentAndRating(String content, BigDecimal rating) {
+        this.content = content;
+        this.rating = rating;
+    }
 
     public void softDelete(){
         this.deletedAt = LocalDateTime.now();

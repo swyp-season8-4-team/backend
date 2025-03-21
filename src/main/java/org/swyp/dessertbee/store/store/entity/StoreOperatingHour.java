@@ -13,7 +13,6 @@ import java.time.LocalTime;
 @Entity
 @Table(name = "store_operating_hour")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

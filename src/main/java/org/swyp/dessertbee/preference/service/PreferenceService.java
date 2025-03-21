@@ -112,7 +112,7 @@ public class PreferenceService {
             List<Long> preferenceIds = newPreferences.stream()
                     .map(PreferenceEntity::getId)
                     .collect(Collectors.toList());
-            savedStore.setUserPreferences(preferenceIds);
+            savedStore.updateUserPreferences(preferenceIds);
         }
 
         // 변경된 가게 선호도 저장

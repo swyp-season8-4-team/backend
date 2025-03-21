@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "store_holiday")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

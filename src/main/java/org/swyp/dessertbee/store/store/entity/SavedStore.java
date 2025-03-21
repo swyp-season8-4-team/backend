@@ -10,7 +10,6 @@ import java.util.List;
 @Entity
 @Table(name = "saved_store")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -35,4 +34,8 @@ public class SavedStore {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    public void updateUserPreferences(List<Long> newPreferences) {
+        this.userPreferences = newPreferences;
+    }
 }
