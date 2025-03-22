@@ -16,10 +16,3 @@ spring:
 app:    # 추가
   client:    # 추가
     redirect-url: "https://desserbee.com"    # 추가
-springdoc:
-  api-docs:
-    path: /api-docs          # OpenAPI 문서 엔드포인트
-  swagger-ui:
-    path: /swagger-ui         # Swagger UI 접근 경로
-    enabled: true
-    url: https://api.desserbee.com/api-docs
