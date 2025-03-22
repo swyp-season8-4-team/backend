@@ -20,6 +20,9 @@ import org.swyp.dessertbee.auth.dto.passwordreset.PasswordResetRequest;
 import org.swyp.dessertbee.auth.dto.signup.SignUpRequest;
 import org.swyp.dessertbee.auth.service.AuthService;
 import jakarta.validation.Valid;
+import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
+import org.swyp.dessertbee.common.exception.ErrorCode;
+import org.swyp.dessertbee.common.exception.ErrorResponse;
 
 
 @Tag(name = "Authentication", description = "인증 관련 API")
@@ -33,21 +36,19 @@ public class AuthController {
 
     @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "회원가입 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청"),
-            @ApiResponse(responseCode = "409", description = "이미 존재하는 이메일")
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "회원가입 성공",
+                    content = @Content(schema = @Schema(implementation = LoginResponse.class))
+            ),
     })
+    @ApiErrorResponses({ErrorCode.PASSWORD_MISMATCH, ErrorCode.DUPLICATE_NICKNAME, ErrorCode.DUPLICATE_EMAIL, ErrorCode.IMAGE_REFERENCE_INVALID, ErrorCode.IMAGE_FETCH_ERROR})
     @PostMapping("/signup")
     public ResponseEntity<LoginResponse> signup(
             @RequestHeader("X-Email-Verification-Token") String verificationToken,
             @Valid @RequestBody SignUpRequest request
-    ) throws BadRequestException {
+    ) {
         log.debug("회원가입 요청: {}", request.getEmail());
-
-        // 비밀번호 일치 여부 확인
-        if (!request.getPassword().equals(request.getConfirmPassword())) {
-            throw new BadRequestException("비밀번호가 일치하지 않습니다.");
-        }
 
         // 회원가입 처리
         LoginResponse signupResponse = authService.signup(request, verificationToken);
@@ -56,14 +57,8 @@ public class AuthController {
 
 
     @Operation(summary = "로그인", description = "이메일과 비밀번호로 로그인합니다.")
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "로그인 성공",
-                    content = @Content(schema = @Schema(implementation = LoginResponse.class))
-            ),
-            @ApiResponse(responseCode = "401", description = "인증 실패")
-    })
+    @ApiResponse( responseCode = "200", description = "로그인 성공", content = @Content(schema = @Schema(implementation = LoginResponse.class)))
+    @ApiErrorResponses({ErrorCode.PASSWORD_MISMATCH, ErrorCode.IMAGE_REFERENCE_INVALID, ErrorCode.IMAGE_FETCH_ERROR, ErrorCode.USER_NOT_FOUND})
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
             @Parameter(description = "로그인 정보", required = true)
@@ -74,10 +69,7 @@ public class AuthController {
     }
 
     @Operation(summary = "로그아웃", description = "현재 로그인된 사용자를 로그아웃합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "로그아웃 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 실패")
-    })
+    @ApiResponse(responseCode = "200", description = "로그아웃 성공")
     @PostMapping("/logout")
     public ResponseEntity<LogoutResponse> logout(
             @Parameter(description = "JWT 액세스 토큰", required = true)
@@ -90,11 +82,8 @@ public class AuthController {
     }
 
     @Operation(summary = "비밀번호 재설정", description = "이메일 인증 후 비밀번호를 재설정합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "비밀번호 재설정 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청"),
-            @ApiResponse(responseCode = "401", description = "인증 실패")
-    })
+    @ApiResponse(responseCode = "200", description = "비밀번호 재설정 성공")
+    @ApiErrorResponses({ErrorCode.INVALID_VERIFICATION_TOKEN, ErrorCode.INVALID_VERIFICATION_TOKEN})
     @PostMapping("/password/reset")
     public ResponseEntity<?> resetPassword(
             @Parameter(description = "이메일 인증 토큰", required = true)
@@ -107,11 +96,8 @@ public class AuthController {
     }
 
     @Operation(summary = "토큰 재발급", description = "Authorization 헤더의 리프레시 토큰을 사용하여 새로운 액세스 토큰을 발급받습니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "토큰 재발급 성공",
-                    content = @Content(schema = @Schema(implementation = TokenResponse.class))),
-            @ApiResponse(responseCode = "401", description = "유효하지 않은 리프레시 토큰")
-    })
+    @ApiResponse(responseCode = "200", description = "토큰 재발급 성공", content = @Content(schema = @Schema(implementation = TokenResponse.class)))
+    @ApiErrorResponses({ErrorCode.INVALID_CREDENTIALS, ErrorCode.INVALID_VERIFICATION_TOKEN, ErrorCode.EXPIRED_VERIFICATION_TOKEN})
     @PostMapping("/token/refresh")
     public ResponseEntity<TokenResponse> refreshToken(
             @Parameter(description = "리프레시 토큰 (Bearer 형식)", required = true)

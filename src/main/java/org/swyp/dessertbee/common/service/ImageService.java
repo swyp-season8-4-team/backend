@@ -100,20 +100,24 @@ public class ImageService {
      * 특정 refType과 refId에 해당하는 이미지 조회 (URL 반환)
      */
     public List<String> getImagesByTypeAndId(ImageType refType, Long refId) {
-        if (refId == null) {
-            log.error("이미지 조회 실패 - refId가 null입니다. refType: {}", refType);
-            return List.of();
+        if (refType == null || refId == null) {
+            log.error("이미지 조회 실패 - 유효하지 않은 참조 정보: refType: {}, refId: {}", refType, refId);
+            throw new BusinessException(ErrorCode.IMAGE_REFERENCE_INVALID);
         }
 
-        List<Image> images = imageRepository.findByRefTypeAndRefId(refType, refId);
+        try {
+            List<Image> images = imageRepository.findByRefTypeAndRefId(refType, refId);
+            // 로그 추가
+            log.info("조회된 이미지 개수: {}, refType: {}, refId: {}", images.size(), refType, refId);
 
-        // 로그 추가
-        log.info("조회된 이미지 개수: {}, refType: {}, refId: {}", images.size(), refType, refId);
-
-        return imageRepository.findByRefTypeAndRefId(refType, refId)
-                .stream()
-                .map(Image::getUrl)
-                .collect(Collectors.toList());
+            // 조회된 이미지 리스트에서 URL만 추출
+            return images.stream()
+                    .map(Image::getUrl)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("이미지 조회 중 오류 발생 - refType: {}, refId: {}", refType, refId, e);
+            throw new BusinessException(ErrorCode.IMAGE_FETCH_ERROR);
+        }
     }
 
     /**
