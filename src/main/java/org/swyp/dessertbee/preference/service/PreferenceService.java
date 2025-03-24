@@ -65,13 +65,13 @@ public class PreferenceService {
 
         // 새로운 선호도가 없는 경우 종료
         if (newPreferenceIds != null && newPreferenceIds.isEmpty()) {
-            user.setPreferenceSetFlag(true);
+            user.markPreferenceSet();
             updateSavedStoresPreferences(user, new HashSet<>());
             return;
         }
 
         if (newPreferenceIds == null) {
-            user.setPreferenceSetFlag(false);
+            user.unmarkPreferenceSet();
             return;
         }
 
@@ -91,7 +91,7 @@ public class PreferenceService {
                     .build();
             user.getUserPreferences().add(userPreference);
         });
-        user.setPreferenceSetFlag(true);
+        user.markPreferenceSet();
         // 유저가 저장한 가게(SavedStore)의 선호도도 업데이트
         updateSavedStoresPreferences(user, preferences);
     }

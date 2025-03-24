@@ -21,7 +21,6 @@ import java.time.LocalDateTime;
         }
 )
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -68,5 +67,9 @@ public class AuthEntity {
         this.refreshToken = newRefreshToken;
         this.refreshTokenExpiresAt = expiresAt;
         this.active = true;
+    }
+
+    public void updateProviderId(String providerId) {
+        this.providerId = providerId;
     }
 }

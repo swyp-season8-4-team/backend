@@ -8,7 +8,6 @@ import java.util.Set;
 @Entity
 @Table(name = "preference")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

@@ -230,19 +230,19 @@ public class UserServiceImpl implements UserService {
      */
     private void updateBasicInfo(UserEntity user, UserUpdateRequestDto updateRequest) {
         Optional.ofNullable(updateRequest.getName())
-                .ifPresent(user::setName);
+                .ifPresent(user::updateName);
 
         Optional.ofNullable(updateRequest.getNickname())
-                .ifPresent(user::setNickname);
+                .ifPresent(user::updateNickname);
 
         Optional.ofNullable(updateRequest.getPhoneNumber())
-                .ifPresent(user::setPhoneNumber);
+                .ifPresent(user::updatePhoneNumber);
 
         Optional.ofNullable(updateRequest.getAddress())
-                .ifPresent(user::setAddress);
+                .ifPresent(user::updateAddress);
 
         Optional.ofNullable(updateRequest.getGender())
-                .ifPresent(user::setGender);
+                .ifPresent(user::updateGender);
     }
 
     /**
@@ -251,7 +251,7 @@ public class UserServiceImpl implements UserService {
      */
     private void updateMbti(UserEntity user, String mbtiType) {
         if (mbtiType == null) {
-            user.setMbti(null);
+            user.removeMbti();
             return;
         }
 
@@ -261,7 +261,7 @@ public class UserServiceImpl implements UserService {
                         "유효하지 않은 MBTI 타입입니다: " + mbtiType
                 ));
 
-        user.setMbti(mbti);
+        user.updateMbti(mbti);
     }
 
     /**
@@ -271,7 +271,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deleteMyAccount() {
         UserEntity user = getCurrentUser();
-        user.setDeletedAt(LocalDateTime.now());
+        user.softDelete();
         userRepository.save(user);
 
         // 연관된 인증 정보도 비활성화

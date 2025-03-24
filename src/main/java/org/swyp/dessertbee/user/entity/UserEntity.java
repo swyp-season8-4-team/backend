@@ -24,7 +24,6 @@ import java.util.stream.Stream;
         }
 )
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -92,6 +91,61 @@ public class UserEntity {
     @Column(name = "preference_set_flag", nullable = false)
     private boolean preferenceSetFlag = false;
 
+    public enum Gender {
+        MALE,
+        FEMALE
+    }
+
+    // ==== 도메인 메서드 ====
+
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
+    public void updatePhoneNumber(String phoneNumber) {
+        if (phoneNumber != null) {
+            String numberOnly = phoneNumber.replaceAll("-", "");
+            this.phoneNumber = numberOnly.replaceFirst("(\\d{3})(\\d{4})(\\d{4})", "$1-$2-$3");
+        } else {
+            this.phoneNumber = null;
+        }
+    }
+
+    public void updateName(String name) {
+        this.name = name;
+    }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void updateAddress(String address) {
+        this.address = address;
+    }
+
+    public void updateGender(Gender gender) {
+        this.gender = gender;
+    }
+
+    public void updateMbti(MbtiEntity mbti) {
+        this.mbti = mbti;
+    }
+
+    public void removeMbti() {
+        this.mbti = null;
+    }
+
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    public void markPreferenceSet() {
+        this.preferenceSetFlag = true;
+    }
+
+    public void unmarkPreferenceSet() {
+        this.preferenceSetFlag = false;
+    }
 
     public void addRole(RoleEntity role) {
         UserRoleEntity userRole = UserRoleEntity.builder()
@@ -103,21 +157,6 @@ public class UserEntity {
 
     public void removeRole(UserRoleEntity userRole) {
         this.userRoles.remove(userRole);
-        userRole.setUser(null);
-    }
-
-    public enum Gender {
-        MALE,
-        FEMALE
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        if (phoneNumber != null) {
-            // 하이픈 제거 후 형식 통일
-            String numberOnly = phoneNumber.replaceAll("-", "");
-            this.phoneNumber = numberOnly.replaceFirst("(\\d{3})(\\d{4})(\\d{4})", "$1-$2-$3");
-        } else {
-            this.phoneNumber = null;
-        }
+        userRole.clearUser();
     }
 }

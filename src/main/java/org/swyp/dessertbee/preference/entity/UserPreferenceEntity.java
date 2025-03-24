@@ -7,7 +7,6 @@ import org.swyp.dessertbee.user.entity.UserEntity;
 @Entity
 @Table(name = "user_preference")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

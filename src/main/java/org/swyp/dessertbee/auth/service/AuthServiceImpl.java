@@ -267,7 +267,7 @@ public class AuthServiceImpl implements AuthService {
             UserEntity user = userService.findUserByEmail(request.getEmail());
 
             // 새 비밀번호 암호화 및 저장
-            user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+            user.updatePassword(passwordEncoder.encode(request.getNewPassword()));
             userRepository.save(user);
 
             // 로그아웃 처리 (기존 토큰 무효화)
