@@ -325,7 +325,7 @@ public class MateMemberService {
 
 
                 mateMemberRepository.updateApplyStatus(MateApplyStatus.REJECTED, mateId, rejectUser.getUserId());
-                rejectUser.setApplyStatus(MateApplyStatus.REJECTED);
+                rejectUser.updateStatus(MateApplyStatus.REJECTED);
 
                 rejectUser.softDelete();
 
@@ -370,7 +370,7 @@ public class MateMemberService {
                         .orElseThrow(() -> new BusinessException(ErrorCode.MATE_MEMBER_NOT_FOUND));
 
                 mateMemberRepository.updateApplyStatus(MateApplyStatus.BANNED, mateId, banUser.getUserId());
-                banUser.setApplyStatus(MateApplyStatus.BANNED);
+                banUser.updateStatus(MateApplyStatus.BANNED);
 
                 banUser.softDelete();
 

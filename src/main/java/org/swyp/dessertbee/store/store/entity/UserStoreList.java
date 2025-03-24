@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "user_store_list")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

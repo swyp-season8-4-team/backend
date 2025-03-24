@@ -460,17 +460,19 @@ public class StoreService {
         }
 
         // 가게 기본 정보 업데이트
-        store.setName(request.getName());
-        store.setPhone(request.getPhone());
-        store.setAddress(request.getAddress());
-        store.setStoreLink(request.getStoreLink());
-        store.setLatitude(request.getLatitude());
-        store.setLongitude(request.getLongitude());
-        store.setDescription(request.getDescription());
-        store.setAnimalYn(Boolean.TRUE.equals(request.getAnimalYn()));
-        store.setTumblerYn(Boolean.TRUE.equals(request.getTumblerYn()));
-        store.setParkingYn(Boolean.TRUE.equals(request.getParkingYn()));
-        store.setNotice(request.getNotice());
+        store.updateInfo(
+                request.getName(),
+                request.getPhone(),
+                request.getAddress(),
+                request.getStoreLink(),
+                request.getLatitude(),
+                request.getLongitude(),
+                request.getDescription(),
+                Boolean.TRUE.equals(request.getAnimalYn()),
+                Boolean.TRUE.equals(request.getTumblerYn()),
+                Boolean.TRUE.equals(request.getParkingYn()),
+                request.getNotice()
+        );
         storeRepository.save(store);
 
         if (storeImageFiles != null && !storeImageFiles.isEmpty()) {
@@ -562,7 +564,7 @@ public class StoreService {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
         }
 
-        store.setDeletedAt(LocalDateTime.now());
+        store.softDelete();
         storeRepository.save(store);
     }
 }

@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "saved_community_review")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

@@ -15,7 +15,6 @@ import java.util.UUID;
 @Entity
 @Table(name = "store")
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -94,6 +93,23 @@ public class Store {
         if (this.status == null) {
             this.status = StoreStatus.APPROVED;
         }
+    }
+
+    public void updateInfo(String name, String phone, String address, String storeLink,
+                           BigDecimal latitude, BigDecimal longitude, String description,
+                           Boolean animalYn, Boolean tumblerYn, Boolean parkingYn,
+                           List<String> notice) {
+        this.name = name;
+        this.phone = phone;
+        this.address = address;
+        this.storeLink = storeLink;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.description = description;
+        this.animalYn = animalYn;
+        this.tumblerYn = tumblerYn;
+        this.parkingYn = parkingYn;
+        this.notice = notice;
     }
 
     public void softDelete(){

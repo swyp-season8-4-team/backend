@@ -56,7 +56,7 @@ public class TokenService {
 
             // providerId가 null이 아닌 경우에만 설정
             if (providerId != null) {
-                auth.setProviderId(providerId);
+                auth.updateProviderId(providerId);
             }
 
             authRepository.save(auth);

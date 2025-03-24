@@ -2,6 +2,7 @@ package org.swyp.dessertbee.community.mate.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.time.LocalDateTime;
 
@@ -29,8 +30,6 @@ public class MateMember {
     @Column(nullable = false)
     private MateMemberGrade grade;
 
-    // Setter 메서드
-    @Setter
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private MateApplyStatus applyStatus;
@@ -39,6 +38,9 @@ public class MateMember {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    public void updateStatus(MateApplyStatus applyStatus) {
+        this.applyStatus = applyStatus;
+    }
 
     public void softDelete(){
         this.deletedAt = LocalDateTime.now();

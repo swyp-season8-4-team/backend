@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "saved_mate")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

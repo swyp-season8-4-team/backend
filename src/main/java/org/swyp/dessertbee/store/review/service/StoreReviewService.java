@@ -109,8 +109,7 @@ public class StoreReviewService {
             throw new BusinessException(ErrorCode.INVALID_STORE_REVIEW);
         }
 
-        review.setContent(request.getContent());
-        review.setRating(request.getRating());
+        review.updateContentAndRating(request.getContent(), request.getRating());
 
         // 이미지 처리
         if (newImages != null && !newImages.isEmpty()) {

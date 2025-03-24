@@ -7,7 +7,6 @@ import java.util.UUID;
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -36,6 +35,4 @@ public class Image {
 
     @Column
     private UUID imageUuid;
-
-
 }
