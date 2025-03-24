@@ -151,7 +151,7 @@ public class AuthServiceImpl implements AuthService {
             // 2. 비밀번호 검증
             if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
                 log.warn("로그인 실패 - 비밀번호 불일치: {}", request.getEmail());
-                throw new InvalidCredentialsException("비밀번호가 올바르지 않습니다.");
+                throw new PasswordMismatchException("비밀번호가 올바르지 않습니다.");
             }
 
             // 3. 사용자 권한 조회
@@ -297,26 +297,31 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     @Override
     public LogoutResponse logout(String accessToken) {
-        try {
-            // 유효한 토큰에서 사용자 UUID 추출
-            UUID userUuid;
-            try {
-                userUuid = jwtUtil.getUserUuid(accessToken, true);
-            } catch (Exception e) {
-                log.error("액세스 토큰에서 사용자 UUID 추출 실패", e);
-                throw new JwtTokenException(ErrorCode.JWT_TOKEN_MALFORMED, "액세스 토큰에서 사용자 정보를 추출할 수 없습니다.");
-            }
-            UserEntity user = userService.findByUserUuid(userUuid);
-            revokeRefreshToken(userUuid);
-            log.info("로그아웃 성공 - 사용자: {}, UUID: {}", user.getEmail(), userUuid);
+        // 토큰이 없는 경우도 로그아웃 성공으로 처리
+        if (accessToken == null || accessToken.trim().isEmpty()) {
+            log.info("토큰 없이 로그아웃 요청 - 성공으로 처리");
             return LogoutResponse.success();
-
-        } catch (BusinessException e) {
-            log.warn("로그아웃 실패 - 사유: {}", e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("로그아웃 처리 중 알 수 없는 오류 발생", e);
-            throw new AuthServiceException("로그아웃 처리 중 오류가 발생했습니다.");
         }
+
+        try {
+            // 토큰 파싱 시도
+            UUID userUuid = jwtUtil.getUserUuid(accessToken, true);
+
+            try {
+                // 리프레시 토큰 무효화 시도 (사용자를 찾을 수 없어도 계속 진행)
+                revokeRefreshToken(userUuid);
+                log.info("로그아웃 성공 - UUID: {}", userUuid);
+            } catch (Exception e) {
+                // 리프레시 토큰 무효화 실패해도 로그아웃은 성공으로 처리
+                log.warn("리프레시 토큰 무효화 실패 - UUID: {}, 사유: {}", userUuid, e.getMessage());
+            }
+
+        } catch (Exception e) {
+            // 토큰 파싱 실패해도 로그아웃은 성공으로 처리
+            log.warn("유효하지 않은 토큰으로 로그아웃 시도 - 성공으로 처리: {}", e.getMessage());
+        }
+
+        // 모든 경우에 로그아웃 성공 응답
+        return LogoutResponse.success();
     }
 }

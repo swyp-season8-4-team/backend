@@ -86,6 +86,10 @@ public enum ErrorCode {
     INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "F004", "지원하지 않는 파일 형식입니다."),
     FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "F005", "파일 크기가 제한을 초과했습니다."),
 
+    // Image
+    IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "I001", "이미지를 찾을 수 없습니다."),
+    IMAGE_REFERENCE_INVALID(HttpStatus.BAD_REQUEST, "I002", "잘못된 이미지 참조 정보입니다."),
+    IMAGE_FETCH_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "I003", "이미지 조회 중 오류가 발생했습니다."),
 
     //디저트메이트
     MATE_NOT_FOUND(HttpStatus.NOT_FOUND,"M001" ,"존재하지 않는 디저트메이트입니다." ),
