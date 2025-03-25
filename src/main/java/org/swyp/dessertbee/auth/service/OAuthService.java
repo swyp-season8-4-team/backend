@@ -8,7 +8,7 @@ import org.swyp.dessertbee.auth.dto.login.LoginResponse;
 import org.swyp.dessertbee.auth.enums.AuthProvider;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
-
+import org.swyp.dessertbee.auth.exception.OAuthExceptions.*;
 /**
  * OAuth 인증 처리를 담당하는 공통 서비스
  */
@@ -35,23 +35,20 @@ public class OAuthService {
             AuthProvider provider = AuthProvider.fromString(providerName);
 
             if (provider == null) {
-                throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE,
-                        "지원하지 않는 OAuth 제공자입니다: " + providerName);
+                throw new InvalidProviderException("OAuth 제공자가 입력되지 않았습니다.");
             }
 
             // enum을 사용하여 적절한 서비스 호출
             return switch (provider) {
                 case KAKAO -> kakaoOAuthService.processKakaoLogin(code);
                 // 추후 다른 OAuth 제공자 추가
-                default -> throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE,
-                        "아직 구현되지 않은 OAuth 제공자입니다: " + provider.getProviderName());
+                default -> throw new InvalidProviderException("아직 구현되지 않은 OAuth 제공자입니다: " + provider.getProviderName());
             };
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
             log.error("OAuth 로그인 처리 중 오류 발생 - 제공자: {}", providerName, e);
-            throw new BusinessException(ErrorCode.AUTHENTICATION_FAILED,
-                    "OAuth 로그인 처리 중 오류가 발생했습니다.");
+            throw new OAuthAuthenticationException("OAuth 로그인 처리 중 오류가 발생했습니다.");
         }
     }
 }
