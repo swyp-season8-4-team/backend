@@ -24,6 +24,8 @@ import org.swyp.dessertbee.role.repository.RoleRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.auth.exception.AuthExceptions.*;
+import org.swyp.dessertbee.auth.exception.OAuthExceptions.*;
+
 import java.util.*;
 import java.util.stream.Collectors;
 

@@ -28,6 +28,9 @@ public enum ErrorCode {
     AUTH_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "A008", "인증 서비스 처리 중 오류가 발생했습니다."),
     OAUTH_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "A008", "소셜 인증 서비스 처리 중 오류가 발생했습니다."),
 
+    // OAuth
+    INVALID_PROVIDER(HttpStatus.BAD_REQUEST, "O001", "지원되지 않는 OAuth 제공자입니다."),
+
 
     // JWT
     JWT_SIGNATURE_INVALID(HttpStatus.UNAUTHORIZED, "J001", "유효하지 않은 JWT 서명입니다."),
