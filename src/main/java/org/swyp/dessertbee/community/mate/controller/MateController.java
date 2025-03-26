@@ -20,8 +20,6 @@ import org.swyp.dessertbee.community.mate.dto.request.MateReportRequest;
 import org.swyp.dessertbee.community.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MatesPageResponse;
 import org.swyp.dessertbee.community.mate.service.MateService;
-import org.swyp.dessertbee.community.mate.service.MateServiceImpl;
-import org.swyp.dessertbee.user.service.UserServiceImpl;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -35,8 +33,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class MateController{
 
-    private final MateServiceImpl mateService;
-    private final UserServiceImpl userService;
+    private final MateService mateService;
 
     /**
      * 메이트 등록

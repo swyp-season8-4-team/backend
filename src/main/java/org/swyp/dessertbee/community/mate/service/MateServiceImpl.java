@@ -37,7 +37,7 @@ public class MateServiceImpl implements MateService {
     private final MateMemberRepository mateMemberRepository;
     private final MateCategoryRepository mateCategoryRepository;
     private final SavedMateRepository savedMateRepository;
-    private final MateMemberService mateMemberService;
+    private final MateMemberServiceImpl mateMemberService;
     private final MateReportRepository mateReportRepository;
     private final ReportRepository reportRepository;
     private final StoreRepository storeRepository;
@@ -101,6 +101,7 @@ public class MateServiceImpl implements MateService {
 
 
     /** 메이트 상세 정보 */
+    @Override
     public MateDetailResponse getMateDetail(UUID mateUuid) {
         // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
         UserEntity user = userService.getCurrentUser();
@@ -117,6 +118,7 @@ public class MateServiceImpl implements MateService {
     }
 
     /** 메이트 삭제 */
+    @Override
     @Transactional
     public void deleteMate(UUID mateUuid) {
 
@@ -145,6 +147,7 @@ public class MateServiceImpl implements MateService {
     /**
      * 메이트 수정
      * */
+    @Override
     @Transactional
     public void updateMate(UUID mateUuid, MateCreateRequest request, MultipartFile mateImage) {
 
@@ -169,6 +172,7 @@ public class MateServiceImpl implements MateService {
     /**
      * 디저트메이트 전체 조회
      * */
+    @Override
     @Transactional
     public MatesPageResponse getMates(Pageable pageable, String keyword, Long mateCategoryId) {
 
@@ -194,6 +198,7 @@ public class MateServiceImpl implements MateService {
     /**
      * 내가 참여한 디저트메이트 조회
      * */
+    @Override
     @Transactional
     public MatesPageResponse getMyMates(Pageable pageable) {
         // 현재 사용자 정보 및 userId 조회
@@ -215,6 +220,7 @@ public class MateServiceImpl implements MateService {
     /**
      * 디저트메이트 신고
      * */
+    @Override
     public void reportMate(UUID mateUuid, MateReportRequest request) {
 
         UserEntity user = userService.getCurrentUser();
