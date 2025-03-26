@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  app:
+    image: your-dockerhub-username/dessertbee:latest  # GitHub Actions에서 자동 치환할 거라서 냅두면 됩니다요
+    container_name: dessertbee-app
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    restart: always
+
+  redis:
+    image: redis:7.0
+    container_name: dessertbee-redis
+    ports:
+      - "6379:6379"
+    restart: always
