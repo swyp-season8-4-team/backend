@@ -116,15 +116,7 @@ public class AuthExceptions {
     /**
      * OAuth 인증 서비스 오류 예외
      */
-    public static class OAuthAuthenticationException extends BusinessException {
-        public OAuthAuthenticationException() {
-            super(ErrorCode.AUTHENTICATION_FAILED);
-        }
 
-        public OAuthAuthenticationException(String message) {
-            super(ErrorCode.AUTHENTICATION_FAILED, message);
-        }
-    }
 
     /**
      * JWT 토큰 오류 예외

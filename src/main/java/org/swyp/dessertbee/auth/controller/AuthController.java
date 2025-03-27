@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.coyote.BadRequestException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.auth.dto.TokenResponse;
@@ -22,7 +21,6 @@ import org.swyp.dessertbee.auth.service.AuthService;
 import jakarta.validation.Valid;
 import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
 import org.swyp.dessertbee.common.exception.ErrorCode;
-import org.swyp.dessertbee.common.exception.ErrorResponse;
 
 
 @Tag(name = "Authentication", description = "인증 관련 API")
@@ -35,13 +33,7 @@ public class AuthController {
     private final AuthService authService;
 
     @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다.")
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "회원가입 성공",
-                    content = @Content(schema = @Schema(implementation = LoginResponse.class))
-            ),
-    })
+    @ApiResponse( responseCode = "200", description = "회원가입 성공", content = @Content(schema = @Schema(implementation = LoginResponse.class)))
     @ApiErrorResponses({ErrorCode.PASSWORD_MISMATCH, ErrorCode.DUPLICATE_NICKNAME, ErrorCode.DUPLICATE_EMAIL, ErrorCode.IMAGE_REFERENCE_INVALID, ErrorCode.IMAGE_FETCH_ERROR})
     @PostMapping("/signup")
     public ResponseEntity<LoginResponse> signup(
