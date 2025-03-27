@@ -56,7 +56,13 @@ public enum ErrorCode {
 
     // Search Keyword
     SEARCH_KEYWORD_NOT_FOUND(HttpStatus.NOT_FOUND, "K001", "해당 검색 기록을 찾을 수 없습니다."),
-    SEARCH_KEYWORD_DELETE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "K002", "검색 기록 삭제에 실패했습니다."),
+    RECENT_KEYWORD_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "K002", "최근 검색 기록 삭제에 실패했습니다."),
+    SEARCH_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "K003", "검색어 서비스 처리 중 오류가 발생했습니다."),
+    RECENT_KEYWORD_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "K004", "최근 검색 기록 생성에 실패했습니다."),
+    OLD_KEYWORD_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "K005", "오래된 검색 기록 삭제에 실패했습니다."),
+    POPULAR_KEYWORD_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "K006", "인기 검색 기록 생성에 실패했습니다."),
+    POPULAR_KEYWORD_SYNC_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "K007", "인기 검색 기록 동기화에 실패했습니다."),
+    POPULAR_KEYWORD_INIT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "K008", "인기 검색 기록 초기화에 실패했습니다."),
 
     // Store
     STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "존재하지 않는 가게입니다."),
