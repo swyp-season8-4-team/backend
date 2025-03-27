@@ -27,4 +27,8 @@ public class StoreStatistics {
     private Integer reviews;
     private LocalDate createDate;
     private LocalDateTime createdAt;
+
+    public void increaseViews() {
+        this.views = this.views + 1;
+    }
 }
