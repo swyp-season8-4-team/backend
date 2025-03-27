@@ -1,6 +1,9 @@
 package org.swyp.dessertbee.store.store.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -10,6 +13,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.swyp.dessertbee.auth.dto.login.LoginResponse;
+import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.SearchService;
 import org.swyp.dessertbee.store.store.dto.request.StoreCreateRequest;
 import org.swyp.dessertbee.store.store.dto.request.StoreUpdateRequest;
@@ -36,6 +42,8 @@ public class StoreController {
 
     /** 가게 등록 */
     @Operation(summary = "가게 등록", description = "업주가 가게를 등록합니다.")
+    @ApiResponse( responseCode = "201", description = "가게 등록 성공", content = @Content(schema = @Schema(implementation = StoreDetailResponse.class)))
+    @ApiErrorResponses({ErrorCode.STORE_CREATION_FAILED, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.STORE_TAG_SAVE_FAILED, ErrorCode.INVALID_TAG_SELECTION, ErrorCode.INVALID_TAG_INCLUDED})
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StoreDetailResponse> createStore(
@@ -51,6 +59,8 @@ public class StoreController {
 
     /** 반경 내 가게 조회 */
     @Operation(summary = "반경 내 가게 조회", description = "지도 반경 내 가게를 조회합니다.")
+    @ApiResponse( responseCode = "200", description = "지도 반경 내 가게 조회 성공", content = @Content(schema = @Schema(implementation = StoreMapResponse.class)))
+    @ApiErrorResponses({ErrorCode.STORE_MAP_READ_FAILED, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.STORE_SEARCH_FAILED})
     @GetMapping("/map")
     public List<StoreMapResponse> getStoresByLocation(
             @RequestParam Double latitude,
@@ -85,6 +95,8 @@ public class StoreController {
      * 반경 내 가게 조회 (인증된 사용자의 취향 태그 기반)
      */
     @Operation(summary = "반경 내 사용자 취향 가게 조회", description = "반경 내에서 사용자의 취향 태그를 가진 가게를 조회합니다.")
+    @ApiResponse( responseCode = "200", description = "지도 반경 내 사용자 취향 태그 가진 가게 조회 성공", content = @Content(schema = @Schema(implementation = StoreMapResponse.class)))
+    @ApiErrorResponses({ErrorCode.PREFERENCE_STORE_READ_FAILED, ErrorCode.STORE_SERVICE_ERROR})
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
     @GetMapping("/map/my-preferences")
     public ResponseEntity<List<StoreMapResponse>> getStoresByMyPreferences(
@@ -98,6 +110,8 @@ public class StoreController {
 
     /** 가게 간략 정보 조회 */
     @Operation(summary = "가게 간략 정보 조회", description = "가게의 간략한 정보를 조회합니다.")
+    @ApiResponse( responseCode = "200", description = "가게 간략 정보 조회 성공", content = @Content(schema = @Schema(implementation = StoreSummaryResponse.class)))
+    @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.STORE_INFO_READ_FAILED})
     @GetMapping("/{storeUuid}/summary")
     public StoreSummaryResponse getStoreSummary(@PathVariable UUID storeUuid) {
         return storeService.getStoreSummary(storeUuid);
@@ -105,6 +119,8 @@ public class StoreController {
 
     /** 가게 상세 정보 조회 */
     @Operation(summary = "가게 상세 정보 조회", description = "가게의 상세한 정보를 조회합니다.")
+    @ApiResponse( responseCode = "200", description = "가게 상세 정보 조회 성공", content = @Content(schema = @Schema(implementation = StoreDetailResponse.class)))
+    @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.STORE_INFO_READ_FAILED})
     @GetMapping("/{storeUuid}/details")
     public StoreDetailResponse getStoreDetails(@PathVariable UUID storeUuid) {
         return storeService.getStoreDetails(storeUuid);
@@ -112,6 +128,8 @@ public class StoreController {
 
     /** 가게 수정 */
     @Operation(summary = "가게 수정", description = "업주가 가게의 정보를 수정합니다.")
+    @ApiResponse( responseCode = "200", description = "가게 수정 성공", content = @Content(schema = @Schema(implementation = StoreDetailResponse.class)))
+    @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.UNAUTHORIZED_ACCESS, ErrorCode.STORE_UPDATE_FAILED})
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @PatchMapping(value = "/{storeUuid}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StoreDetailResponse> updateStore(
@@ -128,6 +146,8 @@ public class StoreController {
 
     /** 가게 삭제 */
     @Operation(summary = "가게 삭제", description = "업주가 가게를 삭제합니다.")
+    @ApiResponse(responseCode = "204", description = "가게 삭제 성공")
+    @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.UNAUTHORIZED_ACCESS, ErrorCode.STORE_DELETE_FAILED})
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @DeleteMapping("/{storeUuid}")
     public ResponseEntity<Void> deleteStore(@PathVariable UUID storeUuid) {
