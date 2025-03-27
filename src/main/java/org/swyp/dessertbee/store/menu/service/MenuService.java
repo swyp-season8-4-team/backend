@@ -6,8 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
-import org.swyp.dessertbee.common.exception.BusinessException;
-import org.swyp.dessertbee.common.exception.ErrorCode;
+import org.swyp.dessertbee.store.menu.exception.MenuExceptions.*;
+import org.swyp.dessertbee.store.store.exception.StoreExceptions.*;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.common.util.CustomMultipartFile;
 import org.swyp.dessertbee.store.menu.dto.request.MenuCreateRequest;
@@ -44,111 +44,153 @@ public class MenuService {
 
     /** 특정 가게의 메뉴 목록 조회 */
     public List<MenuResponse> getMenusByStore(UUID storeUuid) {
-        Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
-        if (storeId == null) {
-            throw new BusinessException(ErrorCode.INVALID_STORE_UUID);
-        }
+        try{
+            Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
+            if (storeId == null) {
+                throw new InvalidStoreUuidException();
+            }
 
-        return menuRepository.findByStoreIdAndDeletedAtIsNull(storeId).stream()
-                .map(menu -> MenuResponse.fromEntity(menu, imageService.getImagesByTypeAndId(ImageType.MENU, menu.getMenuId())))
-                .collect(Collectors.toList());
+            return menuRepository.findByStoreIdAndDeletedAtIsNull(storeId).stream()
+                    .map(menu -> MenuResponse.fromEntity(menu, imageService.getImagesByTypeAndId(ImageType.MENU, menu.getMenuId())))
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("메뉴 목록 조회 처리 중 오류 발생 - 가게 Uuid: {}", storeUuid, e);
+            throw new MenuServiceException("메뉴 목록 조회 처리 중 오류가 발생했습니다.");
+        }
     }
 
     /** 특정 가게의 특정 메뉴 조회 */
     public MenuResponse getMenuByStore(UUID storeUuid, UUID menuUuid) {
-        Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
-        Long menuId = menuRepository.findMenuIdByMenuUuid(menuUuid);
-        if (menuId == null) {
-            throw new BusinessException(ErrorCode.INVALID_STORE_MENU_UUID);
-        }
-        Menu menu = menuRepository.findByMenuIdAndStoreIdAndDeletedAtIsNull(menuId, storeId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_STORE_MENU));
+        try{
+            Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
+            Long menuId = menuRepository.findMenuIdByMenuUuid(menuUuid);
+            if (menuId == null) {
+                throw new InvalidMenuUuidException();
+            }
+            Menu menu = menuRepository.findByMenuIdAndStoreIdAndDeletedAtIsNull(menuId, storeId)
+                    .orElseThrow(() -> new InvalidMenuException());
 
-        return MenuResponse.fromEntity(menu, imageService.getImagesByTypeAndId(ImageType.MENU, menuId));
+            return MenuResponse.fromEntity(menu, imageService.getImagesByTypeAndId(ImageType.MENU, menuId));
+        } catch (Exception e) {
+            log.error("단일 메뉴 조회 처리 중 오류 발생 - 가게 Uuid: {}, 메뉴 Uuid: {}", storeUuid, menuUuid, e);
+            throw new MenuServiceException("단일 메뉴 조회 처리 중 오류가 발생했습니다.");
+        }
     }
 
     /** 개별 메뉴 추가 (개별 메뉴 수정/추가 API 용) */
     public void addMenu(UUID storeUuid, MenuCreateRequest request, MultipartFile file) {
-        Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
-        if (storeId == null) {
-            throw new BusinessException(ErrorCode.INVALID_STORE_UUID);
-        }
+        try{
+            Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
+            if (storeId == null) {
+                throw new InvalidStoreUuidException();
+            }
 
-        Menu menu = Menu.builder()
-                .storeId(storeId)
-                .name(request.getName())
-                .price(request.getPrice())
-                .isPopular(request.getIsPopular())
-                .description(request.getDescription())
-                .build();
-        menuRepository.save(menu);
+            Menu menu = Menu.builder()
+                    .storeId(storeId)
+                    .name(request.getName())
+                    .price(request.getPrice())
+                    .isPopular(request.getIsPopular())
+                    .description(request.getDescription())
+                    .build();
+            menuRepository.save(menu);
 
-        // 이미지 파일이 있는 경우 재정의된 파일명으로 업로드
-        if (file != null) {
-            MultipartFile renamedFile = renameFile(file, menu.getName());
-            imageService.uploadAndSaveImage(renamedFile, ImageType.MENU, menu.getMenuId(), "menu/" + menu.getMenuId());
+            // 이미지 파일이 있는 경우 재정의된 파일명으로 업로드
+            if (file != null) {
+                MultipartFile renamedFile = renameFile(file, menu.getName());
+                imageService.uploadAndSaveImage(renamedFile, ImageType.MENU, menu.getMenuId(), "menu/" + menu.getMenuId());
+            }
+        } catch (MenuCreationFailedException e){
+            log.warn("단일 메뉴 추가 실패 - 가게 Uuid: {}, 사유: {}", storeUuid, e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("단일 메뉴 추가 처리 중 오류 발생 - 가게 Uuid: {}", storeUuid, e);
+            throw new MenuServiceException("메뉴 추가 처리 중 오류가 발생했습니다.");
         }
     }
 
     /** 메뉴 전체 일괄 추가 (가게 등록 시 사용) */
     public void addMenus(UUID storeUuid, List<MenuCreateRequest> menuRequests, Map<String, MultipartFile> menuImageFiles) {
-        if (menuRequests == null || menuRequests.isEmpty()) return;
+        try{
+            if (menuRequests == null || menuRequests.isEmpty()) return;
 
-        Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
-        if (storeId == null) {
-            throw new BusinessException(ErrorCode.INVALID_STORE_UUID);
-        }
+            Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
+            if (storeId == null) {
+                throw new InvalidStoreUuidException();
+            }
 
-        // 메뉴 저장
-        List<Menu> menus = menuRequests.stream()
-                .map(request -> Menu.builder()
-                        .storeId(storeId)
-                        .name(request.getName())
-                        .price(request.getPrice())
-                        .isPopular(request.getIsPopular())
-                        .description(request.getDescription())
-                        .build())
-                .collect(Collectors.toList());
-        menuRepository.saveAll(menus);
+            // 메뉴 저장
+            List<Menu> menus = menuRequests.stream()
+                    .map(request -> Menu.builder()
+                            .storeId(storeId)
+                            .name(request.getName())
+                            .price(request.getPrice())
+                            .isPopular(request.getIsPopular())
+                            .description(request.getDescription())
+                            .build())
+                    .collect(Collectors.toList());
+            menuRepository.saveAll(menus);
 
-        // 각 메뉴에 대해 이미지 파일 업로드 처리
-        for (int i = 0; i < menus.size(); i++) {
-            Menu menu = menus.get(i);
-            String imageKey = menuRequests.get(i).getImageFileKey();
-            if (imageKey != null) {
-                MultipartFile file = menuImageFiles.get(imageKey);
-                if (file != null) {
-                    MultipartFile renamedFile = renameFile(file, menu.getName());
-                    imageService.uploadAndSaveImage(renamedFile, ImageType.MENU, menu.getMenuId(), "menu/" + menu.getMenuId());
+            // 각 메뉴에 대해 이미지 파일 업로드 처리
+            for (int i = 0; i < menus.size(); i++) {
+                Menu menu = menus.get(i);
+                String imageKey = menuRequests.get(i).getImageFileKey();
+                if (imageKey != null) {
+                    MultipartFile file = menuImageFiles.get(imageKey);
+                    if (file != null) {
+                        MultipartFile renamedFile = renameFile(file, menu.getName());
+                        imageService.uploadAndSaveImage(renamedFile, ImageType.MENU, menu.getMenuId(), "menu/" + menu.getMenuId());
+                    }
                 }
             }
+        } catch (MenuCreationFailedException e){
+            log.warn("메뉴 전체 등록 실패 - 가게 Uuid: {}, 사유: {}", storeUuid, e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("메뉴 전체 등록 처리 중 오류 발생 - 가게 Uuid: {}", storeUuid, e);
+            throw new MenuServiceException("메뉴 전체 등록 처리 중 오류가 발생했습니다.");
         }
     }
 
     /** 메뉴 수정 */
     public void updateMenu(UUID storeUuid, UUID menuUuid, MenuCreateRequest request, MultipartFile file) {
-        Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
-        Long menuId = menuRepository.findMenuIdByMenuUuid(menuUuid);
-        Menu menu = menuRepository.findByMenuIdAndStoreIdAndDeletedAtIsNull(menuId, storeId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_MENU_NOT_FOUND));
+        try{
+            Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
+            Long menuId = menuRepository.findMenuIdByMenuUuid(menuUuid);
+            Menu menu = menuRepository.findByMenuIdAndStoreIdAndDeletedAtIsNull(menuId, storeId)
+                    .orElseThrow(() -> new MenuNotFoundException());
 
-        menu.update(request.getName(), request.getPrice(), request.getIsPopular(), request.getDescription());
+            menu.update(request.getName(), request.getPrice(), request.getIsPopular(), request.getDescription());
 
-        if (file != null) {
-            MultipartFile renamedFile = renameFile(file, menu.getName());
-            imageService.updateImage(ImageType.MENU, menuId, renamedFile, "menu/" + menuId);
+            if (file != null) {
+                MultipartFile renamedFile = renameFile(file, menu.getName());
+                imageService.updateImage(ImageType.MENU, menuId, renamedFile, "menu/" + menuId);
+            }
+        } catch (MenuUpdateFailedException e){
+            log.warn("단일 메뉴 수정 실패 - 가게 Uuid: {}, 메뉴 Uuid: {}, 사유: {}", storeUuid, menuUuid, e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("단일 메뉴 수정 처리 중 오류 발생 - 가게 Uuid: {}, 메뉴 Uuid: {}", storeUuid, menuUuid, e);
+            throw new MenuServiceException("단일 메뉴 수정 처리 중 오류가 발생했습니다.");
         }
     }
 
     /** 메뉴 삭제 */
     public void deleteMenu(UUID storeUuid, UUID menuUuid) {
-        Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
-        Long menuId = menuRepository.findMenuIdByMenuUuid(menuUuid);
-        Menu menu = menuRepository.findByMenuIdAndStoreIdAndDeletedAtIsNull(menuId, storeId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_MENU_NOT_FOUND));
+        try{
+            Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
+            Long menuId = menuRepository.findMenuIdByMenuUuid(menuUuid);
+            Menu menu = menuRepository.findByMenuIdAndStoreIdAndDeletedAtIsNull(menuId, storeId)
+                    .orElseThrow(() -> new MenuNotFoundException());
 
-        menu.softDelete();
-        menuRepository.save(menu);
-        imageService.deleteImagesByRefId(ImageType.MENU, menuId);
+            menu.softDelete();
+            menuRepository.save(menu);
+            imageService.deleteImagesByRefId(ImageType.MENU, menuId);
+        } catch (MenuDeleteFailedException e){
+            log.warn("단일 메뉴 삭제 실패 - 가게 Uuid: {}, 메뉴 Uuid: {}, 사유: {}", storeUuid, menuUuid, e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("단일 메뉴 삭제 처리 중 오류 발생 - 가게 Uuid: {}, 메뉴 Uuid: {}", storeUuid, menuUuid, e);
+            throw new MenuServiceException("단일 메뉴 삭제 처리 중 오류가 발생했습니다.");
+        }
     }
 }
