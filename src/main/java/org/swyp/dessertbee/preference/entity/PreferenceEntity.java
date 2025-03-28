@@ -23,6 +23,7 @@ public class PreferenceEntity {
     @Column(name = "preference_desc", length = 200)
     private String preferenceDesc;
 
+    @Builder.Default
     @OneToMany(mappedBy = "preference", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserPreferenceEntity> userPreferences = new HashSet<>();
 }
