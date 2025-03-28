@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +18,6 @@ import org.swyp.dessertbee.common.exception.ErrorCode;
  * OAuth 인증을 처리하는 컨트롤러
  * 프론트엔드에서 받은 인가 코드로 OAuth 인증 처리
  */
-@Tag(name = "OAuth", description = "소셜 인증 관련 API")
 @RestController
 @RequestMapping("/api/auth/oauth2")
 @RequiredArgsConstructor
