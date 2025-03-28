@@ -70,3 +70,6 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+jar {
+    archiveFileName = "desserbeeApp.jar"
+}

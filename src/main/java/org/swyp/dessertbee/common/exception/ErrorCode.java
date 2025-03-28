@@ -45,8 +45,6 @@ public enum ErrorCode {
 
     // User
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "사용자를 찾을 수 없습니다."),
-    USER_DELETED(HttpStatus.GONE, "U002", "탈퇴한 사용자입니다."),
-    INVALID_USER_STATUS(HttpStatus.BAD_REQUEST, "U003", "유효하지 않은 사용자 상태입니다."),
     UNAUTHORIZED_ACCESS(HttpStatus.FORBIDDEN, "U004", "해당 정보에 대한 접근 권한이 없습니다."),
     INVALID_USER_UUID(HttpStatus.BAD_REQUEST, "U005", "유효하지 않은 사용자 식별자입니다."),
 
@@ -118,7 +116,6 @@ public enum ErrorCode {
     FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "F005", "파일 크기가 제한을 초과했습니다."),
 
     // Image
-    IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "I001", "이미지를 찾을 수 없습니다."),
     IMAGE_REFERENCE_INVALID(HttpStatus.BAD_REQUEST, "I002", "잘못된 이미지 참조 정보입니다."),
     IMAGE_FETCH_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "I003", "이미지 조회 중 오류가 발생했습니다."),
 

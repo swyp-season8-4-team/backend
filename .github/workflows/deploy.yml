@@ -1,75 +1,98 @@
-name: Deploy DesserBee Application
+name: Deploy DessertBee Application
 
 on:
   push:
-    branches: [ main, dev ]  # main 또는 dev 브랜치에 푸시될 때만 실행
+    branches: [ main, dev ]
   workflow_dispatch:
 
 jobs:
   build-and-deploy:
-    # 작업 실행 환경 : 깃허브에서 빌드하고 자르파일만 넣기 위함입니다~
     runs-on: ubuntu-latest
 
     steps:
+
+      # GitHub 저장소 코드 체크아웃
       - name: Checkout code
         uses: actions/checkout@v3
+
+      # Java 17 설치
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
           cache: 'gradle'
+
+      # gradlew에 실행 권한 부여
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
+      # Gradle 빌드
       - name: Build with Gradle
         run: ./gradlew build -x test
 
-      # 빌드된 자르 파일을 EC2 인스턴스로 전송
-      - name: Deploy to EC2
+      # 푸시를 위한 Docker Hub 로그인
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Docker 이미지 빌드 및 푸시
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/dessertbee:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/dessertbee:${{ github.sha }}
+
+      # docker-compose 파일을 EC2 인스턴스로 전송
+      - name: Transfer docker-compose file to EC2
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_PRIVATE_KEY }}
-          source: "build/libs/dessertBee-0.0.1-SNAPSHOT.jar"
-          target: "/home/ec2-user"
-          strip_components: 2  # 경로에서 처음 2개 컴포넌트(build/libs/) 제거하고 파일만 전송
+          source: "docker-compose.prod.yml"
+          target: "/home/ec2-user/app"
 
-      - name: Execute deployment commands
+      # EC2에 SSH 접속 후 Docker 환경 구성 및 애플리케이션 실행
+      - name: Deploy to EC2 and run Docker Compose
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_PRIVATE_KEY }}
-          script: | 
-            # 애플리케이션 중지
-            echo "Stopping application..."
-            sudo systemctl stop myapp.service
-            
-            # 필요한 디렉토리 구조 확인 및 생성
-            if [ ! -d "/home/ec2-user/backend" ]; then
-              echo "Creating backend directory..."
-              mkdir -p /home/ec2-user/backend
+          script: |
+            # Docker 설치
+            if ! command -v docker &> /dev/null; then
+              sudo yum update -y
+              sudo amazon-linux-extras install docker -y
+              sudo systemctl start docker
+              sudo systemctl enable docker
+              sudo usermod -aG docker ec2-user
             fi
-                        
-            # systemd 설정 변경 감지를 위한 데몬 리로드
-            echo "Reloading systemd daemon..."
-            sudo systemctl daemon-reload
-            
-            # 애플리케이션 시작
-            echo "Starting application..."
-            sudo systemctl start myapp.service
-            
-            # 서비스 상태 확인 (로그 목적)
-            echo "Checking service status..."
-            sudo systemctl status myapp.service
-            
-            # 시스템 부팅 시 서비스 자동 시작 설정
-            if ! sudo systemctl is-enabled myapp.service; then
-              echo "Enabling service to start on boot..."
-              sudo systemctl enable myapp.service
+
+            # Docker Compose 설치
+            if ! command -v docker-compose &> /dev/null; then
+              sudo curl -L "https://github.com/docker/compose/releases/download/v2.18.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+              sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
             fi
-            
-            # 배포 완료 메시지와 타임스탬프 출력
+
+            cd /home/ec2-user/app
+
+            # .env 파일 작성
+            echo "${{ secrets.ENV_PROD }}" > .env
+
+            # Docker Hub 로그인
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+            # Docker 이미지 pull 및 Compose 실행
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/dessertbee:latest
+            docker-compose -f docker-compose.prod.yml down
+            docker-compose -f docker-compose.prod.yml up -d
+
             echo "Deployment completed at $(date)"
