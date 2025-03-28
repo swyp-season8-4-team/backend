@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   app:
-    image: your-dockerhub-username/dessertbee:latest  # GitHub Actions에서 자동 치환할 거라서 냅두면 됩니다요
+    image: desserbee/dessertbee:latest
     container_name: dessertbee-app
     ports:
       - "8080:8080"
