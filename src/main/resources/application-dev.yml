@@ -16,6 +16,10 @@ spring:
   graphql:
     cors:
       allowed-origins: "http://localhost:3000"
+  data:
+    redis:
+      host: localhost
+      port: ${SPRING_DATA_REDIS_PORT}
 app:
   client:
     redirect-url: "http://localhost:3000"
