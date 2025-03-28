@@ -36,5 +36,5 @@ public interface UserSearchHistoryRepository extends JpaRepository<UserSearchHis
     @Modifying
     @Transactional
     @Query("DELETE FROM UserSearchHistory h WHERE h.userId = :userId")
-    int deleteByUserId(Long userId);
+    void deleteByUserId(Long userId);
 }
