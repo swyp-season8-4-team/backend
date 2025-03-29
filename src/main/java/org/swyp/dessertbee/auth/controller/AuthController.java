@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -38,12 +40,14 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<LoginResponse> signup(
             @RequestHeader("X-Email-Verification-Token") String verificationToken,
-            @Valid @RequestBody SignUpRequest request
+            @Valid @RequestBody SignUpRequest request,
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse
     ) {
         log.debug("회원가입 요청: {}", request.getEmail());
 
         // 회원가입 처리
-        LoginResponse signupResponse = authService.signup(request, verificationToken);
+        LoginResponse signupResponse = authService.signup(request, verificationToken, httpRequest, httpResponse);
         return ResponseEntity.ok(signupResponse);
     }
 
@@ -54,9 +58,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
             @Parameter(description = "로그인 정보", required = true)
-            @Valid @RequestBody LoginRequest request
+            @Valid @RequestBody LoginRequest request,
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse
     ) {
-        LoginResponse loginResponse = authService.login(request);
+        LoginResponse loginResponse = authService.login(request, httpRequest, httpResponse);
         return ResponseEntity.ok(loginResponse);
     }
 
@@ -65,10 +71,13 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<LogoutResponse> logout(
             @Parameter(description = "JWT 액세스 토큰", required = true)
-            @RequestHeader("Authorization") String authHeader) {
+            @RequestHeader("Authorization") String authHeader,
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse
+    ) {
         // Bearer 접두사 제거
         String accessToken = authHeader.substring(7);
-        LogoutResponse logoutResponse = authService.logout(accessToken);
+        LogoutResponse logoutResponse = authService.logout(accessToken, httpRequest, httpResponse);
 
         return ResponseEntity.ok(logoutResponse);
     }
@@ -93,13 +102,15 @@ public class AuthController {
     @PostMapping("/token/refresh")
     public ResponseEntity<TokenResponse> refreshToken(
             @Parameter(description = "리프레시 토큰 (Bearer 형식)", required = true)
-            @RequestHeader("Authorization") String authHeader) {
+            @RequestHeader("Authorization") String authHeader,
+            HttpServletRequest httpRequest
+    ) {
 
         // Bearer 접두사 제거하여 토큰만 추출
         String refreshToken = authHeader.substring(7);
         log.debug("리프레시 토큰 추출 성공");
 
-        TokenResponse tokenResponse = authService.refreshAccessToken(refreshToken);
+        TokenResponse tokenResponse = authService.refreshAccessToken(refreshToken, httpRequest);
         return ResponseEntity.ok(tokenResponse);
     }
 
@@ -115,11 +126,12 @@ public class AuthController {
     @PostMapping("/dev/login")
     public ResponseEntity<LoginResponse> devlogin(
             @Parameter(description = "로그인 정보", required = true)
-            @Valid @RequestBody LoginRequest request
+            @Valid @RequestBody LoginRequest request,
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse
     ) {
-        LoginResponse loginResponse = authService.devLogin(request);
+        LoginResponse loginResponse = authService.devLogin(request, httpRequest, httpResponse);
         return ResponseEntity.ok(loginResponse);
     }
-
 }
 

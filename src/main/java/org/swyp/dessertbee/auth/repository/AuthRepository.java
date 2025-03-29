@@ -49,4 +49,12 @@ public interface AuthRepository extends JpaRepository<AuthEntity, Integer> {
      * @param deviceId 디바이스 식별자
      */
     void deleteByUser_UserUuidAndProviderAndDeviceId(UUID userUuid, String provider, String deviceId);
+
+    /**
+     * 사용자와 디바이스 ID로 인증 정보 찾기 (프로바이더에 관계없이)
+     * @param user 사용자 엔티티
+     * @param deviceId 디바이스 식별자
+     * @return 해당 조건에 맞는 인증 정보
+     */
+    Optional<AuthEntity> findByUserAndDeviceId(UserEntity user, String deviceId);
 }
