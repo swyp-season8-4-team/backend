@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -36,11 +38,13 @@ public class OAuthController {
     @ApiErrorResponses({ErrorCode.INVALID_INPUT_VALUE, ErrorCode.AUTHENTICATION_FAILED, ErrorCode.INVALID_PROVIDER, ErrorCode.DUPLICATE_NICKNAME})
     @PostMapping("/callback")
     public ResponseEntity<LoginResponse> oauthCallback(
-            @RequestBody OAuthCodeRequest request) {
+            @RequestBody OAuthCodeRequest request,
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse) {
 
         log.info("OAuth 인가 코드 수신 - 제공자: {}", request.getProvider());
         LoginResponse loginResponse = oAuthService.processOAuthLogin(
-                request.getCode(), request.getProvider());
+                request.getCode(), request.getProvider(), httpRequest, httpResponse);
 
         return ResponseEntity.ok(loginResponse);
     }

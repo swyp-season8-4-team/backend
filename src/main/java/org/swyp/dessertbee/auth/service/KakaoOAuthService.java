@@ -1,5 +1,7 @@
 package org.swyp.dessertbee.auth.service;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -58,7 +60,7 @@ public class KakaoOAuthService {
      * 인가 코드로 카카오 로그인 처리
      */
     @Transactional
-    public LoginResponse processKakaoLogin(String code) {
+    public LoginResponse processKakaoLogin(String code, HttpServletRequest request, HttpServletResponse response) {
         try {
             log.info("카카오 로그인 처리 시작 - 인가 코드: {}", code);
 
@@ -70,7 +72,7 @@ public class KakaoOAuthService {
             OAuth2Response userInfo = getKakaoUserInfo(accessToken);
             log.info("카카오 사용자 정보 획득 성공 - 이메일: {}", userInfo.getEmail());
             // 3. 사용자 정보로 회원가입/로그인 처리
-            return processUserLogin(userInfo);
+            return processUserLogin(userInfo, request, response);
 
         } catch (Exception e) {
             log.error("카카오 로그인 처리 중 오류 발생", e);
@@ -151,7 +153,7 @@ public class KakaoOAuthService {
     /**
      * OAuth 사용자 정보로 로그인 처리 (회원가입 또는 로그인)
      */
-    private LoginResponse processUserLogin(OAuth2Response oauth2Response) {
+    private LoginResponse processUserLogin(OAuth2Response oauth2Response, HttpServletRequest request, HttpServletResponse response) {
         // 이메일로 사용자 조회
         UserEntity user = userRepository.findByEmail(oauth2Response.getEmail())
                 .orElseGet(() -> registerNewUser(oauth2Response));
@@ -167,12 +169,14 @@ public class KakaoOAuthService {
         String refreshToken = jwtUtil.createRefreshToken(user.getUserUuid(), keepLoggedIn);
         long expiresIn = jwtUtil.getSHORT_ACCESS_TOKEN_EXPIRE();
 
-        // 리프레시 토큰 저장
+        // 리프레시 토큰 저장 (디바이스 ID 관리 포함)
         tokenService.saveRefreshToken(
                 user.getUserUuid(),
                 refreshToken,
                 oauth2Response.getProvider(),
-                oauth2Response.getProviderId()
+                oauth2Response.getProviderId(),
+                request,
+                response
         );
 
         // 프로필 이미지 조회
