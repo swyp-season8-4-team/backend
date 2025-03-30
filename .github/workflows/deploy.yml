@@ -56,22 +56,26 @@ jobs:
           if [ "${{ github.ref }}" = "refs/heads/main" ]; then
             echo "ENV_VALUE=${{ secrets.ENV_PROD }}" >> $GITHUB_ENV
             echo "EC2_HOST_VALUE=${{ secrets.EC2_HOST }}" >> $GITHUB_ENV
+            echo "SERVER_NAME=api.desserbee.com" >> $GITHUB_ENV
           elif [ "${{ github.ref }}" = "refs/heads/release" ]; then
             echo "ENV_VALUE=${{ secrets.ENV_RELEASE }}" >> $GITHUB_ENV
             echo "EC2_HOST_VALUE=${{ secrets.EC2_HOST_RELEASE }}" >> $GITHUB_ENV
+            echo "SERVER_NAME=release.desserbee.com" >> $GITHUB_ENV
           fi
 
-        # docker-compose 파일을 EC2 인스턴스로 전송
-      - name: Transfer docker-compose file to EC2
+      # docker-compose 파일과 Nginx 설정을 EC2 인스턴스로 전송
+      - name: Transfer files to EC2
         uses: appleboy/scp-action@master
         with:
           host: ${{ env.EC2_HOST_VALUE }}
           username: ec2-user
           key: ${{ secrets.EC2_PRIVATE_KEY }}
-          source: "docker-compose.yml"
+          source: "docker-compose.yml,nginx/"
           target: "/home/ec2-user/app"
+          strip_components: 0
 
-      # EC2에 SSH 접속 후 Docker 환경 구성 및 애플리케이션 실행
+
+        # EC2에 SSH 접속 후 Docker 환경 구성 및 애플리케이션 실행
       - name: Deploy to EC2 and run Docker Compose
         uses: appleboy/ssh-action@master
         with:
@@ -99,6 +103,26 @@ jobs:
 
             # .env 파일 작성
             echo "${{ env.ENV_VALUE }}" > .env
+            echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> .env
+            echo "SERVER_NAME=${{ env.SERVER_NAME }}" >> .env
+            
+            # Nginx 설정 파일 생성 (템플릿에서 서버 이름 변수 치환)
+            cat nginx/conf/default.conf.template | sed "s/\${SERVER_NAME}/${{ env.SERVER_NAME }}/g" > nginx/conf/default.conf
+
+            if [ ! -d "/etc/letsencrypt/live/${{ env.SERVER_NAME }}" ]; then
+              echo "SSL certificate for ${{ env.SERVER_NAME }} not found. Attempting to obtain it..."
+              # 현재 실행 중인 컨테이너 중지 (80/443 포트 확보)
+              docker-compose down || true
+      
+              # 인증서 발급
+              sudo certbot certonly --standalone --non-interactive --agree-tos -m admin@desserbee.com -d ${{ env.SERVER_NAME }}
+      
+              # 인증서 발급에 실패한 경우
+              if [ ! -d "/etc/letsencrypt/live/${{ env.SERVER_NAME }}" ]; then
+                echo "Failed to obtain SSL certificate. Check domain configuration."
+                exit 1
+              fi
+            fi
 
             # Docker Hub 로그인
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
