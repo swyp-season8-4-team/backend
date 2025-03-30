@@ -1,6 +1,16 @@
 # 릴리스(스테이징) 환경 특정 설정
 
 spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${RELEASE_DB_URL}
+    username: ${RELEASE_DB_USERNAME}
+    password: ${RELEASE_DB_PASSWORD}
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST}
+      port: ${SPRING_DATA_REDIS_PORT}
+
   # 스테이징 환경에서는 스키마 검증만 수행
   jpa:
     hibernate:
