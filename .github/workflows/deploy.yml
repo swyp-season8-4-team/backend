@@ -108,4 +108,4 @@ jobs:
             docker-compose down
             docker-compose up -d
 
-            echo "Deployment completed at $(date)"
+            echo "Deployment completed at $(date) for branch ${{ github.ref_name }}"
