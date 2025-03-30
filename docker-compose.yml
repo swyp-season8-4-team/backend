@@ -2,10 +2,8 @@ version: '3.8'
 
 services:
   app:
-    image: desserbee/dessertbee:latest
+    image: ${DOCKERHUB_USERNAME}/dessertbee:latest
     container_name: dessertbee-app
-    ports:
-      - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - SPRING_DATA_REDIS_HOST=redis
@@ -15,15 +13,37 @@ services:
     depends_on:
       - redis
     restart: always
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:latest
+    container_name: dessertbee-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf:/etc/nginx/conf.d
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - /etc/letsencrypt:/etc/letsencrypt # 호스트의 인증서를 컨테이너에 마운트
+    depends_on:
+      - app
+    restart: always
+    networks:
+      - app-network
 
   redis:
     image: redis:7.0
     container_name: dessertbee-redis
-    ports:
-      - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: always
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
