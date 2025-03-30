@@ -15,11 +15,6 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
   devtools:
     restart:
       enabled: true   # 자동 재시작 활성화
@@ -49,7 +44,6 @@ spring:
               - profile_image
               - account_email
             client-authentication-method: client_secret_post
-            redirect-uri: ${KAKAO_REDIRECT_URI}
         provider:
           kakao:
             authorization-uri: https://kauth.kakao.com/oauth/authorize
