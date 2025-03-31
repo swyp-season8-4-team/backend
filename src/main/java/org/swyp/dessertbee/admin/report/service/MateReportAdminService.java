@@ -1,8 +1,8 @@
 package org.swyp.dessertbee.admin.report.service;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.community.mate.dto.response.MateReportResponse;
@@ -33,6 +33,7 @@ public class MateReportAdminService {
                 .collect(Collectors.toList());
     }
 
+
     //Mate 게시글 삭제
     @Transactional
     public void deleteMateByUuid(UUID mateUuid) {
@@ -44,6 +45,10 @@ public class MateReportAdminService {
         if (!isReported) {
             throw new BusinessException(ErrorCode.MATE_NOT_REPORTED);
         }
+
+        // 게시글 삭제 (soft delete)
+        mate.softDelete();
+        mateRepository.save(mate);
     }
 
     //신고된 Mate 댓글 조회
