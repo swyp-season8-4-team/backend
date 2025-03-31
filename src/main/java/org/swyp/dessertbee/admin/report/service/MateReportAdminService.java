@@ -7,6 +7,7 @@ import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.community.mate.dto.response.MateReportResponse;
 import org.swyp.dessertbee.community.mate.entity.Mate;
+import org.swyp.dessertbee.community.mate.entity.MateReply;
 import org.swyp.dessertbee.community.mate.entity.MateReport;
 import org.swyp.dessertbee.community.mate.repository.MateReplyRepository;
 import org.swyp.dessertbee.community.mate.repository.MateReportRepository;
@@ -54,5 +55,19 @@ public class MateReportAdminService {
                 .collect(Collectors.toList());
     }
 
+    //Mate 댓글 삭제
+    @Transactional
+    public void deleteReportedMateReply(Long mateReplyId) {
+        boolean isReported = mateReportRepository.existsByMateReplyId(mateReplyId);
+        if (!isReported) {
+            throw new BusinessException(ErrorCode.MATE_REPLY_NOT_REPORTED);
+        }
+
+        MateReply mateReply = mateReplyRepository.findByMateReplyIdAndDeletedAtIsNull(mateReplyId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_REPLY_NOT_FOUND));
+
+        mateReply.softDelete();
+        mateReplyRepository.save(mateReply);
+    }
 }
 

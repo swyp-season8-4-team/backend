@@ -43,6 +43,13 @@ public class MateReportAdminController {
         return ResponseEntity.ok(reportedReplies);
     }
 
+    // 신고된 Mate 댓글 삭제
+    @DeleteMapping("/replies/{mateReplyId}/report")
+    public ResponseEntity<String> deleteReportedMateReply(@PathVariable Long mateReplyId) {
+        mateReportAdminService.deleteReportedMateReply(mateReplyId);
+        return ResponseEntity.ok("신고된 댓글이 삭제되었습니다.");
+    }
+
 
 
 }
