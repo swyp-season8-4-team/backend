@@ -32,6 +32,7 @@ services:
     networks:
       - app-network
 
+
   redis:
     image: redis:7.0
     container_name: dessertbee-redis
@@ -43,6 +44,9 @@ services:
     restart: always
     networks:
       - app-network
+    volumes:
+      - redis-data:/data
+    command: ["redis-server", "--appendonly", "yes"]
 
 networks:
   app-network:
