@@ -26,6 +26,13 @@ spring:
     livereload:
       enabled: false
 
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            redirect-uri: ${KAKAO_REDIRECT_URI_PROD}
+
 logging:
   level:
     root: info
