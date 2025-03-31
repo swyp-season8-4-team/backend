@@ -7,7 +7,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.swyp.dessertbee.store.store.service.UserStoreService;
 import org.swyp.dessertbee.user.dto.request.NicknameValidationRequestDto;
 import org.swyp.dessertbee.user.dto.response.UserDetailResponseDto;
 import org.swyp.dessertbee.user.dto.response.UserResponseDto;
@@ -27,7 +26,6 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
-    private final UserStoreService userStoreService;
 
     /**
      * 현재 인증된 사용자의 상세 정보를 조회

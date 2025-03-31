@@ -18,7 +18,6 @@ import org.swyp.dessertbee.store.review.dto.request.StoreReviewCreateRequest;
 import org.swyp.dessertbee.store.review.dto.request.StoreReviewUpdateRequest;
 import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
 import org.swyp.dessertbee.store.review.service.StoreReviewService;
-import org.swyp.dessertbee.store.store.dto.response.StoreDetailResponse;
 
 import java.util.List;
 import java.util.UUID;

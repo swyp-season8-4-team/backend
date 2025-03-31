@@ -15,7 +15,6 @@ import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.store.menu.dto.request.MenuCreateRequest;
 import org.swyp.dessertbee.store.menu.dto.response.MenuResponse;
 import org.swyp.dessertbee.store.menu.service.MenuService;
-import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
 
 import java.util.Collections;
 import java.util.List;
