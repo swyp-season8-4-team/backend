@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.swyp.dessertbee.admin.report.service.MateReportAdminService;
+import org.swyp.dessertbee.admin.report.service.MateReportAdminServiceImpl;
 import org.swyp.dessertbee.community.mate.dto.response.MateReportResponse;
 
 import java.util.HashMap;
@@ -19,13 +19,13 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class MateReportAdminController {
 
-    private final MateReportAdminService mateReportAdminService;
+    private final MateReportAdminServiceImpl mateReportAdminServiceImpl;
 
     // 신고된 게시글 조회 API
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/report")
     public ResponseEntity<List<MateReportResponse>> getReportedMates() {
-        List<MateReportResponse> reports = mateReportAdminService.getReportedMates();
+        List<MateReportResponse> reports = mateReportAdminServiceImpl.getReportedMates();
         return ResponseEntity.ok(reports);
     }
 
@@ -33,7 +33,7 @@ public class MateReportAdminController {
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{mateUuid}/report")
     public ResponseEntity<Map<String, String>> deleteMate(@PathVariable UUID mateUuid) {
-        mateReportAdminService.deleteMateByUuid(mateUuid);
+        mateReportAdminServiceImpl.deleteMateByUuid(mateUuid);
         Map<String, String> response = new HashMap<>();
         response.put("message", "게시글이 삭제되었습니다.");
         return ResponseEntity.ok(response);
@@ -43,7 +43,7 @@ public class MateReportAdminController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/replies/report")
     public ResponseEntity<List<MateReportResponse>> getReportedMateReplies() {
-        List<MateReportResponse> reportedReplies = mateReportAdminService.getReportedMateReplies();
+        List<MateReportResponse> reportedReplies = mateReportAdminServiceImpl.getReportedMateReplies();
         return ResponseEntity.ok(reportedReplies);
     }
 
@@ -51,7 +51,7 @@ public class MateReportAdminController {
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/replies/{mateReplyId}/report")
     public ResponseEntity<String> deleteReportedMateReply(@PathVariable Long mateReplyId) {
-        mateReportAdminService.deleteReportedMateReply(mateReplyId);
+        mateReportAdminServiceImpl.deleteReportedMateReply(mateReplyId);
         return ResponseEntity.ok("신고된 댓글이 삭제되었습니다.");
     }
 
