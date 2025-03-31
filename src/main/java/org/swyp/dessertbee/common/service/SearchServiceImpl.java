@@ -239,8 +239,7 @@ public class SearchServiceImpl implements SearchService {
     /**
      * 1분마다 MySQL에 Redis 데이터 동기화 (초기화 X)
      */
-    @Scheduled(fixedRate = 60000)
-    private void syncPopularSearchesToDB() {
+    public void syncPopularSearchesToDB() {
         try{
             // 자정 동기화 중이라면 실행하지 않음
             if (Boolean.TRUE.equals(redisTemplate.hasKey(SYNC_LOCK_KEY))) {
@@ -313,8 +312,7 @@ public class SearchServiceImpl implements SearchService {
     /**
      * 매일 자정 MySQL로 데이터 이전 후 Redis 초기화
      */
-    @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
-    private void midnightSyncPopularSearchesToDB() {
+    public void midnightSyncPopularSearchesToDB() {
         log.info("자정 인기 검색어 백업 및 초기화 시작");
 
         // 락 설정
