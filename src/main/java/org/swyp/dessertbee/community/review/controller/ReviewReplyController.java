@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.community.review.dto.request.ReviewReplyCreateRequest;
@@ -51,6 +52,12 @@ public class ReviewReplyController {
     /**
      * 커뮤니티 댓글 조회(한개만)
      * */
+    @Operation(summary = "커뮤니티 리뷰 댓글 조회(한개만)", description = "커뮤니티 리뷰 댓글 Uuid에 맞는 하나의 댓글을 조회합니다..")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "커뮤니티 리뷰 댓글 조회(한개만) 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+    })
+    @ApiErrorResponses({ErrorCode.REVIEW_REPLY_NOT_FOUND})
     @GetMapping("/{reviewReplyUuid}")
     public ResponseEntity<ReviewReplyResponse> getReplyDetail(@PathVariable UUID reviewReplyUuid, @PathVariable UUID reviewUuid) {
 
@@ -60,6 +67,12 @@ public class ReviewReplyController {
     /**
      * 커뮤니티 댓글 전체 조회
      * */
+    @Operation(summary = "커뮤니티 리뷰 댓글 전체 조회", description = "커뮤니티 리뷰에 댓글 전체 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "커뮤니티 리뷰 댓글 전체 조회 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+    })
+    @ApiErrorResponses({ErrorCode.INVALID_RANGE})
     @GetMapping
     public ResponseEntity<ReviewReplyPageResponse> getReplies(@PathVariable UUID reviewUuid,
                                                               @RequestParam(required = false, defaultValue = "0") int from,
@@ -81,6 +94,12 @@ public class ReviewReplyController {
     /**
      * 커뮤니티 댓글 수정
      * */
+    @Operation(summary = "커뮤니티 리뷰 댓글 수정", description = "커뮤니티 리뷰에 댓글 수정합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "커뮤니티 리뷰 댓글 수정 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+    })
+    @ApiErrorResponses({ErrorCode.REVIEW_REPLY_NOT_FOUND, ErrorCode.REPLY_NOT_AUTHOR})
     @PatchMapping("/{reviewReplyUuid}")
     public ResponseEntity<Map<String, String>> updateReply(
             @PathVariable UUID reviewUuid,
@@ -98,6 +117,12 @@ public class ReviewReplyController {
     /**
      * 커뮤니티 댓글 삭제
      * */
+    @Operation(summary = "커뮤니티 리뷰 댓글 삭제", description = "커뮤니티 리뷰에 댓글 삭제합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "커뮤니티 리뷰 댓글 삭제 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+    })
+    @ApiErrorResponses({ErrorCode.REVIEW_REPLY_NOT_FOUND, ErrorCode.REPLY_NOT_AUTHOR})
     @DeleteMapping("/{reviewReplyUuid}")
     public ResponseEntity<Map<String, String>> deleteReply(@PathVariable UUID reviewReplyUuid, @PathVariable UUID reviewUuid) {
 

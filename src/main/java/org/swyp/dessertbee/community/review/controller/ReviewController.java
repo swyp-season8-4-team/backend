@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.community.review.dto.request.ReviewCreateRequest;
@@ -47,6 +48,7 @@ public class ReviewController {
             @ApiResponse(responseCode = "200", description = "커뮤니티 리뷰 생성 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청")
     })
+    @ApiErrorResponses({ErrorCode.USER_NOT_FOUND, ErrorCode.IMAGE_COUNT_MISMATCH, ErrorCode.IMAGE_UPLOAD_FAILED})
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ReviewResponse> createReview(@RequestPart("request") ReviewCreateRequest request,
                                                        @RequestPart(value = "reviewImages", required = false) List<MultipartFile> reviewImages){
@@ -59,6 +61,11 @@ public class ReviewController {
      * 커뮤니티 리뷰 상세 조회
      * */
     @Operation(summary = "커뮤니티 리뷰 상세 조회", description = "커뮤니티 맛집 리뷰 상세 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "커뮤니티 리뷰 상세 조회"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+    })
+    @ApiErrorResponses({ErrorCode.COMMUNITY_REVIEW_NOT_FOUND, ErrorCode.USER_NOT_FOUND})
     @GetMapping("/{reviewUuid}")
     public ResponseEntity<ReviewResponse> getReviewDetail(@PathVariable UUID reviewUuid){
 
@@ -70,7 +77,13 @@ public class ReviewController {
     /**
      * 커뮤니티 리뷰 전체 조회
      * */
-    @GetMapping()
+    @Operation(summary = "커뮤니티 리뷰 전체 조회", description = "커뮤니티 맛집 리뷰 전체 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "커뮤니티 리뷰 전체 조회"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+    })
+    @ApiErrorResponses({ErrorCode.USER_NOT_FOUND, ErrorCode.INVALID_RANGE})
+    @GetMapping
     public ResponseEntity<ReviewPageResponse> getReviews(
             @RequestParam(required = false, defaultValue = "0") int from,
             @RequestParam(required = false, defaultValue = "10") int to,
@@ -95,6 +108,12 @@ public class ReviewController {
     /**
      * 커뮤니티 리뷰 수정
      * */
+    @Operation(summary = "커뮤니티 리뷰 수정", description = "커뮤니티 맛집 리뷰 수정합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "커뮤니티 리뷰 수정"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+    })
+    @ApiErrorResponses({ErrorCode.COMMUNITY_REVIEW_NOT_FOUND, ErrorCode.IMAGE_COUNT_MISMATCH, ErrorCode.IMAGE_UPLOAD_FAILED})
     @PatchMapping("/{reviewUuid}")
     public ResponseEntity<Map<String, String>> updateReview(
             @PathVariable UUID reviewUuid,
@@ -110,6 +129,12 @@ public class ReviewController {
     }
 
     /**커뮤니티 리뷰 삭제*/
+    @Operation(summary = "커뮤니티 리뷰 삭제", description = "커뮤니티 맛집 리뷰 삭제합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "커뮤니티 리뷰 삭제"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+    })
+    @ApiErrorResponses({ErrorCode.COMMUNITY_REVIEW_NOT_FOUND})
     @DeleteMapping("/{reviewUuid}")
     public ResponseEntity<Map<String, String>> deleteReview(@PathVariable UUID reviewUuid){
 

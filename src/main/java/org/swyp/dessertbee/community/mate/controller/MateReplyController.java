@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.community.mate.dto.request.MateReplyCreateRequest;
@@ -52,6 +53,12 @@ public class MateReplyController {
     /**
      * 디저트메이트 댓글 조회(한개만)
      * */
+    @Operation(summary = "메이트 댓글 조회(한개만)", description = "디저트메이트의 댓글 Uuid에 맞는 하나의 댓글을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "디저트메이트 댓글 조회(한개만) 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+    })
+    @ApiErrorResponses({ErrorCode.MATE_REPLY_NOT_FOUND, ErrorCode.USER_NOT_FOUND})
     @GetMapping("/{replyId}")
     public ResponseEntity<MateReplyResponse> getReplyDetail(@PathVariable UUID mateUuid, @PathVariable Long replyId) {
 
@@ -64,6 +71,12 @@ public class MateReplyController {
     /**
      * 디저트메이트 댓글 전체 조회
      * */
+    @Operation(summary = "메이트 댓글 전체 조회", description = "디저트메이트의 댓글 전체 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "디저트메이트 댓글 전체 조회 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+    })
+    @ApiErrorResponses({ErrorCode.INVALID_RANGE})
     @GetMapping
     public ResponseEntity<MateReplyPageResponse> getReplies(@PathVariable UUID mateUuid,
                                                             @RequestParam(required = false, defaultValue = "0") int from,
@@ -83,6 +96,12 @@ public class MateReplyController {
     /**
      * 디저트메이트 댓글 수정
      * */
+    @Operation(summary = "메이트 댓글 수정", description = "디저트메이트 댓글 수정합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "디저트메이트 댓글 수정 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+    })
+    @ApiErrorResponses({ErrorCode.MATE_REPLY_NOT_FOUND, ErrorCode.USER_NOT_FOUND})
     @PatchMapping("/{replyId}")
     public ResponseEntity<Map<String, String>>  updateReply(
             @PathVariable UUID mateUuid,
@@ -101,6 +120,12 @@ public class MateReplyController {
     /**
      * 디저트메이트 댓글 삭제
      * */
+    @Operation(summary = "메이트 댓글 삭제", description = "디저트메이트 댓글 삭제합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "디저트메이트 댓글 삭제 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+    })
+    @ApiErrorResponses({ErrorCode.MATE_REPLY_NOT_FOUND, ErrorCode.USER_NOT_FOUND})
     @DeleteMapping("/{replyId}")
     public ResponseEntity<Map<String, String>> deleteReply(@PathVariable UUID mateUuid,
                                               @PathVariable Long replyId) {
@@ -115,6 +140,12 @@ public class MateReplyController {
     /**
      * 디저트메이트 댓글 신고
      * */
+    @Operation(summary = "메이트 댓글 신고", description = "디저트메이트 댓글 신고합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "디저트메이트 댓글 신고 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+    })
+    @ApiErrorResponses({ErrorCode.MATE_REPLY_NOT_FOUND, ErrorCode.DUPLICATION_REPORT})
     @PostMapping("/{replyId}/report")
     public ResponseEntity<Map<String, String>>  reportMateReply(@PathVariable UUID mateUuid,
                                                   @PathVariable Long replyId,
