@@ -7,6 +7,15 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+  # 개발 환경에서 devtools 활성화
+  devtools:
+    restart:
+      enabled: true
+    livereload:
+      enabled: true
   security:
     oauth2:
       client:
@@ -23,3 +32,15 @@ spring:
 app:
   client:
     redirect-url: "http://localhost:3000"
+
+# 개발 환경에서는 상세 로깅 활성화
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: debug
+        orm:
+          jdbc:
+            bind: trace
+    com:
+      dessertbee: debug

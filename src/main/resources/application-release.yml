@@ -1,0 +1,47 @@
+# 릴리스(스테이징) 환경 특정 설정
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${RELEASE_DB_URL}
+    username: ${RELEASE_DB_USERNAME}
+    password: ${RELEASE_DB_PASSWORD}
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST}
+      port: ${SPRING_DATA_REDIS_PORT}
+
+  # 스테이징 환경에서는 스키마 검증만 수행
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: false
+  
+  # 개발 도구 비활성화
+  devtools:
+    restart:
+      enabled: false
+    livereload:
+      enabled: false
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            redirect-uri: ${KAKAO_REDIRECT_URI_PROD}
+
+logging:
+  level:
+    root: info
+    org:
+      hibernate:
+        SQL: info  # SQL 로깅은 info 레벨
+    com:
+      dessertbee: debug  # 애플리케이션 로그는 debug
+# 스웨거도 활성화
+springdoc:
+  swagger-ui:
+    enabled: true
