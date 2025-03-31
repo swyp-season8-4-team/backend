@@ -113,30 +113,6 @@ jobs:
             mkdir -p nginx/conf
             cat nginx/conf/default.conf.template | sed "s/\${SERVER_NAME}/${{ env.SERVER_NAME }}/g" > nginx/conf/default.conf
             
-            # SSL 인증서 확인 및 발급
-            if [ ! -d "/etc/letsencrypt/live/${{ env.SERVER_NAME }}" ]; then
-              echo "SSL certificate for ${{ env.SERVER_NAME }} not found. Attempting to obtain it..."
-            
-              # Certbot 설치 (AL2023)
-              if ! command -v certbot &> /dev/null; then
-                sudo dnf install -y certbot python3-certbot-nginx
-              fi
-            
-              # 현재 실행 중인 컨테이너 중지 (80/443 포트 확보)
-              docker-compose down || true
-            
-              # 인증서 발급
-              sudo certbot certonly --standalone --non-interactive --agree-tos -m admin@desserbee.com -d ${{ env.SERVER_NAME }}
-            
-              # 인증서 발급에 실패한 경우
-              if [ ! -d "/etc/letsencrypt/live/${{ env.SERVER_NAME }}" ]; then
-                echo "Failed to obtain SSL certificate. Check domain configuration."
-                exit 1
-              fi
-            else
-              echo "SSL certificate for ${{ env.SERVER_NAME }} already exists."
-            fi
-            
             # Docker Hub 로그인
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
