@@ -104,6 +104,7 @@ public enum ErrorCode {
     MENU_UPDATE_FAILED(HttpStatus.BAD_REQUEST, "S041", "단일 메뉴 수정에 실패했습니다."),
     MENU_DELETE_FAILED(HttpStatus.BAD_REQUEST, "S042", "단일 메뉴 삭제에 실패했습니다."),
     MENU_CREATION_FAILED(HttpStatus.BAD_REQUEST, "S043", "메뉴 등록에 실패했습니다."),
+    STORE_DUPLICATE_PRIMARY_LINK(HttpStatus.CONFLICT, "S044", "대표 링크는 하나만 설정할 수 있습니다."),
 
     // 사장님 권한
     /**
