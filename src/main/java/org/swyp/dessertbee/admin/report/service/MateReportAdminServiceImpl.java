@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class MateReportAdminServiceImpl {
+public class MateReportAdminServiceImpl implements MateReportAdminService {
 
     private final MateService mateService;
     private final MateReplyService mateReplyService;
@@ -24,7 +24,7 @@ public class MateReportAdminServiceImpl {
 
 
     //Mate 게시글 삭제
-    @Transactional
+    @org.springframework.transaction.annotation.Transactional
     public void deleteMateByUuid(UUID mateUuid) {
         mateService.deleteMateByUuid(mateUuid);
     }
@@ -35,7 +35,7 @@ public class MateReportAdminServiceImpl {
     }
 
     //Mate 댓글 삭제
-    @Transactional
+    @org.springframework.transaction.annotation.Transactional
     public void deleteReportedMateReply(Long mateReplyId) {
         mateReplyService.deleteReportedMateReply(mateReplyId);
     }
