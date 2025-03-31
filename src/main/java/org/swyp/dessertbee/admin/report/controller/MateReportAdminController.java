@@ -36,5 +36,13 @@ public class MateReportAdminController {
         return ResponseEntity.ok(response);
     }
 
+    // 신고된 게시글 댓글 조회 API
+    @GetMapping("/replies/report")
+    public ResponseEntity<List<MateReportResponse>> getReportedMateReplies() {
+        List<MateReportResponse> reportedReplies = mateReportAdminService.getReportedMateReplies();
+        return ResponseEntity.ok(reportedReplies);
+    }
+
+
 
 }

@@ -45,3 +45,14 @@ public class MateReportAdminService {
         }
     }
 
+    //신고된 Mate 댓글 조회
+    public List<MateReportResponse> getReportedMateReplies() {
+        List<MateReport> reports = mateReportRepository.findAllByMateReplyIdIsNotNull();
+
+        return reports.stream()
+                .map(MateReportResponse::new)
+                .collect(Collectors.toList());
+    }
+
+}
+
