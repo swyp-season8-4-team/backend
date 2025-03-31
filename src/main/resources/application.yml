@@ -79,6 +79,7 @@ springdoc:
   swagger-ui:
     path: /swagger-ui               # Swagger UI 경로 변경
     enabled: true                    # Swagger UI 활성화
+    url: /api-docs
   paths-to-match:
     - /api/** # /api/로 시작하는 모든 컨트롤러 엔드포인트가 Swagger 문서에 포함
 
