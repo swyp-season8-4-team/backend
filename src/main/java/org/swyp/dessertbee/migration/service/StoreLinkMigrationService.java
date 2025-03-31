@@ -2,6 +2,7 @@ package org.swyp.dessertbee.migration.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.entity.StoreLink;
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class StoreLinkMigrationService {
 
     private final StoreRepository storeRepository;
@@ -33,6 +35,6 @@ public class StoreLinkMigrationService {
                 .collect(Collectors.toList());
 
         storeLinkRepository.saveAll(storeLinks);
-        System.out.println("✅ 마이그레이션 완료 - 총 " + storeLinks.size() + "건");
+        log.info("✅ 마이그레이션 완료 - 총 " + storeLinks.size() + "건");
     }
 }
