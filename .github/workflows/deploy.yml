@@ -54,11 +54,15 @@ jobs:
         id: vars
         run: |
           if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            echo "ENV_VALUE=${{ secrets.ENV_PROD }}" >> $GITHUB_ENV
+            echo "ENV_VALUE<<EOF" >> $GITHUB_ENV
+            echo "${{ secrets.ENV_PROD }}" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
             echo "EC2_HOST_VALUE=${{ secrets.EC2_HOST }}" >> $GITHUB_ENV
             echo "SERVER_NAME=api.desserbee.com" >> $GITHUB_ENV
           elif [ "${{ github.ref }}" = "refs/heads/release" ]; then
-            echo "ENV_VALUE=${{ secrets.ENV_RELEASE }}" >> $GITHUB_ENV
+            echo "ENV_VALUE<<EOF" >> $GITHUB_ENV
+            echo "${{ secrets.ENV_RELEASE }}" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
             echo "EC2_HOST_VALUE=${{ secrets.EC2_HOST_RELEASE }}" >> $GITHUB_ENV
             echo "SERVER_NAME=release.desserbee.com" >> $GITHUB_ENV
           fi
@@ -105,7 +109,7 @@ jobs:
             cd /home/ec2-user/app
 
             # .env 파일 작성
-            echo "${{ env.ENV_VALUE }}" > .env
+            printf "%b\n" "${{ env.ENV_VALUE }}" > .env
             echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> .env
             echo "SERVER_NAME=${{ env.SERVER_NAME }}" >> .env
             
