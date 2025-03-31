@@ -15,6 +15,8 @@ public interface MateReportRepository extends JpaRepository<MateReport, Long> {
 
     List<MateReport> findAllByMateIdIsNotNull();
 
+    boolean existsByMateId(Long mateId);
+
     List<MateReport> findAllByMateReplyIdIsNotNull();
 }
 
