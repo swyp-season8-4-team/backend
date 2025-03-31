@@ -66,6 +66,7 @@ public class StoreServiceImpl implements StoreService {
     private final SavedMateRepository savedMateRepository;
     private final UserService userService;
     private final ReviewRepository reviewRepository;
+    private final StoreLinkRepository storeLinkRepository;
 
     /** 가게 등록 (이벤트, 쿠폰, 메뉴 + 이미지 포함) */
     @Override
@@ -87,7 +88,6 @@ public class StoreServiceImpl implements StoreService {
                             .name(request.getName())
                             .phone(request.getPhone())
                             .address(request.getAddress())
-                            .storeLink(request.getStoreLink())
                             .latitude(request.getLatitude())
                             .longitude(request.getLongitude())
                             .description(request.getDescription())
@@ -97,6 +97,23 @@ public class StoreServiceImpl implements StoreService {
                             .notice(request.getNotice())
                             .build()
             );
+
+            List<StoreLink> links = request.getStoreLinks().stream()
+                    .map(linkReq -> StoreLink.builder()
+                            .storeId(store.getStoreId())
+                            .url(linkReq.getUrl())
+                            .isPrimary(Boolean.TRUE.equals(linkReq.getIsPrimary()))
+                            .build())
+                    .collect(Collectors.toList());
+            storeLinkRepository.saveAll(links);
+
+            long primaryCount = request.getStoreLinks().stream()
+                    .filter(link -> Boolean.TRUE.equals(link.getIsPrimary()))
+                    .count();
+
+            if (primaryCount > 1) {
+                throw new DuplicatePrimaryLinkException();
+            }
 
             // 가게 통계 초기화
             storeStatisticsRepository.save(
@@ -318,6 +335,16 @@ public class StoreServiceImpl implements StoreService {
             List<String> ownerPickImages = imageService.getImagesByTypeAndId(ImageType.OWNERPICK, storeId);
             List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(storeId);
 
+            // 가게 링크 조회
+            List<StoreLink> storeLinks = storeLinkRepository.findByStoreId(storeId);
+
+            // 대표 링크 추출 (없을 경우 null)
+            String primaryStoreLink = storeLinks.stream()
+                    .filter(StoreLink::getIsPrimary)
+                    .map(StoreLink::getUrl)
+                    .findFirst()
+                    .orElse(null);
+
             // 운영 시간
             List<StoreOperatingHour> operatingHours = storeOperatingHourRepository.findByStoreId(storeId);
             List<OperatingHourResponse> operatingHourResponses = operatingHours.stream()
@@ -345,7 +372,7 @@ public class StoreServiceImpl implements StoreService {
                     .map(result -> (String) result[0])
                     .toList();
 
-            return  StoreSummaryResponse.fromEntity(store, tags, operatingHourResponses, holidayResponses, storeImages, ownerPickImages, topPreferences);
+            return  StoreSummaryResponse.fromEntity(store, tags, storeLinks.stream().map(StoreLink::getUrl).toList(), primaryStoreLink, operatingHourResponses, holidayResponses, storeImages, ownerPickImages, topPreferences);
         } catch (StoreInfoReadFailedException e){
             log.warn("가게 간략정보 조회 실패 - 사유: {}", e.getMessage());
             throw e;
@@ -384,6 +411,16 @@ public class StoreServiceImpl implements StoreService {
 
             // 태그 조회
             List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(storeId);
+
+            // 가게 링크 조회
+            List<StoreLink> storeLinks = storeLinkRepository.findByStoreId(storeId);
+
+            // 대표 링크 추출 (없을 경우 null)
+            String primaryStoreLink = storeLinks.stream()
+                    .filter(StoreLink::getIsPrimary)
+                    .map(StoreLink::getUrl)
+                    .findFirst()
+                    .orElse(null);
 
             // 운영 시간
             List<StoreOperatingHour> operatingHours = storeOperatingHourRepository.findByStoreId(storeId);
@@ -507,7 +544,7 @@ public class StoreServiceImpl implements StoreService {
             storeStatisticsRepository.save(statistics);
 
             return StoreDetailResponse.fromEntity(store, userId, userUuid, totalReviewCount, operatingHourResponses, holidayResponses, menus,
-                    storeImages, ownerPickImages, topPreferences, reviewResponses, tags, communityResponses, mateResponses, saved, savedListId);
+                    storeImages, ownerPickImages, topPreferences, reviewResponses, tags, storeLinks.stream().map(StoreLink::getUrl).toList(), primaryStoreLink, communityResponses, mateResponses, saved, savedListId);
         } catch (StoreInfoReadFailedException e){
             log.warn("가게 상세정보 조회 실패 - 사유: {}", e.getMessage());
             throw e;
@@ -554,7 +591,6 @@ public class StoreServiceImpl implements StoreService {
                     request.getName(),
                     request.getPhone(),
                     request.getAddress(),
-                    request.getStoreLink(),
                     request.getLatitude(),
                     request.getLongitude(),
                     request.getDescription(),
@@ -564,6 +600,30 @@ public class StoreServiceImpl implements StoreService {
                     request.getNotice()
             );
             storeRepository.save(store);
+
+            // 기존 링크 전체 삭제
+            storeLinkRepository.deleteByStoreId(storeId);
+
+            // 새 링크 저장
+            if (request.getStoreLinks() != null && !request.getStoreLinks().isEmpty()) {
+                long primaryCount = request.getStoreLinks().stream()
+                        .filter(link -> Boolean.TRUE.equals(link.getIsPrimary()))
+                        .count();
+
+                if (primaryCount > 1) {
+                    throw new DuplicatePrimaryLinkException();
+                }
+
+                List<StoreLink> links = request.getStoreLinks().stream()
+                        .map(linkReq -> StoreLink.builder()
+                                .storeId(store.getStoreId())
+                                .url(linkReq.getUrl())
+                                .isPrimary(Boolean.TRUE.equals(linkReq.getIsPrimary()))
+                                .build())
+                        .collect(Collectors.toList());
+
+                storeLinkRepository.saveAll(links);
+            }
 
             if (storeImageFiles != null && !storeImageFiles.isEmpty()) {
                 List<Long> deleteStoreImageIds = request.getStoreImageDeleteIds();
