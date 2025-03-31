@@ -32,7 +32,6 @@ public class StoreCreateRequest {
 
     private String phone;
     private String address;
-    private String storeLink;
     private BigDecimal latitude;
     private BigDecimal longitude;
     private String description;
@@ -52,6 +51,14 @@ public class StoreCreateRequest {
     private List<MultipartFile> ownerPickImageFiles; // 사장님 픽 이미지
 
     private Map<String, MultipartFile> menuImageFiles;
+
+    @Data
+    public static class StoreLinkRequest {
+        private String url;
+        private Boolean isPrimary;
+    }
+
+    private List<StoreLinkRequest> storeLinks;
 
     private List<OperatingHourRequest> operatingHours; // 영업 시간
     private List<HolidayRequest> holidays; // 휴무 정보

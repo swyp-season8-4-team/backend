@@ -23,7 +23,6 @@ public class StoreUpdateRequest {
 
     private String phone;
     private String address;
-    private String storeLink;
     private BigDecimal latitude;
     private BigDecimal longitude;
     private String description;
@@ -38,6 +37,16 @@ public class StoreUpdateRequest {
 
     private List<Long> storeImageDeleteIds;
     private List<Long> ownerPickImageDeleteIds;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class StoreLinkRequest {
+        private String url;
+        private Boolean isPrimary;
+    }
+
+    private List<StoreLinkRequest> storeLinks;
 
     @Data
     @NoArgsConstructor
