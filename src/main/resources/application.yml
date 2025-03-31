@@ -15,7 +15,6 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
-
   devtools:
     restart:
       enabled: true   # 자동 재시작 활성화
