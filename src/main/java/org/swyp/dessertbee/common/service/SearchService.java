@@ -38,4 +38,7 @@ public interface SearchService {
      * Redis 인기 검색어 데이터 초기화 (테스트용)
      */
     void clearPopularSearchCache();
+
+    void syncPopularSearchesToDB();                // 1분 동기화용
+    void midnightSyncPopularSearchesToDB();        // 자정 동기화용
 }
