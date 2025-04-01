@@ -24,7 +24,7 @@ public class MateReportAdminServiceImpl implements MateReportAdminService {
 
 
     //Mate 게시글 삭제
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
     public void deleteMateByUuid(UUID mateUuid) {
         mateService.deleteMateByUuid(mateUuid);
     }
@@ -35,7 +35,7 @@ public class MateReportAdminServiceImpl implements MateReportAdminService {
     }
 
     //Mate 댓글 삭제
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
     public void deleteReportedMateReply(Long mateReplyId) {
         mateReplyService.deleteReportedMateReply(mateReplyId);
     }
