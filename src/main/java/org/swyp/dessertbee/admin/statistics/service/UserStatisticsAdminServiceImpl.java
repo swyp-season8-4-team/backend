@@ -30,5 +30,12 @@ public class UserStatisticsAdminServiceImpl implements UserStatisticsAdminServic
     public UserCountResponseDto getTotalUserCount(){
         return userStatisticsService.getTotalUserCount();
     }
+    /**
+     * 전체 사용자 수 조회
+     */
+    @Transactional(readOnly = true)
+    public UserCountResponseDto getTotalUserOwnersCount(){
+        return userStatisticsService.getTotalUserOwnersCount();
+    }
 
 }

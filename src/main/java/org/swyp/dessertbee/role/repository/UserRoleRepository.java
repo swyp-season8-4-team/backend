@@ -14,4 +14,9 @@ public interface UserRoleRepository extends JpaRepository<UserRoleEntity, Long> 
             "WHERE ur.role.id != 3")
     long countUsers();
 
+    @Query("SELECT COUNT(DISTINCT ur.user.id) " +
+            "FROM UserRoleEntity ur " +
+            "WHERE ur.role.id = 2")
+    long countOwners();
+
 }

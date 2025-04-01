@@ -38,5 +38,14 @@ public class UserStatisticsAdminController {
     public ResponseEntity<UserCountResponseDto> getTotalUserCount() {
         return ResponseEntity.ok(userStatisticsAdminService.getTotalUserCount());
     }
+
+    /**
+     * 전체 사장님 수 조회
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/users/all-owners")
+    public ResponseEntity<UserCountResponseDto> getTotalOwnersCount() {
+        return ResponseEntity.ok(userStatisticsAdminService.getTotalUserOwnersCount());
+    }
 }
 

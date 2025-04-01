@@ -10,4 +10,6 @@ public interface UserStatisticsAdminService {
 //    List<UserStatisticsResponseDto> getAllUsers();
 
     UserCountResponseDto getTotalUserCount();
+
+    UserCountResponseDto getTotalUserOwnersCount();
 }

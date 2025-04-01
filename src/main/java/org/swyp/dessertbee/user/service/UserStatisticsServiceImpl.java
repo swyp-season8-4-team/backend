@@ -33,4 +33,13 @@ public class UserStatisticsServiceImpl implements UserStatisticsService {
         long userCount = userRoleRepository.countUsers();
         return new UserCountResponseDto(userCount);
     }
+
+    /**
+     * 전체 사장님 수 조회
+     */
+    @Transactional(readOnly = true)
+    public UserCountResponseDto getTotalUserOwnersCount() {
+        long userCount = userRoleRepository.countOwners();
+        return new UserCountResponseDto(userCount);
+    }
 }
