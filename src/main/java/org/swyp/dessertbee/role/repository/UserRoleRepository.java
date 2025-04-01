@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface UserRoleRepository extends JpaRepository<UserRoleEntity, Long> {
     List<UserRoleEntity> findByUserId(Long userId); // 사용자의 모든 역할 가져오기
+
 }

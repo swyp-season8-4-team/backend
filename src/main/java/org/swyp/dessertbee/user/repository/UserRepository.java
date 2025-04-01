@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.swyp.dessertbee.user.dto.response.UserStatisticsResponseDto;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.util.List;
@@ -70,4 +71,11 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     @Query("SELECT u FROM UserEntity u WHERE u.userUuid = :userUuid AND u.deletedAt IS NULL")
     Optional<UserEntity> findByUserUuid(@NotNull UUID userUuid);
+
+
+    @Query("SELECT new org.swyp.dessertbee.user.dto.response.UserStatisticsResponseDto(u.userUuid, u.id, ur.role.id) " +
+            "FROM UserEntity u " +
+            "JOIN u.userRoles ur " +
+            "JOIN ur.role r")
+    List<UserStatisticsResponseDto> findAllUsersWithRoles();
 }
