@@ -1,9 +1,9 @@
 package org.swyp.dessertbee.migration.service;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.entity.StoreLink;
 import org.swyp.dessertbee.store.store.repository.StoreLinkRepository;

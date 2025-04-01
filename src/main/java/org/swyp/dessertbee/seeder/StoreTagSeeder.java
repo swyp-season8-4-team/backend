@@ -1,9 +1,9 @@
 package org.swyp.dessertbee.seeder;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.store.store.entity.StoreTag;
 import org.swyp.dessertbee.store.store.entity.TagCategory;
 import org.swyp.dessertbee.store.store.repository.StoreTagRepository;
