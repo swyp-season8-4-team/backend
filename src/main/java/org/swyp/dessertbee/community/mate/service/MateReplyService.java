@@ -5,7 +5,9 @@ import org.swyp.dessertbee.community.mate.dto.request.MateReplyCreateRequest;
 import org.swyp.dessertbee.community.mate.dto.request.MateReportRequest;
 import org.swyp.dessertbee.community.mate.dto.response.MateReplyPageResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MateReplyResponse;
+import org.swyp.dessertbee.community.mate.dto.response.MateReportResponse;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface MateReplyService {
@@ -29,4 +31,11 @@ public interface MateReplyService {
     void reportMateReply(UUID mateUuid, Long replyId, MateReportRequest request);
 
 
+    //     -------------- 관리자용 메이트 댓글 신고 관리 기능 ------------
+
+    /**  신고된 Mate 댓글 조회*/
+    List<MateReportResponse> getReportedMateReplies();
+
+    /** 신고된 Mate 댓글 삭제*/
+    void deleteReportedMateReply(Long mateReplyId);
 }

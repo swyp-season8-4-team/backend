@@ -16,6 +16,7 @@ import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.community.mate.dto.request.MateCreateRequest;
 import org.swyp.dessertbee.community.mate.dto.request.MateReportRequest;
 import org.swyp.dessertbee.community.mate.dto.response.MateDetailResponse;
+import org.swyp.dessertbee.community.mate.dto.response.MateReportResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MatesPageResponse;
 import org.swyp.dessertbee.community.mate.entity.*;
 import org.swyp.dessertbee.community.mate.repository.*;
@@ -302,6 +303,38 @@ public class MateServiceImpl implements MateService {
 
         return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, creator, profileImage, saved, applyStatus, store);
 
+    }
+
+//    -------------- 관리자용 메이트 신고 관리 기능 ------------
+
+    /**
+     *   신고된 Mate 게시글 목록 조회
+     */
+    public List<MateReportResponse> getReportedMates() {
+        List<MateReport> reports = mateReportRepository.findAllByMateIdIsNotNull();
+        return reports.stream()
+                .map(MateReportResponse::new)
+                .collect(Collectors.toList());
+    }
+
+
+    /**
+     * 신고된 Mate 게시글 삭제
+     */
+    @Transactional
+    public void deleteMateByUuid(UUID mateUuid) {
+        Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
+
+        // mateUuid가 있는 신고 데이터 확인
+        boolean isReported = mateReportRepository.existsByMateId(mate.getMateId());
+        if (!isReported) {
+            throw new BusinessException(ErrorCode.MATE_NOT_REPORTED);
+        }
+
+        // 게시글 삭제 (soft delete)
+        mate.softDelete();
+        mateRepository.save(mate);
     }
 
 }

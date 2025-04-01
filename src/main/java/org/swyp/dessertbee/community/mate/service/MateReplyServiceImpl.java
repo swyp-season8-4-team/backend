@@ -17,6 +17,7 @@ import org.swyp.dessertbee.community.mate.dto.request.MateReplyCreateRequest;
 import org.swyp.dessertbee.community.mate.dto.request.MateReportRequest;
 import org.swyp.dessertbee.community.mate.dto.response.MateReplyPageResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MateReplyResponse;
+import org.swyp.dessertbee.community.mate.dto.response.MateReportResponse;
 import org.swyp.dessertbee.community.mate.entity.Mate;
 import org.swyp.dessertbee.community.mate.entity.MateReply;
 import org.swyp.dessertbee.community.mate.entity.MateReport;
@@ -273,5 +274,37 @@ public class MateReplyServiceImpl implements MateReplyService {
 
 
         return new MateUserIds(mate.getMateId(), null);
+    }
+
+
+//     -------------- 관리자용 메이트 댓글 신고 관리 기능 ------------
+
+
+    /**
+     *  신고된 Mate 댓글 조회
+     */
+    public List<MateReportResponse> getReportedMateReplies() {
+        List<MateReport> reports = mateReportRepository.findAllByMateReplyIdIsNotNull();
+
+        return reports.stream()
+                .map(MateReportResponse::new)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 신고된 Mate 댓글 삭제
+     */
+    @Transactional
+    public void deleteReportedMateReply(Long mateReplyId) {
+        boolean isReported = mateReportRepository.existsByMateReplyId(mateReplyId);
+        if (!isReported) {
+            throw new BusinessException(ErrorCode.MATE_REPLY_NOT_REPORTED);
+        }
+
+        MateReply mateReply = mateReplyRepository.findByMateReplyIdAndDeletedAtIsNull(mateReplyId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_REPLY_NOT_FOUND));
+
+        mateReply.softDelete();
+        mateReplyRepository.save(mateReply);
     }
 }

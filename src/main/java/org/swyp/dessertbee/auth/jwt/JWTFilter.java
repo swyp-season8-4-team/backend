@@ -72,6 +72,26 @@ public class JWTFilter extends OncePerRequestFilter {
     }
 
     /**
+     * 특정 요청 경로에 대해 필터 스킵
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+
+        return path.startsWith("/api/auth/") ||
+                path.startsWith("/api/oauth2/") ||
+                path.startsWith("/api/public/") ||
+
+                // Swagger 관련 경로 예외 처리 추가
+                path.startsWith("/swagger-ui") ||
+                path.startsWith("/swagger-ui.html") ||
+                path.startsWith("/v3/api-docs") ||
+                path.startsWith("/api-docs") ||
+                path.startsWith("/swagger-resources") ||
+                path.startsWith("/webjars");
+    }
+
+    /**
      * Request Header에서 토큰 추출
      */
     private String extractTokenFromHeader(HttpServletRequest request) {
@@ -111,18 +131,6 @@ public class JWTFilter extends OncePerRequestFilter {
         }
         return token.substring(0, 4) + "..." +
                 token.substring(token.length() - 4);
-    }
-
-    /**
-     * 특정 요청 경로에 대해 필터 스킵
-     */
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getServletPath();
-        // 인증이 필요없는 경로 설정
-        return path.startsWith("/api/auth/") ||
-                path.startsWith("/api/oauth2/") ||
-                path.startsWith("/api/public/");
     }
 
     /**

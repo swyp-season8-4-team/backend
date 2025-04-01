@@ -5,8 +5,10 @@ import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.community.mate.dto.request.MateCreateRequest;
 import org.swyp.dessertbee.community.mate.dto.request.MateReportRequest;
 import org.swyp.dessertbee.community.mate.dto.response.MateDetailResponse;
+import org.swyp.dessertbee.community.mate.dto.response.MateReportResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MatesPageResponse;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface MateService {
@@ -31,4 +33,12 @@ public interface MateService {
 
     /** 디저트메이트 신고*/
     void reportMate(UUID mateUuid, MateReportRequest request);
+
+//    -------------- 관리자용 메이트 신고 관리 기능 ------------
+
+    /** 신고된 Mate 게시글 목록 조회 */
+    List<MateReportResponse> getReportedMates();
+
+    /** 신고된 Mate 삭제 */
+    void deleteMateByUuid(UUID mateUuid);
 }

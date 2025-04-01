@@ -21,4 +21,6 @@ public interface MateReplyRepository extends JpaRepository<MateReply, Long> {
 
 
     Optional<MateReply> findByMateIdAndMateReplyIdAndDeletedAtIsNull(Long mateId, Long replyId);
+
+    Optional<MateReply> findByMateReplyIdAndDeletedAtIsNull(Long mateReplyId);
 }

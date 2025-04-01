@@ -41,10 +41,10 @@ public class SwaggerConfig {
                         .addSecuritySchemes("bearerAuth", securityScheme));
 
         // 프로덕션 환경에서만 서버 URL 설정 추가
-        if ("prod".equals(activeProfile) || "production".equals(activeProfile)) {
+        if ("release".equals(activeProfile)) {
             Server server = new Server();
-            server.setUrl("https://api.desserbee.com");
-            server.setDescription("Production Server");
+            server.setUrl("https://release.desserbee.com");
+            server.setDescription("Release Server");
             openAPI.servers(List.of(server));
         }
 
