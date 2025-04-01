@@ -295,6 +295,14 @@ public class MateReplyServiceImpl implements MateReplyService {
      * 신고된 Mate 댓글 삭제
      */
     @org.springframework.transaction.annotation.Transactional
+    public void deleteReportedMateReply() {
+        deleteReportedMateReply(null);
+    }
+
+    /**
+     * 신고된 Mate 댓글 삭제
+     */
+    @Transactional
     public void deleteReportedMateReply(Long mateReplyId) {
         boolean isReported = mateReportRepository.existsByMateReplyId(mateReplyId);
         if (!isReported) {

@@ -1,11 +1,11 @@
 package org.swyp.dessertbee.community.mate.service;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.entity.ReportCategory;
@@ -321,7 +321,7 @@ public class MateServiceImpl implements MateService {
     /**
      * 신고된 Mate 게시글 삭제
      */
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
     public void deleteMateByUuid(UUID mateUuid) {
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
