@@ -1,7 +1,14 @@
-# 서버 블록 설정 파일
-# 특정 도메인에 대한 라우팅, SSL, 프록시, CORS 등의 설정을 정의합니다.
+# 변수 매핑 - 요청 시 동적으로 처리할 헤더를 안정적으로 지정
+map $cookie_deviceId $device_id {
+    default $cookie_deviceId;
+    ""      "";
+}
 
-# HTTPS 서버 설정 (443 포트)
+map $http_authorization $auth_header {
+    default $http_authorization;
+    ""      "";
+}
+
 server {
     listen 443 ssl;
     server_name ${SERVER_NAME};
@@ -12,41 +19,36 @@ server {
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
-    # 모든 요청에 대한 처리
+    # API 문서 접근 리다이렉트 예시
+    location = /api-docs/ {
+        return 301 /api-docs;
+    }
+
+    # 모든 요청 처리
     location / {
-        # Spring Boot 애플리케이션으로 요청 프록시
         proxy_pass http://app:8080;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
 
-        # 디바이스 ID 쿠키를 헤더로 변환 (다중 기기 로그인 지원)
-        if ($cookie_deviceId) {
-            proxy_set_header X-Device-ID $cookie_deviceId;
-        }
-
-        # Authorization 헤더 처리
-        set $auth_header "";
-        if ($http_authorization) {
-            set $auth_header $http_authorization;
-        }
+        # 커스텀 헤더 설정
+        proxy_set_header X-Device-ID $device_id;
         proxy_set_header Authorization $auth_header;
 
-        # CORS 설정
+        # CORS 처리
         set $cors_origin "";
         if ($http_origin ~* "(https://desserbee.com|https://www.desserbee.com|http://desserbee.com|http://www.desserbee.com|https://${SERVER_NAME}|https://frontend-desserbee-web-git-vercel-test-eepyzs-projects.vercel.app)") {
             set $cors_origin $http_origin;
         }
 
-        # CORS 헤더 추가
         add_header 'Access-Control-Allow-Origin' "$cors_origin" always;
         add_header 'Access-Control-Allow-Credentials' "true" always;
         add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, PATCH, DELETE, OPTIONS' always;
         add_header 'Access-Control-Allow-Headers' 'Origin, Content-Type, Accept, Authorization, X-Email-Verification-Token, X-Device-ID' always;
         add_header 'Access-Control-Expose-Headers' 'Authorization, Set-Cookie, X-Email-Verification-Token' always;
 
-        # OPTIONS 요청 처리
+        # OPTIONS 요청 사전 처리
         if ($request_method = 'OPTIONS') {
             add_header 'Access-Control-Allow-Origin' "$cors_origin";
             add_header 'Access-Control-Allow-Credentials' "true";
@@ -59,12 +61,11 @@ server {
     }
 }
 
-# HTTP 서버 설정 (80 포트)
+# HTTP → HTTPS 리디렉션
 server {
     listen 80;
     server_name ${SERVER_NAME};
 
-    # 모든 HTTP 요청을 HTTPS로 리다이렉트
     location / {
         return 301 https://$host$request_uri;
     }
