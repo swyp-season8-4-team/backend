@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.swyp.dessertbee.admin.statistics.service.UserStatisticsAdminService;
+import org.swyp.dessertbee.user.dto.response.UserCountResponseDto;
 import org.swyp.dessertbee.user.dto.response.UserStatisticsResponseDto;
 
 import java.util.List;
@@ -20,9 +21,22 @@ public class UserStatisticsAdminController {
 
     private final UserStatisticsAdminService userStatisticsAdminService;
 
+//    /**
+//     * 전체 사용자 조회
+//     */
+//    @PreAuthorize("hasRole('ADMIN')")
+//    @GetMapping("/users/all")
+//    public ResponseEntity<List<UserStatisticsResponseDto>> getAllUsers(){
+//        return ResponseEntity.ok( userStatisticsAdminService.getAllUsers());
+//    }
+
+    /**
+     * 전체 사용자 수 조회
+     */
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/users/all")
-    public ResponseEntity<List<UserStatisticsResponseDto>> getAllUsers(){
-        return ResponseEntity.ok( userStatisticsAdminService.getAllUsers());
+    public ResponseEntity<UserCountResponseDto> getTotalUserCount() {
+        return ResponseEntity.ok(userStatisticsAdminService.getTotalUserCount());
     }
 }
+

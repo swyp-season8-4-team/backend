@@ -16,4 +16,5 @@ public class UserStatisticsResponseDto {
         this.userId = userId;
         this.roleId = roleId;
     }
+
 }
