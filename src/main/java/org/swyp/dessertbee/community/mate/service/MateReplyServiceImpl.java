@@ -1,11 +1,12 @@
 package org.swyp.dessertbee.community.mate.service;
 
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.entity.ReportCategory;
 import org.swyp.dessertbee.common.exception.BusinessException;
@@ -289,14 +290,6 @@ public class MateReplyServiceImpl implements MateReplyService {
         return reports.stream()
                 .map(MateReportResponse::new)
                 .collect(Collectors.toList());
-    }
-
-    /**
-     * 신고된 Mate 댓글 삭제
-     */
-    @org.springframework.transaction.annotation.Transactional
-    public void deleteReportedMateReply() {
-        deleteReportedMateReply(null);
     }
 
     /**
