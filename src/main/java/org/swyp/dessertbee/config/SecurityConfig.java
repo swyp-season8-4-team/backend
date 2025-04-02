@@ -22,6 +22,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.swyp.dessertbee.auth.jwt.JWTFilter;
 import org.swyp.dessertbee.auth.jwt.JWTUtil;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.swyp.dessertbee.auth.repository.AuthRepository;
 import org.swyp.dessertbee.auth.service.CustomUserDetailsService;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
@@ -39,13 +40,11 @@ import java.util.Collections;
 public class SecurityConfig {
 
     private final JWTUtil jwtUtil;
-
-//    @Value("${spring.graphql.cors.allowed-origins}")
-//    private String corsAllowedOrigins;
+    private final AuthRepository authRepository;
 
     @Bean
     public JWTFilter jwtFilter() {
-        return new JWTFilter(jwtUtil);
+        return new JWTFilter(jwtUtil, authRepository);
     }
 
     @Bean
@@ -87,39 +86,11 @@ public class SecurityConfig {
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .anonymous(Customizer.withDefaults());
-//        // CORS 설정 추가
-//        http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
         // CORS 설정 비활성화 (NGINX에서 처리)
         http.cors(AbstractHttpConfigurer::disable);
 
         return http.build();
     }
-
-
-//    /**
-//     * CORS 설정
-//     */
-//    @Bean
-//    public CorsConfigurationSource corsConfigurationSource() {
-//        CorsConfiguration configuration = new CorsConfiguration();
-//
-//        // allowedOrigins를 yml 설정값에서 가져와서 설정
-//        String[] origins = corsAllowedOrigins.split(",");
-//        configuration.setAllowedOrigins(Arrays.asList(origins)); // 명시적으로 허용할 도메인 지정
-//
-//        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-//        configuration.setAllowedHeaders(Arrays.asList("Origin", "Content-Type", "Accept", "Authorization", "X-Email-Verification-Token"));
-//        configuration.setAllowCredentials(true); // 쿠키를 포함한 크로스 도메인 요청 허용
-//        configuration.setMaxAge(3600L);
-//
-//        // 노출할 헤더 설정 - Set-Cookie도 포함
-//        configuration.setExposedHeaders(Arrays.asList("Authorization", "Set-Cookie","X-Email-Verification-Token"));
-//
-//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-//        source.registerCorsConfiguration("/**", configuration);
-//
-//        return source;
-//    }
 
     /**
      * 비밀번호 인코더 설정

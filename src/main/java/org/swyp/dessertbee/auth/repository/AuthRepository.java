@@ -1,6 +1,8 @@
 package org.swyp.dessertbee.auth.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.swyp.dessertbee.auth.entity.AuthEntity;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
@@ -57,4 +59,13 @@ public interface AuthRepository extends JpaRepository<AuthEntity, Integer> {
      * @return 해당 조건에 맞는 인증 정보
      */
     Optional<AuthEntity> findByUserAndDeviceId(UserEntity user, String deviceId);
+
+    /**
+     * 사용자 UUID와 활성 상태로 인증 정보 존재 여부 확인
+     * @param userUuid 사용자 UUID
+     * @param active 활성 상태
+     * @return 존재 여부
+     */
+    @Query("SELECT COUNT(a) > 0 FROM AuthEntity a WHERE a.user.userUuid = :userUuid AND a.active = :active")
+    boolean existsByUserUuidAndActive(@Param("userUuid") UUID userUuid, @Param("active") boolean active);
 }
