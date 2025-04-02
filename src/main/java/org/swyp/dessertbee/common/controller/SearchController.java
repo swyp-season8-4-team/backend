@@ -28,7 +28,7 @@ public class SearchController {
     private final UserService userService;
 
     /** 최근 검색어 조회 API */
-    @Operation(summary = "최근 검색어 조회", description = "최근 검색어를 조회합니다.")
+    @Operation(summary = "최근 검색어 조회 (completed)", description = "최근 검색어를 조회합니다.")
     @ApiResponse( responseCode = "200", description = "최근 검색어 조회 성공")
     @ApiErrorResponses({ErrorCode.SEARCH_SERVICE_ERROR})
     @PreAuthorize("isAuthenticated()")
@@ -41,7 +41,7 @@ public class SearchController {
     }
 
     /** 특정 검색어 삭제 */
-    @Operation(summary = "최근 검색어 삭제", description = "최근 검색어를 삭제합니다.")
+    @Operation(summary = "최근 검색어 삭제 (completed)", description = "최근 검색어를 삭제합니다.")
     @ApiResponse( responseCode = "204", description = "최근 검색어 삭제 성공")
     @ApiErrorResponses({ErrorCode.SEARCH_SERVICE_ERROR, ErrorCode.RECENT_KEYWORD_DELETE_FAILED})
     @PreAuthorize("isAuthenticated()")
@@ -58,7 +58,7 @@ public class SearchController {
     }
 
     /** 모든 검색어 삭제 */
-    @Operation(summary = "최근 검색어 전체 삭제", description = "최근 검색어를 전체 삭제합니다.")
+    @Operation(summary = "최근 검색어 전체 삭제 (completed)", description = "최근 검색어를 전체 삭제합니다.")
     @ApiResponse( responseCode = "204", description = "최근 검색어 전체 삭제 성공")
     @ApiErrorResponses({ErrorCode.SEARCH_SERVICE_ERROR, ErrorCode.RECENT_KEYWORD_DELETE_FAILED})
     @PreAuthorize("isAuthenticated()")
@@ -72,7 +72,7 @@ public class SearchController {
     }
 
     /** 실시간 인기 검색어 조회 API (이전 검색 횟수 차이 + 업데이트 시간 포함) */
-    @Operation(summary = "실시간 인기 검색어 조회", description = "실시간으로 인기 검색어를 조회합니다.")
+    @Operation(summary = "실시간 인기 검색어 조회 (completed)", description = "실시간으로 인기 검색어를 조회합니다.")
     @ApiResponse( responseCode = "200", description = "실시간 인기 검색어 조회 성공")
     @ApiErrorResponses({ErrorCode.SEARCH_SERVICE_ERROR})
     @GetMapping("/popular")
