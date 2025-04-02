@@ -41,7 +41,6 @@ public class StoreDetailResponse {
     private int totalReviewCount;
     private List<StoreReviewResponse> storeReviews;
     private List<String> tags;
-    private List<String> notice;
     private List<OperatingHourResponse> operatingHours;
     private List<HolidayResponse> holidays;
     private List<String> topPreferences;
@@ -83,7 +82,6 @@ public class StoreDetailResponse {
                 .parkingYn(store.getParkingYn())
                 .description(store.getDescription())
                 .averageRating(store.getAverageRating())
-                .notice(store.getNotice())
                 .operatingHours(operatingHours)
                 .holidays(holidays)
                 .topPreferences(topPreferences)
