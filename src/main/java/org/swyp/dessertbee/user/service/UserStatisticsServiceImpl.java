@@ -8,6 +8,9 @@ import org.swyp.dessertbee.user.dto.response.UserCountResponseDto;
 import org.swyp.dessertbee.user.dto.response.UserStatisticsResponseDto;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 @Service
@@ -40,6 +43,32 @@ public class UserStatisticsServiceImpl implements UserStatisticsService {
     @Transactional(readOnly = true)
     public UserCountResponseDto getTotalUserOwnersCount() {
         long userCount = userRoleRepository.countOwners();
+        return new UserCountResponseDto(userCount);
+    }
+
+    /**
+     * 신규 가입자 수 조회
+     */
+    /** 일 마다 */
+    @Transactional(readOnly = true)
+    public UserCountResponseDto getNewUsersByDay(LocalDate date) {
+        long userCount = userRepository.countNewUsersByDay(date);
+        return new UserCountResponseDto(userCount);
+    }
+    /** 주 마다 */
+    @Transactional(readOnly = true)
+    public UserCountResponseDto getNewUsersByWeek(int year, int week) {
+        LocalDate weekStart = LocalDate.of(year, 1, 1).plusWeeks(week - 1).with(TemporalAdjusters.previousOrSame(java.time.DayOfWeek.SUNDAY));
+        LocalDate weekEnd = weekStart.plusDays(6);
+        long userCount = userRepository.countNewUsersByWeek(weekStart, weekEnd);
+        return new UserCountResponseDto(userCount);
+    }
+    /** 월 마다 */
+    @Transactional(readOnly = true)
+    public UserCountResponseDto getNewUsersByMonth(int year, int month) {
+        LocalDate monthStart = LocalDate.of(year, month, 1);
+        LocalDate monthEnd = monthStart.with(TemporalAdjusters.lastDayOfMonth());
+        long userCount = userRepository.countNewUsersByMonth(monthStart, monthEnd);
         return new UserCountResponseDto(userCount);
     }
 }

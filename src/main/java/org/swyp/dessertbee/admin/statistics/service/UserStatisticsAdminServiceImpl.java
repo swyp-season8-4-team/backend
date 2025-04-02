@@ -7,6 +7,9 @@ import org.swyp.dessertbee.user.dto.response.UserCountResponseDto;
 import org.swyp.dessertbee.user.dto.response.UserStatisticsResponseDto;
 import org.swyp.dessertbee.user.service.UserStatisticsService;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 @Service
@@ -31,11 +34,28 @@ public class UserStatisticsAdminServiceImpl implements UserStatisticsAdminServic
         return userStatisticsService.getTotalUserCount();
     }
     /**
-     * 전체 사용자 수 조회
+     * 전체 사장님 수 조회
      */
     @Transactional(readOnly = true)
     public UserCountResponseDto getTotalUserOwnersCount(){
         return userStatisticsService.getTotalUserOwnersCount();
     }
-
+    /**
+    * 신규 가입자 수 조회
+    */
+    /** 일 마다 */
+    @Transactional(readOnly = true)
+    public UserCountResponseDto getNewUsersByDay(LocalDate date) {
+        return userStatisticsService.getNewUsersByDay(date);
+    }
+    /** 주 마다 */
+    @Transactional(readOnly = true)
+    public UserCountResponseDto getNewUsersByWeek(int year, int week) {
+        return userStatisticsService.getNewUsersByWeek(year, week);
+    }
+    /** 월 마다 */
+    @Transactional(readOnly = true)
+    public UserCountResponseDto getNewUsersByMonth(int year, int month) {
+        return userStatisticsService.getNewUsersByMonth(year, month);
+    }
 }

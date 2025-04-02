@@ -7,6 +7,8 @@ import org.springframework.stereotype.Repository;
 import org.swyp.dessertbee.user.dto.response.UserStatisticsResponseDto;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -78,4 +80,16 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
             "JOIN u.userRoles ur " +
             "JOIN ur.role r")
     List<UserStatisticsResponseDto> findAllUsersWithRoles();
+
+    // 특정 날짜(일)에 가입한 사용자 수 조회
+    @Query("SELECT COUNT(u) FROM UserEntity u WHERE DATE(u.createdAt) = :date")
+    long countNewUsersByDay(LocalDate date);
+
+    // 특정 주(일요일~토요일)에 가입한 사용자 수 조회
+    @Query("SELECT COUNT(u) FROM UserEntity u WHERE u.createdAt BETWEEN :weekStart AND :weekEnd")
+    long countNewUsersByWeek(LocalDate weekStart, LocalDate weekEnd);
+
+    // 특정 월에 가입한 사용자 수 조회
+    @Query("SELECT COUNT(u) FROM UserEntity u WHERE u.createdAt BETWEEN :monthStart AND :monthEnd")
+    long countNewUsersByMonth(LocalDate monthStart, LocalDate monthEnd);
 }
