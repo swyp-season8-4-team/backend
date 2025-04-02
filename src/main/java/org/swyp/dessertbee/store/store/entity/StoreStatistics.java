@@ -2,10 +2,10 @@ package org.swyp.dessertbee.store.store.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Getter
@@ -25,10 +25,18 @@ public class StoreStatistics {
     private Integer views;
     private Integer saves;
     private Integer reviews;
-    private LocalDate createDate;
-    private LocalDateTime createdAt;
+    private LocalDate createDate; // 가게가 등록된 날짜
+
+    @CreationTimestamp
+    private LocalDateTime createdAt; // 가게 통계가 집계된 시간
+
+    private LocalDateTime deletedAt; // 가게, 통계가 삭제(무효화)된 시간
 
     public void increaseViews() {
         this.views = this.views + 1;
+    }
+
+    public void softDelete(){
+        this.deletedAt = LocalDateTime.now();
     }
 }
