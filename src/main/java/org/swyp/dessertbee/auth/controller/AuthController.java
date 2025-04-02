@@ -36,7 +36,7 @@ public class AuthController {
     private final AuthService authService;
 
     @Operation(
-            summary = "회원가입",
+            summary = "회원가입 (completed)",
             description = "새로운 사용자를 등록합니다. 앱에서는 X-Device-ID 헤더를, 웹에서는 deviceId 쿠키를 사용하여 디바이스를 식별합니다.",
             parameters = {
                     @Parameter(
@@ -70,7 +70,7 @@ public class AuthController {
 
 
     @Operation(
-            summary = "로그인",
+            summary = "로그인 (completed)",
             description = "이메일과 비밀번호로 로그인합니다. 앱에서는 X-Device-ID 헤더를, 웹에서는 deviceId 쿠키를 사용하여 디바이스를 식별합니다.",
             parameters = {
                     @Parameter(
@@ -101,7 +101,7 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "로그아웃",
+            summary = "로그아웃 (completed)",
             description = "현재 로그인된 사용자를 로그아웃합니다. 앱에서는 X-Device-ID 헤더를, 웹에서는 deviceId 쿠키를 사용하여 해당 디바이스의 세션만 종료합니다. 하지만 X-Device-ID 헤더를 전달받지 못한 경우에는 해당 유저가 가지고 있는 모든 리프레시 토큰을 무효화합니다.",
             parameters = {
                     @Parameter(
@@ -133,7 +133,7 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "토큰 재발급",
+            summary = "토큰 재발급 (completed)",
             description = "리프레시 토큰을 사용하여 새로운 액세스 토큰을 발급받습니다. 앱에서는 X-Device-ID 헤더를, 웹에서는 deviceId 쿠키를 사용하여 디바이스를 식별합니다.",
             parameters = {
                     @Parameter(
@@ -166,7 +166,7 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "DEV 로그인",
+            summary = "DEV 로그인 (completed)",
             description = "개발용 로그인. 앱에서는 X-Device-ID 헤더를, 웹에서는 deviceId 쿠키를 사용하여 디바이스를 식별합니다.",
             parameters = {
                     @Parameter(

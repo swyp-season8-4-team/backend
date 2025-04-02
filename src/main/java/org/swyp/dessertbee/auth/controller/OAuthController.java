@@ -34,7 +34,7 @@ public class OAuthController {
      * OAuth 인가 코드로 로그인 처리 (POST 요청)
      */
     @Operation(
-            summary = "OAuth 회원가입, 로그인",
+            summary = "OAuth 회원가입, 로그인 (completed)",
             description = "OAuth로 새로운 사용자 등록 및 로그인. 앱에서는 X-Device-ID 헤더를, 웹에서는 deviceId 쿠키를 사용하여 디바이스를 식별합니다.",
             parameters = {
                     @Parameter(
