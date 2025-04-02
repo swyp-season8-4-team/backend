@@ -39,7 +39,7 @@ public class StoreController {
     private final UserService userService;
 
     /** 가게 등록 */
-    @Operation(summary = "가게 등록", description = "업주가 가게를 등록합니다.")
+    @Operation(summary = "가게 등록 (completed)", description = "업주가 가게를 등록합니다.")
     @ApiResponse( responseCode = "201", description = "가게 등록 성공", content = @Content(schema = @Schema(implementation = StoreDetailResponse.class)))
     @ApiErrorResponses({ErrorCode.STORE_CREATION_FAILED, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.STORE_TAG_SAVE_FAILED, ErrorCode.INVALID_TAG_SELECTION, ErrorCode.INVALID_TAG_INCLUDED})
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
@@ -56,7 +56,7 @@ public class StoreController {
     }
 
     /** 반경 내 가게 조회 */
-    @Operation(summary = "반경 내 가게 조회", description = "지도 반경 내 가게를 조회합니다.")
+    @Operation(summary = "반경 내 가게 조회 (completed)", description = "지도 반경 내 가게를 조회합니다.")
     @ApiResponse( responseCode = "200", description = "지도 반경 내 가게 조회 성공", content = @Content(schema = @Schema(implementation = StoreMapResponse.class)))
     @ApiErrorResponses({ErrorCode.STORE_MAP_READ_FAILED, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.STORE_SEARCH_FAILED})
     @GetMapping("/map")
@@ -92,7 +92,7 @@ public class StoreController {
     /**
      * 반경 내 가게 조회 (인증된 사용자의 취향 태그 기반)
      */
-    @Operation(summary = "반경 내 사용자 취향 가게 조회", description = "반경 내에서 사용자의 취향 태그를 가진 가게를 조회합니다.")
+    @Operation(summary = "반경 내 사용자 취향 가게 조회 (completed)", description = "반경 내에서 사용자의 취향 태그를 가진 가게를 조회합니다.")
     @ApiResponse( responseCode = "200", description = "지도 반경 내 사용자 취향 태그 가진 가게 조회 성공", content = @Content(schema = @Schema(implementation = StoreMapResponse.class)))
     @ApiErrorResponses({ErrorCode.PREFERENCE_STORE_READ_FAILED, ErrorCode.STORE_SERVICE_ERROR})
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
@@ -107,7 +107,7 @@ public class StoreController {
     }
 
     /** 가게 간략 정보 조회 */
-    @Operation(summary = "가게 간략 정보 조회", description = "가게의 간략한 정보를 조회합니다.")
+    @Operation(summary = "가게 간략 정보 조회 (completed)", description = "가게의 간략한 정보를 조회합니다.")
     @ApiResponse( responseCode = "200", description = "가게 간략 정보 조회 성공", content = @Content(schema = @Schema(implementation = StoreSummaryResponse.class)))
     @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.STORE_INFO_READ_FAILED})
     @GetMapping("/{storeUuid}/summary")
@@ -116,7 +116,7 @@ public class StoreController {
     }
 
     /** 가게 상세 정보 조회 */
-    @Operation(summary = "가게 상세 정보 조회", description = "가게의 상세한 정보를 조회합니다.")
+    @Operation(summary = "가게 상세 정보 조회 (completed)", description = "가게의 상세한 정보를 조회합니다.")
     @ApiResponse( responseCode = "200", description = "가게 상세 정보 조회 성공", content = @Content(schema = @Schema(implementation = StoreDetailResponse.class)))
     @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.STORE_INFO_READ_FAILED})
     @GetMapping("/{storeUuid}/details")
@@ -125,7 +125,7 @@ public class StoreController {
     }
 
     /** 가게 수정 */
-    @Operation(summary = "가게 수정", description = "업주가 가게의 정보를 수정합니다.")
+    @Operation(summary = "가게 수정 (completed)", description = "업주가 가게의 정보를 수정합니다.")
     @ApiResponse( responseCode = "200", description = "가게 수정 성공", content = @Content(schema = @Schema(implementation = StoreDetailResponse.class)))
     @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.UNAUTHORIZED_ACCESS, ErrorCode.STORE_UPDATE_FAILED})
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
@@ -143,7 +143,7 @@ public class StoreController {
     }
 
     /** 가게 삭제 */
-    @Operation(summary = "가게 삭제", description = "업주가 가게를 삭제합니다.")
+    @Operation(summary = "가게 삭제 (completed)", description = "업주가 가게를 삭제합니다.")
     @ApiResponse(responseCode = "204", description = "가게 삭제 성공")
     @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.UNAUTHORIZED_ACCESS, ErrorCode.STORE_DELETE_FAILED})
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
