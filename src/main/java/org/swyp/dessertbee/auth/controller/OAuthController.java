@@ -3,13 +3,10 @@ package org.swyp.dessertbee.auth.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -56,28 +53,17 @@ public class OAuthController {
                     )
             }
     )
-    @ApiResponse(
-            responseCode = "200",
-            description = "로그인 및 회원가입 성공",
-            content = @Content(schema = @Schema(implementation = LoginResponse.class)),
-            headers = {
-                    @Header(
-                            name = "Set-Cookie",
-                            description = "디바이스 식별자 쿠키 (웹 환경용)",
-                            schema = @Schema(type = "string", example = "deviceId=abc123; Path=/; HttpOnly; Secure; SameSite=None")
-                    )
-            }
-    )
+    @ApiResponse( responseCode = "200", description = "로그인 및 회원가입 성공", content = @Content(schema = @Schema(implementation = LoginResponse.class)))
     @ApiErrorResponses({ErrorCode.INVALID_INPUT_VALUE, ErrorCode.AUTHENTICATION_FAILED, ErrorCode.INVALID_PROVIDER, ErrorCode.DUPLICATE_NICKNAME})
     @PostMapping("/callback")
     public ResponseEntity<LoginResponse> oauthCallback(
             @RequestBody OAuthCodeRequest request,
-            HttpServletRequest httpRequest,
-            HttpServletResponse httpResponse) {
+            @Parameter(hidden = true) @RequestHeader(value = "X-Device-ID", required = false) String deviceId
+            ) {
 
         log.info("OAuth 인가 코드 수신 - 제공자: {}", request.getProvider());
         LoginResponse loginResponse = oAuthService.processOAuthLogin(
-                request.getCode(), request.getProvider(), httpRequest, httpResponse);
+                request.getCode(), request.getProvider(), deviceId);
 
         return ResponseEntity.ok(loginResponse);
     }

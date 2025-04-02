@@ -55,28 +55,16 @@ public class AuthController {
                     )
             }
     )
-    @ApiResponse(
-            responseCode = "200",
-            description = "회원가입 성공",
-            content = @Content(schema = @Schema(implementation = LoginResponse.class)),
-            headers = {
-                    @Header(
-                            name = "Set-Cookie",
-                            description = "디바이스 식별자 쿠키 (웹 환경용)",
-                            schema = @Schema(type = "string", example = "deviceId=abc123; Path=/; HttpOnly; Secure; SameSite=None")
-                    )
-            }
-    )
+    @ApiResponse( responseCode = "200", description = "회원가입 성공", content = @Content(schema = @Schema(implementation = LoginResponse.class)) )
     @ApiErrorResponses({ErrorCode.PASSWORD_MISMATCH, ErrorCode.DUPLICATE_NICKNAME, ErrorCode.DUPLICATE_EMAIL})
     @PostMapping("/signup")
     public ResponseEntity<LoginResponse> signup(
             @RequestHeader("X-Email-Verification-Token") String verificationToken,
-            @Valid @RequestBody SignUpRequest request,
-            @Parameter(hidden = true) HttpServletRequest httpRequest,
-            @Parameter(hidden = true) HttpServletResponse httpResponse
+            @Parameter(hidden = true) @RequestHeader(value = "X-Device-ID", required = false) String deviceId,
+            @Valid @RequestBody SignUpRequest request
     ) {
         log.debug("회원가입 요청: {}", request.getEmail());
-        LoginResponse signupResponse = authService.signup(request, verificationToken, httpRequest, httpResponse);
+        LoginResponse signupResponse = authService.signup(request, verificationToken, deviceId);
         return ResponseEntity.ok(signupResponse);
     }
 
@@ -101,32 +89,20 @@ public class AuthController {
                     )
             }
     )
-    @ApiResponse(
-            responseCode = "200",
-            description = "로그인 성공",
-            content = @Content(schema = @Schema(implementation = LoginResponse.class)),
-            headers = {
-                    @Header(
-                            name = "Set-Cookie",
-                            description = "디바이스 식별자 쿠키 (웹 환경용)",
-                            schema = @Schema(type = "string", example = "deviceId=abc123; Path=/; HttpOnly; Secure; SameSite=None")
-                    )
-            }
-    )
+    @ApiResponse( responseCode = "200", description = "로그인 성공", content = @Content(schema = @Schema(implementation = LoginResponse.class)) )
     @ApiErrorResponses({ErrorCode.PASSWORD_MISMATCH, ErrorCode.USER_NOT_FOUND})
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
             @Parameter(description = "로그인 정보", required = true) @Valid @RequestBody LoginRequest request,
-            @Parameter(hidden = true) HttpServletRequest httpRequest,
-            @Parameter(hidden = true) HttpServletResponse httpResponse
+            @Parameter(hidden = true) @RequestHeader(value = "X-Device-ID", required = false) String deviceId
     ) {
-        LoginResponse loginResponse = authService.login(request, httpRequest, httpResponse);
+        LoginResponse loginResponse = authService.login(request, deviceId);
         return ResponseEntity.ok(loginResponse);
     }
 
     @Operation(
             summary = "로그아웃",
-            description = "현재 로그인된 사용자를 로그아웃합니다. 앱에서는 X-Device-ID 헤더를, 웹에서는 deviceId 쿠키를 사용하여 해당 디바이스의 세션만 종료합니다.",
+            description = "현재 로그인된 사용자를 로그아웃합니다. 앱에서는 X-Device-ID 헤더를, 웹에서는 deviceId 쿠키를 사용하여 해당 디바이스의 세션만 종료합니다. 하지만 X-Device-ID 헤더를 전달받지 못한 경우에는 해당 유저가 가지고 있는 모든 리프레시 토큰을 무효화합니다.",
             parameters = {
                     @Parameter(
                             name = "X-Device-ID",
@@ -144,26 +120,15 @@ public class AuthController {
                     )
             }
     )
-    @ApiResponse(
-            responseCode = "200",
-            description = "로그아웃 성공",
-            headers = {
-                    @Header(
-                            name = "Set-Cookie",
-                            description = "디바이스 식별자 쿠키 삭제 (웹 환경용)",
-                            schema = @Schema(type = "string", example = "deviceId=; Path=/; HttpOnly; Secure; Max-Age=0")
-                    )
-            }
-    )
+    @ApiResponse( responseCode = "200", description = "로그아웃 성공" )
     @PostMapping("/logout")
     public ResponseEntity<LogoutResponse> logout(
             @Parameter(description = "JWT 액세스 토큰", required = true)
             @RequestHeader("Authorization") String authHeader,
-            @Parameter(hidden = true) HttpServletRequest httpRequest,
-            @Parameter(hidden = true) HttpServletResponse httpResponse
+            @Parameter(hidden = true) @RequestHeader(value = "X-Device-ID", required = false) String deviceId
     ) {
         String accessToken = authHeader.substring(7);
-        LogoutResponse logoutResponse = authService.logout(accessToken, httpRequest, httpResponse);
+        LogoutResponse logoutResponse = authService.logout(accessToken, deviceId);
         return ResponseEntity.ok(logoutResponse);
     }
 
@@ -193,10 +158,10 @@ public class AuthController {
     public ResponseEntity<TokenResponse> refreshToken(
             @Parameter(description = "리프레시 토큰 (Bearer 형식)", required = true)
             @RequestHeader("Authorization") String authHeader,
-            @Parameter(hidden = true) HttpServletRequest httpRequest
+            @Parameter(hidden = true) @RequestHeader(value = "X-Device-ID", required = false) String deviceId
     ) {
         String refreshToken = authHeader.substring(7);
-        TokenResponse tokenResponse = authService.refreshAccessToken(refreshToken, httpRequest);
+        TokenResponse tokenResponse = authService.refreshAccessToken(refreshToken, deviceId);
         return ResponseEntity.ok(tokenResponse);
     }
 
@@ -220,17 +185,13 @@ public class AuthController {
                     )
             }
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "로그인 성공", content = @Content(schema = @Schema(implementation = LoginResponse.class))),
-            @ApiResponse(responseCode = "401", description = "인증 실패")
-    })
+    @ApiResponses( @ApiResponse(responseCode = "200", description = "로그인 성공", content = @Content(schema = @Schema(implementation = LoginResponse.class))))
     @PostMapping("/dev/login")
     public ResponseEntity<LoginResponse> devlogin(
             @Parameter(description = "로그인 정보", required = true) @Valid @RequestBody LoginRequest request,
-            @Parameter(hidden = true) HttpServletRequest httpRequest,
-            @Parameter(hidden = true) HttpServletResponse httpResponse
+            @Parameter(hidden = true) @RequestHeader(value = "X-Device-ID", required = false) String deviceId
     ) {
-        LoginResponse loginResponse = authService.devLogin(request, httpRequest, httpResponse);
+        LoginResponse loginResponse = authService.devLogin(request, deviceId);
         return ResponseEntity.ok(loginResponse);
     }
 }
