@@ -1,9 +1,9 @@
 package org.swyp.dessertbee.store.store.service;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.store.store.exception.StoreExceptions.*;
 import org.swyp.dessertbee.store.store.exception.UserStoreExceptions.*;

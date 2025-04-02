@@ -4,41 +4,31 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * 가게 업데이트 요청 DTO
+ */
 @Data
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class StoreUpdateRequest {
+public class StoreUpdateRequest extends BaseStoreRequest {
 
-    @NotNull
-    private UUID userUuid;
-
-    @NotBlank
-    private String name;
-
-    private String phone;
-    private String address;
-    private String storeLink;
-    private BigDecimal latitude;
-    private BigDecimal longitude;
-    private String description;
-    private Boolean animalYn;
-    private Boolean tumblerYn;
-    private Boolean parkingYn;
-    private List<String> notice;
-    private List<Long> tagIds;
     private List<MenuRequest> menus;
-    private List<StoreCreateRequest.OperatingHourRequest> operatingHours;
-    private List<StoreCreateRequest.HolidayRequest> holidays;
-
     private List<Long> storeImageDeleteIds;
     private List<Long> ownerPickImageDeleteIds;
 
+    /**
+     * 메뉴 요청 클래스
+     */
     @Data
     @NoArgsConstructor
     @AllArgsConstructor

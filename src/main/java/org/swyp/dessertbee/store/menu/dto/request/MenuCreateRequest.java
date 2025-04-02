@@ -9,20 +9,16 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+/**
+ * 메뉴 생성 요청 DTO
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class    MenuCreateRequest {
-
-    private UUID menuUuid;
-
-    @NotBlank
-    private String name; // 메뉴 이름
-
-    @NotNull
-    private BigDecimal price; // 가격
-
-    private Boolean isPopular = false; // 인기 메뉴 여부 (기본값: false)
-    private String description; // 메뉴 설명
+public class MenuCreateRequest {
+    private String name;
+    private BigDecimal price;
+    private Boolean isPopular;
+    private String description;
     private String imageFileKey;
 }

@@ -1,13 +1,11 @@
 package org.swyp.dessertbee.community.review.service;
 
-import ch.qos.logback.classic.model.LevelModel;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.antlr.v4.runtime.misc.MurmurHash;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.Image;
 import org.swyp.dessertbee.common.entity.ImageType;
@@ -16,7 +14,6 @@ import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.repository.ImageRepository;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.community.review.dto.ReviewContentDto;
-import org.swyp.dessertbee.community.review.dto.ReviewImage;
 import org.swyp.dessertbee.community.review.dto.request.ReviewCreateRequest;
 import org.swyp.dessertbee.community.review.dto.request.ReviewUpdateRequest;
 import org.swyp.dessertbee.community.review.dto.response.ReviewPageResponse;
