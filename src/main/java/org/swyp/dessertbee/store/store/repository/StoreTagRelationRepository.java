@@ -24,4 +24,8 @@ public interface StoreTagRelationRepository extends JpaRepository<StoreTagRelati
     @Modifying
     void deleteByStore(Store store);
 
+    @Modifying
+    @Query("DELETE FROM StoreTagRelation r WHERE r.store.storeId = :storeId")
+    void deleteByStoreId(@Param("storeId") Long storeId);
+
 }
