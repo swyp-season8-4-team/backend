@@ -23,10 +23,11 @@ public enum ErrorCode {
     PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "A005", "비밀번호가 일치하지 않습니다."),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "A006", "잘못된 인증 정보입니다."),
     AUTHENTICATION_FAILED(HttpStatus.UNAUTHORIZED, "A007", "인증에 실패했습니다."),
-    SIGNUP_RESTRICTED_DELETED_ACCOUNT(HttpStatus.FORBIDDEN, "A007", "탈퇴한 계정은 30일 이후에 재가입이 가능합니다."),
-    ROLE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "U010", "해당 권한으로는 접근이 불가합니다."),
-    AUTH_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "A008", "인증 서비스 처리 중 오류가 발생했습니다."),
-    OAUTH_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "A008", "소셜 인증 서비스 처리 중 오류가 발생했습니다."),
+    SIGNUP_RESTRICTED_DELETED_ACCOUNT(HttpStatus.FORBIDDEN, "A008", "탈퇴한 계정은 30일 이후에 재가입이 가능합니다."),
+    ROLE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "A009", "해당 권한으로는 접근이 불가합니다."),
+    AUTH_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "A010", "인증 서비스 처리 중 오류가 발생했습니다."),
+    OAUTH_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "A011", "소셜 인증 서비스 처리 중 오류가 발생했습니다."),
+    DEVICE_ID_MISSING(HttpStatus.BAD_REQUEST, "A012", "디바이스 ID가 제공되지 않았습니다."),
 
     // OAuth
     INVALID_PROVIDER(HttpStatus.BAD_REQUEST, "O001", "지원되지 않는 OAuth 제공자입니다."),

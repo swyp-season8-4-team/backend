@@ -153,7 +153,7 @@ public class AuthController {
             }
     )
     @ApiResponse(responseCode = "200", description = "토큰 재발급 성공", content = @Content(schema = @Schema(implementation = TokenResponse.class)))
-    @ApiErrorResponses({ErrorCode.INVALID_CREDENTIALS, ErrorCode.INVALID_VERIFICATION_TOKEN, ErrorCode.EXPIRED_VERIFICATION_TOKEN})
+    @ApiErrorResponses({ErrorCode.INVALID_CREDENTIALS, ErrorCode.INVALID_VERIFICATION_TOKEN, ErrorCode.EXPIRED_VERIFICATION_TOKEN, ErrorCode.DEVICE_ID_MISSING})
     @PostMapping("/token/refresh")
     public ResponseEntity<TokenResponse> refreshToken(
             @Parameter(description = "리프레시 토큰 (Bearer 형식)", required = true)

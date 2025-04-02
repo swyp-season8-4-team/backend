@@ -195,7 +195,7 @@ public class TokenService {
             // 디바이스 ID 확인
             if (deviceId == null || deviceId.isEmpty()) {
                 log.warn("리프레시 토큰 검증 실패 - 디바이스 ID 없음: {}", email);
-                throw new JwtTokenException(ErrorCode.INVALID_CREDENTIALS, "디바이스 ID가 제공되지 않았습니다.");
+                throw new DeviceIdMissingException();
             }
 
             // 디바이스 ID로 인증 정보 조회
