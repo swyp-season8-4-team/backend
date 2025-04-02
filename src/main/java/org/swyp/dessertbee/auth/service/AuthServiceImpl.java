@@ -54,13 +54,13 @@ public class AuthServiceImpl implements AuthService {
     private UserRoleService userRoleService;
 
     @Override
-    public TokenResponse refreshAccessToken(String refreshToken, HttpServletRequest request) {
-        return tokenService.refreshAccessToken(refreshToken, request);
+    public TokenResponse refreshAccessToken(String refreshToken, String deviceId) {
+        return tokenService.refreshAccessToken(refreshToken, deviceId);
     }
 
     @Override
-    public void saveRefreshToken(UUID userUuid, String refreshToken, String provider, String providerId, HttpServletRequest request, HttpServletResponse response) {
-        tokenService.saveRefreshToken(userUuid, refreshToken, provider, providerId, request, response);
+    public String saveRefreshToken(UUID userUuid, String refreshToken, String provider, String providerId, String deviceId) {
+        return tokenService.saveRefreshToken(userUuid, refreshToken, provider, providerId, deviceId);
     }
 
     @Override
@@ -73,7 +73,7 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     @Transactional
-    public LoginResponse signup(SignUpRequest request, String verificationToken, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+    public LoginResponse signup(SignUpRequest request, String verificationToken, String deviceId) {
         try {
             // 메일 인증 토큰 검증
             emailVerificationService.validateEmailVerificationToken(verificationToken, request.getEmail(), EmailVerificationPurpose.SIGNUP);
@@ -123,13 +123,13 @@ public class AuthServiceImpl implements AuthService {
 
 
             // Refresh Token 저장 및 디바이스 ID 처리
-            tokenService.saveRefreshToken(user.getUserUuid(), refreshToken, "local", null, httpRequest, httpResponse);
+            String usedDeviceId = saveRefreshToken(user.getUserUuid(), refreshToken, "local", null, deviceId);
 
             log.info("회원가입 완료 - 이메일: {}", request.getEmail());
 
             String profileImageUrl = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId()).stream().findFirst().orElse(null);
 
-            return LoginResponse.success(accessToken, refreshToken, expiresIn, user, profileImageUrl);
+            return LoginResponse.success(accessToken, refreshToken, expiresIn, user, profileImageUrl, usedDeviceId);
 
         } catch (BusinessException e) {
             log.warn("회원가입 실패 - 이메일: {}, 사유: {}", request.getEmail(), e.getMessage());
@@ -147,7 +147,7 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     @Transactional
-    public LoginResponse login(LoginRequest request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+    public LoginResponse login(LoginRequest request, String deviceId) {
         try {
             // 1. 사용자 조회
             UserEntity user = userService.findUserByEmail(request.getEmail());
@@ -174,7 +174,7 @@ public class AuthServiceImpl implements AuthService {
                     jwtUtil.getSHORT_ACCESS_TOKEN_EXPIRE();
 
             // 5. Refresh Token 저장 및 디바이스 ID 처리
-            tokenService.saveRefreshToken(user.getUserUuid(), refreshToken, "local", null, httpRequest, httpResponse);
+            String usedDeviceId = saveRefreshToken(user.getUserUuid(), refreshToken, "local", null, deviceId);
 
             // 6. 프로필 이미지
             String profileImageUrl = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId()).stream().findFirst().orElse(null);
@@ -183,7 +183,7 @@ public class AuthServiceImpl implements AuthService {
             boolean isPreferenceSet = preferenceService.isUserPreferenceSet(user);
 
             // 8. 로그인 응답 생성
-            return LoginResponse.success(accessToken, refreshToken, expiresIn, user, profileImageUrl, isPreferenceSet);
+            return LoginResponse.success(accessToken, refreshToken, expiresIn, user, profileImageUrl, usedDeviceId, isPreferenceSet);
 
         } catch (InvalidCredentialsException e) {
             log.warn("로그인 실패 - 이메일: {}, 사유: {}", request.getEmail(), e.getMessage());
@@ -201,7 +201,7 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     @Transactional
-    public LoginResponse devLogin(LoginRequest request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+    public LoginResponse devLogin(LoginRequest request, String deviceId) {
         try {
             // 1. 사용자 조회
             UserEntity user = userService.findUserByEmail(request.getEmail());
@@ -227,7 +227,7 @@ public class AuthServiceImpl implements AuthService {
             long expiresIn = 180;
 
             // 5. Refresh Token 저장 및 디바이스 ID 처리
-            tokenService.saveRefreshToken(user.getUserUuid(), refreshToken, "local", null, httpRequest, httpResponse);
+            String usedDeviceId = saveRefreshToken(user.getUserUuid(), refreshToken, "local", null, deviceId);
 
             // 6. 프로필 이미지
             List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
@@ -239,7 +239,7 @@ public class AuthServiceImpl implements AuthService {
             log.info("개발 로그인 성공 - 이메일: {}, 토큰 만료시간: {}초", request.getEmail(), expiresIn);
 
             // 8. 로그인 응답 생성
-            return LoginResponse.success(accessToken, refreshToken, expiresIn, user, profileImageUrl, isPreferenceSet);
+            return LoginResponse.success(accessToken, refreshToken, expiresIn, user, profileImageUrl, usedDeviceId, isPreferenceSet);
 
         } catch (InvalidCredentialsException e) {
             log.warn("개발 로그인 실패 - 이메일: {}, 사유: {}", request.getEmail(), e.getMessage());
@@ -300,7 +300,7 @@ public class AuthServiceImpl implements AuthService {
      */
     @Transactional
     @Override
-    public LogoutResponse logout(String accessToken, HttpServletRequest request, HttpServletResponse response) {
+    public LogoutResponse logout(String accessToken, String deviceId) {
         // 토큰이 없는 경우도 로그아웃 성공으로 처리
         if (accessToken == null || accessToken.trim().isEmpty()) {
             log.info("토큰 없이 로그아웃 요청 - 성공으로 처리");
@@ -311,19 +311,10 @@ public class AuthServiceImpl implements AuthService {
             // 토큰 파싱 시도
             UUID userUuid = jwtUtil.getUserUuid(accessToken, true);
 
-            // 디바이스 ID 쿠키 확인
-            String deviceId = CookieUtil.getCookie(request, "deviceId")
-                    .map(Cookie::getValue)
-                    .orElse(null);
-
             try {
-                if (deviceId != null) {
+                if (deviceId != null && !deviceId.isEmpty()) {
                     // 특정 디바이스의 리프레시 토큰만 무효화
                     tokenService.revokeRefreshTokenByDevice(userUuid, deviceId);
-
-                    // 디바이스 ID 쿠키 삭제
-                    CookieUtil.deleteDeviceIdCookie(response);
-
                     log.info("로그아웃 성공 - UUID: {}, 디바이스: {}", userUuid, deviceId);
                 } else {
                     // 디바이스 ID가 없는 경우 모든 기기에서 로그아웃

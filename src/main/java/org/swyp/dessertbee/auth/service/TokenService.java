@@ -35,10 +35,18 @@ public class TokenService {
     private final UserService userService;
 
     /**
+     * 디바이스 ID 생성
+     * @return 고유한 디바이스 ID
+     */
+    public String generateDeviceId() {
+        return UUID.randomUUID().toString();
+    }
+
+    /**
      * 리프레시 토큰을 저장하거나 업데이트
      */
     @Transactional
-    public void saveRefreshToken(UUID userUuid, String refreshToken, String provider, String providerId, HttpServletRequest request, HttpServletResponse response) {
+    public String saveRefreshToken(UUID userUuid, String refreshToken, String provider, String providerId, String deviceId) {
         UserEntity user = userService.findByUserUuid(userUuid);
         String email = user.getEmail();
 
@@ -46,21 +54,12 @@ public class TokenService {
             // provider가 null인 경우 'local'로 기본 설정
             String safeProvider = Optional.ofNullable(provider).orElse("local");
 
-            // 쿠키에서 디바이스 ID 확인
-            String deviceId = CookieUtil.getCookie(request, "deviceId")
-                    .map(Cookie::getValue)
-                    .orElse(null);
-
             // 디바이스 ID가 없으면 새로 생성
-            if (deviceId == null) {
-                deviceId = CookieUtil.generateDeviceId();
-
-                // 리프레시 토큰과 동일한 수명을 가진 디바이스 ID 쿠키 설정
-                long maxAgeSec = Duration.ofMillis(jwtUtil.getLONG_REFRESH_TOKEN_EXPIRE()).getSeconds();
-                CookieUtil.addDeviceIdCookie(response, deviceId, maxAgeSec);
-
+            if (deviceId == null || deviceId.isEmpty()) {
+                deviceId = generateDeviceId();
                 log.debug("새 디바이스 ID 생성: {}", deviceId);
             }
+
             // 디바이스 ID로 기존 인증 정보 조회
             Optional<AuthEntity> authOpt = authRepository.findByUserAndProviderAndDeviceId(user, safeProvider, deviceId);
 
@@ -77,9 +76,8 @@ public class TokenService {
                         .build();
             }
 
-            // JWTUtil의 LONG_REFRESH_TOKEN_EXPIRE 값과 동일하게 설정
             LocalDateTime expirationTime = LocalDateTime.now(KST)
-                    .plus(Duration.ofMillis(jwtUtil.getLONG_REFRESH_TOKEN_EXPIRE()));
+                    .plus(Duration.ofMillis(jwtUtil.getSHORT_REFRESH_TOKEN_EXPIRE()));
             auth.updateRefreshToken(refreshToken, expirationTime);
 
             // providerId가 null이 아닌 경우에만 설정
@@ -88,6 +86,9 @@ public class TokenService {
             }
 
             authRepository.save(auth);
+
+            // 생성하거나 사용한 디바이스 ID 반환
+            return deviceId;
 
         } catch (BusinessException e) {
             log.warn("리프레시 토큰 저장 실패 - 이메일: {}, 사유: {}", email, e.getMessage());
@@ -107,6 +108,12 @@ public class TokenService {
         String email = user.getEmail();
 
         try {
+            // 디바이스 ID가 없는 경우 예외 발생
+            if (deviceId == null || deviceId.isEmpty()) {
+                log.warn("리프레시 토큰 무효화 실패 - 디바이스 ID가 제공되지 않음: {}", email);
+                throw new JwtTokenException(ErrorCode.INVALID_CREDENTIALS, "디바이스 ID가 제공되지 않았습니다.");
+            }
+
             // 특정 디바이스의 인증 정보만 찾기
             Optional<AuthEntity> authOpt = authRepository.findByUserAndProviderAndDeviceId(user, "local", deviceId);
 
@@ -169,7 +176,7 @@ public class TokenService {
      * @return 새로운 액세스 토큰 응답
      */
     @Transactional
-    public TokenResponse refreshAccessToken(String refreshToken, HttpServletRequest request) {
+    public TokenResponse refreshAccessToken(String refreshToken, String deviceId) {
         try {
             // 리프레시 토큰 검증
             ErrorCode errorCode = jwtUtil.validateToken(refreshToken, false);
@@ -185,20 +192,24 @@ public class TokenService {
             UserEntity user = userService.findByUserUuid(userUuid);
             String email = user.getEmail();
 
-            // 디바이스 ID 쿠키 확인
-            String deviceId = CookieUtil.getCookie(request, "deviceId")
-                    .map(Cookie::getValue)
-                    .orElseThrow(() -> {
-                        log.warn("리프레시 토큰 검증 실패 - 디바이스 ID 쿠키 없음: {}", email);
-                        return new JwtTokenException(ErrorCode.INVALID_CREDENTIALS, "디바이스 ID가 존재하지 않습니다.");
-                    });
+            // 디바이스 ID 확인
+            if (deviceId == null || deviceId.isEmpty()) {
+                log.warn("리프레시 토큰 검증 실패 - 디바이스 ID 없음: {}", email);
+                throw new JwtTokenException(ErrorCode.INVALID_CREDENTIALS, "디바이스 ID가 제공되지 않았습니다.");
+            }
 
-            // 새로 추가한 메서드로 디바이스 ID만으로 인증 정보 조회
+            // 디바이스 ID로 인증 정보 조회
             AuthEntity auth = authRepository.findByUserAndDeviceId(user, deviceId)
                     .orElseThrow(() -> {
                         log.warn("리프레시 토큰 검증 실패 - 사용자({})의 디바이스({})에 대한 인증 정보 없음", email, deviceId);
                         return new JwtTokenException(ErrorCode.INVALID_CREDENTIALS, "리프레시 토큰이 존재하지 않습니다.");
                     });
+
+            // 토큰의 활성화 상태 확인
+            if (!auth.isActive()) {
+                log.warn("리프레시 토큰 검증 실패 - 비활성화된 토큰: {}, 디바이스: {}", email, deviceId);
+                throw new JwtTokenException(ErrorCode.INVALID_CREDENTIALS, "로그아웃 처리된 토큰입니다.");
+            }
 
             // DB에 저장된 토큰과 요청된 토큰 비교
             if (!refreshToken.equals(auth.getRefreshToken())) {
@@ -230,6 +241,7 @@ public class TokenService {
                     .accessToken(newAccessToken)
                     .tokenType("Bearer")
                     .expiresIn(jwtUtil.getSHORT_ACCESS_TOKEN_EXPIRE())
+                    .deviceId(deviceId)  // 응답에 디바이스 ID 포함
                     .build();
         }
         catch (BusinessException e) {
