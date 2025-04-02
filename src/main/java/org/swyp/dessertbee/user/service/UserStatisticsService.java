@@ -13,7 +13,7 @@ public interface UserStatisticsService {
 
     UserCountResponseDto getTotalUserCount();
     UserCountResponseDto getTotalUserOwnersCount();
-    UserCountResponseDto getNewUsersByDay(LocalDate date);
-    UserCountResponseDto getNewUsersByWeek(int year, int week);
+    UserCountResponseDto getNewUsersByDay(int year, int month, int day);
+    UserCountResponseDto getNewUsersByWeek(int year, int month, int week);
     UserCountResponseDto getNewUsersByMonth(int year, int month);
 }

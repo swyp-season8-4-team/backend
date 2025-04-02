@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.user.repository;
 
+import io.lettuce.core.dynamic.annotation.Param;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -74,6 +75,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     @Query("SELECT u FROM UserEntity u WHERE u.userUuid = :userUuid AND u.deletedAt IS NULL")
     Optional<UserEntity> findByUserUuid(@NotNull UUID userUuid);
 
+//    -------------- 관리자용 조회 -----------
 
     @Query("SELECT new org.swyp.dessertbee.user.dto.response.UserStatisticsResponseDto(u.userUuid, u.id, ur.role.id) " +
             "FROM UserEntity u " +
@@ -81,15 +83,19 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
             "JOIN ur.role r")
     List<UserStatisticsResponseDto> findAllUsersWithRoles();
 
-    // 특정 날짜(일)에 가입한 사용자 수 조회
-    @Query("SELECT COUNT(u) FROM UserEntity u WHERE DATE(u.createdAt) = :date")
-    long countNewUsersByDay(LocalDate date);
+
+    // 특정 날짜(일)에 가입한 사용자 수 조회 (하루 동안 가입한 유저)
+    @Query("SELECT COUNT(u) FROM UserEntity u WHERE u.createdAt BETWEEN :startOfDay AND :endOfDay")
+    long countNewUsersByDay(@Param("startOfDay") LocalDateTime startOfDay,
+                            @Param("endOfDay") LocalDateTime endOfDay);
 
     // 특정 주(일요일~토요일)에 가입한 사용자 수 조회
     @Query("SELECT COUNT(u) FROM UserEntity u WHERE u.createdAt BETWEEN :weekStart AND :weekEnd")
-    long countNewUsersByWeek(LocalDate weekStart, LocalDate weekEnd);
+    long countNewUsersByWeek(@Param("weekStart") LocalDateTime weekStart,
+                             @Param("weekEnd") LocalDateTime weekEnd);
 
     // 특정 월에 가입한 사용자 수 조회
     @Query("SELECT COUNT(u) FROM UserEntity u WHERE u.createdAt BETWEEN :monthStart AND :monthEnd")
-    long countNewUsersByMonth(LocalDate monthStart, LocalDate monthEnd);
+    long countNewUsersByMonth(@Param("monthStart") LocalDateTime monthStart,
+                              @Param("monthEnd") LocalDateTime monthEnd);
 }

@@ -8,6 +8,7 @@ import org.swyp.dessertbee.user.dto.response.UserCountResponseDto;
 import org.swyp.dessertbee.user.dto.response.UserStatisticsResponseDto;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
@@ -49,26 +50,39 @@ public class UserStatisticsServiceImpl implements UserStatisticsService {
     /**
      * 신규 가입자 수 조회
      */
-    /** 일 마다 */
+    /** 일 단위 조회 (특정 연도, 특정 월, 특정 일) */
     @Transactional(readOnly = true)
-    public UserCountResponseDto getNewUsersByDay(LocalDate date) {
-        long userCount = userRepository.countNewUsersByDay(date);
+    public UserCountResponseDto getNewUsersByDay(int year, int month, int day) {
+        LocalDateTime startOfDay = LocalDate.of(year, month, day).atStartOfDay(); // 00:00:00
+        LocalDateTime endOfDay = startOfDay.withHour(23).withMinute(59).withSecond(59); // 23:59:59
+
+        long userCount = userRepository.countNewUsersByDay(startOfDay, endOfDay);
         return new UserCountResponseDto(userCount);
     }
-    /** 주 마다 */
+
+    /** 주 단위 조회 (특정 연도, 특정 월, 특정 주) */
     @Transactional(readOnly = true)
-    public UserCountResponseDto getNewUsersByWeek(int year, int week) {
-        LocalDate weekStart = LocalDate.of(year, 1, 1).plusWeeks(week - 1).with(TemporalAdjusters.previousOrSame(java.time.DayOfWeek.SUNDAY));
+    public UserCountResponseDto getNewUsersByWeek(int year, int month, int week) {
+        LocalDate firstDayOfMonth = LocalDate.of(year, month, 1);
+        LocalDate firstSunday = firstDayOfMonth.with(TemporalAdjusters.firstInMonth(DayOfWeek.SUNDAY));
+
+        LocalDate weekStart = firstSunday.plusWeeks(week - 1);
         LocalDate weekEnd = weekStart.plusDays(6);
-        long userCount = userRepository.countNewUsersByWeek(weekStart, weekEnd);
+
+        LocalDateTime startDateTime = weekStart.atStartOfDay();  // 00:00:00 변환
+        LocalDateTime endDateTime = weekEnd.atTime(23, 59, 59); // 23:59:59 변환
+
+        long userCount = userRepository.countNewUsersByWeek(startDateTime, endDateTime);
         return new UserCountResponseDto(userCount);
     }
     /** 월 마다 */
     @Transactional(readOnly = true)
     public UserCountResponseDto getNewUsersByMonth(int year, int month) {
         LocalDate monthStart = LocalDate.of(year, month, 1);
-        LocalDate monthEnd = monthStart.with(TemporalAdjusters.lastDayOfMonth());
-        long userCount = userRepository.countNewUsersByMonth(monthStart, monthEnd);
+        LocalDateTime startDateTime = monthStart.atStartOfDay();  // 00:00:00 변환
+        LocalDateTime endDateTime = monthStart.with(TemporalAdjusters.lastDayOfMonth()).atTime(23, 59, 59); // 23:59:59 변환
+
+        long userCount = userRepository.countNewUsersByMonth(startDateTime, endDateTime);
         return new UserCountResponseDto(userCount);
     }
 }

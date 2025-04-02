@@ -58,16 +58,19 @@ public class UserStatisticsAdminController {
     // 특정 날짜(일) 기준 신규 가입자 수 조회
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/users/new/day")
-    public ResponseEntity<UserCountResponseDto> getNewUsersByDay(@RequestParam String date) {
-        LocalDate parsedDate = LocalDate.parse(date);
-        return ResponseEntity.ok(userStatisticsAdminService.getNewUsersByDay(parsedDate));
+    public ResponseEntity<UserCountResponseDto> getNewUsersByDay(@RequestParam int year,
+                                                                 @RequestParam int month,
+                                                                 @RequestParam int day ){
+        return ResponseEntity.ok(userStatisticsAdminService.getNewUsersByDay(year, month, day));
     }
 
     // 특정 주 기준 신규 가입자 수 조회
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/users/new/week")
-    public ResponseEntity<UserCountResponseDto> getNewUsersByWeek(@RequestParam int year, @RequestParam int week) {
-        return ResponseEntity.ok(userStatisticsAdminService.getNewUsersByWeek(year, week));
+    public ResponseEntity<UserCountResponseDto> getNewUsersByWeek(@RequestParam int year,
+                                                                  @RequestParam int month,
+                                                                  @RequestParam int week) {
+        return ResponseEntity.ok(userStatisticsAdminService.getNewUsersByWeek(year, month, week));
     }
 
     // 특정 월 기준 신규 가입자 수 조회

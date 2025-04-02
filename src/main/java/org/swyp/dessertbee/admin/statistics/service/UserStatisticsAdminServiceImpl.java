@@ -45,13 +45,13 @@ public class UserStatisticsAdminServiceImpl implements UserStatisticsAdminServic
     */
     /** 일 마다 */
     @Transactional(readOnly = true)
-    public UserCountResponseDto getNewUsersByDay(LocalDate date) {
-        return userStatisticsService.getNewUsersByDay(date);
+    public UserCountResponseDto getNewUsersByDay(int year, int month, int day) {
+        return userStatisticsService.getNewUsersByDay(year, month, day);
     }
     /** 주 마다 */
     @Transactional(readOnly = true)
-    public UserCountResponseDto getNewUsersByWeek(int year, int week) {
-        return userStatisticsService.getNewUsersByWeek(year, week);
+    public UserCountResponseDto getNewUsersByWeek(int year, int month, int week) {
+        return userStatisticsService.getNewUsersByWeek(year, month, week);
     }
     /** 월 마다 */
     @Transactional(readOnly = true)
