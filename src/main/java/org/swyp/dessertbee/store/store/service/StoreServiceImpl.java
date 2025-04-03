@@ -543,7 +543,7 @@ public class StoreServiceImpl implements StoreService {
      * Store 엔티티를 StoreMapResponse DTO로 변환
      */
     private StoreMapResponse convertToStoreMapResponse(Store store) {
-        List<StoreOperatingHour> operatingHours = storeOperatingHourRepository.findByStoreId(store.getStoreId());
+        List<OperatingHourResponse> operatingHours = getOperatingHoursResponse(store.getStoreId());
         int totalReviewCount = storeReviewRepository.countByStoreIdAndDeletedAtIsNull(store.getStoreId());
         List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(store.getStoreId());
         List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, store.getStoreId());
