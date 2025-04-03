@@ -544,11 +544,12 @@ public class StoreServiceImpl implements StoreService {
      */
     private StoreMapResponse convertToStoreMapResponse(Store store) {
         List<OperatingHourResponse> operatingHours = getOperatingHoursResponse(store.getStoreId());
+        List<HolidayResponse> holidays = getHolidaysResponse(store.getStoreId());
         int totalReviewCount = storeReviewRepository.countByStoreIdAndDeletedAtIsNull(store.getStoreId());
         List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(store.getStoreId());
         List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, store.getStoreId());
 
-        return StoreMapResponse.fromEntity(store, operatingHours, totalReviewCount, tags, storeImages);
+        return StoreMapResponse.fromEntity(store, operatingHours, holidays, totalReviewCount, tags, storeImages);
     }
 
     /**

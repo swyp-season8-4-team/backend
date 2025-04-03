@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.store.store.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,25 +14,58 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 public class StoreSummaryResponse {
+    @Schema(description = "가게 ID", example = "12")
     private Long storeId;
+
+    @Schema(description = "가게 UUID", example = "4e8e1e28-c94e-40d7-8e93-6789abc45678")
     private UUID storeUuid;
+
+    @Schema(description = "가게 이름", example = "디저트비 합정점")
     private String name;
+
+    @Schema(description = "평균 별점 (소수점 2자리)", example = "4.58")
     private BigDecimal averageRating;
+
+    @Schema(description = "매장 대표 이미지 URL 리스트")
     private List<String> storeImages;
+
+    @Schema(description = "업주가 직접 고른 추가 이미지 URL 리스트")
     private List<String> ownerPickImages;
+
+    @Schema(description = "태그 리스트", example = "[\"케이크\", \"구움과자\"]")
     private List<String> tags;
+
+    @Schema(description = "가게 대표 링크", example = "https://instagram.com/dessertbee")
     private String primaryStoreLink;
+
+    @Schema(description = "가게 관련 링크 리스트", example = "[\"https://link1.com\", \"https://link2.com\"]")
     private List<String> storeLinks;
+
+    @Schema(description = "운영 시간 정보")
     private List<OperatingHourResponse> operatingHours;
+
+    @Schema(description = "특정 휴무일 정보")
     private List<HolidayResponse> holidays;
+
+    @Schema(description = "가게를 저장한 사용자들의 취향 태그 Top3", example = "[\"비건\", \"키토제닉\",\"락토프리\"]")
     private List<String> topPreferences;
 
+    @Schema(description = "가게 주소", example = "서울 마포구 양화로 23길 8")
     private String address;
+
+    @Schema(description = "가게 전화번호", example = "02-123-4567")
     private String phone;
+
+    @Schema(description = "가게 소개글", example = "편안한 분위기의 감성 디저트 카페입니다.")
     private String description;
 
+    @Schema(description = "반려동물 동반 가능 여부", example = "true")
     private Boolean animalYn;
+
+    @Schema(description = "텀블러 사용 가능 여부", example = "false")
     private Boolean tumblerYn;
+
+    @Schema(description = "주차 가능 여부", example = "true")
     private Boolean parkingYn;
 
     public static StoreSummaryResponse fromEntity(Store store, List<String> tags,

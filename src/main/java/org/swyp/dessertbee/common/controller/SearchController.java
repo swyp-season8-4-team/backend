@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
-import org.swyp.dessertbee.common.dto.PopularSearchResponse;
+import org.swyp.dessertbee.common.dto.PopularSearchesList;
 import org.swyp.dessertbee.common.dto.UserSearchHistoryDto;
 import org.swyp.dessertbee.common.exception.SearchExceptions.*;
 import org.swyp.dessertbee.common.exception.ErrorCode;
@@ -20,7 +20,6 @@ import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.service.UserService;
 
 import java.util.List;
-import java.util.Map;
 
 @Tag(name = "Search Keyword", description = "검색어 관련 API")
 @RestController
@@ -84,14 +83,17 @@ public class SearchController {
     @ApiResponse(
             responseCode = "200",
             description = "실시간 인기 검색어 조회 성공",
-            content = @Content(schema = @Schema(implementation = PopularSearchResponse.class))
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = PopularSearchesList.class)
+            )
     )
     @ApiErrorResponses({ErrorCode.SEARCH_SERVICE_ERROR})
     @GetMapping("/popular")
-    public ResponseEntity<Map<String, Object>> getPopularSearches(
+    public ResponseEntity<PopularSearchesList> getPopularSearches(
             @RequestParam(defaultValue = "10") int limit
     ) {
-        Map<String, Object> response = searchService.getPopularSearchesWithDifference(limit);
+        PopularSearchesList response = searchService.getPopularSearchesWithDifference(limit);
         return ResponseEntity.ok(response);
     }
 

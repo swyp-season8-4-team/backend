@@ -1,9 +1,9 @@
 package org.swyp.dessertbee.common.service;
 
+import org.swyp.dessertbee.common.dto.PopularSearchesList;
 import org.swyp.dessertbee.common.dto.UserSearchHistoryDto;
 
 import java.util.List;
-import java.util.Map;
 
 public interface SearchService {
     /** 공백 제거 */
@@ -32,7 +32,7 @@ public interface SearchService {
     /**
      * 실시간 인기 검색어 조회 (이전 검색 횟수 차이 포함)
      */
-    Map<String, Object> getPopularSearchesWithDifference(int limit);
+    PopularSearchesList getPopularSearchesWithDifference(int limit);
 
     /**
      * Redis 인기 검색어 데이터 초기화 (테스트용)
