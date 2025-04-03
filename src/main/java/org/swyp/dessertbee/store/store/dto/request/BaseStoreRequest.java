@@ -1,12 +1,16 @@
 package org.swyp.dessertbee.store.store.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import org.swyp.dessertbee.store.store.entity.RegularClosureType;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
@@ -36,7 +40,6 @@ public abstract class BaseStoreRequest {
     private Boolean animalYn;
     private Boolean tumblerYn;
     private Boolean parkingYn;
-    private List<String> notice;
     private List<Long> tagIds;
     private List<OperatingHourRequest> operatingHours;
     private List<HolidayRequest> holidays;
@@ -51,6 +54,20 @@ public abstract class BaseStoreRequest {
     public static class StoreLinkRequest {
         private String url;
         private Boolean isPrimary;
+    }
+
+    /**
+     * 휴게시간 요청 클래스
+     */
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class BreakTimeRequest {
+        @JsonFormat(pattern = "HH:mm")
+        private LocalTime startTime;
+
+        @JsonFormat(pattern = "HH:mm")
+        private LocalTime endTime;
     }
 
     /**
@@ -73,6 +90,15 @@ public abstract class BaseStoreRequest {
         private LocalTime lastOrderTime;
 
         private Boolean isClosed;
+
+        @Enumerated(EnumType.STRING)
+        @Column(length = 10)
+        private RegularClosureType regularClosureType;
+
+        @Column(length = 50)
+        private String regularClosureWeeks;
+
+        private List<BreakTimeRequest> breakTimes;
     }
 
     /**

@@ -20,4 +20,10 @@ public interface StoreOperatingHourRepository extends JpaRepository<StoreOperati
     @Modifying
     @Query("DELETE FROM StoreOperatingHour o WHERE o.storeId = :storeId")
     void deleteByStoreId(@Param("storeId") Long storeId);
+
+    /**
+     * 매장 ID로 영업시간 ID 목록만 조회 (성능 최적화)
+     */
+    @Query("SELECT oh.id FROM StoreOperatingHour oh WHERE oh.storeId = :storeId")
+    List<Long> findIdsByStoreId(@Param("storeId") Long storeId);
 }

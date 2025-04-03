@@ -1,6 +1,7 @@
 package org.swyp.dessertbee.store.store.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -59,4 +60,8 @@ public interface SavedStoreRepository extends JpaRepository<SavedStore, Long> {
             "JOIN usl.user u " +
             "WHERE s.store = :store AND u.id = :userId")
     Optional<SavedStore> findFirstByStoreAndUserId(@Param("store") Store store, @Param("userId") Long userId);
+
+    @Modifying
+    @Query("DELETE FROM SavedStore ss WHERE ss.store.storeId = :storeId")
+    void deleteByStoreId(@Param("storeId") Long storeId);
 }
