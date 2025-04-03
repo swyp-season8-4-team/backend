@@ -65,7 +65,11 @@ public class StoreController {
 
     /** 반경 내 가게 조회 */
     @Operation(summary = "반경 내 가게 조회 (completed)", description = "지도 반경 내 가게를 조회합니다.")
-    @ApiResponse( responseCode = "200", description = "지도 반경 내 가게 조회 성공", content = @Content(schema = @Schema(implementation = StoreMapResponse.class)))
+    @ApiResponse(
+            responseCode = "200",
+            description = "지도 반경 내 가게 조회 성공",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = StoreMapResponse.class)))
+    )
     @ApiErrorResponses({ErrorCode.STORE_MAP_READ_FAILED, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.STORE_SEARCH_FAILED})
     @GetMapping("/map")
     public List<StoreMapResponse> getStoresByLocation(
