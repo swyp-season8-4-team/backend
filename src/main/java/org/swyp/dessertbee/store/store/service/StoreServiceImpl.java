@@ -112,6 +112,7 @@ public class StoreServiceImpl implements StoreService {
                             .views(0)
                             .saves(0)
                             .reviews(0)
+                            .createDate(LocalDate.now())  // 가게가 등록된 날짜
                             .build()
             );
 
