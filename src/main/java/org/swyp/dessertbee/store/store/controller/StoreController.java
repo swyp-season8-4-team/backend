@@ -1,6 +1,7 @@
 package org.swyp.dessertbee.store.store.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -15,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.SearchService;
+import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
 import org.swyp.dessertbee.store.store.dto.request.StoreCreateRequest;
 import org.swyp.dessertbee.store.store.dto.request.StoreUpdateRequest;
 import org.swyp.dessertbee.store.store.dto.response.StoreDetailResponse;
@@ -99,7 +101,8 @@ public class StoreController {
      * 반경 내 가게 조회 (인증된 사용자의 취향 태그 기반)
      */
     @Operation(summary = "반경 내 사용자 취향 가게 조회 (completed)", description = "반경 내에서 사용자의 취향 태그를 가진 가게를 조회합니다.")
-    @ApiResponse( responseCode = "200", description = "지도 반경 내 사용자 취향 태그 가진 가게 조회 성공", content = @Content(schema = @Schema(implementation = StoreMapResponse.class)))
+    @ApiResponse( responseCode = "200", description = "지도 반경 내 사용자 취향 태그 가진 가게 조회 성공",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = StoreMapResponse.class))))
     @ApiErrorResponses({ErrorCode.PREFERENCE_STORE_READ_FAILED, ErrorCode.STORE_SERVICE_ERROR})
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
     @GetMapping("/map/my-preferences")
