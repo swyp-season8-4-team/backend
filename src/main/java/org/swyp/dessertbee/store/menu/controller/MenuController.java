@@ -1,6 +1,7 @@
 package org.swyp.dessertbee.store.menu.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -11,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
+import org.swyp.dessertbee.common.dto.UserSearchHistoryDto;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.store.menu.dto.request.MenuCreateRequest;
 import org.swyp.dessertbee.store.menu.dto.response.MenuResponse;
@@ -32,7 +34,8 @@ public class MenuController {
 
     /** 특정 가게의 메뉴 목록 조회 */
     @Operation(summary = "메뉴 목록 조회 (completed)", description = "가게의 메뉴 목록을 조회합니다.")
-    @ApiResponse( responseCode = "200", description = "메뉴 목록 조회 성공", content = @Content(schema = @Schema(implementation = MenuResponse.class)))
+    @ApiResponse( responseCode = "200", description = "메뉴 목록 조회 성공",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = MenuResponse.class))))
     @ApiErrorResponses({ErrorCode.INVALID_STORE_UUID, ErrorCode.MENU_SERVICE_ERROR})
     @GetMapping
     public ResponseEntity<List<MenuResponse>> getMenusByStore(@PathVariable UUID storeUuid) {
