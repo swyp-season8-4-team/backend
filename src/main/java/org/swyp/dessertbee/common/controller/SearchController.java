@@ -1,6 +1,9 @@
 package org.swyp.dessertbee.common.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
+import org.swyp.dessertbee.common.dto.PopularSearchResponse;
 import org.swyp.dessertbee.common.dto.UserSearchHistoryDto;
 import org.swyp.dessertbee.common.exception.SearchExceptions.*;
 import org.swyp.dessertbee.common.exception.ErrorCode;
@@ -29,7 +33,11 @@ public class SearchController {
 
     /** 최근 검색어 조회 API */
     @Operation(summary = "최근 검색어 조회 (completed)", description = "최근 검색어를 조회합니다.")
-    @ApiResponse( responseCode = "200", description = "최근 검색어 조회 성공")
+    @ApiResponse(
+            responseCode = "200",
+            description = "최근 검색어 조회 성공",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = UserSearchHistoryDto.class)))
+    )
     @ApiErrorResponses({ErrorCode.SEARCH_SERVICE_ERROR})
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/recent")
@@ -73,7 +81,11 @@ public class SearchController {
 
     /** 실시간 인기 검색어 조회 API (이전 검색 횟수 차이 + 업데이트 시간 포함) */
     @Operation(summary = "실시간 인기 검색어 조회 (completed)", description = "실시간으로 인기 검색어를 조회합니다.")
-    @ApiResponse( responseCode = "200", description = "실시간 인기 검색어 조회 성공")
+    @ApiResponse(
+            responseCode = "200",
+            description = "실시간 인기 검색어 조회 성공",
+            content = @Content(schema = @Schema(implementation = PopularSearchResponse.class))
+    )
     @ApiErrorResponses({ErrorCode.SEARCH_SERVICE_ERROR})
     @GetMapping("/popular")
     public ResponseEntity<Map<String, Object>> getPopularSearches(
