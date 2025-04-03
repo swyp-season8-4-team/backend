@@ -17,6 +17,10 @@ import java.time.LocalDateTime;
                 @UniqueConstraint(
                         name = "uk_auth_provider_provider_id",
                         columnNames = {"provider", "provider_id"}
+                ),
+                @UniqueConstraint(
+                        name = "uk_auth_user_provider_device",
+                        columnNames = {"user_id", "provider", "device_id"}
                 )
         }
 )
@@ -40,6 +44,9 @@ public class AuthEntity {
 
     @Column(name = "provider_id", length = 255)
     private String providerId;
+
+    @Column(name = "device_id", length = 64)
+    private String deviceId;
 
     @Column(name = "refresh_token", columnDefinition = "TEXT")
     private String refreshToken;
@@ -71,5 +78,9 @@ public class AuthEntity {
 
     public void updateProviderId(String providerId) {
         this.providerId = providerId;
+    }
+
+    public void updateDeviceId(String deviceId) {
+        this.deviceId = deviceId;
     }
 }

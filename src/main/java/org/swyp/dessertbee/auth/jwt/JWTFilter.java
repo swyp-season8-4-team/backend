@@ -16,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.swyp.dessertbee.auth.dto.userdetails.CustomUserDetails;
+import org.swyp.dessertbee.auth.repository.AuthRepository;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.exception.ErrorResponse;
 
@@ -31,6 +32,7 @@ import java.util.UUID;
 public class JWTFilter extends OncePerRequestFilter {
 
     private final JWTUtil jwtUtil;
+    private final AuthRepository authRepository;
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
@@ -47,18 +49,35 @@ public class JWTFilter extends OncePerRequestFilter {
         String token = extractTokenFromHeader(request);
         log.debug("추출된 토큰: {}", token);
 
-
         if (token != null) {
             ErrorCode errorCode = jwtUtil.validateToken(token, true);
 
             if (errorCode == null) {
-                // 토큰이 유효한 경우 인증 처리
-                Authentication authentication = createAuthentication(token);
-                context.setAuthentication(authentication);
-                SecurityContextHolder.setContext(context);
-                // SecurityContextHolder.getContext().setAuthentication(authentication);
-                log.debug("인증 성공: '{}'", maskToken(token));
-                log.info("SecurityContext에 저장된 Authentication: {}", SecurityContextHolder.getContext().getAuthentication());
+                // 토큰 서명 검증에 성공한 경우
+                try {
+                    // 토큰에서 사용자 UUID 추출
+                    UUID userUuid = jwtUtil.getUserUuid(token, true);
+
+                    // 해당 사용자의 활성화된 토큰이 있는지 확인
+                    boolean hasActiveToken = authRepository.existsByUserUuidAndActive(userUuid, true);
+
+                    if (!hasActiveToken) {
+                        // 활성화된 토큰이 없으면 로그아웃 상태로 간주
+                        log.warn("로그아웃된 사용자의 토큰: {}", maskToken(token));
+                        handleJwtException(response, ErrorCode.INVALID_CREDENTIALS);
+                        return;
+                    }
+
+                    // 인증 처리
+                    Authentication authentication = createAuthentication(token);
+                    context.setAuthentication(authentication);
+                    SecurityContextHolder.setContext(context);
+                    log.debug("인증 성공: '{}'", maskToken(token));
+                } catch (Exception e) {
+                    log.error("인증 처리 중 오류: {}", e.getMessage());
+                    handleJwtException(response, ErrorCode.AUTHENTICATION_FAILED);
+                    return;
+                }
             } else {
                 // 토큰 검증 실패 - 구체적인 오류 코드로 응답
                 log.warn("JWT 검증 실패: {}", errorCode);
@@ -68,10 +87,10 @@ public class JWTFilter extends OncePerRequestFilter {
             }
         }
         filterChain.doFilter(request, response);
-        log.debug("필터 체인 실행 후 SecurityContext: {}", SecurityContextHolder.getContext().getAuthentication());
     }
 
-    /**
+
+/**
      * 특정 요청 경로에 대해 필터 스킵
      */
     @Override
