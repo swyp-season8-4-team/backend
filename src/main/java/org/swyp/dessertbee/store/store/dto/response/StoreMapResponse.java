@@ -19,12 +19,12 @@ public class StoreMapResponse {
     private String address;
     private Double latitude;
     private Double longitude;
-    private List<StoreOperatingHour> operatingHours; // 운영 시간
+    private List<OperatingHourResponse> operatingHours; // 운영 시간
     private int shortReviewCount; // 한줄 리뷰 개수
     private List<String> tags; // 태그 리스트
     private String storeImage; // 대표 이미지 (첫 번째 이미지)
 
-    public static StoreMapResponse fromEntity(Store store, List<StoreOperatingHour> operatingHours, int shortReviewCount, List<String> tags, List<String> storeImages) {
+    public static StoreMapResponse fromEntity(Store store, List<OperatingHourResponse> operatingHours, int shortReviewCount, List<String> tags, List<String> storeImages) {
         return StoreMapResponse.builder()
                 .storeId(store.getStoreId())
                 .storeUuid(store.getStoreUuid())
