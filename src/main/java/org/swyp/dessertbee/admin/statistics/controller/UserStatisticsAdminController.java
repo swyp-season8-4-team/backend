@@ -25,20 +25,20 @@ public class UserStatisticsAdminController {
 
     private final UserStatisticsAdminService userStatisticsAdminService;
 
-//    /**
-//     * 전체 사용자 조회
-//     */
-//    @PreAuthorize("hasRole('ADMIN')")
-//    @GetMapping("/users/all")
-//    public ResponseEntity<List<UserStatisticsResponseDto>> getAllUsers(){
-//        return ResponseEntity.ok( userStatisticsAdminService.getAllUsers());
-//    }
+    /**
+     * 전체 사용자 조회
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/users/all")
+    public ResponseEntity<List<UserStatisticsResponseDto>> getAllUsers(){
+        return ResponseEntity.ok( userStatisticsAdminService.getAllUsers());
+    }
 
     /**
      * 전체 사용자 수 조회
      */
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/users/all")
+    @GetMapping("/users/count/all")
     public ResponseEntity<UserCountResponseDto> getTotalUserCount() {
         return ResponseEntity.ok(userStatisticsAdminService.getTotalUserCount());
     }
@@ -47,7 +47,7 @@ public class UserStatisticsAdminController {
      * 전체 사장님 수 조회
      */
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/users/all-owners")
+    @GetMapping("/users/count/all-owners")
     public ResponseEntity<UserCountResponseDto> getTotalOwnersCount() {
         return ResponseEntity.ok(userStatisticsAdminService.getTotalUserOwnersCount());
     }
@@ -57,7 +57,7 @@ public class UserStatisticsAdminController {
      */
     // 특정 날짜(일) 기준 신규 가입자 수 조회
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/users/new/day")
+    @GetMapping("/users/count/new/day")
     public ResponseEntity<UserCountResponseDto> getNewUsersByDay(@RequestParam int year,
                                                                  @RequestParam int month,
                                                                  @RequestParam int day ){
@@ -66,7 +66,7 @@ public class UserStatisticsAdminController {
 
     // 특정 주 기준 신규 가입자 수 조회
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/users/new/week")
+    @GetMapping("/users/count/new/week")
     public ResponseEntity<UserCountResponseDto> getNewUsersByWeek(@RequestParam int year,
                                                                   @RequestParam int month,
                                                                   @RequestParam int week) {
@@ -75,7 +75,7 @@ public class UserStatisticsAdminController {
 
     // 특정 월 기준 신규 가입자 수 조회
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/users/new/month")
+    @GetMapping("/users/count/new/month")
     public ResponseEntity<UserCountResponseDto> getNewUsersByMonth(@RequestParam int year, @RequestParam int month) {
         return ResponseEntity.ok(userStatisticsAdminService.getNewUsersByMonth(year, month));
     }

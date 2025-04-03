@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface UserStatisticsAdminService {
 
-//    List<UserStatisticsResponseDto> getAllUsers();
+    List<UserStatisticsResponseDto> getAllUsers();
 
     UserCountResponseDto getTotalUserCount();
 

@@ -18,13 +18,13 @@ public class UserStatisticsAdminServiceImpl implements UserStatisticsAdminServic
 
     private final UserStatisticsService userStatisticsService;
 
-//    /**
-//     * 전체 사용자 조회
-//     */
-//    @Transactional(readOnly = true)
-//    public List<UserStatisticsResponseDto> getAllUsers(){
-//        return userStatisticsService.getAllUsers();
-//    }
+    /**
+     * 전체 사용자 조회
+     */
+    @Transactional(readOnly = true)
+    public List<UserStatisticsResponseDto> getAllUsers(){
+        return userStatisticsService.getAllUsers();
+    }
 
     /**
      * 전체 사용자 수 조회
