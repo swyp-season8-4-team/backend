@@ -114,11 +114,6 @@ public class AuthExceptions {
     }
 
     /**
-     * OAuth 인증 서비스 오류 예외
-     */
-
-
-    /**
      * JWT 토큰 오류 예외
      */
     public static class JwtTokenException extends BusinessException {
@@ -131,4 +126,16 @@ public class AuthExceptions {
         }
     }
 
+    /**
+     * 디바이스 ID 누락 예외
+     */
+    public static class DeviceIdMissingException extends BusinessException {
+        public DeviceIdMissingException() {
+            super(ErrorCode.DEVICE_ID_MISSING);
+        }
+
+        public DeviceIdMissingException(String message) {
+            super(ErrorCode.DEVICE_ID_MISSING, message);
+        }
+    }
 }

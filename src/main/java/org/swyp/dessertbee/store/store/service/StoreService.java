@@ -13,7 +13,7 @@ import java.util.UUID;
 
 public interface StoreService {
     /** 가게 등록 (이벤트, 쿠폰, 메뉴 + 이미지 포함) */
-    StoreDetailResponse createStore(StoreCreateRequest request,
+    void createStore(StoreCreateRequest request,
                                     List<MultipartFile> storeImageFiles,
                                     List<MultipartFile> ownerPickImageFiles,
                                     List<MultipartFile> menuImageFiles);
@@ -40,7 +40,7 @@ public interface StoreService {
     void updateAverageRating(Long storeId);
 
     /** 가게 수정 */
-    StoreDetailResponse updateStore(UUID storeUuid,
+    void updateStore(UUID storeUuid,
                                     StoreUpdateRequest request,
                                     List<MultipartFile> storeImageFiles,
                                     List<MultipartFile> ownerPickImageFiles,

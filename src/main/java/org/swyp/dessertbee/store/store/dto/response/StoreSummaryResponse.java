@@ -20,13 +20,14 @@ public class StoreSummaryResponse {
     private List<String> storeImages;
     private List<String> ownerPickImages;
     private List<String> tags;
+    private String primaryStoreLink;
+    private List<String> storeLinks;
     private List<OperatingHourResponse> operatingHours;
     private List<HolidayResponse> holidays;
     private List<String> topPreferences;
 
     private String address;
     private String phone;
-    private String storeLink;
     private String description;
 
     private Boolean animalYn;
@@ -34,6 +35,8 @@ public class StoreSummaryResponse {
     private Boolean parkingYn;
 
     public static StoreSummaryResponse fromEntity(Store store, List<String> tags,
+                                                  List<String> storeLinks,
+                                                  String primaryStoreLink,
                                                   List<OperatingHourResponse> operatingHours,
                                                   List<HolidayResponse> holidays,
                                                   List<String> storeImages,
@@ -45,6 +48,8 @@ public class StoreSummaryResponse {
                 .name(store.getName())
                 .averageRating(store.getAverageRating())
                 .tags(tags)
+                .storeLinks(storeLinks)
+                .primaryStoreLink(primaryStoreLink)
                 .storeImages(storeImages)
                 .ownerPickImages(ownerPickImages)
                 .operatingHours(operatingHours)
@@ -52,7 +57,6 @@ public class StoreSummaryResponse {
                 .topPreferences(topPreferences)
                 .address(store.getAddress())
                 .phone(store.getPhone())
-                .storeLink(store.getStoreLink())
                 .description(store.getDescription())
                 .animalYn(store.getAnimalYn())
                 .tumblerYn(store.getTumblerYn())

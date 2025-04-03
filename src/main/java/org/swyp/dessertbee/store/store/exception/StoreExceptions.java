@@ -22,6 +22,19 @@ public class StoreExceptions {
     }
 
     /**
+     * 가게 대표링크 중복 예외
+     */
+    public static class DuplicatePrimaryLinkException extends BusinessException {
+        public DuplicatePrimaryLinkException() {
+            super(ErrorCode.STORE_DUPLICATE_PRIMARY_LINK);
+        }
+
+        public DuplicatePrimaryLinkException(String message) {
+            super(ErrorCode.STORE_DUPLICATE_PRIMARY_LINK, message);
+        }
+    }
+
+    /**
      * 가게 서비스 오류 예외
      */
     public static class StoreServiceException extends BusinessException {

@@ -28,7 +28,6 @@ public class StoreDetailResponse {
     private BigDecimal latitude;
     private BigDecimal longitude;
     private String phone;
-    private String storeLink;
     private Boolean animalYn;
     private Boolean tumblerYn;
     private Boolean parkingYn;
@@ -37,10 +36,11 @@ public class StoreDetailResponse {
     private List<MenuResponse> menus;
     private List<String> storeImages;
     private List<String> ownerPickImages;
+    private String primaryStoreLink;
+    private List<String> storeLinks;
     private int totalReviewCount;
     private List<StoreReviewResponse> storeReviews;
     private List<String> tags;
-    private List<String> notice;
     private List<OperatingHourResponse> operatingHours;
     private List<HolidayResponse> holidays;
     private List<String> topPreferences;
@@ -59,6 +59,8 @@ public class StoreDetailResponse {
                                                  List<String> topPreferences,
                                                  List<StoreReviewResponse> storeReviews,
                                                  List<String> tags,
+                                                 List<String> storeLinks,
+                                                 String primaryStoreLink,
                                                  List<ReviewSummaryResponse> communityReviews,
                                                  List<MateResponse> mate,
                                                  boolean saved,
@@ -75,19 +77,19 @@ public class StoreDetailResponse {
                 .latitude(store.getLatitude())
                 .longitude(store.getLongitude())
                 .phone(store.getPhone())
-                .storeLink(store.getStoreLink())
                 .animalYn(store.getAnimalYn())
                 .tumblerYn(store.getTumblerYn())
                 .parkingYn(store.getParkingYn())
                 .description(store.getDescription())
                 .averageRating(store.getAverageRating())
-                .notice(store.getNotice())
                 .operatingHours(operatingHours)
                 .holidays(holidays)
                 .topPreferences(topPreferences)
                 .menus(menus)
                 .storeImages(storeImages)
                 .ownerPickImages(ownerPickImages)
+                .primaryStoreLink(primaryStoreLink)
+                .storeLinks(storeLinks)
                 .totalReviewCount(totalReviewCount)
                 .storeReviews(storeReviews)
                 .tags(tags)
