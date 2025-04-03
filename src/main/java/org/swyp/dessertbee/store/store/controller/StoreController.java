@@ -40,19 +40,25 @@ public class StoreController {
 
     /** 가게 등록 */
     @Operation(summary = "가게 등록 (completed)", description = "업주가 가게를 등록합니다.")
-    @ApiResponse( responseCode = "201", description = "가게 등록 성공", content = @Content(schema = @Schema(implementation = StoreDetailResponse.class)))
-    @ApiErrorResponses({ErrorCode.STORE_CREATION_FAILED, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.STORE_TAG_SAVE_FAILED, ErrorCode.INVALID_TAG_SELECTION, ErrorCode.INVALID_TAG_INCLUDED})
+    @ApiResponse(responseCode = "201", description = "가게 등록 성공")
+    @ApiErrorResponses({
+            ErrorCode.STORE_CREATION_FAILED,
+            ErrorCode.STORE_SERVICE_ERROR,
+            ErrorCode.STORE_TAG_SAVE_FAILED,
+            ErrorCode.INVALID_TAG_SELECTION,
+            ErrorCode.INVALID_TAG_INCLUDED
+    })
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<StoreDetailResponse> createStore(
+    public ResponseEntity<Void> createStore(
             @RequestPart("request") StoreCreateRequest request,
             @RequestPart(value = "storeImageFiles", required = false) List<MultipartFile> storeImageFiles,
             @RequestPart(value = "ownerPickImageFiles", required = false) List<MultipartFile> ownerPickImageFiles,
             @RequestPart(value = "menuImageFiles", required = false) List<MultipartFile> menuImageFiles) {
 
         // 가게 생성
-        StoreDetailResponse response = storeService.createStore(request, storeImageFiles, ownerPickImageFiles, menuImageFiles);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        storeService.createStore(request, storeImageFiles, ownerPickImageFiles, menuImageFiles);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     /** 반경 내 가게 조회 */
@@ -126,20 +132,19 @@ public class StoreController {
 
     /** 가게 수정 */
     @Operation(summary = "가게 수정 (completed)", description = "업주가 가게의 정보를 수정합니다.")
-    @ApiResponse( responseCode = "200", description = "가게 수정 성공", content = @Content(schema = @Schema(implementation = StoreDetailResponse.class)))
+    @ApiResponse( responseCode = "200", description = "가게 수정 성공")
     @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.UNAUTHORIZED_ACCESS, ErrorCode.STORE_UPDATE_FAILED})
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @PatchMapping(value = "/{storeUuid}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<StoreDetailResponse> updateStore(
+    public ResponseEntity<Void> updateStore(
             @PathVariable UUID storeUuid,
             @RequestPart("request") StoreUpdateRequest request,
             @RequestPart(value = "storeImageFiles", required = false) List<MultipartFile> storeImageFiles,
             @RequestPart(value = "ownerPickImageFiles", required = false) List<MultipartFile> ownerPickImageFiles,
             @RequestPart(value = "menuImageFiles", required = false) List<MultipartFile> menuImageFiles) {
 
-        StoreDetailResponse updatedStore = storeService.updateStore(storeUuid, request,
-                storeImageFiles, ownerPickImageFiles, menuImageFiles);
-        return ResponseEntity.ok(updatedStore);
+        storeService.updateStore(storeUuid, request, storeImageFiles, ownerPickImageFiles, menuImageFiles);
+        return ResponseEntity.ok().build();
     }
 
     /** 가게 삭제 */

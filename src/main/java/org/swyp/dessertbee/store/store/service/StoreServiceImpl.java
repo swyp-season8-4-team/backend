@@ -77,7 +77,7 @@ public class StoreServiceImpl implements StoreService {
 
     /** 가게 등록 (이벤트, 쿠폰, 메뉴 + 이미지 포함) */
     @Override
-    public StoreDetailResponse createStore(StoreCreateRequest request,
+    public void createStore(StoreCreateRequest request,
                                            List<MultipartFile> storeImageFiles,
                                            List<MultipartFile> ownerPickImageFiles,
                                            List<MultipartFile> menuImageFiles) {
@@ -130,8 +130,6 @@ public class StoreServiceImpl implements StoreService {
 
             // 휴무일 저장
             //saveOrUpdateHolidays(store, request.getHolidays());
-
-            return getStoreDetails(store.getStoreUuid());
         } catch (StoreCreationFailedException e) {
             log.warn("가게 등록 실패 - 업주Uuid: {}, 사유: {}", request.getUserUuid(), e.getMessage());
             throw e;
@@ -798,7 +796,7 @@ public class StoreServiceImpl implements StoreService {
 
     /** 가게 수정 */
     @Override
-    public StoreDetailResponse updateStore(UUID storeUuid,
+    public void updateStore(UUID storeUuid,
                                            StoreUpdateRequest request,
                                            List<MultipartFile> storeImageFiles,
                                            List<MultipartFile> ownerPickImageFiles,
@@ -850,8 +848,6 @@ public class StoreServiceImpl implements StoreService {
 
             // 휴무일 저장
             //saveOrUpdateHolidays(store, request.getHolidays());
-
-            return getStoreDetails(store.getStoreUuid());
         } catch (StoreUpdateException e) {
             log.warn("가게 수정 실패 - 사유: {}", e.getMessage());
             throw e;
