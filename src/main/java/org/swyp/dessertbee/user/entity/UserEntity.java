@@ -88,6 +88,7 @@ public class UserEntity {
     private MbtiEntity mbti;
 
     // 의도적으로 선호도 설정을 안하겠다는 의미로 사용
+    @Builder.Default
     @Column(name = "preference_set_flag", nullable = false)
     private boolean preferenceSetFlag = false;
 
