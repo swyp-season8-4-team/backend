@@ -46,8 +46,8 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/dessertbee:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/dessertbee:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/desserbee:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/desserbee:${{ github.sha }}
 
       # 배포 환경 결정
       - name: Set deployment variables
@@ -122,7 +122,7 @@ jobs:
 
             # Docker 이미지 pull 및 Compose 실행
             echo "Pulling latest Docker image..."
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/dessertbee:latest
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/desserbee:latest
 
             echo "Stopping existing containers..."
             docker-compose down || true

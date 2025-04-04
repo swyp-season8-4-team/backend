@@ -38,7 +38,7 @@ server {
 
         # CORS 처리
         set $cors_origin "";
-        if ($http_origin ~* "(https://desserbee.com|https://www.desserbee.com|http://desserbee.com|http://www.desserbee.com|https://${SERVER_NAME}|https://frontend-desserbee-web-git-vercel-test-eepyzs-projects.vercel.app)") {
+        if ($http_origin ~* "(https://desserbee.com|https://www.desserbee.com|http://desserbee.com|http://www.desserbee.com|https://${SERVER_NAME}|https://frontend-desserbee-web-git-vercel-test-eepyzs-projects.vercel.app|https://www.test.desserbee.com|https://test.desserbee.com)") {
             set $cors_origin $http_origin;
         }
 
