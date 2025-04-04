@@ -891,41 +891,49 @@ public class StoreServiceImpl implements StoreService {
     }
 
     private void deleteRelatedData(Long storeId) {
-        // 1. SavedStore 삭제
-        savedStoreRepository.deleteByStoreId(storeId);
+        try{
+            // 1. SavedStore 삭제
+            savedStoreRepository.deleteByStoreId(storeId);
 
-        // 2. StoreOperatingHour → StoreBreakTime → 삭제
-        storeBreakTimeRepository.deleteAllByStoreId(storeId);
-        storeOperatingHourRepository.deleteByStoreId(storeId);
+            // 2. StoreOperatingHour → StoreBreakTime → 삭제
+            storeBreakTimeRepository.deleteAllByStoreId(storeId);
+            storeOperatingHourRepository.deleteByStoreId(storeId);
 
-        // 3. StoreHoliday 삭제
-        storeHolidayRepository.deleteByStoreId(storeId);
+            // 3. StoreHoliday 삭제
+            storeHolidayRepository.deleteByStoreId(storeId);
 
-        // 4. StoreLink 삭제
-        storeLinkRepository.deleteByStoreId(storeId);
+            // 4. StoreLink 삭제
+            storeLinkRepository.deleteByStoreId(storeId);
 
-        // 5. StoreStatistics soft delete
-        List<StoreStatistics> stats = storeStatisticsRepository.findAllByStoreIdAndDeletedAtIsNull(storeId);
-        for (StoreStatistics stat : stats) {
-            stat.softDelete();
+            // 5. StoreStatistics soft delete
+            List<StoreStatistics> stats = storeStatisticsRepository.findAllByStoreIdAndDeletedAtIsNull(storeId);
+            for (StoreStatistics stat : stats) {
+                stat.softDelete();
+            }
+            storeStatisticsRepository.saveAll(stats);
+
+            // 6. StoreTagRelation 삭제
+            storeTagRelationRepository.deleteByStoreId(storeId);
+
+            // 7. StoreReview soft delete
+            List<StoreReview> reviews = storeReviewRepository.findByStoreIdAndDeletedAtIsNull(storeId);
+            for (StoreReview review : reviews) {
+                review.softDelete();
+            }
+            storeReviewRepository.saveAll(reviews);
+
+            // 8. Menu soft delete
+            List<Menu> menus = menuRepository.findByStoreIdAndDeletedAtIsNull(storeId);
+            for (Menu menu : menus) {
+                menu.softDelete();
+            }
+            menuRepository.saveAll(menus);
+        } catch (StoreDeleteException e){
+            log.warn("가게 연관 데이터 삭제 실패 - 사유: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("가게 연관 데이터 삭제 처리 중 오류 발생", e);
+            throw new StoreServiceException("가게 삭제 처리 중 오류가 발생했습니다.");
         }
-        storeStatisticsRepository.saveAll(stats);
-
-        // 6. StoreTagRelation 삭제
-        storeTagRelationRepository.deleteByStoreId(storeId);
-
-        // 7. StoreReview soft delete
-        List<StoreReview> reviews = storeReviewRepository.findByStoreIdAndDeletedAtIsNull(storeId);
-        for (StoreReview review : reviews) {
-            review.softDelete();
-        }
-        storeReviewRepository.saveAll(reviews);
-
-        // 8. Menu soft delete
-        List<Menu> menus = menuRepository.findByStoreIdAndDeletedAtIsNull(storeId);
-        for (Menu menu : menus) {
-            menu.softDelete();
-        }
-        menuRepository.saveAll(menus);
     }
 }
