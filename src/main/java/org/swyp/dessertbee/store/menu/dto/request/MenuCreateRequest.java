@@ -25,12 +25,12 @@ public class MenuCreateRequest {
     @NotNull(message = "가격은 필수입니다.")
     private BigDecimal price;
 
-    @Schema(description = "인기 메뉴 여부", example = "true")
+    @Schema(description = "인기 메뉴 여부", example = "true", nullable = true)
     private Boolean isPopular;
 
-    @Schema(description = "메뉴 설명", example = "부드럽고 달콤한 수건 모양 케이크입니다.")
+    @Schema(description = "메뉴 설명", example = "부드럽고 달콤한 수건 모양 케이크입니다.", nullable = true)
     private String description;
 
-    @Schema(description = "이미지 파일명", example = "image123.png")
+    @Schema(description = "이미지 파일명", example = "image123.png", nullable = true)
     private String imageFileKey;
 }

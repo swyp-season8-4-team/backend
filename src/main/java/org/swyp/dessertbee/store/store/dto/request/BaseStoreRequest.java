@@ -28,7 +28,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public abstract class BaseStoreRequest {
     @NotNull
-    @Schema(description = "사용자 UUID (비로그인 시 Null)", example = "1c95f3a7-0c7d-4e2b-95cf-ff123abc4567")
+    @Schema(description = "사용자 UUID", example = "1c95f3a7-0c7d-4e2b-95cf-ff123abc4567")
     private UUID userUuid;
 
     @NotBlank
@@ -47,7 +47,7 @@ public abstract class BaseStoreRequest {
     @Schema(description = "경도 (소수점 8자리)", example = "126.92345678")
     private BigDecimal longitude;
 
-    @Schema(description = "가게 소개글", example = "편안한 분위기의 감성 디저트 카페입니다.")
+    @Schema(description = "가게 소개글", example = "편안한 분위기의 감성 디저트 카페입니다.", nullable = true)
     private String description;
 
     @Schema(description = "반려동물 동반 가능 여부", example = "true")
@@ -65,10 +65,10 @@ public abstract class BaseStoreRequest {
     @Schema(description = "운영 시간 정보")
     private List<OperatingHourRequest> operatingHours;
 
-    @Schema(description = "특정 휴무일 정보")
-    private List<HolidayRequest> holidays;
+/*    @Schema(description = "특정 휴무일 정보")
+    private List<HolidayRequest> holidays;*/
 
-    @Schema(description = "가게 관련 링크 리스트", example = "[\"https://link1.com\", \"https://link2.com\"]")
+    @Schema(description = "가게 관련 링크 리스트", example = "[\"https://link1.com\", \"https://link2.com\"]", nullable = true)
     private List<? extends StoreLinkRequest> storeLinks;
 
     /**
@@ -121,7 +121,7 @@ public abstract class BaseStoreRequest {
         private LocalTime closingTime;
 
         @JsonFormat(pattern = "HH:mm")
-        @Schema(description = "라스트 오더 시간", example = "19:30")
+        @Schema(description = "라스트 오더 시간", example = "19:30", nullable = true)
         private LocalTime lastOrderTime;
 
         @Schema(description = "해당 요일 휴무 여부", example = "false")
@@ -129,29 +129,30 @@ public abstract class BaseStoreRequest {
 
         @Enumerated(EnumType.STRING)
         @Column(length = 10)
-        @Schema(description = "정기 휴무 유형", example = "MONTHLY")
+        @Schema(description = "정기 휴무 유형", example = "MONTHLY", nullable = true)
         private RegularClosureType regularClosureType;
 
         @Column(length = 50)
-        @Schema(description = "정기 휴무 주차", example = "1,3")
+        @Schema(description = "정기 휴무 주차", example = "1,3", nullable = true)
         private String regularClosureWeeks;
 
-        @Schema(description = "휴게 시간 목록")
+        @Schema(description = "휴게 시간 목록", nullable = true)
         private List<BreakTimeRequest> breakTimes;
     }
 
-    /**
+    /*
      * 휴무일 요청 클래스
+     *
+     * @Data
+     * @SuperBuilder
+     * @AllArgsConstructor
+     * @NoArgsConstructor
+     * public static class HolidayRequest {
+     *     @Schema(description = "휴무 일자", example = "2025-01-01")
+     *     private String date;
+     *
+     *     @Schema(description = "휴무 사유", example = "신정")
+     *     private String reason;
+     * }
      */
-    @Data
-    @SuperBuilder
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class HolidayRequest {
-        @Schema(description = "휴무 일자", example = "2025-01-01")
-        private String date;
-
-        @Schema(description = "휴무 사유", example = "신정")
-        private String reason;
-    }
 }
