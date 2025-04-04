@@ -193,22 +193,23 @@ public class StoreServiceImpl implements StoreService {
         }
     }
 
-    /**
+    /*
      * 휴무일 저장/갱신 메서드
+     *
+     * private void saveOrUpdateHolidays(Store store, List<BaseStoreRequest.HolidayRequest> holidaysRequest) {
+     *     if (holidaysRequest != null) {
+     *         storeHolidayRepository.deleteByStoreId(store.getStoreId());
+     *         List<StoreHoliday> holidays = holidaysRequest.stream()
+     *                 .map(holiday -> StoreHoliday.builder()
+     *                         .storeId(store.getStoreId())
+     *                         .holidayDate(LocalDate.parse(holiday.getDate()))
+     *                         .reason(holiday.getReason())
+     *                         .build())
+     *                 .toList();
+     *         storeHolidayRepository.saveAll(holidays);
+     *     }
+     * }
      */
-    private void saveOrUpdateHolidays(Store store, List<BaseStoreRequest.HolidayRequest> holidaysRequest) {
-        if (holidaysRequest != null) {
-            storeHolidayRepository.deleteByStoreId(store.getStoreId());
-            List<StoreHoliday> holidays = holidaysRequest.stream()
-                    .map(holiday -> StoreHoliday.builder()
-                            .storeId(store.getStoreId())
-                            .holidayDate(LocalDate.parse(holiday.getDate()))
-                            .reason(holiday.getReason())
-                            .build())
-                    .toList();
-            storeHolidayRepository.saveAll(holidays);
-        }
-    }
 
     /**
      * 링크 유효성 검사 및 저장 메서드
