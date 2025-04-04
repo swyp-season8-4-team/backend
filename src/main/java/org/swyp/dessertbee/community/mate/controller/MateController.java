@@ -38,10 +38,9 @@ public class MateController{
     /**
      * 메이트 등록
      */
-    @Operation(summary = "메이트 생성", description = "디저트메이트를 생성합니다.")
+    @Operation(summary = "메이트 생성(completed)", description = "디저트메이트를 생성합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "디저트메이트 생성 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+            @ApiResponse(responseCode = "201", description = "디저트메이트 생성 성공")
     })
     @ApiErrorResponses({ErrorCode.USER_NOT_FOUND})
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -57,10 +56,9 @@ public class MateController{
     /**
      * 메이트 상세 정보 조회
      */
-    @Operation(summary = "메이트 상세 정보 조회", description = "디저트메이트 상세 정보 조회합니다.")
+    @Operation(summary = "메이트 상세 정보 조회(completed)", description = "디저트메이트 상세 정보 조회합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "디저트메이트 상세 정보 요청 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+            @ApiResponse(responseCode = "200", description = "디저트메이트 상세 정보 요청 성공")
     })
     @ApiErrorResponses({ErrorCode.MATE_NOT_FOUND})
     @GetMapping("/{mateUuid}")
@@ -74,10 +72,9 @@ public class MateController{
     /**
      * 메이트 삭제
      */
-    @Operation(summary = "메이트 삭제", description = "디저트메이트 삭제합니다.")
+    @Operation(summary = "메이트 삭제(completed)", description = "디저트메이트 삭제합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "디저트메이트 삭제 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+            @ApiResponse(responseCode = "204", description = "디저트메이트 삭제 성공")
     })
     @ApiErrorResponses({ErrorCode.MATE_NOT_FOUND})
     @DeleteMapping("/{mateUuid}")
@@ -94,10 +91,9 @@ public class MateController{
     /**
      * 메이트 수정
      * */
-    @Operation(summary = "메이트 수정", description = "디저트메이트 수정합니다.")
+    @Operation(summary = "메이트 수정(completed)", description = "디저트메이트 수정합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "디저트메이트 수정 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+            @ApiResponse(responseCode = "204", description = "디저트메이트 수정 성공")
     })
     @ApiErrorResponses({ErrorCode.MATE_NOT_FOUND})
     @PatchMapping("/{mateUuid}")
@@ -119,10 +115,9 @@ public class MateController{
     /**
      * 디저트메이트 전체 조회
      * */
-    @Operation(summary = "메이트 전체 조회", description = "디저트메이트 전체 조회합니다.")
+    @Operation(summary = "메이트 전체 조회(completed)", description = "디저트메이트 전체 조회합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "디저트메이트 전체 조회 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+            @ApiResponse(responseCode = "200", description = "디저트메이트 전체 조회 성공")
     })
     @ApiErrorResponses({ErrorCode.INVALID_RANGE})
     @GetMapping
@@ -150,10 +145,9 @@ public class MateController{
     /**
      * 내가 참여한 디저트메이트 조회
      * */
-    @Operation(summary = "내가 참여한 디저트메이트 조회", description = "내가 참여한 디저트메이트 조회합니다.")
+    @Operation(summary = "내가 참여한 디저트메이트 조회(completed)", description = "내가 참여한 디저트메이트 조회합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "내가 참여한 디저트메이트 조회 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+            @ApiResponse(responseCode = "200", description = "내가 참여한 디저트메이트 조회 성공")
     })
     @ApiErrorResponses({ErrorCode.INVALID_RANGE})
     @GetMapping("/me")
@@ -173,10 +167,9 @@ public class MateController{
     /**
      * 디저트메이트 신고 기능
      * */
-    @Operation(summary = "디저트메이트 신고 기능", description = "디저트메이트 신고합니다.")
+    @Operation(summary = "디저트메이트 신고 기능(completed)", description = "디저트메이트 신고합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "디저트메이트 신고 기능"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+            @ApiResponse(responseCode = "204", description = "디저트메이트 신고 기능")
     })
     @ApiErrorResponses({ErrorCode.DUPLICATION_REPORT})
     @PostMapping("/{mateUuid}/report")
