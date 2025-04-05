@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.auth.dto.logout;
+package org.swyp.dessertbee.auth.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
