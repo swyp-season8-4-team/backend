@@ -1,12 +1,10 @@
 package org.swyp.dessertbee.auth.service;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.swyp.dessertbee.auth.dto.login.LoginResponse;
+import org.swyp.dessertbee.auth.dto.response.LoginResponse;
 import org.swyp.dessertbee.auth.enums.AuthProvider;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.auth.exception.OAuthExceptions.*;

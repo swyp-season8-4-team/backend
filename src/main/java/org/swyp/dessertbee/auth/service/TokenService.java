@@ -1,19 +1,15 @@
 package org.swyp.dessertbee.auth.service;
 
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.swyp.dessertbee.auth.dto.TokenResponse;
+import org.swyp.dessertbee.auth.dto.response.TokenResponse;
 import org.swyp.dessertbee.auth.entity.AuthEntity;
 import org.swyp.dessertbee.auth.jwt.JWTUtil;
 import org.swyp.dessertbee.auth.repository.AuthRepository;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
-import org.swyp.dessertbee.common.util.CookieUtil;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.service.UserService;
 import org.swyp.dessertbee.auth.exception.AuthExceptions.*;

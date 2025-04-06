@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.auth.dto.userdetails;
+package org.swyp.dessertbee.auth.security;
 
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
