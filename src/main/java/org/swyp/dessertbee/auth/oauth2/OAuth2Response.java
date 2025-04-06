@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.auth.dto.oauth2;
+package org.swyp.dessertbee.auth.oauth2;
 
 public interface OAuth2Response {
     String getProvider();

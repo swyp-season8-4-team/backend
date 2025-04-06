@@ -1,13 +1,11 @@
 package org.swyp.dessertbee.auth.service;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.swyp.dessertbee.auth.dto.login.LoginRequest;
-import org.swyp.dessertbee.auth.dto.login.LoginResponse;
-import org.swyp.dessertbee.auth.dto.TokenResponse;
-import org.swyp.dessertbee.auth.dto.logout.LogoutResponse;
-import org.swyp.dessertbee.auth.dto.signup.SignUpRequest;
-import org.swyp.dessertbee.auth.dto.passwordreset.PasswordResetRequest;
+import org.swyp.dessertbee.auth.dto.request.LoginRequest;
+import org.swyp.dessertbee.auth.dto.response.LoginResponse;
+import org.swyp.dessertbee.auth.dto.response.TokenResponse;
+import org.swyp.dessertbee.auth.dto.response.LogoutResponse;
+import org.swyp.dessertbee.auth.dto.request.SignUpRequest;
+import org.swyp.dessertbee.auth.dto.request.PasswordResetRequest;
 import org.swyp.dessertbee.auth.exception.AuthExceptions.*;
 
 import java.util.UUID;

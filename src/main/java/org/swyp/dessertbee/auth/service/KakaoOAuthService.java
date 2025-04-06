@@ -1,7 +1,5 @@
 package org.swyp.dessertbee.auth.service;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,9 +9,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import org.swyp.dessertbee.auth.dto.oauth2.KakaoResponse;
-import org.swyp.dessertbee.auth.dto.oauth2.OAuth2Response;
-import org.swyp.dessertbee.auth.dto.login.LoginResponse;
+import org.swyp.dessertbee.auth.oauth2.KakaoResponse;
+import org.swyp.dessertbee.auth.oauth2.OAuth2Response;
+import org.swyp.dessertbee.auth.dto.response.LoginResponse;
 import org.swyp.dessertbee.auth.jwt.JWTUtil;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;

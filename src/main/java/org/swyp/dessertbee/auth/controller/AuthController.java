@@ -3,23 +3,19 @@ package org.swyp.dessertbee.auth.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.swyp.dessertbee.auth.dto.TokenResponse;
-import org.swyp.dessertbee.auth.dto.login.LoginRequest;
-import org.swyp.dessertbee.auth.dto.login.LoginResponse;
-import org.swyp.dessertbee.auth.dto.logout.LogoutResponse;
-import org.swyp.dessertbee.auth.dto.signup.SignUpRequest;
+import org.swyp.dessertbee.auth.dto.response.TokenResponse;
+import org.swyp.dessertbee.auth.dto.request.LoginRequest;
+import org.swyp.dessertbee.auth.dto.response.LoginResponse;
+import org.swyp.dessertbee.auth.dto.response.LogoutResponse;
+import org.swyp.dessertbee.auth.dto.request.SignUpRequest;
 import org.swyp.dessertbee.auth.service.AuthService;
 import jakarta.validation.Valid;
 import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
@@ -61,7 +57,11 @@ public class AuthController {
     public ResponseEntity<LoginResponse> signup(
             @RequestHeader("X-Email-Verification-Token") String verificationToken,
             @Parameter(hidden = true) @RequestHeader(value = "X-Device-ID", required = false) String deviceId,
-            @Valid @RequestBody SignUpRequest request
+            @Parameter(
+                    description = "회원가입 정보",
+                    required = true,
+                    schema = @Schema(implementation = SignUpRequest.class)
+            ) @Valid @RequestBody SignUpRequest request
     ) {
         log.debug("회원가입 요청: {}", request.getEmail());
         LoginResponse signupResponse = authService.signup(request, verificationToken, deviceId);
@@ -93,7 +93,11 @@ public class AuthController {
     @ApiErrorResponses({ErrorCode.PASSWORD_MISMATCH, ErrorCode.USER_NOT_FOUND})
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
-            @Parameter(description = "로그인 정보", required = true) @Valid @RequestBody LoginRequest request,
+            @Parameter(
+                    description = "로그인 정보",
+                    required = true,
+                    schema = @Schema(implementation = LoginRequest.class)
+            )  @Valid @RequestBody LoginRequest request,
             @Parameter(hidden = true) @RequestHeader(value = "X-Device-ID", required = false) String deviceId
     ) {
         LoginResponse loginResponse = authService.login(request, deviceId);
@@ -167,7 +171,7 @@ public class AuthController {
 
     @Operation(
             summary = "DEV 로그인 (completed)",
-            description = "개발용 로그인. 앱에서는 X-Device-ID 헤더를, 웹에서는 deviceId 쿠키를 사용하여 디바이스를 식별합니다.",
+            description = "개발용 로그인. 앱에서는 X-Device-ID 헤더를, 웹에서는 deviceId 쿠키를 사용하여 디바이스를 식별합니다.(리프레시 토큰 10분, 액세스 토큰 3분)",
             parameters = {
                     @Parameter(
                             name = "X-Device-ID",
@@ -185,10 +189,21 @@ public class AuthController {
                     )
             }
     )
-    @ApiResponses( @ApiResponse(responseCode = "200", description = "로그인 성공", content = @Content(schema = @Schema(implementation = LoginResponse.class))))
+    @ApiResponse(
+            responseCode = "200",
+            description = "로그인 성공",
+            content = @Content(
+                    schema = @Schema(implementation = LoginResponse.class)
+            )
+    )
+    @ApiErrorResponses({ErrorCode.PASSWORD_MISMATCH, ErrorCode.USER_NOT_FOUND})
     @PostMapping("/dev/login")
     public ResponseEntity<LoginResponse> devlogin(
-            @Parameter(description = "로그인 정보", required = true) @Valid @RequestBody LoginRequest request,
+            @Parameter(
+                    description = "로그인 정보",
+                    required = true,
+                    schema = @Schema(implementation = LoginRequest.class)
+            )  @Valid @RequestBody LoginRequest request,
             @Parameter(hidden = true) @RequestHeader(value = "X-Device-ID", required = false) String deviceId
     ) {
         LoginResponse loginResponse = authService.devLogin(request, deviceId);
