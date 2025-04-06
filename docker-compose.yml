@@ -2,8 +2,8 @@ version: '3.8'
 
 services:
   app:
-    image: ${DOCKERHUB_USERNAME}/dessertbee:latest
-    container_name: dessertbee-app
+    image: ${DOCKERHUB_USERNAME}/desserbee:latest
+    container_name: desserbee-app
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - SPRING_DATA_REDIS_HOST=redis
@@ -18,7 +18,7 @@ services:
 
   nginx:
     image: nginx:latest
-    container_name: dessertbee-nginx
+    container_name: desserbee-nginx
     ports:
       - "80:80"
       - "443:443"
@@ -35,7 +35,7 @@ services:
 
   redis:
     image: redis:7.0
-    container_name: dessertbee-redis
+    container_name: desserbee-redis
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
