@@ -21,9 +21,6 @@ import org.swyp.dessertbee.user.dto.response.UserResponseDto;
 import org.swyp.dessertbee.user.dto.request.UserUpdateRequestDto;
 import org.swyp.dessertbee.user.service.UserService;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * 사용자 정보 조회 관련 컨트롤러
  */
@@ -41,7 +38,7 @@ public class UserController {
      * @return 사용자 상세 정보
      */
     @Operation(
-            summary = "현재 사용자 정보 조회",
+            summary = "현재 사용자 정보 조회 (completed)",
             description = "현재 로그인된 사용자의 상세 정보를 반환합니다."
     )
     @ApiResponse(
@@ -65,7 +62,7 @@ public class UserController {
      * @return 사용자 기본 정보
      */
     @Operation(
-            summary = "특정 사용자 정보 조회",
+            summary = "특정 사용자 정보 조회 (completed)",
             description = "UUID로 특정 사용자의 기본 정보를 조회합니다."
     )
     @ApiResponse(
@@ -88,7 +85,7 @@ public class UserController {
      * @return 사용자 상세 정보
      */
     @Operation(
-            summary = "사용자 정보 수정",
+            summary = "사용자 정보 수정 (completed)",
             description = "현재 로그인된 사용자의 정보를 수정합니다."
     )
     @ApiResponse(
@@ -111,7 +108,7 @@ public class UserController {
      * 회원 탈퇴 처리
      */
     @Operation(
-            summary = "회원 탈퇴",
+            summary = "회원 탈퇴 (completed)",
             description = "현재 로그인된 사용자의 계정을 비활성화합니다."
     )
     @ApiResponse(responseCode = "204", description = "회원 탈퇴 성공")
@@ -128,7 +125,7 @@ public class UserController {
      * @return 사용 가능 여부
      */
     @Operation(
-            summary = "닉네임 중복 검사",
+            summary = "닉네임 중복 검사 (completed)",
             description = "닉네임 사용 가능 여부를 확인합니다."
     )
     @ApiResponse(
@@ -156,7 +153,7 @@ public class UserController {
      * @return 업데이트된 사용자 정보
      */
     @Operation(
-            summary = "프로필 이미지 업데이트",
+            summary = "프로필 이미지 업데이트 (completed)",
             description = "사용자의 프로필 이미지를 업로드합니다."
     )
     @ApiResponse(

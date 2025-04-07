@@ -100,7 +100,7 @@ public class AuthController {
             )  @Valid @RequestBody LoginRequest request,
             @Parameter(hidden = true) @RequestHeader(value = "X-Device-ID", required = false) String deviceId
     ) {
-        LoginResponse loginResponse = authService.login(request, deviceId);
+        LoginResponse loginResponse = authService.login(request, deviceId, false);
         return ResponseEntity.ok(loginResponse);
     }
 
@@ -206,7 +206,7 @@ public class AuthController {
             )  @Valid @RequestBody LoginRequest request,
             @Parameter(hidden = true) @RequestHeader(value = "X-Device-ID", required = false) String deviceId
     ) {
-        LoginResponse loginResponse = authService.devLogin(request, deviceId);
+        LoginResponse loginResponse = authService.login(request, deviceId, true);
         return ResponseEntity.ok(loginResponse);
     }
 }

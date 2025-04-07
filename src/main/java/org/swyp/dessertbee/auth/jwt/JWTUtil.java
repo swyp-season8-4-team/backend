@@ -36,10 +36,7 @@ public class JWTUtil {
     private final long EMAIL_VERIFICATION_TOKEN_EXPIRE_TIME = 30 * 60 * 1000L;
 
     @Getter
-    private final long SHORT_ACCESS_TOKEN_EXPIRE = 24 * 60 * 60 * 1000L;       // 1일
-    @Getter
-    private final long LONG_ACCESS_TOKEN_EXPIRE = 3 * 24 * 60 * 60 * 1000L;   // 3일
-
+    private final long ACCESS_TOKEN_EXPIRE = 30 * 60 * 1000L;   // 30분
     @Getter
     private final long SHORT_REFRESH_TOKEN_EXPIRE = 10 * 24 * 60 * 60 * 1000L;   // 10일
     @Getter
@@ -68,9 +65,8 @@ public class JWTUtil {
     /**
      * Access Token 생성
      */
-    public String createAccessToken(UUID userUuid, List<String> roles, boolean keepLoggedIn) {
-        long expireTime = keepLoggedIn ? LONG_ACCESS_TOKEN_EXPIRE : SHORT_ACCESS_TOKEN_EXPIRE;
-        return buildToken(TokenType.ACCESS, userUuid, roles, null, null, accessTokenSecretKey, expireTime);
+    public String createAccessToken(UUID userUuid, List<String> roles) {
+        return buildToken(TokenType.ACCESS, userUuid, roles, null, null, accessTokenSecretKey, ACCESS_TOKEN_EXPIRE);
     }
 
     /**

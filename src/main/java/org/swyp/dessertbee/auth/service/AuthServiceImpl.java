@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.auth.service;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import org.swyp.dessertbee.auth.exception.AuthExceptions.*;
 import org.swyp.dessertbee.auth.jwt.JWTUtil;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.email.entity.EmailVerificationPurpose;
 import org.swyp.dessertbee.email.service.EmailVerificationService;
@@ -25,6 +27,7 @@ import org.swyp.dessertbee.role.service.UserRoleService;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.user.service.UserService;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -103,8 +106,7 @@ public class AuthServiceImpl implements AuthService {
             List<String> roles;
             if (request.getRole() == null) {
                 roles = userRoleService.ensureDefaultRole(user);
-            }
-            else {
+            } else {
                 roles = userRoleService.setUserRoles(user, Collections.singletonList(request.getRole()));
             }
 
@@ -112,17 +114,19 @@ public class AuthServiceImpl implements AuthService {
             userRepository.save(user);
 
             // Access Token, Refresh Token 생성
-            String accessToken = jwtUtil.createAccessToken(user.getUserUuid(), roles, false);
+            String accessToken = jwtUtil.createAccessToken(user.getUserUuid(), roles);
             String refreshToken = jwtUtil.createRefreshToken(user.getUserUuid(), false);
-            long expiresIn = jwtUtil.getSHORT_ACCESS_TOKEN_EXPIRE();
-
+            long expiresIn = jwtUtil.getACCESS_TOKEN_EXPIRE();
 
             // Refresh Token 저장 및 디바이스 ID 처리
             String usedDeviceId = saveRefreshToken(user.getUserUuid(), refreshToken, "local", null, deviceId);
 
             log.info("회원가입 완료 - 이메일: {}", request.getEmail());
 
-            String profileImageUrl = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId()).stream().findFirst().orElse(null);
+            String profileImageUrl = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId())
+                    .stream()
+                    .findFirst()
+                    .orElse(null);
 
             return LoginResponse.success(accessToken, refreshToken, expiresIn, user, profileImageUrl, usedDeviceId);
 
@@ -138,129 +142,87 @@ public class AuthServiceImpl implements AuthService {
     /**
      * 로그인 처리
      * 1. 사용자 인증
-     * 2. JWT 토큰 생성
+     * 2. 권한 확인 및 기본 역할 부여
+     * 3. JWT 토큰 생성
+     * 4. 리프레시 토큰 저장, 프로필 이미지 조회, 선호도 확인 후 응답 생성
+     *
+     * @param request 로그인 요청 정보
+     * @param deviceId 디바이스 ID
+     * @param isDev 개발 환경 로그인 여부
+     * @return 로그인 응답
      */
     @Override
     @Transactional
-    public LoginResponse login(LoginRequest request, String deviceId) {
+    public LoginResponse login(LoginRequest request, String deviceId, boolean isDev) {
         try {
-            // 1. 사용자 조회
-            UserEntity user = userService.findUserByEmail(request.getEmail());
+            // 1. 사용자 인증
+            UserEntity user = authenticateUser(request);
 
-            // 2. 비밀번호 검증
-            if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-                log.warn("로그인 실패 - 비밀번호 불일치: {}", request.getEmail());
-                throw new PasswordMismatchException("비밀번호가 올바르지 않습니다.");
+            // 2. 사용자 권한 확인 및 기본 역할 부여
+            List<String> roles = determineUserRoles(user);
+
+            // 3. 토큰 생성 (개발 모드 여부에 따라 다른 토큰 생성)
+            String accessToken;
+            String refreshToken;
+            long expiresIn;
+
+            if (isDev) {
+                // 개발용 짧은 유효기간 토큰
+                accessToken = jwtUtil.createDevAccessToken(user.getUserUuid(), roles);
+                refreshToken = jwtUtil.createDevRefreshToken(user.getUserUuid());
+                expiresIn = 180; // 3분 = 180초
+                log.info("개발 로그인 성공 - 이메일: {}, 토큰 만료시간: {}초", request.getEmail(), expiresIn);
+            } else {
+                // 일반 토큰
+                boolean keepLoggedIn = request.isKeepLoggedIn();
+                TokenPair tokenPair = createTokenPair(user, roles, keepLoggedIn);
+                accessToken = tokenPair.accessToken();
+                refreshToken = tokenPair.refreshToken();
+                expiresIn = tokenPair.expiresIn();
             }
 
-            // 3. 사용자 권한 조회
-            List<String> roles = userRoleService.getUserRoles(user);
-            if (roles.isEmpty()) {
-                // 역할이 비었다면 기본 역할 부여
-                roles = userRoleService.ensureDefaultRole(user);
-            }
+            // 4. 리프레시 토큰 저장
+            String usedDeviceId = saveRefreshToken(user, refreshToken, deviceId);
 
-            // 4. Access Token, Refresh Token 생성
-            boolean keepLoggedIn = request.isKeepLoggedIn();
-            String accessToken = jwtUtil.createAccessToken(user.getUserUuid(), roles, keepLoggedIn);
-            String refreshToken = jwtUtil.createRefreshToken(user.getUserUuid(), keepLoggedIn);
-            long expiresIn = keepLoggedIn ?
-                    jwtUtil.getLONG_ACCESS_TOKEN_EXPIRE() :
-                    jwtUtil.getSHORT_ACCESS_TOKEN_EXPIRE();
+            // 5. 프로필 이미지 조회
+            String profileImageUrl = getProfileImage(user);
 
-            // 5. Refresh Token 저장 및 디바이스 ID 처리
-            String usedDeviceId = saveRefreshToken(user.getUserUuid(), refreshToken, "local", null, deviceId);
-
-            // 6. 프로필 이미지
-            String profileImageUrl = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId()).stream().findFirst().orElse(null);
-
-            // 7. 선호도 설정 여부 파악
+            // 6. 선호도 설정 여부 확인
             boolean isPreferenceSet = preferenceService.isUserPreferenceSet(user);
 
-            // 8. 로그인 응답 생성
-            return LoginResponse.success(accessToken, refreshToken, expiresIn, user, profileImageUrl, usedDeviceId, isPreferenceSet);
-
-        } catch (InvalidCredentialsException e) {
+            // 7. 로그인 응답 생성
+            return LoginResponse.success(
+                    accessToken,
+                    refreshToken,
+                    expiresIn,
+                    user,
+                    profileImageUrl,
+                    usedDeviceId,
+                    isPreferenceSet
+            );
+        } catch (BusinessException e) {
             log.warn("로그인 실패 - 이메일: {}, 사유: {}", request.getEmail(), e.getMessage());
             throw e;
         } catch (Exception e) {
             log.error("로그인 처리 중 오류 발생 - 이메일: {}", request.getEmail(), e);
             throw new AuthServiceException("로그인 처리 중 오류가 발생했습니다.");
-
-        }
-    }
-
-    /**
-     * 개발 환경용 로그인 처리
-     * 일반 로그인과 동일하지만 토큰 유효 시간이 매우 짧음 (3~5분)
-     */
-    @Override
-    @Transactional
-    public LoginResponse devLogin(LoginRequest request, String deviceId) {
-        try {
-            // 1. 사용자 조회
-            UserEntity user = userService.findUserByEmail(request.getEmail());
-
-            // 2. 비밀번호 검증
-            if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-                log.warn("개발 로그인 실패 - 비밀번호 불일치: {}", request.getEmail());
-                throw new InvalidCredentialsException("비밀번호가 올바르지 않습니다.");
-            }
-
-            // 3. 사용자 권한 조회
-            List<String> roles = userRoleService.getUserRoles(user);
-            if (roles.isEmpty()) {
-                // 역할이 비었다면 기본 역할 부여
-                roles = userRoleService.ensureDefaultRole(user);
-            }
-
-            // 4. 개발용 짧은 유효기간의 Access Token, Refresh Token 생성 (3~5분)
-            String accessToken = jwtUtil.createDevAccessToken(user.getUserUuid(), roles);
-            String refreshToken = jwtUtil.createDevRefreshToken(user.getUserUuid());
-
-            // 개발 환경용 토큰 만료 시간 (3분 = 180초)
-            long expiresIn = 180;
-
-            // 5. Refresh Token 저장 및 디바이스 ID 처리
-            String usedDeviceId = saveRefreshToken(user.getUserUuid(), refreshToken, "local", null, deviceId);
-
-            // 6. 프로필 이미지
-            List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
-            String profileImageUrl = profileImages.isEmpty() ? null : profileImages.get(0);
-
-            // 7. 선호도 설정 여부 파악
-            boolean isPreferenceSet = preferenceService.isUserPreferenceSet(user);
-
-            log.info("개발 로그인 성공 - 이메일: {}, 토큰 만료시간: {}초", request.getEmail(), expiresIn);
-
-            // 8. 로그인 응답 생성
-            return LoginResponse.success(accessToken, refreshToken, expiresIn, user, profileImageUrl, usedDeviceId, isPreferenceSet);
-
-        } catch (InvalidCredentialsException e) {
-            log.warn("개발 로그인 실패 - 이메일: {}, 사유: {}", request.getEmail(), e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("개발 로그인 처리 중 오류 발생 - 이메일: {}", request.getEmail(), e);
-            throw new AuthServiceException("개발 로그인 처리 중 오류가 발생했습니다.");
         }
     }
 
     /**
      * 비밀번호 재설정
-     * 이메일 인증이 완료된 사용자의 비밀번호 변경
-     *
-     * 1. 이메일 검증 토큰에서 사용자 이메일 추출
-     * 2. 사용자 존재 확인
-     * 3. 새 비밀번호 암호화 및 업데이트
-     * 4. 기존 토큰 무효화 (로그아웃)
+     * 이메일 인증이 완료된 사용자의 비밀번호 변경 후 기존 토큰 무효화
      */
     @Override
     @Transactional
     public void resetPassword(PasswordResetRequest request, String verificationToken) {
         try {
-
             // 토큰 유효성 검사
-            emailVerificationService.validateEmailVerificationToken(verificationToken, request.getEmail(), EmailVerificationPurpose.PASSWORD_RESET);
+            emailVerificationService.validateEmailVerificationToken(
+                    verificationToken,
+                    request.getEmail(),
+                    EmailVerificationPurpose.PASSWORD_RESET
+            );
 
             // 사용자 조회
             UserEntity user = userService.findUserByEmail(request.getEmail());
@@ -284,35 +246,28 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
-     * 로그아웃 처리
-     * 사용자의 리프레시 토큰을 무효화
-     *
-     * 1. 액세스 토큰에서 이메일 추출
-     * 2. 리프레시 토큰 무효화
-     *
-     * @param accessToken 액세스 토큰
-     * @return 로그아웃 응답
+     * 로그아웃 처리 - 사용자의 리프레시 토큰 무효화
      */
     @Transactional
     @Override
     public LogoutResponse logout(String accessToken, String deviceId) {
-        // 토큰이 없는 경우도 로그아웃 성공으로 처리
+        // 토큰이 없는 경우에도 로그아웃 성공으로 처리
         if (accessToken == null || accessToken.trim().isEmpty()) {
             log.info("토큰 없이 로그아웃 요청 - 성공으로 처리");
             return LogoutResponse.success();
         }
 
         try {
-            // 토큰 파싱 시도
+            // 액세스 토큰 파싱
             UUID userUuid = jwtUtil.getUserUuid(accessToken, true);
 
             try {
                 if (deviceId != null && !deviceId.isEmpty()) {
-                    // 특정 디바이스의 리프레시 토큰만 무효화
+                    // 특정 디바이스의 리프레시 토큰 무효화
                     tokenService.revokeRefreshTokenByDevice(userUuid, deviceId);
                     log.info("로그아웃 성공 - UUID: {}, 디바이스: {}", userUuid, deviceId);
                 } else {
-                    // 디바이스 ID가 없는 경우 모든 기기에서 로그아웃
+                    // 디바이스 ID가 없으면 모든 기기에서 로그아웃
                     tokenService.revokeRefreshToken(userUuid);
                     log.info("모든 기기에서 로그아웃 성공 - UUID: {}", userUuid);
                 }
@@ -326,7 +281,63 @@ public class AuthServiceImpl implements AuthService {
             log.warn("유효하지 않은 토큰으로 로그아웃 시도 - 성공으로 처리: {}", e.getMessage());
         }
 
-        // 모든 경우에 로그아웃 성공 응답
         return LogoutResponse.success();
+    }
+
+    /**
+     * 사용자 인증: 이메일로 사용자 조회 후 비밀번호 검증
+     */
+    private UserEntity authenticateUser(LoginRequest request) {
+        UserEntity user = userService.findUserByEmail(request.getEmail(), ErrorCode.INVALID_EMAIL);
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            log.warn("로그인 실패 - 비밀번호 인증 실패: {}", request.getEmail());
+            throw new InvalidPasswordException();
+        }
+        return user;
+    }
+
+    /**
+     * 사용자 권한 조회 및 기본 역할 부여
+     */
+    private List<String> determineUserRoles(UserEntity user) {
+        List<String> roles = userRoleService.getUserRoles(user);
+        if (roles.isEmpty()) {
+            roles = userRoleService.ensureDefaultRole(user);
+        }
+        return roles;
+    }
+
+    /**
+     * Access Token, Refresh Token 및 만료시간 생성
+     */
+    private TokenPair createTokenPair(UserEntity user, List<String> roles, boolean keepLoggedIn) {
+        String accessToken = jwtUtil.createAccessToken(user.getUserUuid(), roles);
+        String refreshToken = jwtUtil.createRefreshToken(user.getUserUuid(), keepLoggedIn);
+        long expiresIn = jwtUtil.getACCESS_TOKEN_EXPIRE();
+        return new TokenPair(accessToken, refreshToken, expiresIn);
+    }
+
+    /**
+     * 리프레시 토큰 저장 및 디바이스 ID 처리
+     */
+    private String saveRefreshToken(UserEntity user, String refreshToken, String deviceId) {
+        return tokenService.saveRefreshToken(user.getUserUuid(), refreshToken, "local", null, deviceId);
+    }
+
+    /**
+     * 프로필 이미지 URL 조회
+     */
+    private String getProfileImage(UserEntity user) {
+        return imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId())
+                .stream()
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+         * 토큰 생성 결과를 담는 도메인 객체
+         */
+        private record TokenPair(String accessToken, String refreshToken, long expiresIn) {
+
     }
 }
