@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.auth.service;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -175,9 +176,9 @@ public class AuthServiceImpl implements AuthService {
                 // 일반 토큰
                 boolean keepLoggedIn = request.isKeepLoggedIn();
                 TokenPair tokenPair = createTokenPair(user, roles, keepLoggedIn);
-                accessToken = tokenPair.getAccessToken();
-                refreshToken = tokenPair.getRefreshToken();
-                expiresIn = tokenPair.getExpiresIn();
+                accessToken = tokenPair.accessToken();
+                refreshToken = tokenPair.refreshToken();
+                expiresIn = tokenPair.expiresIn();
             }
 
             // 4. 리프레시 토큰 저장
@@ -334,29 +335,9 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
-     * 토큰 생성 결과를 담는 도메인 객체
-     */
-    private static class TokenPair {
-        private final String accessToken;
-        private final String refreshToken;
-        private final long expiresIn;
+         * 토큰 생성 결과를 담는 도메인 객체
+         */
+        private record TokenPair(String accessToken, String refreshToken, long expiresIn) {
 
-        public TokenPair(String accessToken, String refreshToken, long expiresIn) {
-            this.accessToken = accessToken;
-            this.refreshToken = refreshToken;
-            this.expiresIn = expiresIn;
-        }
-
-        public String getAccessToken() {
-            return accessToken;
-        }
-
-        public String getRefreshToken() {
-            return refreshToken;
-        }
-
-        public long getExpiresIn() {
-            return expiresIn;
-        }
     }
 }
