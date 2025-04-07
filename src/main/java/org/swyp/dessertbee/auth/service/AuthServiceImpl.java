@@ -113,9 +113,9 @@ public class AuthServiceImpl implements AuthService {
             userRepository.save(user);
 
             // Access Token, Refresh Token 생성
-            String accessToken = jwtUtil.createAccessToken(user.getUserUuid(), roles, false);
+            String accessToken = jwtUtil.createAccessToken(user.getUserUuid(), roles);
             String refreshToken = jwtUtil.createRefreshToken(user.getUserUuid(), false);
-            long expiresIn = jwtUtil.getSHORT_ACCESS_TOKEN_EXPIRE();
+            long expiresIn = jwtUtil.getACCESS_TOKEN_EXPIRE();
 
             // Refresh Token 저장 및 디바이스 ID 처리
             String usedDeviceId = saveRefreshToken(user.getUserUuid(), refreshToken, "local", null, deviceId);
@@ -310,9 +310,9 @@ public class AuthServiceImpl implements AuthService {
      * Access Token, Refresh Token 및 만료시간 생성
      */
     private TokenPair createTokenPair(UserEntity user, List<String> roles, boolean keepLoggedIn) {
-        String accessToken = jwtUtil.createAccessToken(user.getUserUuid(), roles, keepLoggedIn);
+        String accessToken = jwtUtil.createAccessToken(user.getUserUuid(), roles);
         String refreshToken = jwtUtil.createRefreshToken(user.getUserUuid(), keepLoggedIn);
-        long expiresIn = keepLoggedIn ? jwtUtil.getLONG_ACCESS_TOKEN_EXPIRE() : jwtUtil.getSHORT_ACCESS_TOKEN_EXPIRE();
+        long expiresIn = jwtUtil.getACCESS_TOKEN_EXPIRE();
         return new TokenPair(accessToken, refreshToken, expiresIn);
     }
 
