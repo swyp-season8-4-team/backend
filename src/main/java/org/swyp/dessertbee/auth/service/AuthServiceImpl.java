@@ -17,6 +17,7 @@ import org.swyp.dessertbee.auth.exception.AuthExceptions.*;
 import org.swyp.dessertbee.auth.jwt.JWTUtil;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.email.entity.EmailVerificationPurpose;
 import org.swyp.dessertbee.email.service.EmailVerificationService;
@@ -145,12 +146,12 @@ public class AuthServiceImpl implements AuthService {
     public LoginResponse login(LoginRequest request, String deviceId) {
         try {
             // 1. 사용자 조회
-            UserEntity user = userService.findUserByEmail(request.getEmail());
+            UserEntity user = userService.findUserByEmail(request.getEmail(), ErrorCode.INVALID_EMAIL);
 
             // 2. 비밀번호 검증
             if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-                log.warn("로그인 실패 - 비밀번호 불일치: {}", request.getEmail());
-                throw new PasswordMismatchException("비밀번호가 올바르지 않습니다.");
+                log.warn("로그인 실패 - 비밀번호 인증 실패: {}", request.getEmail());
+                throw new InvalidPasswordException();
             }
 
             // 3. 사용자 권한 조회
@@ -180,7 +181,7 @@ public class AuthServiceImpl implements AuthService {
             // 8. 로그인 응답 생성
             return LoginResponse.success(accessToken, refreshToken, expiresIn, user, profileImageUrl, usedDeviceId, isPreferenceSet);
 
-        } catch (InvalidCredentialsException e) {
+        } catch (BusinessException e) {
             log.warn("로그인 실패 - 이메일: {}, 사유: {}", request.getEmail(), e.getMessage());
             throw e;
         } catch (Exception e) {
