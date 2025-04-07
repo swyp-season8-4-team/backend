@@ -52,7 +52,7 @@ public interface AuthService {
      * @return 로그인 응답 정보
      * @throws InvalidCredentialsException 잘못된 인증 정보
      */
-    LoginResponse login(LoginRequest request, String deviceId);
+    LoginResponse login(LoginRequest request, String deviceId, boolean isDev);
 
     /**
      * 비밀번호 재설정
@@ -68,12 +68,4 @@ public interface AuthService {
      * @return 로그아웃 응답 정보
      */
     LogoutResponse logout(String token, String deviceId);
-
-    /**
-     * 개발 환경용 로그인 처리
-     * @param request 로그인 요청 정보
-     * @return 로그인 응답 정보
-     * @throws InvalidCredentialsException 잘못된 인증 정보
-     */
-    LoginResponse devLogin(LoginRequest request, String deviceId);
 }

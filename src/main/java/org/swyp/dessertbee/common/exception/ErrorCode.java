@@ -28,7 +28,8 @@ public enum ErrorCode {
     AUTH_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "A010", "인증 서비스 처리 중 오류가 발생했습니다."),
     OAUTH_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "A011", "소셜 인증 서비스 처리 중 오류가 발생했습니다."),
     DEVICE_ID_MISSING(HttpStatus.BAD_REQUEST, "A012", "디바이스 ID가 제공되지 않았습니다."),
-
+    INVALID_EMAIL(HttpStatus.UNAUTHORIZED, "A013", "이메일을 다시 확인해주세요."),
+    INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "A014", "비밀번호를 다시 입력해주세요."),
     // OAuth
     INVALID_PROVIDER(HttpStatus.BAD_REQUEST, "O001", "지원되지 않는 OAuth 제공자입니다."),
 

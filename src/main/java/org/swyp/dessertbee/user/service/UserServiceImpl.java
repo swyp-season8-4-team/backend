@@ -317,6 +317,15 @@ public class UserServiceImpl implements UserService {
                 });
     }
 
+    public UserEntity findUserByEmail(String email, ErrorCode errorCode) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    log.warn("로그인 실패 - 존재하지 않는 이메일: {}", email);
+                    return new BusinessException(errorCode);
+                });
+    }
+
+
     @Override
     public UserEntity findByUserUuid(UUID userUuid) {
         return userRepository.findByUserUuid(userUuid)
