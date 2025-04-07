@@ -16,7 +16,7 @@ public interface UserStatisticsAdminService {
     List<WeeklyUserCountDto> getNewUsersByWeek(int year, int month);
     List<MonthlyUserCountDto> getNewUsersByMonth(int year);
 
-    void trackUserActivity(String userId);
+    void trackUserActivity(String userUuid);
     long getDAU(String date);
     long getWAU(String week);
     long getMAU(String month);

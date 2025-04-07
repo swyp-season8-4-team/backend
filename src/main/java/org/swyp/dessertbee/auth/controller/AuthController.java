@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.swyp.dessertbee.admin.statistics.service.UserStatisticsAdminService;
 import org.swyp.dessertbee.auth.dto.response.TokenResponse;
 import org.swyp.dessertbee.auth.dto.request.LoginRequest;
 import org.swyp.dessertbee.auth.dto.response.LoginResponse;
@@ -30,6 +31,7 @@ import org.swyp.dessertbee.common.exception.ErrorCode;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserStatisticsAdminService userStatisticsAdminService;
 
     @Operation(
             summary = "회원가입 (completed)",
@@ -101,6 +103,10 @@ public class AuthController {
             @Parameter(hidden = true) @RequestHeader(value = "X-Device-ID", required = false) String deviceId
     ) {
         LoginResponse loginResponse = authService.login(request, deviceId);
+
+        // ✅ 활성 사용자 기록
+        userStatisticsAdminService.trackUserActivity(String.valueOf(loginResponse.getUserUuid()));
+
         return ResponseEntity.ok(loginResponse);
     }
 

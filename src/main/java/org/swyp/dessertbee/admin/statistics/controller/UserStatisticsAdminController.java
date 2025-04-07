@@ -81,8 +81,8 @@ public class UserStatisticsAdminController {
     // 활성 사용자 추가
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/trackUserActivity")
-    public ResponseEntity<Void> track(@RequestParam String userId) {
-        userStatisticsAdminService.trackUserActivity(userId);
+    public ResponseEntity<Void> track(@RequestParam String userUuid) {
+        userStatisticsAdminService.trackUserActivity(userUuid);
         return ResponseEntity.ok().build();
     }
     // DAU : 일일 활성 사용자 수

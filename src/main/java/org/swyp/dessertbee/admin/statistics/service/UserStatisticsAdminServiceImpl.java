@@ -66,14 +66,14 @@ public class UserStatisticsAdminServiceImpl implements UserStatisticsAdminServic
     활성 사용자 수 조회
     */
     /** 사용자 활동 추적 - 로그인 시 */
-    public void trackUserActivity(String userId) {
+    public void trackUserActivity(String userUuId) {
         LocalDate today = LocalDate.now();
         String week = YearWeek.from(today);
         YearMonth month = YearMonth.from(today);
 
-        redisTemplate.opsForSet().add("active:daily:" + today, userId);
-        redisTemplate.opsForSet().add("active:weekly:" + week, userId);
-        redisTemplate.opsForSet().add("active:monthly:" + month, userId);
+        redisTemplate.opsForSet().add("active:daily:" + today, userUuId);
+        redisTemplate.opsForSet().add("active:weekly:" + week, userUuId);
+        redisTemplate.opsForSet().add("active:monthly:" + month, userUuId);
 
         // 자동 만료 설정 (데이터 정리용)
         redisTemplate.expire("active:daily:" + today, 40, TimeUnit.DAYS);
