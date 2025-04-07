@@ -1,15 +1,14 @@
 package org.swyp.dessertbee.admin.statistics.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.admin.statistics.service.UserStatisticsAdminService;
 import org.swyp.dessertbee.user.dto.response.*;
+import org.swyp.dessertbee.user.service.UserStatisticsService;
 
 import java.util.List;
 
@@ -20,6 +19,7 @@ import java.util.List;
 public class UserStatisticsAdminController {
 
     private final UserStatisticsAdminService userStatisticsAdminService;
+    private final UserStatisticsService userStatisticsService;
 
     /**
      * 전체 사용자 조회
@@ -60,6 +60,7 @@ public class UserStatisticsAdminController {
     }
 
     // 특정 주 기준 신규 가입자 수 조회
+    @Operation(summary = "로그아웃 (completed)")
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/users/count/new/week")
     public ResponseEntity<List<WeeklyUserCountDto>> getNewUsersByWeek(@RequestParam int year,
@@ -72,6 +73,35 @@ public class UserStatisticsAdminController {
     @GetMapping("/users/count/new/month")
     public ResponseEntity<List<MonthlyUserCountDto>> getNewUsersByMonth(@RequestParam int year) {
         return ResponseEntity.ok(userStatisticsAdminService.getNewUsersByMonth(year));
+    }
+
+    /**
+     * 활성 사용자 수 조회
+     */
+    // 활성 사용자 추가
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/trackUserActivity")
+    public ResponseEntity<Void> track(@RequestParam String userId) {
+        userStatisticsAdminService.trackUserActivity(userId);
+        return ResponseEntity.ok().build();
+    }
+    // DAU : 일일 활성 사용자 수
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/dau")
+    public ResponseEntity<Long> getDAU(@RequestParam String date) {
+        return ResponseEntity.ok(userStatisticsAdminService.getDAU(date));
+    }
+    // WAU : 주간 활성 사용자 수
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/wau")
+    public ResponseEntity<Long> getWAU(@RequestParam String week) {
+        return ResponseEntity.ok(userStatisticsAdminService.getWAU(week));
+    }
+    // MAU : 월간 활성 사용자 수
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/mau")
+    public ResponseEntity<Long> getMAU(@RequestParam String month) {
+        return ResponseEntity.ok(userStatisticsAdminService.getMAU(month));
     }
 }
 
