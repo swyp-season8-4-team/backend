@@ -140,8 +140,6 @@ public enum ErrorCode {
     DUPLICATION_REPORT(HttpStatus.CONFLICT, "M015", "이미 신고된 게시물입니다."),
     MATE_NOT_PENDING_MEMBER(HttpStatus.NOT_FOUND, "M016",  "디저트메이트 신청하신 분이 아닙니다."),
     DUPLICATION_SAVED_MATE(HttpStatus.CONFLICT, "M017", "이미 저장된 디저트메이트입니다."),
-    MATE_NOT_REPORTED(HttpStatus.NOT_FOUND, "M018" , "신고되지 않은 디저트메이트입니다." ),
-    MATE_REPLY_NOT_REPORTED(HttpStatus.NOT_FOUND, "M019" , "신고되지 않은 디저트메이트 댓글입니다." ),
 
     //커뮤니티 리뷰
     COMMUNITY_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "R001" , "존재하지 않는 리뷰입니다." ),
@@ -151,7 +149,11 @@ public enum ErrorCode {
     IMAGE_UUID_NOT_FOUND(HttpStatus.NOT_FOUND, "R005", "존재하지 않는 이미지 UUID 입니다."),
     IMAGE_UPLOAD_FAILED(HttpStatus.CONFLICT, "R006", "이미지 업로드 시 문제가 생겼습니다."),
     DUPLICATION_SAVED_REVIEW(HttpStatus.CONFLICT, "R007", "이미 저장된 커뮤니티 리뷰입니다."),
-    SAVED_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "R008", "저장된 커뮤니티 리뷰가 없습니다.");
+    SAVED_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "R008", "저장된 커뮤니티 리뷰가 없습니다."),
+
+    //관리자 페이지
+    INVALID_YEAR(HttpStatus.BAD_REQUEST,"ADMIN_001","잘못된 연도입니다."),
+    INVALID_MONTH(HttpStatus.BAD_REQUEST,"ADMIN_002","잘못된 월입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

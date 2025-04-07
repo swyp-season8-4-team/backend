@@ -3,6 +3,8 @@ package org.swyp.dessertbee.user.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.role.repository.UserRoleRepository;
 import org.swyp.dessertbee.user.dto.response.*;
 import org.swyp.dessertbee.user.repository.UserRepository;
@@ -20,6 +22,20 @@ public class UserStatisticsServiceImpl implements UserStatisticsService {
 
     private final UserRepository userRepository;
     private final UserRoleRepository userRoleRepository;
+
+    private static final int CURRENT_YEAR = LocalDate.now().getYear();
+
+    private void validateYear(int year) {
+        if (year > CURRENT_YEAR || year < 1900) {
+            throw new BusinessException(ErrorCode.INVALID_YEAR);
+        }
+    }
+
+    private void validateMonth(int month) {
+        if (month < 1 || month > 12) {
+            throw new BusinessException(ErrorCode.INVALID_MONTH);
+        }
+    }
 
     /**
      * 전체 사용자 조회
@@ -53,6 +69,10 @@ public class UserStatisticsServiceImpl implements UserStatisticsService {
     /** 일 단위 조회 (특정 연도, 특정 월, 특정 일) */
     @Transactional(readOnly = true)
     public List<DailyUserCountDto> getNewUsersByDay(int year, int month){
+        //날짜 입력값 유효성 검사
+        validateYear(year);
+        validateMonth(month);
+
         List<DailyUserCountDto> result = new ArrayList<>();
         LocalDate startDate = LocalDate.of(year, month, 1);
         int daysInMonth = startDate.lengthOfMonth();
@@ -72,6 +92,10 @@ public class UserStatisticsServiceImpl implements UserStatisticsService {
     /** 주 단위 조회 (특정 연도, 특정 월, 특정 주) */
     @Transactional(readOnly = true)
     public List<WeeklyUserCountDto> getNewUsersByWeek(int year, int month) {
+        //날짜 입력값 유효성 검사
+        validateYear(year);
+        validateMonth(month);
+
         List<WeeklyUserCountDto> result = new ArrayList<>();
 
         LocalDate firstDayOfMonth = LocalDate.of(year, month, 1);
@@ -108,6 +132,9 @@ public class UserStatisticsServiceImpl implements UserStatisticsService {
     /** 월 마다 */
     @Transactional(readOnly = true)
     public  List<MonthlyUserCountDto> getNewUsersByMonth(int year) {
+        //날짜 입력값 유효성 검사
+        validateYear(year);
+
         List<MonthlyUserCountDto> result = new ArrayList<>();
 
         for (int month = 1; month <= 12; month++) {
