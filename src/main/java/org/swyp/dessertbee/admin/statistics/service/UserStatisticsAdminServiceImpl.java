@@ -75,10 +75,6 @@ public class UserStatisticsAdminServiceImpl implements UserStatisticsAdminServic
         redisTemplate.opsForSet().add("active:weekly:" + week, userUuId);
         redisTemplate.opsForSet().add("active:monthly:" + month, userUuId);
 
-        // 자동 만료 설정 (데이터 정리용)
-        redisTemplate.expire("active:daily:" + today, 40, TimeUnit.DAYS);
-        redisTemplate.expire("active:weekly:" + week, 60, TimeUnit.DAYS);
-        redisTemplate.expire("active:monthly:" + month, 120, TimeUnit.DAYS);
     }
     /** DAU : 일일 활성 사용자 수 */
     public long getDAU(String date) {
