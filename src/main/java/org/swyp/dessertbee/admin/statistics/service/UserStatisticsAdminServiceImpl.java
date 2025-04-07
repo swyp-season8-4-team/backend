@@ -3,13 +3,9 @@ package org.swyp.dessertbee.admin.statistics.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.swyp.dessertbee.user.dto.response.UserCountResponseDto;
-import org.swyp.dessertbee.user.dto.response.UserStatisticsResponseDto;
+import org.swyp.dessertbee.user.dto.response.*;
 import org.swyp.dessertbee.user.service.UserStatisticsService;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 @Service
@@ -40,22 +36,23 @@ public class UserStatisticsAdminServiceImpl implements UserStatisticsAdminServic
     public UserCountResponseDto getTotalUserOwnersCount(){
         return userStatisticsService.getTotalUserOwnersCount();
     }
+
     /**
     * 신규 가입자 수 조회
     */
     /** 일 마다 */
     @Transactional(readOnly = true)
-    public UserCountResponseDto getNewUsersByDay(int year, int month, int day) {
-        return userStatisticsService.getNewUsersByDay(year, month, day);
+    public List<DailyUserCountDto> getNewUsersByDay(int year, int month) {
+        return userStatisticsService.getNewUsersByDay(year, month);
     }
     /** 주 마다 */
     @Transactional(readOnly = true)
-    public UserCountResponseDto getNewUsersByWeek(int year, int month, int week) {
-        return userStatisticsService.getNewUsersByWeek(year, month, week);
+    public List<WeeklyUserCountDto> getNewUsersByWeek(int year, int month){
+        return userStatisticsService.getNewUsersByWeek(year, month);
     }
     /** 월 마다 */
     @Transactional(readOnly = true)
-    public UserCountResponseDto getNewUsersByMonth(int year, int month) {
-        return userStatisticsService.getNewUsersByMonth(year, month);
+    public List<MonthlyUserCountDto> getNewUsersByMonth(int year) {
+        return userStatisticsService.getNewUsersByMonth(year);
     }
 }

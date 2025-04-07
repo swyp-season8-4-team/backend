@@ -9,12 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.swyp.dessertbee.admin.statistics.service.UserStatisticsAdminService;
-import org.swyp.dessertbee.user.dto.response.UserCountResponseDto;
-import org.swyp.dessertbee.user.dto.response.UserResponseDto;
-import org.swyp.dessertbee.user.dto.response.UserStatisticsResponseDto;
+import org.swyp.dessertbee.user.dto.response.*;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -58,26 +54,24 @@ public class UserStatisticsAdminController {
     // 특정 날짜(일) 기준 신규 가입자 수 조회
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/users/count/new/day")
-    public ResponseEntity<UserCountResponseDto> getNewUsersByDay(@RequestParam int year,
-                                                                 @RequestParam int month,
-                                                                 @RequestParam int day ){
-        return ResponseEntity.ok(userStatisticsAdminService.getNewUsersByDay(year, month, day));
+    public ResponseEntity<List<DailyUserCountDto>> getNewUsersByDay(@RequestParam int year,
+                                                                    @RequestParam int month){
+        return ResponseEntity.ok(userStatisticsAdminService.getNewUsersByDay(year, month));
     }
 
     // 특정 주 기준 신규 가입자 수 조회
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/users/count/new/week")
-    public ResponseEntity<UserCountResponseDto> getNewUsersByWeek(@RequestParam int year,
-                                                                  @RequestParam int month,
-                                                                  @RequestParam int week) {
-        return ResponseEntity.ok(userStatisticsAdminService.getNewUsersByWeek(year, month, week));
+    public ResponseEntity<List<WeeklyUserCountDto>> getNewUsersByWeek(@RequestParam int year,
+                                                                      @RequestParam int month){
+        return ResponseEntity.ok(userStatisticsAdminService.getNewUsersByWeek(year, month));
     }
 
     // 특정 월 기준 신규 가입자 수 조회
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/users/count/new/month")
-    public ResponseEntity<UserCountResponseDto> getNewUsersByMonth(@RequestParam int year, @RequestParam int month) {
-        return ResponseEntity.ok(userStatisticsAdminService.getNewUsersByMonth(year, month));
+    public ResponseEntity<List<MonthlyUserCountDto>> getNewUsersByMonth(@RequestParam int year) {
+        return ResponseEntity.ok(userStatisticsAdminService.getNewUsersByMonth(year));
     }
 }
 
