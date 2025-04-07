@@ -1,6 +1,7 @@
 package org.swyp.dessertbee.store.store.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -15,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.SearchService;
+import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
 import org.swyp.dessertbee.store.store.dto.request.StoreCreateRequest;
 import org.swyp.dessertbee.store.store.dto.request.StoreUpdateRequest;
 import org.swyp.dessertbee.store.store.dto.response.StoreDetailResponse;
@@ -39,25 +41,35 @@ public class StoreController {
     private final UserService userService;
 
     /** 가게 등록 */
-    @Operation(summary = "가게 등록", description = "업주가 가게를 등록합니다.")
-    @ApiResponse( responseCode = "201", description = "가게 등록 성공", content = @Content(schema = @Schema(implementation = StoreDetailResponse.class)))
-    @ApiErrorResponses({ErrorCode.STORE_CREATION_FAILED, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.STORE_TAG_SAVE_FAILED, ErrorCode.INVALID_TAG_SELECTION, ErrorCode.INVALID_TAG_INCLUDED})
+    @Operation(summary = "가게 등록 (completed)", description = "업주가 가게를 등록합니다.")
+    @ApiResponse(responseCode = "201", description = "가게 등록 성공")
+    @ApiErrorResponses({
+            ErrorCode.STORE_CREATION_FAILED,
+            ErrorCode.STORE_SERVICE_ERROR,
+            ErrorCode.STORE_TAG_SAVE_FAILED,
+            ErrorCode.INVALID_TAG_SELECTION,
+            ErrorCode.INVALID_TAG_INCLUDED
+    })
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<StoreDetailResponse> createStore(
+    public ResponseEntity<Void> createStore(
             @RequestPart("request") StoreCreateRequest request,
             @RequestPart(value = "storeImageFiles", required = false) List<MultipartFile> storeImageFiles,
             @RequestPart(value = "ownerPickImageFiles", required = false) List<MultipartFile> ownerPickImageFiles,
             @RequestPart(value = "menuImageFiles", required = false) List<MultipartFile> menuImageFiles) {
 
         // 가게 생성
-        StoreDetailResponse response = storeService.createStore(request, storeImageFiles, ownerPickImageFiles, menuImageFiles);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        storeService.createStore(request, storeImageFiles, ownerPickImageFiles, menuImageFiles);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     /** 반경 내 가게 조회 */
-    @Operation(summary = "반경 내 가게 조회", description = "지도 반경 내 가게를 조회합니다.")
-    @ApiResponse( responseCode = "200", description = "지도 반경 내 가게 조회 성공", content = @Content(schema = @Schema(implementation = StoreMapResponse.class)))
+    @Operation(summary = "반경 내 가게 조회 (completed)", description = "지도 반경 내 가게를 조회합니다.")
+    @ApiResponse(
+            responseCode = "200",
+            description = "지도 반경 내 가게 조회 성공",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = StoreMapResponse.class)))
+    )
     @ApiErrorResponses({ErrorCode.STORE_MAP_READ_FAILED, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.STORE_SEARCH_FAILED})
     @GetMapping("/map")
     public List<StoreMapResponse> getStoresByLocation(
@@ -92,8 +104,9 @@ public class StoreController {
     /**
      * 반경 내 가게 조회 (인증된 사용자의 취향 태그 기반)
      */
-    @Operation(summary = "반경 내 사용자 취향 가게 조회", description = "반경 내에서 사용자의 취향 태그를 가진 가게를 조회합니다.")
-    @ApiResponse( responseCode = "200", description = "지도 반경 내 사용자 취향 태그 가진 가게 조회 성공", content = @Content(schema = @Schema(implementation = StoreMapResponse.class)))
+    @Operation(summary = "반경 내 사용자 취향 가게 조회 (completed)", description = "반경 내에서 사용자의 취향 태그를 가진 가게를 조회합니다.")
+    @ApiResponse( responseCode = "200", description = "지도 반경 내 사용자 취향 태그 가진 가게 조회 성공",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = StoreMapResponse.class))))
     @ApiErrorResponses({ErrorCode.PREFERENCE_STORE_READ_FAILED, ErrorCode.STORE_SERVICE_ERROR})
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
     @GetMapping("/map/my-preferences")
@@ -126,24 +139,23 @@ public class StoreController {
 
     /** 가게 수정 */
     @Operation(summary = "가게 수정", description = "업주가 가게의 정보를 수정합니다.")
-    @ApiResponse( responseCode = "200", description = "가게 수정 성공", content = @Content(schema = @Schema(implementation = StoreDetailResponse.class)))
+    @ApiResponse( responseCode = "200", description = "가게 수정 성공")
     @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.UNAUTHORIZED_ACCESS, ErrorCode.STORE_UPDATE_FAILED})
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @PatchMapping(value = "/{storeUuid}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<StoreDetailResponse> updateStore(
+    public ResponseEntity<Void> updateStore(
             @PathVariable UUID storeUuid,
             @RequestPart("request") StoreUpdateRequest request,
             @RequestPart(value = "storeImageFiles", required = false) List<MultipartFile> storeImageFiles,
             @RequestPart(value = "ownerPickImageFiles", required = false) List<MultipartFile> ownerPickImageFiles,
             @RequestPart(value = "menuImageFiles", required = false) List<MultipartFile> menuImageFiles) {
 
-        StoreDetailResponse updatedStore = storeService.updateStore(storeUuid, request,
-                storeImageFiles, ownerPickImageFiles, menuImageFiles);
-        return ResponseEntity.ok(updatedStore);
+        storeService.updateStore(storeUuid, request, storeImageFiles, ownerPickImageFiles, menuImageFiles);
+        return ResponseEntity.ok().build();
     }
 
     /** 가게 삭제 */
-    @Operation(summary = "가게 삭제", description = "업주가 가게를 삭제합니다.")
+    @Operation(summary = "가게 삭제 (completed)", description = "업주가 가게를 삭제합니다.")
     @ApiResponse(responseCode = "204", description = "가게 삭제 성공")
     @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.UNAUTHORIZED_ACCESS, ErrorCode.STORE_DELETE_FAILED})
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")

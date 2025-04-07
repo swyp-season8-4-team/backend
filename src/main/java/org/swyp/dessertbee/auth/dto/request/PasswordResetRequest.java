@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.auth.dto.passwordreset;
+package org.swyp.dessertbee.auth.dto.request;
 
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;

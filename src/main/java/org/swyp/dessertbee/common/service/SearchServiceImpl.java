@@ -1,15 +1,15 @@
 package org.swyp.dessertbee.common.service;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.common.dto.PopularSearchResponse;
+import org.swyp.dessertbee.common.dto.PopularSearchesList;
 import org.swyp.dessertbee.common.dto.UserSearchHistoryDto;
 import org.swyp.dessertbee.common.exception.SearchExceptions.*;
 import org.swyp.dessertbee.common.entity.PopularSearchKeyword;
@@ -177,7 +177,7 @@ public class SearchServiceImpl implements SearchService {
      * 실시간 인기 검색어 조회 (이전 검색 횟수 차이 포함)
      */
     @Override
-    public Map<String, Object> getPopularSearchesWithDifference(int limit) {
+    public PopularSearchesList getPopularSearchesWithDifference(int limit) {
         try{
             ZSetOperations<String, String> zSetOps = redisTemplate.opsForZSet();
 
@@ -220,16 +220,11 @@ public class SearchServiceImpl implements SearchService {
             }
 
             // Redis에서 마지막 업데이트 시간 가져오기
-            String lastUpdatedTime = redisTemplate.opsForValue().get(POPULAR_SEARCH_UPDATE_TIME);
-            if (lastUpdatedTime == null) {
-                lastUpdatedTime = Instant.now().toString(); // 기본값 설정
-            }
+            String lastUpdatedTime = Optional.ofNullable(
+                    redisTemplate.opsForValue().get(POPULAR_SEARCH_UPDATE_TIME)
+            ).orElse(Instant.now().toString());
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("lastUpdatedTime", lastUpdatedTime);
-            response.put("searches", responseList);
-
-            return response;
+            return new PopularSearchesList(lastUpdatedTime, responseList);
         } catch (Exception e) {
             log.error("인기 검색어 기록 조회 처리 중 오류 발생", e);
             throw new SearchServiceException("인기 검색어 기록 조회 처리 중 오류가 발생했습니다.");

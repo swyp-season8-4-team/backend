@@ -1,6 +1,7 @@
 package org.swyp.dessertbee.store.store.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
+import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
 import org.swyp.dessertbee.store.store.exception.StoreExceptions.*;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.store.store.dto.response.*;
@@ -27,8 +29,9 @@ public class UserStoreController {
     private final UserStoreService userStoreService;
 
     /** 저장 리스트 전체 조회 */
-    @Operation(summary = "저장 리스트 전체 조회", description = "유저의 모든 가게저장 리스트를 조회합니다.")
-    @ApiResponse( responseCode = "200", description = "저장 리스트 전체 조회 성공", content = @Content(schema = @Schema(implementation = UserStoreListResponse.class)))
+    @Operation(summary = "저장 리스트 전체 조회 (completed)", description = "유저의 모든 가게저장 리스트를 조회합니다.")
+    @ApiResponse( responseCode = "200", description = "저장 리스트 전체 조회 성공",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = UserStoreListResponse.class))))
     @ApiErrorResponses({ErrorCode.USER_NOT_FOUND, ErrorCode.USER_STORE_SERVICE_ERROR, ErrorCode.INVALID_USER_UUID})
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
     @GetMapping("/{userUuid}/lists")
@@ -37,7 +40,7 @@ public class UserStoreController {
     }
 
     /** 저장 리스트 생성 */
-    @Operation(summary = "저장 리스트 생성", description = "유저의 가게 저장 리스트를 생성합니다.")
+    @Operation(summary = "저장 리스트 생성 (completed)", description = "유저의 가게 저장 리스트를 생성합니다.")
     @ApiResponse( responseCode = "200", description = "저장 리스트 생성 성", content = @Content(schema = @Schema(implementation = UserStoreListResponse.class)))
     @ApiErrorResponses({ErrorCode.USER_NOT_FOUND, ErrorCode.USER_STORE_SERVICE_ERROR, ErrorCode.INVALID_USER_UUID, ErrorCode.STORE_LIST_CREATION_FAILED})
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
@@ -49,7 +52,7 @@ public class UserStoreController {
     }
 
     /** listId로 특정 리스트 정보 조회 */
-    @Operation(summary = "저장 리스트 정보 조회", description = "저장 리스트 정보를 조회합니다.")
+    @Operation(summary = "저장 리스트 정보 조회 (completed)", description = "저장 리스트 정보를 조회합니다.")
     @ApiResponse( responseCode = "200", description = "저장 리스트 정보 조회 성공", content = @Content(schema = @Schema(implementation = UserStoreListSimpleResponse.class)))
     @ApiErrorResponses({ErrorCode.USER_STORE_SERVICE_ERROR, ErrorCode.STORE_LIST_NOT_FOUND})
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
@@ -59,7 +62,7 @@ public class UserStoreController {
     }
 
     /** 저장 리스트 수정 */
-    @Operation(summary = "저장 리스트 수정", description = "저장 리스트 정보를 수정합니다.")
+    @Operation(summary = "저장 리스트 수정 (completed)", description = "저장 리스트 정보를 수정합니다.")
     @ApiResponse( responseCode = "200", description = "저장 리스트 정보 수정 성공", content = @Content(schema = @Schema(implementation = UserStoreListResponse.class)))
     @ApiErrorResponses({ErrorCode.USER_STORE_SERVICE_ERROR, ErrorCode.STORE_LIST_NOT_FOUND, ErrorCode.STORE_LIST_UPDATE_FAILED})
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
@@ -71,7 +74,7 @@ public class UserStoreController {
     }
 
     /** 저장 리스트 삭제 */
-    @Operation(summary = "저장 리스트 삭제", description = "저장 리스트를 삭제합니다.")
+    @Operation(summary = "저장 리스트 삭제 (completed)", description = "저장 리스트를 삭제합니다.")
     @ApiResponse( responseCode = "204", description = "저장 리스트 삭제 성공")
     @ApiErrorResponses({ErrorCode.USER_STORE_SERVICE_ERROR, ErrorCode.STORE_LIST_NOT_FOUND, ErrorCode.STORE_LIST_DELETE_FAILED})
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
@@ -82,7 +85,7 @@ public class UserStoreController {
     }
 
     /** 리스트에 가게 추가 */
-    @Operation(summary = "리스트에 가게 저장", description = "해당 리스트에 가게를 저장합니다.")
+    @Operation(summary = "리스트에 가게 저장 (completed)", description = "해당 리스트에 가게를 저장합니다.")
     @ApiResponse( responseCode = "200", description = "리스트에 가게 저장 성공", content = @Content(schema = @Schema(implementation = SavedStoreResponse.class)))
     @ApiErrorResponses({ErrorCode.USER_STORE_SERVICE_ERROR, ErrorCode.STORE_LIST_NOT_FOUND, ErrorCode.STORE_SAVE_FAILED, ErrorCode.STORE_NOT_FOUND, ErrorCode.INVALID_STORE_UUID})
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
@@ -97,8 +100,9 @@ public class UserStoreController {
     }
 
     /** 리스트별 저장된 가게 위치 조회 */
-    @Operation(summary = "저장 리스트 내 가게 위치 조회", description = "특정 리스트에 저장된 가게들의 storeId, name, latitude, longitude, listId, iconColorId를 반환합니다.")
-    @ApiResponse( responseCode = "200", description = "저장 리스트 내 가게 위치 조회 성공")
+    @Operation(summary = "저장 리스트 내 가게 위치 조회 (completed)", description = "특정 리스트에 저장된 가게들의 storeId, name, latitude, longitude, listId, iconColorId를 반환합니다.")
+    @ApiResponse( responseCode = "200", description = "저장 리스트 내 가게 위치 조회 성공",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = StoreListLocationResponse.class))))
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
     @GetMapping("/lists/{listId}/stores/locations")
     public ResponseEntity<List<StoreListLocationResponse>> getStoresByListId(@PathVariable Long listId) {
@@ -106,7 +110,7 @@ public class UserStoreController {
     }
 
     /** 리스트별 저장된 가게 조회 */
-    @Operation(summary = "리스트에 저장된 가게 조회", description = "해당 리스트에 저장된 가게를 조회합니다.")
+    @Operation(summary = "리스트에 저장된 가게 조회 (completed)", description = "해당 리스트에 저장된 가게를 조회합니다.")
     @ApiResponse( responseCode = "200", description = "리스트에 저장된 가게 조회 성공", content = @Content(schema = @Schema(implementation = UserStoreListResponse.class)))
     @ApiErrorResponses({ErrorCode.USER_STORE_SERVICE_ERROR, ErrorCode.STORE_LIST_NOT_FOUND})
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
@@ -116,7 +120,7 @@ public class UserStoreController {
     }
 
     /** 리스트에서 가게 삭제 */
-    @Operation(summary = "리스트에 저장된 가게 삭제", description = "해당 리스트에 저장된 가게를 삭제합니다.")
+    @Operation(summary = "리스트에 저장된 가게 삭제 (completed)", description = "해당 리스트에 저장된 가게를 삭제합니다.")
     @ApiResponse( responseCode = "204", description = "리스트에 저장된 가게 삭제 성공")
     @ApiErrorResponses({ErrorCode.USER_STORE_SERVICE_ERROR, ErrorCode.STORE_LIST_NOT_FOUND, ErrorCode.STORE_NOT_FOUND, ErrorCode.SAVED_STORE_NOT_FOUND, ErrorCode.SAVED_STORE_DELETE_FAILED})
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")

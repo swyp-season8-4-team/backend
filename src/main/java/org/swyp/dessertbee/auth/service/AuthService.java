@@ -1,11 +1,11 @@
 package org.swyp.dessertbee.auth.service;
 
-import org.swyp.dessertbee.auth.dto.login.LoginRequest;
-import org.swyp.dessertbee.auth.dto.login.LoginResponse;
-import org.swyp.dessertbee.auth.dto.TokenResponse;
-import org.swyp.dessertbee.auth.dto.logout.LogoutResponse;
-import org.swyp.dessertbee.auth.dto.signup.SignUpRequest;
-import org.swyp.dessertbee.auth.dto.passwordreset.PasswordResetRequest;
+import org.swyp.dessertbee.auth.dto.request.LoginRequest;
+import org.swyp.dessertbee.auth.dto.response.LoginResponse;
+import org.swyp.dessertbee.auth.dto.response.TokenResponse;
+import org.swyp.dessertbee.auth.dto.response.LogoutResponse;
+import org.swyp.dessertbee.auth.dto.request.SignUpRequest;
+import org.swyp.dessertbee.auth.dto.request.PasswordResetRequest;
 import org.swyp.dessertbee.auth.exception.AuthExceptions.*;
 
 import java.util.UUID;
@@ -18,15 +18,17 @@ public interface AuthService {
      * 리프레시 토큰을 저장하거나 업데이트
      * @param userUuid 사용자 uuid
      * @param refreshToken 리프레시 토큰
+     * @param provider 인증 제공자 (local, kakao 등)
+     * @param providerId 제공자별 식별자 (소셜 로그인의 경우)
      */
-    void saveRefreshToken(UUID userUuid, String refreshToken);
+    String saveRefreshToken(UUID userUuid, String refreshToken, String provider, String providerId, String deviceId);
 
     /**
      * 리프레시 토큰을 통해 새로운 액세스 토큰 발급
      * @param refreshToken 리프레시 토큰
      * @return 새로운 액세스 토큰 응답
      */
-    TokenResponse refreshAccessToken(String refreshToken);
+    TokenResponse refreshAccessToken(String refreshToken, String deviceId);
 
     /**
      * 리프레시 토큰 무효화 (로그아웃)
@@ -42,8 +44,7 @@ public interface AuthService {
      * @throws InvalidVerificationTokenException 유효하지 않은 인증 토큰
      * @throws DuplicateEmailException 이메일 중복
      */
-    LoginResponse signup(SignUpRequest request, String verificationToken);
-
+    LoginResponse signup(SignUpRequest request, String verificationToken, String deviceId);
 
     /**
      * 로그인 처리
@@ -51,7 +52,7 @@ public interface AuthService {
      * @return 로그인 응답 정보
      * @throws InvalidCredentialsException 잘못된 인증 정보
      */
-    LoginResponse login(LoginRequest request);
+    LoginResponse login(LoginRequest request, String deviceId);
 
     /**
      * 비밀번호 재설정
@@ -63,11 +64,16 @@ public interface AuthService {
 
     /**
      * 로그아웃 처리
-     * @param token 로그인 요청 정보
+     * @param token 액세스 토큰
+     * @return 로그아웃 응답 정보
+     */
+    LogoutResponse logout(String token, String deviceId);
+
+    /**
+     * 개발 환경용 로그인 처리
+     * @param request 로그인 요청 정보
      * @return 로그인 응답 정보
      * @throws InvalidCredentialsException 잘못된 인증 정보
      */
-    LogoutResponse logout(String token);
-
-    LoginResponse devLogin(LoginRequest request);
+    LoginResponse devLogin(LoginRequest request, String deviceId);
 }

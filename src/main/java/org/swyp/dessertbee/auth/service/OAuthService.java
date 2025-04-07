@@ -4,10 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.swyp.dessertbee.auth.dto.login.LoginResponse;
+import org.swyp.dessertbee.auth.dto.response.LoginResponse;
 import org.swyp.dessertbee.auth.enums.AuthProvider;
 import org.swyp.dessertbee.common.exception.BusinessException;
-import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.auth.exception.OAuthExceptions.*;
 /**
  * OAuth 인증 처리를 담당하는 공통 서비스
@@ -29,7 +28,7 @@ public class OAuthService {
      * @return 로그인 응답 (JWT 토큰 포함)
      */
     @Transactional
-    public LoginResponse processOAuthLogin(String code, String providerName) {
+    public LoginResponse processOAuthLogin(String code, String providerName, String deviceId) {
         try {
             // 문자열을 AuthProvider enum으로 변환
             AuthProvider provider = AuthProvider.fromString(providerName);
@@ -40,7 +39,7 @@ public class OAuthService {
 
             // enum을 사용하여 적절한 서비스 호출
             return switch (provider) {
-                case KAKAO -> kakaoOAuthService.processKakaoLogin(code);
+                case KAKAO -> kakaoOAuthService.processKakaoLogin(code, deviceId);
                 // 추후 다른 OAuth 제공자 추가
                 default -> throw new InvalidProviderException("아직 구현되지 않은 OAuth 제공자입니다: " + provider.getProviderName());
             };

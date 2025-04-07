@@ -26,7 +26,7 @@ public class MbtiController {
     /**
      * 모든 MBTI 정보를 조회하는 API 엔드포인트
      */
-    @Operation(summary = "모든 MBTI 조회", description = "시스템에 등록된 모든 MBTI 정보를 조회합니다.")
+    @Operation(summary = "모든 MBTI 조회 (completed)", description = "시스템에 등록된 모든 MBTI 정보를 조회합니다.")
     @ApiResponse(
             responseCode = "200",
             description = "MBTI 조회 성공",
@@ -44,7 +44,7 @@ public class MbtiController {
      * 특정 ID의 MBTI 정보를 조회하는 API 엔드포인트
      * @param id MBTI ID
      */
-    @Operation(summary = "ID로 MBTI 조회", description = "특정 ID의 MBTI 정보를 조회합니다.")
+    @Operation(summary = "ID로 MBTI 조회 (completed)", description = "특정 ID의 MBTI 정보를 조회합니다.")
     @ApiResponse(
             responseCode = "200",
             description = "MBTI 조회 성공",
@@ -66,7 +66,7 @@ public class MbtiController {
      * MBTI 유형으로 MBTI 정보를 조회하는 API 엔드포인트
      * @param mbtiType MBTI 유형 문자열
      */
-    @Operation(summary = "유형으로 MBTI 조회", description = "MBTI 유형(예: ENFP, INTJ)으로 MBTI 정보를 조회합니다.")
+    @Operation(summary = "유형으로 MBTI 조회 (completed)", description = "MBTI 유형(예: ENFP, INTJ)으로 MBTI 정보를 조회합니다.")
     @ApiResponse(
             responseCode = "200",
             description = "MBTI 조회 성공",

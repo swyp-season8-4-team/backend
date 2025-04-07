@@ -40,6 +40,14 @@ public class StoreOperatingHour {
 
     private Boolean isClosed; // 해당 요일 휴무 여부
 
+    // 휴무 주기 설정
+    @Enumerated(EnumType.STRING)
+    @Column(length = 10)
+    private RegularClosureType regularClosureType; // 정기 휴무 유형 (매주, 매월)
+
+    @Column(length = 50)
+    private String regularClosureWeeks; // 매월 휴무 주차 정보 (예: "1,3" - 첫째주, 셋째주)
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

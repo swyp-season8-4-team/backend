@@ -31,7 +31,7 @@ public class PreferenceController {
      * @return HTTP 200 OK와 함께 선호도 정보 리스트 반환
      * @apiNote GET /api/preferences
      */
-    @Operation(summary = "모든 선호도 조회", description = "시스템에 등록된 모든 선호도 정보를 조회합니다.")
+    @Operation(summary = "모든 선호도 조회 (completed)", description = "시스템에 등록된 모든 선호도 정보를 조회합니다.")
     @ApiResponse(
             responseCode = "200",
             description = "선호도 조회 성공",

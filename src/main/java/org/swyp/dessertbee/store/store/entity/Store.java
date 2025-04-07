@@ -95,21 +95,18 @@ public class Store {
         }
     }
 
-    public void updateInfo(String name, String phone, String address, String storeLink,
+    public void updateInfo(String name, String phone, String address,
                            BigDecimal latitude, BigDecimal longitude, String description,
-                           Boolean animalYn, Boolean tumblerYn, Boolean parkingYn,
-                           List<String> notice) {
+                           Boolean animalYn, Boolean tumblerYn, Boolean parkingYn) {
         this.name = name;
         this.phone = phone;
         this.address = address;
-        this.storeLink = storeLink;
         this.latitude = latitude;
         this.longitude = longitude;
         this.description = description;
         this.animalYn = animalYn;
         this.tumblerYn = tumblerYn;
         this.parkingYn = parkingYn;
-        this.notice = notice;
     }
 
     public void softDelete(){

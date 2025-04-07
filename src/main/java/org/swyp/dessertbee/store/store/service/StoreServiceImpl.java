@@ -1,12 +1,17 @@
 package org.swyp.dessertbee.store.store.service;
 
-import jakarta.transaction.Transactional;
+import com.nimbusds.jose.util.Pair;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.preference.exception.PreferenceExceptions.*;
+import org.swyp.dessertbee.store.menu.converter.MenuConverter;
+import org.swyp.dessertbee.store.menu.entity.Menu;
+import org.swyp.dessertbee.store.menu.repository.MenuRepository;
 import org.swyp.dessertbee.store.menu.service.MenuService;
+import org.swyp.dessertbee.store.store.dto.request.BaseStoreRequest;
 import org.swyp.dessertbee.store.store.exception.StoreExceptions.*;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.user.exception.UserExceptions.*;
@@ -66,20 +71,21 @@ public class StoreServiceImpl implements StoreService {
     private final SavedMateRepository savedMateRepository;
     private final UserService userService;
     private final ReviewRepository reviewRepository;
+    private final StoreLinkRepository storeLinkRepository;
+    private final StoreBreakTimeRepository storeBreakTimeRepository;
+    private final MenuRepository menuRepository;
 
     /** 가게 등록 (이벤트, 쿠폰, 메뉴 + 이미지 포함) */
     @Override
-    public StoreDetailResponse createStore(StoreCreateRequest request,
+    public void createStore(StoreCreateRequest request,
                                            List<MultipartFile> storeImageFiles,
                                            List<MultipartFile> ownerPickImageFiles,
                                            List<MultipartFile> menuImageFiles) {
-        try{
+        try {
+            // 점주 ID 조회
             Long ownerId = userRepository.findIdByUserUuid(request.getUserUuid());
 
-            if (menuImageFiles == null) {
-                menuImageFiles = Collections.emptyList(); // menuImageFiles가 null이면 빈 리스트로 처리
-            }
-
+            // 가게 저장
             Store store = storeRepository.save(
                     Store.builder()
                             .ownerId(ownerId)
@@ -87,16 +93,17 @@ public class StoreServiceImpl implements StoreService {
                             .name(request.getName())
                             .phone(request.getPhone())
                             .address(request.getAddress())
-                            .storeLink(request.getStoreLink())
                             .latitude(request.getLatitude())
                             .longitude(request.getLongitude())
                             .description(request.getDescription())
                             .animalYn(Boolean.TRUE.equals(request.getAnimalYn()))
                             .tumblerYn(Boolean.TRUE.equals(request.getTumblerYn()))
                             .parkingYn(Boolean.TRUE.equals(request.getParkingYn()))
-                            .notice(request.getNotice())
                             .build()
             );
+
+            // 가게 링크 저장
+            validateAndSaveStoreLinks(store, request.getStoreLinks());
 
             // 가게 통계 초기화
             storeStatisticsRepository.save(
@@ -105,65 +112,211 @@ public class StoreServiceImpl implements StoreService {
                             .views(0)
                             .saves(0)
                             .reviews(0)
+                            .createDate(LocalDate.now())  // 가게가 등록된 날짜
                             .build()
             );
 
-            // 가게 대표 사진 S3 업로드 및 저장
-            if (storeImageFiles != null && !storeImageFiles.isEmpty()) {
-                String folder = "store/" + store.getStoreId();
-                imageService.uploadAndSaveImages(storeImageFiles, ImageType.STORE, store.getStoreId(), folder);
-            }
-
-            // 사장님 픽 이미지 S3 업로드 및 저장
-            if (ownerPickImageFiles != null && !ownerPickImageFiles.isEmpty()) {
-                String folder = "ownerpick/" + store.getStoreId();
-                imageService.uploadAndSaveImages(ownerPickImageFiles, ImageType.OWNERPICK, store.getStoreId(), folder);
-            }
+            // 이미지 처리
+            processStoreImages(store, storeImageFiles, null);
+            processOwnerPickImages(store, ownerPickImageFiles, null);
 
             // 태그 저장
             saveStoreTags(store, request.getTagIds());
 
-            // 메뉴 이미지 파일을 Map<String, MultipartFile>로 변환 (이름을 키로 사용)
-            Map<String, MultipartFile> menuImageMap = menuImageFiles.stream()
-                    .collect(Collectors.toMap(MultipartFile::getOriginalFilename, file -> file, (a, b) -> b));
-
-            // 메뉴 저장 (한 메뉴당 하나의 이미지만 업로드 가능)
-            menuService.addMenus(store.getStoreUuid(), request.getMenus(), menuImageMap);
+            // 메뉴 저장
+            processMenus(store, request.getMenus(), menuImageFiles, false);
 
             // 영업 시간 저장
-            if (request.getOperatingHours() != null) {
-                List<StoreOperatingHour> operatingHours = request.getOperatingHours().stream()
-                        .map(hour -> StoreOperatingHour.builder()
-                                .storeId(store.getStoreId())
-                                .dayOfWeek(hour.getDayOfWeek())
-                                .openingTime(hour.getOpeningTime())
-                                .closingTime(hour.getClosingTime())
-                                .lastOrderTime(hour.getLastOrderTime())
-                                .isClosed(hour.getIsClosed())
-                                .build())
-                        .collect(Collectors.toList());
-                storeOperatingHourRepository.saveAll(operatingHours);
-            }
+            saveOrUpdateOperatingHours(store, request.getOperatingHours());
 
             // 휴무일 저장
-            if (request.getHolidays() != null) {
-                List<StoreHoliday> holidays = request.getHolidays().stream()
-                        .map(holiday -> StoreHoliday.builder()
-                                .storeId(store.getStoreId())
-                                .holidayDate(LocalDate.parse(holiday.getDate()))
-                                .reason(holiday.getReason())
-                                .build())
-                        .collect(Collectors.toList());
-                storeHolidayRepository.saveAll(holidays);
-            }
-
-            return getStoreDetails(store.getStoreUuid());
-        } catch (StoreCreationFailedException e){
+            //saveOrUpdateHolidays(store, request.getHolidays());
+        } catch (StoreCreationFailedException e) {
             log.warn("가게 등록 실패 - 업주Uuid: {}, 사유: {}", request.getUserUuid(), e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("로그인 처리 중 오류 발생 - 업주Uuid: {}", request.getUserUuid(), e);
+            log.error("가게 등록 처리 중 오류 발생 - 업주Uuid: {}", request.getUserUuid(), e);
             throw new StoreServiceException("가게 등록 처리 중 오류가 발생했습니다.");
+        }
+    }
+
+    /**
+     * 영업 시간 저장/갱신 메서드
+     */
+    private void saveOrUpdateOperatingHours(Store store, List<BaseStoreRequest.OperatingHourRequest> operatingHoursRequest) {
+        if (operatingHoursRequest != null) {
+            // 기존 영업 시간 데이터 삭제
+            storeOperatingHourRepository.deleteByStoreId(store.getStoreId());
+
+            // 기존 휴게 시간 데이터 삭제
+            storeBreakTimeRepository.deleteByOperatingHourIdIn(
+                    storeOperatingHourRepository.findIdsByStoreId(store.getStoreId())
+            );
+
+            // 영업 시간 데이터 저장
+            List<StoreOperatingHour> operatingHours = operatingHoursRequest.stream()
+                    .map(hour -> StoreOperatingHour.builder()
+                            .storeId(store.getStoreId())
+                            .dayOfWeek(hour.getDayOfWeek())
+                            .openingTime(hour.getOpeningTime())
+                            .closingTime(hour.getClosingTime())
+                            .lastOrderTime(hour.getLastOrderTime())
+                            .isClosed(hour.getIsClosed())
+                            .regularClosureType(hour.getRegularClosureType())
+                            .regularClosureWeeks(hour.getRegularClosureWeeks())
+                            .build())
+                    .toList();
+
+            List<StoreOperatingHour> savedOperatingHours = storeOperatingHourRepository.saveAll(operatingHours);
+
+            // 휴게 시간 데이터 저장
+            List<StoreBreakTime> breakTimes = new ArrayList<>();
+            for (int i = 0; i < operatingHoursRequest.size(); i++) {
+                BaseStoreRequest.OperatingHourRequest hourRequest = operatingHoursRequest.get(i);
+                StoreOperatingHour savedHour = savedOperatingHours.get(i);
+
+                if (hourRequest.getBreakTimes() != null && !hourRequest.getBreakTimes().isEmpty()) {
+                    List<StoreBreakTime> dayBreakTimes = hourRequest.getBreakTimes().stream()
+                            .map(breakTime -> StoreBreakTime.builder()
+                                    .operatingHourId(savedHour.getId())
+                                    .startTime(breakTime.getStartTime())
+                                    .endTime(breakTime.getEndTime())
+                                    .build())
+                            .toList();
+                    breakTimes.addAll(dayBreakTimes);
+                }
+            }
+
+            if (!breakTimes.isEmpty()) {
+                storeBreakTimeRepository.saveAll(breakTimes);
+            }
+        }
+    }
+
+    /*
+     * 휴무일 저장/갱신 메서드
+     *
+     * private void saveOrUpdateHolidays(Store store, List<BaseStoreRequest.HolidayRequest> holidaysRequest) {
+     *     if (holidaysRequest != null) {
+     *         storeHolidayRepository.deleteByStoreId(store.getStoreId());
+     *         List<StoreHoliday> holidays = holidaysRequest.stream()
+     *                 .map(holiday -> StoreHoliday.builder()
+     *                         .storeId(store.getStoreId())
+     *                         .holidayDate(LocalDate.parse(holiday.getDate()))
+     *                         .reason(holiday.getReason())
+     *                         .build())
+     *                 .toList();
+     *         storeHolidayRepository.saveAll(holidays);
+     *     }
+     * }
+     */
+
+    /**
+     * 링크 유효성 검사 및 저장 메서드
+     * List<? extends StoreLinkRequest> 타입으로 변경하여 제네릭 타입 호환성 문제 해결
+     */
+    private void validateAndSaveStoreLinks(Store store, List<? extends BaseStoreRequest.StoreLinkRequest> linkRequests) {
+        if (linkRequests != null && !linkRequests.isEmpty()) {
+            // 기본 링크 중복 체크
+            long primaryCount = linkRequests.stream()
+                    .filter(link -> Boolean.TRUE.equals(link.getIsPrimary()))
+                    .count();
+
+            if (primaryCount > 1) {
+                throw new DuplicatePrimaryLinkException();
+            }
+
+            List<StoreLink> links = linkRequests.stream()
+                    .map(linkReq -> StoreLink.builder()
+                            .storeId(store.getStoreId())
+                            .url(linkReq.getUrl())
+                            .isPrimary(Boolean.TRUE.equals(linkReq.getIsPrimary()))
+                            .build())
+                    .toList();
+
+            storeLinkRepository.saveAll(links);
+        }
+    }
+
+    /**
+     * 가게 이미지 처리 메서드
+     */
+    private void processStoreImages(Store store, List<MultipartFile> storeImageFiles, List<Long> deleteImageIds) {
+        if (storeImageFiles != null && !storeImageFiles.isEmpty()) {
+            String folder = "store/" + store.getStoreId();
+            if (deleteImageIds != null) {
+                // 업데이트 시 호출
+                imageService.updatePartialImages(deleteImageIds, storeImageFiles, ImageType.STORE, store.getStoreId(), folder);
+            } else {
+                // 생성 시 호출
+                imageService.uploadAndSaveImages(storeImageFiles, ImageType.STORE, store.getStoreId(), folder);
+            }
+        }
+    }
+
+    /**
+     * 사장님 픽 이미지 처리 메서드
+     */
+    private void processOwnerPickImages(Store store, List<MultipartFile> ownerPickImageFiles, List<Long> deleteImageIds) {
+        if (ownerPickImageFiles != null && !ownerPickImageFiles.isEmpty()) {
+            String folder = "ownerpick/" + store.getStoreId();
+            if (deleteImageIds != null) {
+                // 업데이트 시 호출
+                imageService.updatePartialImages(deleteImageIds, ownerPickImageFiles, ImageType.OWNERPICK, store.getStoreId(), folder);
+            } else {
+                // 생성 시 호출
+                imageService.uploadAndSaveImages(ownerPickImageFiles, ImageType.OWNERPICK, store.getStoreId(), folder);
+            }
+        }
+    }
+
+    /**
+     * 메뉴 이미지 맵 생성 유틸리티 메서드
+     */
+    private Map<String, MultipartFile> createMenuImageMap(List<MultipartFile> menuImageFiles) {
+        if (menuImageFiles == null) {
+            return Collections.emptyMap();
+        }
+        return menuImageFiles.stream()
+                .collect(Collectors.toMap(MultipartFile::getOriginalFilename, file -> file, (a, b) -> b));
+    }
+
+    /**
+     * 메뉴 처리 메서드
+     */
+    private <T> void processMenus(Store store, List<T> menuRequests, List<MultipartFile> menuImageFiles, boolean isUpdate) {
+        if (menuRequests != null && !menuRequests.isEmpty()) {
+            Map<String, MultipartFile> menuImageMap = createMenuImageMap(menuImageFiles);
+
+            if (isUpdate) {
+                // 업데이트 시 처리 로직
+                if (menuRequests.get(0) instanceof StoreUpdateRequest.MenuRequest) {
+                    @SuppressWarnings("unchecked")
+                    List<StoreUpdateRequest.MenuRequest> typedRequests = (List<StoreUpdateRequest.MenuRequest>) menuRequests;
+
+                    for (StoreUpdateRequest.MenuRequest menuRequest : typedRequests) {
+                        MultipartFile file = null;
+                        if (menuRequest.getImageFileKey() != null) {
+                            file = menuImageMap.get(menuRequest.getImageFileKey());
+                        }
+
+                        MenuCreateRequest menuCreateRequest = MenuConverter.convertToMenuCreateRequest(menuRequest);
+
+                        if (menuRequest.getMenuUuid() != null) {
+                            menuService.updateMenu(store.getStoreUuid(), menuRequest.getMenuUuid(), menuCreateRequest, file);
+                        } else {
+                            menuService.addMenu(store.getStoreUuid(), menuCreateRequest, file);
+                        }
+                    }
+                }
+            } else {
+                // 생성 시 처리 로직
+                if (menuRequests.get(0) instanceof MenuCreateRequest) {
+                    @SuppressWarnings("unchecked")
+                    List<MenuCreateRequest> typedRequests = (List<MenuCreateRequest>) menuRequests;
+                    menuService.addMenus(store.getStoreUuid(), typedRequests, menuImageMap);
+                }
+            }
         }
     }
 
@@ -190,7 +343,7 @@ public class StoreServiceImpl implements StoreService {
                             .store(store)
                             .tag(tag)
                             .build())
-                    .collect(Collectors.toList());
+                    .toList();
 
             storeTagRelationRepository.saveAll(tagRelations);
         } catch (StoreTagSaveFailedException e){
@@ -210,7 +363,7 @@ public class StoreServiceImpl implements StoreService {
 
             return stores.stream()
                     .map(this::convertToStoreMapResponse)
-                    .collect(Collectors.toList());
+                    .toList();
         } catch (StoreMapReadException e){
             log.warn("반경 내 가게 조회 실패 - 사유: {}", e.getMessage());
             throw e;
@@ -233,7 +386,7 @@ public class StoreServiceImpl implements StoreService {
 
             return stores.stream()
                     .map(this::convertToStoreMapResponse)
-                    .collect(Collectors.toList());
+                    .toList();
         } catch (StoreMapReadException e){
             log.warn("반경 내 가게 조회 실패 - 사유: {}", e.getMessage());
             throw e;
@@ -251,7 +404,7 @@ public class StoreServiceImpl implements StoreService {
 
             return stores.stream()
                     .map(this::convertToStoreMapResponse)
-                    .collect(Collectors.toList());
+                    .toList();
         } catch (StoreSearchFailedException e){
             log.warn("반경 내 가게 검색 실패 - 사유: {}", e.getMessage());
             throw e;
@@ -275,7 +428,7 @@ public class StoreServiceImpl implements StoreService {
             List<Long> preferenceTagIds = user.getUserPreferences().stream()
                     .map(up -> up.getPreference().getId())
                     .distinct()
-                    .collect(Collectors.toList());
+                    .toList();
 
             if (preferenceTagIds.isEmpty()) {
                 throw new UserPreferencesNotFoundException();
@@ -286,7 +439,7 @@ public class StoreServiceImpl implements StoreService {
 
             return stores.stream()
                     .map(this::convertToStoreMapResponse)
-                    .collect(Collectors.toList());
+                    .toList();
         } catch (PreferenceStoreReadException e){
             log.warn("반경 내 사용자 취향 맞춤 가게 조회 실패 - 사유: {}", e.getMessage());
             throw e;
@@ -296,14 +449,211 @@ public class StoreServiceImpl implements StoreService {
         }
     }
 
-    /** Store 엔티티를 StoreMapResponse DTO로 변환 */
+    /**
+     * 가게 링크 조회 및 대표 링크 추출 메서드
+     */
+    private Pair<List<String>, String> getStoreLinksAndPrimary(Long storeId) {
+        List<StoreLink> storeLinks = storeLinkRepository.findByStoreId(storeId);
+
+        String primaryStoreLink = storeLinks.stream()
+                .filter(StoreLink::getIsPrimary)
+                .map(StoreLink::getUrl)
+                .findFirst()
+                .orElse(null);
+
+        List<String> linkUrls = storeLinks.stream()
+                .map(StoreLink::getUrl)
+                .toList();
+
+        return Pair.of(linkUrls, primaryStoreLink);
+    }
+
+    /**
+     * 운영 시간 조회 및 변환 메서드
+     */
+    private List<OperatingHourResponse> getOperatingHoursResponse(Long storeId) {
+        List<StoreOperatingHour> operatingHours = storeOperatingHourRepository.findByStoreId(storeId);
+
+        return operatingHours.stream()
+                .map(o -> {
+                    // 휴게시간 조회
+                    List<BreakTimeResponse> breakTimes = storeBreakTimeRepository.findByOperatingHourId(o.getId())
+                            .stream()
+                            .map(b -> BreakTimeResponse.builder()
+                                    .startTime(b.getStartTime())
+                                    .endTime(b.getEndTime())
+                                    .build())
+                            .toList();
+
+                    return OperatingHourResponse.builder()
+                            .dayOfWeek(o.getDayOfWeek())
+                            .openingTime(o.getOpeningTime())
+                            .closingTime(o.getClosingTime())
+                            .lastOrderTime(o.getLastOrderTime())
+                            .isClosed(o.getIsClosed())
+                            .regularClosureType(o.getRegularClosureType() != null ? o.getRegularClosureType().name() : null)
+                            .regularClosureWeeks(o.getRegularClosureWeeks())
+                            .breakTimes(breakTimes)
+                            .build();
+                })
+                .toList();
+    }
+
+    /**
+     * 휴무일 조회 및 변환 메서드
+     */
+    private List<HolidayResponse> getHolidaysResponse(Long storeId) {
+        List<StoreHoliday> holidays = storeHolidayRepository.findByStoreId(storeId);
+
+        return holidays.stream()
+                .map(h -> HolidayResponse.builder()
+                        .date(h.getHolidayDate().toString())
+                        .reason(h.getReason())
+                        .build())
+                .toList();
+    }
+
+    /**
+     * 가게의 Top3 취향 태그 조회 메서드
+     */
+    private List<String> getTop3Preferences(Long storeId) {
+        List<Object[]> preferenceCounts = savedStoreRepository.findTop3PreferencesByStoreId(storeId);
+
+        return preferenceCounts.stream()
+                .map(result -> (String) result[0])
+                .toList();
+    }
+
+    /**
+     * 사용자의 가게 저장 정보 조회 메서드
+     */
+    private Pair<Boolean, Long> getUserStoreSavedInfo(Store store, UserEntity user) {
+        if (user == null) {
+            return Pair.of(false, null);
+        }
+
+        Optional<SavedStore> savedStoreOpt = savedStoreRepository.findFirstByStoreAndUserId(store, user.getId());
+        boolean saved = savedStoreOpt.isPresent();
+        Long savedListId = savedStoreOpt.map(s -> s.getUserStoreList().getId()).orElse(null);
+
+        log.info("사용자가 가게를 저장했는지 여부: {}, savedListId: {}", saved, savedListId);
+        return Pair.of(saved, savedListId);
+    }
+
+    /**
+     * Store 엔티티를 StoreMapResponse DTO로 변환
+     */
     private StoreMapResponse convertToStoreMapResponse(Store store) {
-        List<StoreOperatingHour> operatingHours = storeOperatingHourRepository.findByStoreId(store.getStoreId()); // 변환 없이 그대로 전달
+        List<OperatingHourResponse> operatingHours = getOperatingHoursResponse(store.getStoreId());
+        List<HolidayResponse> holidays = getHolidaysResponse(store.getStoreId());
         int totalReviewCount = storeReviewRepository.countByStoreIdAndDeletedAtIsNull(store.getStoreId());
         List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(store.getStoreId());
         List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, store.getStoreId());
 
-        return StoreMapResponse.fromEntity(store, operatingHours, totalReviewCount, tags, storeImages);
+        return StoreMapResponse.fromEntity(store, operatingHours, holidays, totalReviewCount, tags, storeImages);
+    }
+
+    /**
+     * 가게 한줄 리뷰 조회 및 변환 메서드
+     */
+    private List<StoreReviewResponse> getStoreReviewResponses(Long storeId) {
+        List<StoreReview> reviews = storeReviewRepository.findByStoreIdAndDeletedAtIsNull(storeId);
+        Map<Long, List<String>> reviewImagesMap = imageService.getImagesByTypeAndIds(ImageType.SHORT,
+                reviews.stream().map(StoreReview::getReviewId).toList());
+
+        return reviews.stream().map(review -> {
+            Long reviewerId = userRepository.findIdByUserUuid(review.getUserUuid());
+            UserEntity reviewer = userRepository.findById(reviewerId)
+                    .orElseThrow(() -> new UserNotFoundException());
+            List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, reviewer.getId());
+
+            return StoreReviewResponse.fromEntity(review, reviewer,
+                    profileImage.isEmpty() ? null : profileImage.get(0),
+                    reviewImagesMap.getOrDefault(review.getReviewId(), Collections.emptyList()));
+        }).toList();
+    }
+
+    /**
+     * 가게 커뮤니티 리뷰 조회 및 변환 메서드
+     */
+    private List<ReviewSummaryResponse> getCommunityReviewResponses(Long storeId) {
+        List<Review> storeReviews = reviewRepository.findByStoreIdAndDeletedAtIsNull(storeId);
+
+        return storeReviews.stream().map(review -> {
+            UserEntity reviewer = userRepository.findById(review.getUserId())
+                    .orElseThrow(() -> new UserNotFoundException());
+
+            List<String> profileImageList = imageService.getImagesByTypeAndId(ImageType.PROFILE, reviewer.getId());
+            String profileImage = profileImageList.isEmpty() ? null : profileImageList.get(0);
+
+            String thumbnail = null;
+            String content = "";
+
+            for (ReviewContent contentItem : review.getReviewContents()) {
+                if (thumbnail == null && "image".equals(contentItem.getType())) {
+                    thumbnail = contentItem.getValue();
+                } else if (content.isEmpty() && "text".equals(contentItem.getType())) {
+                    content = contentItem.getValue();
+                }
+
+                if (thumbnail != null && !content.isEmpty()) {
+                    break;
+                }
+            }
+
+            return ReviewSummaryResponse.builder()
+                    .reviewUuid(review.getReviewUuid())
+                    .userUuid(reviewer.getUserUuid())
+                    .nickname(reviewer.getNickname())
+                    .profileImage(profileImage)
+                    .thumbnail(thumbnail)
+                    .title(review.getTitle())
+                    .content(content)
+                    .createdAt(review.getCreatedAt())
+                    .updatedAt(review.getUpdatedAt())
+                    .build();
+        }).toList();
+    }
+
+    /**
+     * 디저트 메이트 조회 및 변환 메서드
+     */
+    private List<MateResponse> getMateResponses(Long storeId, Long userId) {
+        List<Mate> mates = mateRepository.findByStoreIdAndDeletedAtIsNull(storeId);
+
+        return mates.stream().map(mate -> {
+            UserEntity mateCreator = userRepository.findById(mate.getUserId())
+                    .orElseThrow(() -> new UserNotFoundException());
+            String mateCategory = mateCategoryRepository.findById(mate.getMateCategoryId())
+                    .map(MateCategory::getName).orElse("알 수 없음");
+            List<String> mateThumbnail = imageService.getImagesByTypeAndId(ImageType.MATE, mate.getMateId());
+
+            //저장했는지 유무 확인
+            SavedMate savedMate = userId != null ?
+                    savedMateRepository.findByMate_MateIdAndUserId(mate.getMateId(), userId) : null;
+            boolean mateSaved = (savedMate != null);
+
+            return MateResponse.builder()
+                    .mateUuid(mate.getMateUuid())
+                    .mateCategory(mateCategory)
+                    .thumbnail(mateThumbnail.isEmpty() ? null : mateThumbnail.get(0))
+                    .title(mate.getTitle())
+                    .content(mate.getContent())
+                    .nickname(mateCreator.getNickname())
+                    .recruitYn(mate.getRecruitYn())
+                    .saved(mateSaved)
+                    .build();
+        }).toList();
+    }
+
+    /**
+     * 가게 조회수 증가 메서드
+     */
+    private void increaseStoreViews(Long storeId) {
+        StoreStatistics statistics = storeStatisticsRepository.findTopByStoreIdAndDeletedAtIsNullOrderByCreatedAtDesc(storeId)
+                .orElseThrow(() -> new StoreInfoReadFailedException("통계 정보가 존재하지 않습니다."));
+        statistics.increaseViews();
+        storeStatisticsRepository.save(statistics);
     }
 
     /** 가게 간략 정보 조회 */
@@ -318,34 +668,29 @@ public class StoreServiceImpl implements StoreService {
             List<String> ownerPickImages = imageService.getImagesByTypeAndId(ImageType.OWNERPICK, storeId);
             List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(storeId);
 
-            // 운영 시간
-            List<StoreOperatingHour> operatingHours = storeOperatingHourRepository.findByStoreId(storeId);
-            List<OperatingHourResponse> operatingHourResponses = operatingHours.stream()
-                    .map(o -> OperatingHourResponse.builder()
-                            .dayOfWeek(o.getDayOfWeek())
-                            .openingTime(o.getOpeningTime())
-                            .closingTime(o.getClosingTime())
-                            .lastOrderTime(o.getLastOrderTime())
-                            .isClosed(o.getIsClosed())
-                            .build())
-                    .toList();
+            // 가게 링크 및 대표 링크 조회
+            Pair<List<String>, String> linkInfo = getStoreLinksAndPrimary(storeId);
 
-            // 휴무일
-            List<StoreHoliday> holidays = storeHolidayRepository.findByStoreId(storeId);
-            List<HolidayResponse> holidayResponses = holidays.stream()
-                    .map(h -> HolidayResponse.builder()
-                            .date(h.getHolidayDate().toString())
-                            .reason(h.getReason())
-                            .build())
-                    .toList();
+            // 운영 시간 조회
+            List<OperatingHourResponse> operatingHourResponses = getOperatingHoursResponse(storeId);
 
-            // 해당 가게를 저장한 사람들의 취향 태그 Top3 조회
-            List<Object[]> preferenceCounts = savedStoreRepository.findTop3PreferencesByStoreId(storeId);
-            List<String> topPreferences = preferenceCounts.stream()
-                    .map(result -> (String) result[0])
-                    .toList();
+            // 휴무일 조회
+            List<HolidayResponse> holidayResponses = getHolidaysResponse(storeId);
 
-            return  StoreSummaryResponse.fromEntity(store, tags, operatingHourResponses, holidayResponses, storeImages, ownerPickImages, topPreferences);
+            // 가게 취향 태그 top3 조회
+            List<String> topPreferences = getTop3Preferences(storeId);
+
+            return StoreSummaryResponse.fromEntity(
+                    store,
+                    tags,
+                    linkInfo.getLeft(),
+                    linkInfo.getRight(),
+                    operatingHourResponses,
+                    holidayResponses,
+                    storeImages,
+                    ownerPickImages,
+                    topPreferences
+            );
         } catch (StoreInfoReadFailedException e){
             log.warn("가게 간략정보 조회 실패 - 사유: {}", e.getMessage());
             throw e;
@@ -363,151 +708,71 @@ public class StoreServiceImpl implements StoreService {
             Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
                     .orElseThrow(() -> new StoreNotFoundException());
 
+            // 사용자 정보 조회
             UserEntity user = userService.getCurrentUser();
             Long userId = (user != null) ? user.getId() : null;
             UUID userUuid = (user != null) ? user.getUserUuid() : null;
 
-            Optional<SavedStore> savedStoreOpt = (userId != null) ?
-                    savedStoreRepository.findFirstByStoreAndUserId(store, userId) :
-                    Optional.empty();
+            // 사용자의 가게 저장 정보 조회
+            Pair<Boolean, Long> savedInfo = getUserStoreSavedInfo(store, user);
+            boolean saved = savedInfo.getLeft();
+            Long savedListId = savedInfo.getRight();
 
-            boolean saved = savedStoreOpt.isPresent();
-            Long savedListId = savedStoreOpt.map(s -> s.getUserStoreList().getId()).orElse(null);
-
-            log.info("사용자가 가게를 저장했는지 여부: {}, savedListId: {}", saved, savedListId);
-
-            // 가게 대표 이미지
+            // 가게 이미지 조회
             List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, storeId);
-
-            // 사장님 픽 이미지
             List<String> ownerPickImages = imageService.getImagesByTypeAndId(ImageType.OWNERPICK, storeId);
 
             // 태그 조회
             List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(storeId);
 
-            // 운영 시간
-            List<StoreOperatingHour> operatingHours = storeOperatingHourRepository.findByStoreId(storeId);
+            // 가게 링크 및 대표 링크 조회
+            Pair<List<String>, String> linkInfo = getStoreLinksAndPrimary(storeId);
 
-            List<OperatingHourResponse> operatingHourResponses = operatingHours.stream()
-                    .map(o -> OperatingHourResponse.builder()
-                            .dayOfWeek(o.getDayOfWeek())
-                            .openingTime(o.getOpeningTime())
-                            .closingTime(o.getClosingTime())
-                            .lastOrderTime(o.getLastOrderTime())
-                            .isClosed(o.getIsClosed())
-                            .build())
-                    .toList();
+            // 운영 시간 조회
+            List<OperatingHourResponse> operatingHourResponses = getOperatingHoursResponse(storeId);
 
-            // 휴무일
-            List<StoreHoliday> holidays = storeHolidayRepository.findByStoreId(storeId);
+            // 휴무일 조회
+            List<HolidayResponse> holidayResponses = getHolidaysResponse(storeId);
 
-            List<HolidayResponse> holidayResponses = holidays.stream()
-                    .map(h -> HolidayResponse.builder()
-                            .date(h.getHolidayDate().toString())
-                            .reason(h.getReason())
-                            .build())
-                    .toList();
+            // 가게 취향 태그 top3 조회
+            List<String> topPreferences = getTop3Preferences(storeId);
 
-            // 해당 가게를 저장한 사람들의 취향 태그 Top3 조회
-            List<Object[]> preferenceCounts = savedStoreRepository.findTop3PreferencesByStoreId(storeId);
-            List<String> topPreferences = preferenceCounts.stream()
-                    .map(result -> (String) result[0])
-                    .toList();
-
-            // 메뉴 리스트
+            // 메뉴 리스트 조회
             List<MenuResponse> menus = menuService.getMenusByStore(storeUuid);
 
-            // 한줄 리뷰
-            List<StoreReview> reviews = storeReviewRepository.findByStoreIdAndDeletedAtIsNull(storeId);
-            int totalReviewCount = reviews.size();
-            Map<Long, List<String>> reviewImagesMap = imageService.getImagesByTypeAndIds(ImageType.SHORT,
-                    reviews.stream().map(StoreReview::getReviewId).toList());
+            // 한줄 리뷰 조회
+            List<StoreReviewResponse> reviewResponses = getStoreReviewResponses(storeId);
+            int totalReviewCount = reviewResponses.size();
 
-            List<StoreReviewResponse> reviewResponses = reviews.stream().map(review -> {
-                Long reviewerId = userRepository.findIdByUserUuid(review.getUserUuid());
-                UserEntity reviewer = userRepository.findById(reviewerId)
-                        .orElseThrow(() -> new UserNotFoundException());
-                List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, reviewer.getId());
+            // 커뮤니티 리뷰 조회
+            List<ReviewSummaryResponse> communityResponses = getCommunityReviewResponses(storeId);
 
-                return StoreReviewResponse.fromEntity(review, reviewer,
-                        profileImage.isEmpty() ? null : profileImage.get(0),
-                        reviewImagesMap.getOrDefault(review.getReviewId(), Collections.emptyList()));
-            }).toList();
-
-            // 가게의 리뷰 목록 가져오기
-            List<Review> storeReviews = reviewRepository.findByStoreIdAndDeletedAtIsNull(storeId);
-
-            // 커뮤니티 리뷰 응답 DTO 변환
-            List<ReviewSummaryResponse> communityResponses = storeReviews.stream().map(review -> {
-                // 리뷰 작성자 정보 조회
-                UserEntity reviewer = userRepository.findById(review.getUserId())
-                        .orElseThrow(() -> new UserNotFoundException());
-
-                List<String> profileImageList = imageService.getImagesByTypeAndId(ImageType.PROFILE, reviewer.getId());
-                String profileImage = profileImageList.isEmpty() ? null : profileImageList.get(0);
-
-                String thumbnail = null;
-                String content = "";
-
-                for (ReviewContent contentItem : review.getReviewContents()) {
-                    if (thumbnail == null && "image".equals(contentItem.getType())) {
-                        thumbnail = contentItem.getValue();
-                    } else if (content.isEmpty() && "text".equals(contentItem.getType())) {
-                        content = contentItem.getValue();
-                    }
-
-                    // 두 값이 모두 설정되면 반복문 끝
-                    if (thumbnail != null && !content.isEmpty()) {
-                        break;
-                    }
-                }
-
-                return ReviewSummaryResponse.builder()
-                        .reviewUuid(review.getReviewUuid())
-                        .userUuid(reviewer.getUserUuid())
-                        .nickname(reviewer.getNickname())
-                        .profileImage(profileImage)
-                        .thumbnail(thumbnail)
-                        .title(review.getTitle())
-                        .content(content)
-                        .createdAt(review.getCreatedAt())
-                        .updatedAt(review.getUpdatedAt())
-                        .build();
-            }).collect(Collectors.toList());
-
-            // 디저트 메이트
-            List<Mate> mates = mateRepository.findByStoreIdAndDeletedAtIsNull(storeId);
-            List<MateResponse> mateResponses = mates.stream().map(mate -> {
-                UserEntity mateCreator = userRepository.findById(mate.getUserId())
-                        .orElseThrow(() -> new UserNotFoundException());
-                String mateCategory = mateCategoryRepository.findById(mate.getMateCategoryId())
-                        .map(MateCategory::getName).orElse("알 수 없음");
-                List<String> mateThumbnail = imageService.getImagesByTypeAndId(ImageType.MATE, mate.getMateId());
-
-                //저장했는지 유무 확인
-                SavedMate savedMate = savedMateRepository.findByMate_MateIdAndUserId(mate.getMateId(), userId);
-                boolean mateSaved = (savedMate != null);
-
-                return MateResponse.builder()
-                        .mateUuid(mate.getMateUuid())
-                        .mateCategory(mateCategory)
-                        .thumbnail(mateThumbnail.isEmpty() ? null : mateThumbnail.get(0))
-                        .title(mate.getTitle())
-                        .content(mate.getContent())
-                        .nickname(mateCreator.getNickname())
-                        .recruitYn(mate.getRecruitYn())
-                        .saved(mateSaved)
-                        .build();
-            }).toList();
+            // 디저트 메이트 조회
+            List<MateResponse> mateResponses = getMateResponses(storeId, userId);
 
             // 조회수 증가
-            StoreStatistics statistics = storeStatisticsRepository.findByStoreId(storeId)
-                    .orElseThrow(() -> new StoreInfoReadFailedException("통계 정보가 존재하지 않습니다."));
-            statistics.increaseViews();
-            storeStatisticsRepository.save(statistics);
+            increaseStoreViews(storeId);
 
-            return StoreDetailResponse.fromEntity(store, userId, userUuid, totalReviewCount, operatingHourResponses, holidayResponses, menus,
-                    storeImages, ownerPickImages, topPreferences, reviewResponses, tags, communityResponses, mateResponses, saved, savedListId);
+            return StoreDetailResponse.fromEntity(
+                    store,
+                    userId,
+                    userUuid,
+                    totalReviewCount,
+                    operatingHourResponses,
+                    holidayResponses,
+                    menus,
+                    storeImages,
+                    ownerPickImages,
+                    topPreferences,
+                    reviewResponses,
+                    tags,
+                    linkInfo.getLeft(),
+                    linkInfo.getRight(),
+                    communityResponses,
+                    mateResponses,
+                    saved,
+                    savedListId
+            );
         } catch (StoreInfoReadFailedException e){
             log.warn("가게 상세정보 조회 실패 - 사유: {}", e.getMessage());
             throw e;
@@ -534,17 +799,18 @@ public class StoreServiceImpl implements StoreService {
 
     /** 가게 수정 */
     @Override
-    public StoreDetailResponse updateStore(UUID storeUuid,
+    public void updateStore(UUID storeUuid,
                                            StoreUpdateRequest request,
                                            List<MultipartFile> storeImageFiles,
                                            List<MultipartFile> ownerPickImageFiles,
                                            List<MultipartFile> menuImageFiles) {
-        try{
+        try {
             // 가게 존재 여부 및 삭제 여부 체크
             Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
             Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
                     .orElseThrow(() -> new StoreNotFoundException());
 
+            // 가게 소유자 체크
             if (!store.getOwnerUuid().equals(request.getUserUuid())) {
                 throw new UnauthorizedAccessException();
             }
@@ -554,100 +820,44 @@ public class StoreServiceImpl implements StoreService {
                     request.getName(),
                     request.getPhone(),
                     request.getAddress(),
-                    request.getStoreLink(),
                     request.getLatitude(),
                     request.getLongitude(),
                     request.getDescription(),
                     Boolean.TRUE.equals(request.getAnimalYn()),
                     Boolean.TRUE.equals(request.getTumblerYn()),
-                    Boolean.TRUE.equals(request.getParkingYn()),
-                    request.getNotice()
+                    Boolean.TRUE.equals(request.getParkingYn())
             );
             storeRepository.save(store);
 
-            if (storeImageFiles != null && !storeImageFiles.isEmpty()) {
-                List<Long> deleteStoreImageIds = request.getStoreImageDeleteIds();
-                String folder = "store/" + store.getStoreId();
-                imageService.updatePartialImages(deleteStoreImageIds, storeImageFiles, ImageType.STORE, store.getStoreId(), folder);
-            }
+            // 가게 링크 저장 (기존 링크는 삭제 후 새로 저장)
+            storeLinkRepository.deleteByStoreId(storeId);
+            validateAndSaveStoreLinks(store, request.getStoreLinks());
 
-            if (ownerPickImageFiles != null && !ownerPickImageFiles.isEmpty()) {
-                List<Long> deleteOwnerPickImageIds = request.getOwnerPickImageDeleteIds();
-                String folder = "ownerpick/" + store.getStoreId();
-                imageService.updatePartialImages(deleteOwnerPickImageIds, ownerPickImageFiles, ImageType.OWNERPICK, store.getStoreId(), folder);
-            }
+            // 이미지 처리
+            processStoreImages(store, storeImageFiles, request.getStoreImageDeleteIds());
+            processOwnerPickImages(store, ownerPickImageFiles, request.getOwnerPickImageDeleteIds());
 
+            // 태그 저장 (기존 태그는 삭제 후 새로 저장)
             if (request.getTagIds() != null && !request.getTagIds().isEmpty()) {
                 storeTagRelationRepository.deleteByStore(store);
                 saveStoreTags(store, request.getTagIds());
             }
 
-            if (request.getMenus() != null && !request.getMenus().isEmpty()) {
-                Map<String, MultipartFile> menuImageMap = menuImageFiles.stream()
-                        .collect(Collectors.toMap(MultipartFile::getOriginalFilename, file -> file, (a, b) -> b));
+            // 메뉴 처리
+            processMenus(store, request.getMenus(), menuImageFiles, true);
 
-                for (StoreUpdateRequest.MenuRequest menuRequest : request.getMenus()) {
-                    MultipartFile file = null;
-                    if (menuRequest.getImageFileKey() != null) {
-                        file = menuImageMap.get(menuRequest.getImageFileKey());
-                    }
+            // 영업 시간 저장
+            saveOrUpdateOperatingHours(store, request.getOperatingHours());
 
-                    MenuCreateRequest menuCreateRequest = convertToMenuCreateRequest(menuRequest);
-
-                    if (menuRequest.getMenuUuid() != null) {
-                        menuService.updateMenu(store.getStoreUuid(), menuRequest.getMenuUuid(), menuCreateRequest, file);
-                    } else {
-                        menuService.addMenu(store.getStoreUuid(), menuCreateRequest, file);
-                    }
-                }
-            }
-
-            if (request.getOperatingHours() != null) {
-                storeOperatingHourRepository.deleteByStoreId(store.getStoreId());
-                List<StoreOperatingHour> operatingHours = request.getOperatingHours().stream()
-                        .map(hour -> StoreOperatingHour.builder()
-                                .storeId(store.getStoreId())
-                                .dayOfWeek(hour.getDayOfWeek())
-                                .openingTime(hour.getOpeningTime())
-                                .closingTime(hour.getClosingTime())
-                                .lastOrderTime(hour.getLastOrderTime())
-                                .isClosed(hour.getIsClosed())
-                                .build())
-                        .collect(Collectors.toList());
-                storeOperatingHourRepository.saveAll(operatingHours);
-            }
-
-            if (request.getHolidays() != null) {
-                storeHolidayRepository.deleteByStoreId(store.getStoreId());
-                List<StoreHoliday> holidays = request.getHolidays().stream()
-                        .map(holiday -> StoreHoliday.builder()
-                                .storeId(store.getStoreId())
-                                .holidayDate(LocalDate.parse(holiday.getDate()))
-                                .reason(holiday.getReason())
-                                .build())
-                        .collect(Collectors.toList());
-                storeHolidayRepository.saveAll(holidays);
-            }
-
-            return getStoreDetails(store.getStoreUuid());
-        } catch (StoreUpdateException e){
+            // 휴무일 저장
+            //saveOrUpdateHolidays(store, request.getHolidays());
+        } catch (StoreUpdateException e) {
             log.warn("가게 수정 실패 - 사유: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
             log.error("가게 수정 처리 중 오류 발생", e);
             throw new StoreServiceException("가게 수정 처리 중 오류가 발생했습니다.");
         }
-    }
-
-    private MenuCreateRequest convertToMenuCreateRequest(StoreUpdateRequest.MenuRequest menuRequest) {
-        MenuCreateRequest mcr = new MenuCreateRequest();
-        mcr.setMenuUuid(menuRequest.getMenuUuid());
-        mcr.setName(menuRequest.getName());
-        mcr.setPrice(menuRequest.getPrice());
-        mcr.setIsPopular(menuRequest.getIsPopular());
-        mcr.setDescription(menuRequest.getDescription());
-        mcr.setImageFileKey(menuRequest.getImageFileKey());
-        return mcr;
     }
 
     /** 가게 삭제 */
@@ -657,11 +867,17 @@ public class StoreServiceImpl implements StoreService {
             UserEntity user = userService.getCurrentUser();
             Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
             Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
-                    .orElseThrow(() -> new StoreNotFoundException());
+                    .orElseThrow(StoreNotFoundException::new);
 
             if (!store.getOwnerUuid().equals(user.getUserUuid())) {
                 throw new UnauthorizedAccessException();
             }
+
+            // 관련 엔티티 삭제
+            deleteRelatedData(storeId);
+
+            imageService.deleteImagesByRefId(ImageType.OWNERPICK, storeId);
+            imageService.deleteImagesByRefId(ImageType.STORE, storeId);
 
             store.softDelete();
             storeRepository.save(store);
@@ -670,6 +886,53 @@ public class StoreServiceImpl implements StoreService {
             throw e;
         } catch (Exception e) {
             log.error("가게 삭제 처리 중 오류 발생", e);
+            throw new StoreServiceException("가게 삭제 처리 중 오류가 발생했습니다.");
+        }
+    }
+
+    private void deleteRelatedData(Long storeId) {
+        try{
+            // 1. SavedStore 삭제
+            savedStoreRepository.deleteByStoreId(storeId);
+
+            // 2. StoreOperatingHour → StoreBreakTime → 삭제
+            storeBreakTimeRepository.deleteAllByStoreId(storeId);
+            storeOperatingHourRepository.deleteByStoreId(storeId);
+
+            // 3. StoreHoliday 삭제
+            storeHolidayRepository.deleteByStoreId(storeId);
+
+            // 4. StoreLink 삭제
+            storeLinkRepository.deleteByStoreId(storeId);
+
+            // 5. StoreStatistics soft delete
+            List<StoreStatistics> stats = storeStatisticsRepository.findAllByStoreIdAndDeletedAtIsNull(storeId);
+            for (StoreStatistics stat : stats) {
+                stat.softDelete();
+            }
+            storeStatisticsRepository.saveAll(stats);
+
+            // 6. StoreTagRelation 삭제
+            storeTagRelationRepository.deleteByStoreId(storeId);
+
+            // 7. StoreReview soft delete
+            List<StoreReview> reviews = storeReviewRepository.findByStoreIdAndDeletedAtIsNull(storeId);
+            for (StoreReview review : reviews) {
+                review.softDelete();
+            }
+            storeReviewRepository.saveAll(reviews);
+
+            // 8. Menu soft delete
+            List<Menu> menus = menuRepository.findByStoreIdAndDeletedAtIsNull(storeId);
+            for (Menu menu : menus) {
+                menu.softDelete();
+            }
+            menuRepository.saveAll(menus);
+        } catch (StoreDeleteException e){
+            log.warn("가게 연관 데이터 삭제 실패 - 사유: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("가게 연관 데이터 삭제 처리 중 오류 발생", e);
             throw new StoreServiceException("가게 삭제 처리 중 오류가 발생했습니다.");
         }
     }
