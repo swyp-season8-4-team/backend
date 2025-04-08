@@ -120,7 +120,7 @@ public class StoreController {
     }
 
     /** 가게 간략 정보 조회 */
-    @Operation(summary = "가게 간략 정보 조회 (completed)", description = "가게의 간략한 정보를 조회합니다.")
+    @Operation(summary = "가게 간략 정보 조회", description = "가게의 간략한 정보를 조회합니다.")
     @ApiResponse( responseCode = "200", description = "가게 간략 정보 조회 성공", content = @Content(schema = @Schema(implementation = StoreSummaryResponse.class)))
     @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.STORE_INFO_READ_FAILED})
     @GetMapping("/{storeUuid}/summary")
@@ -129,7 +129,7 @@ public class StoreController {
     }
 
     /** 가게 상세 정보 조회 */
-    @Operation(summary = "가게 상세 정보 조회 (completed)", description = "가게의 상세한 정보를 조회합니다.")
+    @Operation(summary = "가게 상세 정보 조회", description = "가게의 상세한 정보를 조회합니다.")
     @ApiResponse( responseCode = "200", description = "가게 상세 정보 조회 성공", content = @Content(schema = @Schema(implementation = StoreDetailResponse.class)))
     @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.STORE_INFO_READ_FAILED})
     @GetMapping("/{storeUuid}/details")
