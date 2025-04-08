@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface StoreNoticeRepository extends JpaRepository<StoreNotice, Long> {
     List<StoreNotice> findAllByStoreIdAndDeletedAtIsNull(Long storeId);
+    StoreNotice findByNoticeIdAndDeletedAtIsNull(Long noticeId);
 }
