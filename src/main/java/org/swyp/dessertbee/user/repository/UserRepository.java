@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-import org.swyp.dessertbee.statistics.common.dto.user.UserStatisticsResponseDto;
+import org.swyp.dessertbee.statistics.common.dto.user.response.UserStatisticsResponseDto;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.time.LocalDateTime;
@@ -76,7 +76,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
 //    -------------- 관리자용 조회 -----------
 
-    @Query("SELECT new org.swyp.dessertbee.user.dto.response.UserStatisticsResponseDto(u.userUuid, u.id, ur.role.id) " +
+    @Query("SELECT new org.swyp.dessertbee.statistics.common.dto.user.response.UserStatisticsResponseDto(u.userUuid, u.id, ur.role.id) " +
             "FROM UserEntity u " +
             "JOIN u.userRoles ur " +
             "JOIN ur.role r")

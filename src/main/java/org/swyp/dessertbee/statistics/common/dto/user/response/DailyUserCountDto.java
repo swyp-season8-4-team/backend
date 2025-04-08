@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.statistics.common.dto.user;
+package org.swyp.dessertbee.statistics.common.dto.user.response;
 
 import lombok.Getter;
 

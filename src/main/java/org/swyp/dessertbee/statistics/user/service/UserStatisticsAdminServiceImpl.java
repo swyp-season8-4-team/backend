@@ -8,7 +8,7 @@ import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.util.YearWeek;
 import org.swyp.dessertbee.role.repository.UserRoleRepository;
-import org.swyp.dessertbee.statistics.common.dto.user.*;
+import org.swyp.dessertbee.statistics.common.dto.user.response.*;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
 import java.time.DayOfWeek;

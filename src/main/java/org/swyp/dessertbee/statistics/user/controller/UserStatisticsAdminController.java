@@ -6,8 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.swyp.dessertbee.statistics.common.dto.user.response.*;
 import org.swyp.dessertbee.statistics.user.service.UserStatisticsAdminService;
-import org.swyp.dessertbee.statistics.common.dto.user.*;
 
 import java.util.List;
 

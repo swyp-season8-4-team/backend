@@ -1,6 +1,6 @@
 package org.swyp.dessertbee.statistics.user.service;
 
-import org.swyp.dessertbee.statistics.common.dto.user.*;
+import org.swyp.dessertbee.statistics.common.dto.user.response.*;
 
 import java.util.List;
 
