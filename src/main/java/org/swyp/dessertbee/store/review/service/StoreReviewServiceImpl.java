@@ -85,7 +85,7 @@ public class StoreReviewServiceImpl implements StoreReviewService {
 
     /** 특정 가게 리뷰 조회 */
     @Override
-    public List<StoreReviewResponse> getReviewsByStoreId(UUID storeUuid) {
+    public List<StoreReviewResponse> getReviewsByStoreUuId(UUID storeUuid) {
         try{
             Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
             if (storeId == null) {

@@ -13,7 +13,7 @@ public interface StoreReviewService {
     StoreReviewResponse createReview(UUID storeUuid, StoreReviewCreateRequest request, List<MultipartFile> images);
 
     /** 특정 가게 리뷰 조회 */
-    List<StoreReviewResponse> getReviewsByStoreId(UUID storeUuid);
+    List<StoreReviewResponse> getReviewsByStoreUuId(UUID storeUuid);
 
     /** 리뷰 수정 */
     StoreReviewResponse updateReview(UUID storeUuid, UUID reviewUuid, StoreReviewUpdateRequest request, List<MultipartFile> newImages);
