@@ -1,9 +1,7 @@
 package org.swyp.dessertbee.store.notice.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -12,7 +10,9 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "store_notice")
 @Getter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class StoreNotice {
 
     @Id
@@ -40,12 +40,6 @@ public class StoreNotice {
 
     public void softDelete(){
         this.deletedAt = LocalDateTime.now();
-    }
-
-    public StoreNotice(Long storeId, String title, String content) {
-        this.storeId = storeId;
-        this.title = title;
-        this.content = content;
     }
 
     public void update(String title, String content) {
