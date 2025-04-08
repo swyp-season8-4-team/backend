@@ -9,6 +9,7 @@ import lombok.Data;
 import org.swyp.dessertbee.community.mate.dto.response.MateResponse;
 import org.swyp.dessertbee.community.review.dto.response.ReviewSummaryResponse;
 import org.swyp.dessertbee.store.menu.dto.response.MenuResponse;
+import org.swyp.dessertbee.store.notice.dto.response.StoreNoticeResponse;
 import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
 import org.swyp.dessertbee.store.store.entity.Store;
 
@@ -75,6 +76,9 @@ public class StoreDetailResponse {
     @Schema(description = "가게 소개글", example = "편안한 분위기의 감성 디저트 카페입니다.", nullable = true)
     private String description;
 
+    @Schema(description = "가게 공지사항 리스트", nullable = true)
+    private List<StoreNoticeResponse> notices;
+
     @Schema(description = "평균 별점 (소수점 2자리)", example = "4.58")
     private BigDecimal averageRating;
 
@@ -131,6 +135,7 @@ public class StoreDetailResponse {
                                                  int totalReviewCount,
                                                  List<OperatingHourResponse> operatingHours,
                                                  List<HolidayResponse> holidays,
+                                                 List<StoreNoticeResponse> notices,
                                                  List<MenuResponse> menus,
                                                  List<String> storeImages,
                                                  List<String> ownerPickImages,
@@ -162,6 +167,7 @@ public class StoreDetailResponse {
                 .averageRating(store.getAverageRating())
                 .operatingHours(operatingHours)
                 .holidays(holidays)
+                .notices(notices)
                 .topPreferences(topPreferences)
                 .menus(menus)
                 .storeImages(storeImages)

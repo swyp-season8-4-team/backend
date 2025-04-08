@@ -22,7 +22,7 @@ public class StoreNotice {
     @Column(name = "store_id", nullable = false)
     private Long storeId;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
     private String title;
 
     @Lob

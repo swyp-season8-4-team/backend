@@ -11,6 +11,9 @@ import org.swyp.dessertbee.store.menu.converter.MenuConverter;
 import org.swyp.dessertbee.store.menu.entity.Menu;
 import org.swyp.dessertbee.store.menu.repository.MenuRepository;
 import org.swyp.dessertbee.store.menu.service.MenuService;
+import org.swyp.dessertbee.store.notice.dto.response.StoreNoticeResponse;
+import org.swyp.dessertbee.store.notice.entity.StoreNotice;
+import org.swyp.dessertbee.store.notice.repository.StoreNoticeRepository;
 import org.swyp.dessertbee.store.store.dto.request.BaseStoreRequest;
 import org.swyp.dessertbee.store.store.exception.StoreExceptions.*;
 import org.swyp.dessertbee.common.entity.ImageType;
@@ -74,6 +77,7 @@ public class StoreServiceImpl implements StoreService {
     private final StoreLinkRepository storeLinkRepository;
     private final StoreBreakTimeRepository storeBreakTimeRepository;
     private final MenuRepository menuRepository;
+    private final StoreNoticeRepository storeNoticeRepository;
 
     /** 가게 등록 (이벤트, 쿠폰, 메뉴 + 이미지 포함) */
     @Override
@@ -514,6 +518,23 @@ public class StoreServiceImpl implements StoreService {
     }
 
     /**
+     * 공지사항 조회 및 변환 메서드
+     */
+    private List<StoreNoticeResponse> getNotices(Long storeId) {
+        List<StoreNotice> notices = storeNoticeRepository.findAllByStoreIdAndDeletedAtIsNull(storeId);
+
+        return notices.stream()
+                .map(n -> new StoreNoticeResponse(
+                        n.getNoticeId(),
+                        n.getTitle(),
+                        n.getContent(),
+                        n.getCreatedAt(),
+                        n.getUpdatedAt()
+                ))
+                .toList();
+    }
+
+    /**
      * 가게의 Top3 취향 태그 조회 메서드
      */
     private List<String> getTop3Preferences(Long storeId) {
@@ -734,6 +755,9 @@ public class StoreServiceImpl implements StoreService {
             // 휴무일 조회
             List<HolidayResponse> holidayResponses = getHolidaysResponse(storeId);
 
+            // 공지사항 조회
+            List<StoreNoticeResponse> noticeResponses = getNotices(storeId);
+
             // 가게 취향 태그 top3 조회
             List<String> topPreferences = getTop3Preferences(storeId);
 
@@ -760,6 +784,7 @@ public class StoreServiceImpl implements StoreService {
                     totalReviewCount,
                     operatingHourResponses,
                     holidayResponses,
+                    noticeResponses,
                     menus,
                     storeImages,
                     ownerPickImages,
