@@ -8,7 +8,9 @@ import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.community.mate.dto.MateUserIds;
-import org.swyp.dessertbee.community.mate.dto.request.MateApplyMemberRequest;
+import org.swyp.dessertbee.community.mate.dto.request.MateAcceptRequest;
+import org.swyp.dessertbee.community.mate.dto.request.MateBannedRequest;
+import org.swyp.dessertbee.community.mate.dto.request.MateRejectRequest;
 import org.swyp.dessertbee.community.mate.dto.response.MateMemberResponse;
 import org.swyp.dessertbee.community.mate.entity.Mate;
 import org.swyp.dessertbee.community.mate.entity.MateApplyStatus;
@@ -275,7 +277,7 @@ public class MateMemberServiceImpl implements MateMemberService {
      * */
     @Override
     @Transactional
-    public void acceptMember (UUID mateUuid, MateApplyMemberRequest request) {
+    public void acceptMember (UUID mateUuid, MateAcceptRequest request) {
 
 
         //생성자 권한을 위해 생성자 userId 조회 및 유효성 검사
@@ -307,7 +309,7 @@ public class MateMemberServiceImpl implements MateMemberService {
      * */
     @Override
     @Transactional
-    public void rejectMember (UUID mateUuid, MateApplyMemberRequest request) {
+    public void rejectMember (UUID mateUuid, MateRejectRequest request) {
 
         //생성자 권한을 위해 생성자 userId 조회 및 유효성 검사
         MateUserIds creatorIds  = validateMateAndUser(mateUuid, request.getCreatorUserUuid());
@@ -354,7 +356,7 @@ public class MateMemberServiceImpl implements MateMemberService {
      * */
     @Override
     @Transactional
-    public void bannedMember (UUID mateUuid, MateApplyMemberRequest request) {
+    public void bannedMember (UUID mateUuid, MateBannedRequest request) {
 
         //생성자 권한을 위해 생성자 userId 조회 및 유효성 검사
         MateUserIds creatorIds  = validateMateAndUser(mateUuid, request.getCreatorUserUuid());

@@ -9,7 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
 import org.swyp.dessertbee.common.exception.ErrorCode;
-import org.swyp.dessertbee.community.mate.dto.request.MateApplyMemberRequest;
+import org.swyp.dessertbee.community.mate.dto.request.MateAcceptRequest;
+import org.swyp.dessertbee.community.mate.dto.request.MateBannedRequest;
+import org.swyp.dessertbee.community.mate.dto.request.MateRejectRequest;
 import org.swyp.dessertbee.community.mate.dto.response.MateMemberResponse;
 import org.swyp.dessertbee.community.mate.service.MateMemberService;
 
@@ -108,7 +110,7 @@ public class MateMemberController {
     })
     @ApiErrorResponses({ErrorCode.MATE_MEMBER_NOT_FOUND})
     @PatchMapping("/apply")
-    public ResponseEntity<Map<String, String>> acceptMember(@PathVariable UUID mateUuid, @RequestBody MateApplyMemberRequest request) {
+    public ResponseEntity<Map<String, String>> acceptMember(@PathVariable UUID mateUuid, @RequestBody MateAcceptRequest request) {
 
         mateMemberService.acceptMember(mateUuid, request);
 
@@ -127,7 +129,7 @@ public class MateMemberController {
     })
     @ApiErrorResponses({ErrorCode.MATE_MEMBER_NOT_FOUND, ErrorCode.USER_NOT_FOUND})
     @DeleteMapping("/reject")
-    public ResponseEntity<Map<String, String>> rejectMemeber(@PathVariable UUID mateUuid, @RequestBody MateApplyMemberRequest request) {
+    public ResponseEntity<Map<String, String>> rejectMember(@PathVariable UUID mateUuid, @RequestBody MateRejectRequest request) {
 
         mateMemberService.rejectMember(mateUuid, request);
         Map<String, String> response = new HashMap<>();
@@ -144,7 +146,7 @@ public class MateMemberController {
     })
     @ApiErrorResponses({ErrorCode.MATE_MEMBER_NOT_FOUND, ErrorCode.USER_NOT_FOUND, ErrorCode.MATE_PERMISSION_DENIED})
     @DeleteMapping("/members")
-    public ResponseEntity<Map<String, String>> bannedMember(@PathVariable UUID mateUuid, @RequestBody MateApplyMemberRequest request) {
+    public ResponseEntity<Map<String, String>> bannedMember(@PathVariable UUID mateUuid, @RequestBody MateBannedRequest request) {
 
         mateMemberService.bannedMember(mateUuid, request);
         Map<String, String> response = new HashMap<>();
