@@ -1,27 +1,31 @@
-package org.swyp.dessertbee.user.service;
+package org.swyp.dessertbee.statistics.user.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
+import org.swyp.dessertbee.common.util.YearWeek;
 import org.swyp.dessertbee.role.repository.UserRoleRepository;
-import org.swyp.dessertbee.user.dto.response.*;
+import org.swyp.dessertbee.statistics.common.dto.user.*;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class UserStatisticsServiceImpl implements UserStatisticsService {
+public class UserStatisticsAdminServiceImpl implements UserStatisticsAdminService {
 
     private final UserRepository userRepository;
     private final UserRoleRepository userRoleRepository;
+    private final RedisTemplate redisTemplate;
 
     private static final int CURRENT_YEAR = LocalDate.now().getYear();
 
@@ -147,5 +151,33 @@ public class UserStatisticsServiceImpl implements UserStatisticsService {
         }
 
         return result;
+    }
+
+    /**
+    활성 사용자 수 조회
+    */
+    /** 사용자 활동 추적 - 로그인 시 */
+    public void trackUserActivity(String userUuId) {
+        LocalDate today = LocalDate.now();
+        String week = YearWeek.from(today);
+        YearMonth month = YearMonth.from(today);
+
+        redisTemplate.opsForSet().add("active:daily:" + today, userUuId);
+        redisTemplate.opsForSet().add("active:weekly:" + week, userUuId);
+        redisTemplate.opsForSet().add("active:monthly:" + month, userUuId);
+
+    }
+    /** DAU : 일일 활성 사용자 수 */
+    public long getDAU(String date) {
+        return redisTemplate.opsForSet().size("active:daily:" + date);
+    }
+    /** WAU : 주간 활성 사용자 수 */
+    public long getWAU(String week) {
+        return redisTemplate.opsForSet().size("active:weekly:" + week);
+    }
+
+    /** MAU : 월간 활성 사용자 수 */
+    public long getMAU(String month) {
+        return redisTemplate.opsForSet().size("active:monthly:" + month);
     }
 }

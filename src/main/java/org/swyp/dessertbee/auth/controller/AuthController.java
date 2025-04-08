@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.swyp.dessertbee.admin.statistics.service.UserStatisticsAdminService;
+import org.swyp.dessertbee.statistics.user.service.UserStatisticsAdminService;
 import org.swyp.dessertbee.auth.dto.response.TokenResponse;
 import org.swyp.dessertbee.auth.dto.request.LoginRequest;
 import org.swyp.dessertbee.auth.dto.response.LoginResponse;

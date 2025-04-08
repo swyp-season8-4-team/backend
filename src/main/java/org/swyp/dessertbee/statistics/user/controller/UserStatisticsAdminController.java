@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.admin.statistics.controller;
+package org.swyp.dessertbee.statistics.user.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -6,9 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.swyp.dessertbee.admin.statistics.service.UserStatisticsAdminService;
-import org.swyp.dessertbee.user.dto.response.*;
-import org.swyp.dessertbee.user.service.UserStatisticsService;
+import org.swyp.dessertbee.statistics.user.service.UserStatisticsAdminService;
+import org.swyp.dessertbee.statistics.common.dto.user.*;
 
 import java.util.List;
 
@@ -19,7 +18,6 @@ import java.util.List;
 public class UserStatisticsAdminController {
 
     private final UserStatisticsAdminService userStatisticsAdminService;
-    private final UserStatisticsService userStatisticsService;
 
     /**
      * 전체 사용자 조회
