@@ -1,6 +1,7 @@
 package org.swyp.dessertbee.community.mate.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -42,6 +43,7 @@ public class MateController{
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "디저트메이트 생성 성공")
     })
+    @Schema(implementation = MateDetailResponse.class)
     @ApiErrorResponses({ErrorCode.USER_NOT_FOUND})
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MateDetailResponse> createMate(@RequestPart("request")  MateCreateRequest request,
@@ -60,6 +62,7 @@ public class MateController{
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "디저트메이트 상세 정보 요청 성공")
     })
+    @Schema(implementation = MateDetailResponse.class)
     @ApiErrorResponses({ErrorCode.MATE_NOT_FOUND})
     @GetMapping("/{mateUuid}")
     public ResponseEntity<MateDetailResponse> getMateDetail(@PathVariable UUID mateUuid) {
@@ -119,6 +122,7 @@ public class MateController{
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "디저트메이트 전체 조회 성공")
     })
+    @Schema(implementation = MatesPageResponse.class)
     @ApiErrorResponses({ErrorCode.INVALID_RANGE})
     @GetMapping
     public ResponseEntity<MatesPageResponse> getMates(
@@ -149,6 +153,7 @@ public class MateController{
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "내가 참여한 디저트메이트 조회 성공")
     })
+    @Schema(implementation = MatesPageResponse.class)
     @ApiErrorResponses({ErrorCode.INVALID_RANGE})
     @GetMapping("/me")
     public ResponseEntity<MatesPageResponse> getMyMates( @RequestParam(required = false, defaultValue = "0") int from,

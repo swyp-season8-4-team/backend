@@ -2,6 +2,7 @@ package org.swyp.dessertbee.community.mate.controller;
 
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
+import org.swyp.dessertbee.community.mate.dto.response.MateMemberResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MatesPageResponse;
 import org.swyp.dessertbee.community.mate.service.SavedMateService;
 
@@ -76,6 +78,7 @@ public class SavedMateController {
     @ApiResponses({
             @ApiResponse(responseCode = "200gin", description = "저장된 디저트메이트 조회 성공")
     })
+    @Schema(implementation = MatesPageResponse.class)
     @ApiErrorResponses({ErrorCode.USER_NOT_FOUND, ErrorCode.INVALID_RANGE})
     @GetMapping
     private ResponseEntity<MatesPageResponse> getSavedMates(
