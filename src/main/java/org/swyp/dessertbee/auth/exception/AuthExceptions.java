@@ -74,6 +74,20 @@ public class AuthExceptions {
     }
 
     /**
+     * 비밀번호 불일치 예외
+     */
+    public static class InvalidPasswordException extends BusinessException {
+        public InvalidPasswordException() {
+            super(ErrorCode.INVALID_PASSWORD);
+        }
+
+        public InvalidPasswordException(String message) {
+            super(ErrorCode.INVALID_PASSWORD, message);
+        }
+    }
+
+
+    /**
      * 잘못된 인증 정보 예외
      * 로그인 실패, 인증 실패 등에 사용
      */

@@ -224,8 +224,7 @@ public class TokenService {
                     .map(userRole -> userRole.getRole().getName().getRoleName())
                     .collect(Collectors.toList());
 
-            boolean keepLoggedIn = false; // 로그인 유지 여부 (추후 프론트엔드에서 전달받아야 한다.)
-            String newAccessToken = jwtUtil.createAccessToken(user.getUserUuid(), roles, keepLoggedIn);
+            String newAccessToken = jwtUtil.createAccessToken(user.getUserUuid(), roles);
 
             // 마지막 로그인 시간 업데이트
             auth.updateRefreshToken(auth.getRefreshToken(), auth.getRefreshTokenExpiresAt());
@@ -236,7 +235,7 @@ public class TokenService {
             return TokenResponse.builder()
                     .accessToken(newAccessToken)
                     .tokenType("Bearer")
-                    .expiresIn(jwtUtil.getSHORT_ACCESS_TOKEN_EXPIRE())
+                    .expiresIn(jwtUtil.getACCESS_TOKEN_EXPIRE())
                     .deviceId(deviceId)  // 응답에 디바이스 ID 포함
                     .build();
         }
