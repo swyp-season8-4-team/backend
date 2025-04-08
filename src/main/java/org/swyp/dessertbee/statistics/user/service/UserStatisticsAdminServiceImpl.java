@@ -9,6 +9,7 @@ import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.util.YearWeek;
 import org.swyp.dessertbee.role.repository.UserRoleRepository;
 import org.swyp.dessertbee.statistics.common.dto.user.response.*;
+import org.swyp.dessertbee.statistics.infra.repository.user.UserStatisticsRepository;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
 import java.time.DayOfWeek;
@@ -23,8 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserStatisticsAdminServiceImpl implements UserStatisticsAdminService {
 
-    private final UserRepository userRepository;
-    private final UserRoleRepository userRoleRepository;
+    private final UserStatisticsRepository userStatisticsRepository;
     private final RedisTemplate redisTemplate;
 
     private static final int CURRENT_YEAR = LocalDate.now().getYear();
@@ -46,7 +46,7 @@ public class UserStatisticsAdminServiceImpl implements UserStatisticsAdminServic
      */
     @Transactional(readOnly = true)
     public List<UserStatisticsResponseDto> getAllUsers() {
-        return userRepository.findAllUsersWithRoles();
+        return userStatisticsRepository.findAllUsersWithRoles();
     }
 
     /**
@@ -54,7 +54,7 @@ public class UserStatisticsAdminServiceImpl implements UserStatisticsAdminServic
      */
     @Transactional(readOnly = true)
     public UserCountResponseDto getTotalUserCount() {
-        long userCount = userRoleRepository.countUsers();
+        long userCount = userStatisticsRepository.countUsers();
         return new UserCountResponseDto(userCount);
     }
 
@@ -63,7 +63,7 @@ public class UserStatisticsAdminServiceImpl implements UserStatisticsAdminServic
      */
     @Transactional(readOnly = true)
     public UserCountResponseDto getTotalUserOwnersCount() {
-        long userCount = userRoleRepository.countOwners();
+        long userCount = userStatisticsRepository.countOwners();
         return new UserCountResponseDto(userCount);
     }
 
@@ -86,7 +86,7 @@ public class UserStatisticsAdminServiceImpl implements UserStatisticsAdminServic
             LocalDateTime startDateTime = date.atStartOfDay();
             LocalDateTime endDateTime = date.atTime(23, 59, 59);
 
-            long count = userRepository.countNewUsersByDay(startDateTime, endDateTime);
+            long count = userStatisticsRepository.countNewUsersByDay(startDateTime, endDateTime);
             result.add(new DailyUserCountDto(date, count)); // 날짜와 수 함께 반환
         }
 
@@ -111,7 +111,7 @@ public class UserStatisticsAdminServiceImpl implements UserStatisticsAdminServic
         LocalDate firstSunday = firstDayOfMonth.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
         LocalDateTime firstStart = firstDayOfMonth.atStartOfDay();
         LocalDateTime firstEnd = firstSunday.atTime(23, 59, 59);
-        long firstWeekCount = userRepository.countNewUsersByWeek(firstStart, firstEnd);
+        long firstWeekCount = userStatisticsRepository.countNewUsersByWeek(firstStart, firstEnd);
         result.add(new WeeklyUserCountDto(weekNumber++, firstDayOfMonth, firstSunday, firstWeekCount));
 
         // 🔹 이후 주: 월요일부터 일요일까지
@@ -125,7 +125,7 @@ public class UserStatisticsAdminServiceImpl implements UserStatisticsAdminServic
             LocalDateTime startDateTime = weekStart.atStartOfDay();
             LocalDateTime endDateTime = weekEnd.atTime(23, 59, 59);
 
-            long count = userRepository.countNewUsersByWeek(startDateTime, endDateTime);
+            long count = userStatisticsRepository.countNewUsersByWeek(startDateTime, endDateTime);
             result.add(new WeeklyUserCountDto(weekNumber++, weekStart, weekEnd, count));
 
             weekStart = weekStart.plusWeeks(1);
@@ -146,7 +146,7 @@ public class UserStatisticsAdminServiceImpl implements UserStatisticsAdminServic
             LocalDateTime startDateTime = startDate.atStartOfDay();
             LocalDateTime endDateTime = startDate.with(TemporalAdjusters.lastDayOfMonth()).atTime(23, 59, 59);
 
-            long userCount = userRepository.countNewUsersByMonth(startDateTime, endDateTime);
+            long userCount = userStatisticsRepository.countNewUsersByMonth(startDateTime, endDateTime);
             result.add(new MonthlyUserCountDto(month, userCount));
         }
 
