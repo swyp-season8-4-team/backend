@@ -107,6 +107,12 @@ public enum ErrorCode {
     MENU_DELETE_FAILED(HttpStatus.BAD_REQUEST, "S042", "단일 메뉴 삭제에 실패했습니다."),
     MENU_CREATION_FAILED(HttpStatus.BAD_REQUEST, "S043", "메뉴 등록에 실패했습니다."),
     STORE_DUPLICATE_PRIMARY_LINK(HttpStatus.CONFLICT, "S044", "대표 링크는 하나만 설정할 수 있습니다."),
+    STORE_NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "S045", "존재하지 않는 공지사항입니다."),
+    STORE_NOTICE_CREATION_FAILED(HttpStatus.BAD_REQUEST, "S046", "공지사항 등록에 실패했습니다."),
+    STORE_NOTICE_UPDATE_FAILED(HttpStatus.BAD_REQUEST, "S047", "공지사항 수정에 실패했습니다."),
+    STORE_NOTICE_DELETE_FAILED(HttpStatus.BAD_REQUEST, "S048", "공지사항 삭제에 실패했습니다."),
+    STORE_NOTICE_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S049", "가게 공지사항 서비스 처리 중 오류가 발생했습니다."),
+
 
     // 사장님 권한
     /**
