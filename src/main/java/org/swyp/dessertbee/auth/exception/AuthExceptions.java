@@ -152,4 +152,16 @@ public class AuthExceptions {
             super(ErrorCode.DEVICE_ID_MISSING, message);
         }
     }
+
+    /**
+     * 로그인 실패 누적으로 계정 잠김 예외
+     */
+    public static class AccountLockedException extends BusinessException {
+        public AccountLockedException() { super(ErrorCode.ACCOUNT_LOCKED); }
+
+        public AccountLockedException(String message) {
+            super(ErrorCode.ACCOUNT_LOCKED, message);
+        }
+    }
+
 }
