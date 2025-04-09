@@ -28,7 +28,7 @@ public class LoginAttemptServiceImpl implements LoginAttemptService {
     private static final int LOCK_TIME_MINUTES = 10;
 
     /**
-     * 로그인 시도 전 계정 잠금 상태 확인
+     * 로그인 실패 처리와 잠금 만료 확인
      * @param email 사용자 이메일
      * @throws AccountLockedException 계정이 잠긴 경우
      */
@@ -47,9 +47,7 @@ public class LoginAttemptServiceImpl implements LoginAttemptService {
         // 잠금 시간이 지났으면 잠금 해제
         if (loginAttempt.getLockedUntil() != null &&
                 loginAttempt.getLockedUntil().isBefore(LocalDateTime.now())) {
-            loginAttempt.resetFailedAttempts();
-            loginAttemptRepository.save(loginAttempt);
-            log.info("계정 잠금 시간 만료 - 자동 잠금 해제: {}", email);
+            log.info("계정 잠금 시간 만료됨, 자동 잠금 해제 예정: {}", email);
             return;
         }
 
@@ -69,18 +67,24 @@ public class LoginAttemptServiceImpl implements LoginAttemptService {
      */
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public int incrementFailedAttempts(String email) {
+    public int handleLoginFailure(String email) {
         LoginAttemptEntity loginAttempt = getOrCreateLoginAttempt(email);
-        loginAttempt.incrementFailedAttempts();
+
+        // 잠금 시간이 만료된 경우 먼저 초기화
+        if (loginAttempt.getLockedUntil() != null &&
+                loginAttempt.getLockedUntil().isBefore(LocalDateTime.now())) {
+            // 실패 횟수를 초기화하고 새로운 실패 횟수 적용
+            loginAttempt.resetFailedAttempts();
+            log.info("계정 잠금 시간 만료 - 자동 잠금 해제: {}", email);
+        }
+
+        loginAttempt.incrementFailedAttempts(MAX_FAILED_ATTEMPTS, LOCK_TIME_MINUTES);
 
         // 저장 전후로 로그 추가
         log.info("로그인 실패 저장 전 - 이메일: {}, 실패 횟수: {}", email, loginAttempt.getFailedAttempts());
         LoginAttemptEntity saved = loginAttemptRepository.save(loginAttempt);
         log.info("로그인 실패 저장 후 - 이메일: {}, 실패 횟수: {}, ID: {}",
                 email, saved.getFailedAttempts(), saved.getId());
-
-        // 변경 내용 즉시 반영
-        loginAttemptRepository.flush();
 
         int remainingAttempts = MAX_FAILED_ATTEMPTS - loginAttempt.getFailedAttempts();
         log.info("로그인 실패 - 이메일: {}, 남은 시도 횟수: {}", email, remainingAttempts);

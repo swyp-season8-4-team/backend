@@ -170,7 +170,7 @@ public class AuthServiceImpl implements AuthService {
                 log.warn("로그인 실패 - 비밀번호 인증 실패: {}", request.getEmail());
 
                 // 로그인 실패 처리
-                int remainingAttempts = loginAttemptService.incrementFailedAttempts(request.getEmail());
+                int remainingAttempts = loginAttemptService.handleLoginFailure(request.getEmail());
 
                 // 남은 시도 횟수에 따라 다른 예외 발생
                 if (remainingAttempts <= 0) {

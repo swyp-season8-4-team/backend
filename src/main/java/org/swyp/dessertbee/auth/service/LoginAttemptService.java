@@ -17,7 +17,7 @@ public interface LoginAttemptService {
      * @param email 사용자 이메일
      * @return 남은 시도 횟수
      */
-    int incrementFailedAttempts(String email);
+    int handleLoginFailure(String email);
 
     /**
      * 로그인 성공 시 실패 횟수 초기화 빵회로

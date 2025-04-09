@@ -50,11 +50,11 @@ public class LoginAttemptEntity {
     /**
      * 로그인 실패 횟수 증가 및 계정 잠금 설정
      */
-    public void incrementFailedAttempts() {
+    public void incrementFailedAttempts(int maxFailedAttempts, int lockTimeMinutes) {
         this.failedAttempts++;
-        // 5회 이상 실패 시 계정 잠금 (10분)
-        if (this.failedAttempts >= 5) {
-            this.lockedUntil = LocalDateTime.now().plusMinutes(10);
+        // 최대 실패 횟수 이상 시 계정 잠금
+        if (this.failedAttempts >= maxFailedAttempts) {
+            this.lockedUntil = LocalDateTime.now().plusMinutes(lockTimeMinutes);
         }
     }
 
