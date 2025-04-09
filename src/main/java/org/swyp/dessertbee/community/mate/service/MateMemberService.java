@@ -1,6 +1,8 @@
 package org.swyp.dessertbee.community.mate.service;
 
-import org.swyp.dessertbee.community.mate.dto.request.MateApplyMemberRequest;
+import org.swyp.dessertbee.community.mate.dto.request.MateAcceptRequest;
+import org.swyp.dessertbee.community.mate.dto.request.MateBannedRequest;
+import org.swyp.dessertbee.community.mate.dto.request.MateRejectRequest;
 import org.swyp.dessertbee.community.mate.dto.response.MateMemberResponse;
 
 import java.util.List;
@@ -27,13 +29,13 @@ public interface MateMemberService {
     List<MateMemberResponse> pendingMate(UUID mateUuid);
 
     /** 디저트 메이트 멤버 신청 수락 api */
-    void acceptMember (UUID mateUuid, MateApplyMemberRequest request);
+    void acceptMember (UUID mateUuid, MateAcceptRequest request);
 
     /** 디저트 메이트 멤버 신청 거절 api */
-    void rejectMember (UUID mateUuid, MateApplyMemberRequest request);
+    void rejectMember (UUID mateUuid, MateRejectRequest request);
 
     /** 디저트 메이트 멤버 강퇴 api */
-    void bannedMember (UUID mateUuid, MateApplyMemberRequest request);
+    void bannedMember (UUID mateUuid, MateBannedRequest request);
 
     /** 디저트 메이트 멤버 탈퇴 api */
     void leaveMember (UUID mateUuid);
