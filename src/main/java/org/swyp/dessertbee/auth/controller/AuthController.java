@@ -92,7 +92,7 @@ public class AuthController {
             }
     )
     @ApiResponse( responseCode = "200", description = "로그인 성공", content = @Content(schema = @Schema(implementation = LoginResponse.class)) )
-    @ApiErrorResponses({ErrorCode.PASSWORD_MISMATCH, ErrorCode.USER_NOT_FOUND})
+    @ApiErrorResponses({ErrorCode.PASSWORD_MISMATCH, ErrorCode.USER_NOT_FOUND, ErrorCode.ACCOUNT_LOCKED})
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
             @Parameter(
