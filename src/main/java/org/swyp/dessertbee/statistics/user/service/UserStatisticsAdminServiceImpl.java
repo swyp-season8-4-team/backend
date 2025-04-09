@@ -156,6 +156,7 @@ public class UserStatisticsAdminServiceImpl implements UserStatisticsAdminServic
     /**
     활성 사용자 수 조회
     */
+    //TODO : 만료시간 명시
     /** 사용자 활동 추적 - 로그인 시 */
     public void trackUserActivity(String userUuId) {
         LocalDate today = LocalDate.now();
@@ -165,17 +166,18 @@ public class UserStatisticsAdminServiceImpl implements UserStatisticsAdminServic
         redisTemplate.opsForSet().add("active:daily:" + today, userUuId);
         redisTemplate.opsForSet().add("active:weekly:" + week, userUuId);
         redisTemplate.opsForSet().add("active:monthly:" + month, userUuId);
-
     }
+    //TODO
     /** DAU : 일일 활성 사용자 수 */
     public long getDAU(String date) {
         return redisTemplate.opsForSet().size("active:daily:" + date);
     }
+    //TODO
     /** WAU : 주간 활성 사용자 수 */
     public long getWAU(String week) {
         return redisTemplate.opsForSet().size("active:weekly:" + week);
     }
-
+    //TODO
     /** MAU : 월간 활성 사용자 수 */
     public long getMAU(String month) {
         return redisTemplate.opsForSet().size("active:monthly:" + month);
