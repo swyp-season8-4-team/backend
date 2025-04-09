@@ -74,7 +74,7 @@ public class StoreNoticeController {
     @ApiErrorResponses({ErrorCode.STORE_NOTICE_NOT_FOUND, ErrorCode.STORE_NOTICE_SERVICE_ERROR})
     @GetMapping("/{noticeId}")
     public ResponseEntity<StoreNoticeResponse> getNotice(
-            @PathVariable Long storeUuid,
+            @PathVariable UUID storeUuid,
             @PathVariable Long noticeId) {
         StoreNoticeResponse response = storeNoticeService.getNotice(noticeId);
         return ResponseEntity.ok(response);
