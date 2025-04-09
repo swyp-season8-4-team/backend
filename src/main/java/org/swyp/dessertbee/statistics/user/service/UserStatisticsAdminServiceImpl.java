@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.statistics.user.service;
 
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -28,9 +29,10 @@ public class UserStatisticsAdminServiceImpl implements UserStatisticsAdminServic
     private final RedisTemplate redisTemplate;
 
     private static final int CURRENT_YEAR = LocalDate.now().getYear();
+    private static final int MIN_YEAR = 1900;
 
     private void validateYear(int year) {
-        if (year > CURRENT_YEAR || year < 1900) {
+        if (year > CURRENT_YEAR || year < MIN_YEAR) {
             throw new BusinessException(ErrorCode.INVALID_YEAR);
         }
     }
@@ -107,14 +109,14 @@ public class UserStatisticsAdminServiceImpl implements UserStatisticsAdminServic
 
         int weekNumber = 1;
 
-        // 🔹 첫 주: 1일부터 시작해서 그 주의 일요일까지
+        // 첫 주: 1일부터 시작해서 그 주의 일요일까지
         LocalDate firstSunday = firstDayOfMonth.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
         LocalDateTime firstStart = firstDayOfMonth.atStartOfDay();
         LocalDateTime firstEnd = firstSunday.atTime(23, 59, 59);
         long firstWeekCount = userStatisticsRepository.countNewUsersByWeek(firstStart, firstEnd);
         result.add(new WeeklyUserCountDto(weekNumber++, firstDayOfMonth, firstSunday, firstWeekCount));
 
-        // 🔹 이후 주: 월요일부터 일요일까지
+        //  이후 주: 월요일부터 일요일까지
         LocalDate weekStart = firstSunday.plusDays(1); // 다음 주 월요일
         while (!weekStart.isAfter(lastDayOfMonth)) {
             LocalDate weekEnd = weekStart.plusDays(6);
@@ -158,14 +160,14 @@ public class UserStatisticsAdminServiceImpl implements UserStatisticsAdminServic
     */
     //TODO : 만료시간 명시
     /** 사용자 활동 추적 - 로그인 시 */
-    public void trackUserActivity(String userUuId) {
+    public void trackUserActivity(String userUuid) {
         LocalDate today = LocalDate.now();
         String week = YearWeek.from(today);
         YearMonth month = YearMonth.from(today);
 
-        redisTemplate.opsForSet().add("active:daily:" + today, userUuId);
-        redisTemplate.opsForSet().add("active:weekly:" + week, userUuId);
-        redisTemplate.opsForSet().add("active:monthly:" + month, userUuId);
+        redisTemplate.opsForSet().add("active:daily:" + today, userUuid);
+        redisTemplate.opsForSet().add("active:weekly:" + week, userUuid);
+        redisTemplate.opsForSet().add("active:monthly:" + month, userUuid);
     }
     //TODO
     /** DAU : 일일 활성 사용자 수 */
