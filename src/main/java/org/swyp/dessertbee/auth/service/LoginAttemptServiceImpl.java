@@ -9,6 +9,7 @@ import org.swyp.dessertbee.auth.entity.LoginAttemptEntity;
 import org.swyp.dessertbee.auth.exception.AuthExceptions.AccountLockedException;
 import org.swyp.dessertbee.auth.repository.LoginAttemptRepository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
@@ -43,6 +44,16 @@ public class LoginAttemptServiceImpl implements LoginAttemptService {
 
         LoginAttemptEntity loginAttempt = attemptOpt.get();
 
+        // 잠금 시간이 지났으면 잠금 해제
+        if (loginAttempt.getLockedUntil() != null &&
+                loginAttempt.getLockedUntil().isBefore(LocalDateTime.now())) {
+            loginAttempt.resetFailedAttempts();
+            loginAttemptRepository.save(loginAttempt);
+            log.info("계정 잠금 시간 만료 - 자동 잠금 해제: {}", email);
+            return;
+        }
+
+        // 아직 잠금 상태인 경우
         if (loginAttempt.isAccountLocked()) {
             long remainingMinutes = loginAttempt.getRemainingLockTime();
             log.warn("계정 잠금 상태 - 이메일: {}, 남은 시간: {}분", email, remainingMinutes);
