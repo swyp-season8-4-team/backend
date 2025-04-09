@@ -29,7 +29,7 @@ import java.util.UUID;
 
 @Tag(name = "Mate", description = "디저트메이트 관련 API")
 @RestController
-@RequestMapping("api/mates")
+@RequestMapping("/api/mates")
 @RequiredArgsConstructor
 public class MateController{
 

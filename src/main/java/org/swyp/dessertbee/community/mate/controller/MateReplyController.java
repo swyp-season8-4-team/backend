@@ -25,7 +25,7 @@ import java.util.UUID;
 
 @Tag(name = "MateReply", description = "디저트메이트 댓글 관련 API")
 @RestController
-@RequestMapping("api/mates/{mateUuid}/reply")
+@RequestMapping("/api/mates/{mateUuid}/reply")
 @RequiredArgsConstructor
 public class MateReplyController {
 
