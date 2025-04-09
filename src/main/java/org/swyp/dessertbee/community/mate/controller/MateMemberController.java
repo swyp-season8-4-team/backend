@@ -32,9 +32,7 @@ public class MateMemberController {
      * 디저트 메이트 멤버 전체 조회
      * */
     @Operation(summary = "디저트 메이트 멤버 전체 조회(completed)", description = "디저트 메이트 멤버 전체 조회합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "디저트 메이트 멤버 전체 조회 성공")
-    })
+    @ApiResponses(@ApiResponse(responseCode = "200", description = "디저트 메이트 멤버 전체 조회 성공"))
     @ApiErrorResponses({ErrorCode.USER_NOT_FOUND})
     @GetMapping("/members")
     public ResponseEntity<List<MateMemberResponse>> getMembers(@PathVariable UUID mateUuid) {
@@ -48,9 +46,7 @@ public class MateMemberController {
      * 디저트 메이트 멤버 신청 api
      * */
     @Operation(summary = "디저트 메이트 멤버 신청(completed)", description = "디저트 메이트 멤버 신청합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "디저트 메이트 멤버 신청 성공")
-    })
+    @ApiResponses(@ApiResponse(responseCode = "204", description = "디저트 메이트 멤버 신청 성공"))
     @ApiErrorResponses({ErrorCode.MATE_RECRUIT_DONE, ErrorCode.MATE_APPLY_BANNED, ErrorCode.MATE_APPLY_WAIT, ErrorCode.MATE_APPLY_REJECT, ErrorCode.ALREADY_TEAM_MEMBER})
     @PostMapping("/apply")
         public ResponseEntity<Map<String, String>> applyMate(@PathVariable UUID mateUuid) {
@@ -68,9 +64,7 @@ public class MateMemberController {
      * 디저트메이트 멤버 신청 취소 api
      * */
     @Operation(summary = "디저트 메이트 멤버 신청 취소(completed)", description = "디저트 메이트 멤버 신청 취소합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "디저트 메이트 멤버 신청 취소 성공")
-    })
+    @ApiResponses(@ApiResponse(responseCode = "204", description = "디저트 메이트 멤버 신청 취소 성공"))
     @ApiErrorResponses({ErrorCode.MATE_NOT_PENDING_MEMBER})
     @DeleteMapping("/apply")
     public ResponseEntity<Map<String, String>> cancelApplyMate(@PathVariable UUID mateUuid) {
@@ -88,9 +82,7 @@ public class MateMemberController {
      * 디저트 메이트 대기 멤버 전체 조회
      **/
     @Operation(summary = "디저트 메이트 대기 멤버 전체 조회(completed)", description = "디저트 메이트 대기 멤버 전체 조회합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "디저트 메이트 대기 멤버 전체 조회 성공"),
-    })
+    @ApiResponses(@ApiResponse(responseCode = "204", description = "디저트 메이트 대기 멤버 전체 조회 성공"))
     @ApiErrorResponses({ErrorCode.USER_NOT_FOUND})
     @GetMapping("/pending")
     public ResponseEntity<List<MateMemberResponse>> pendingMate(@PathVariable UUID mateUuid) {
@@ -105,9 +97,7 @@ public class MateMemberController {
      * 디저트 메이트 멤버 신청 수락 api
      * */
     @Operation(summary = "디저트 메이트 멤버 신청 수락(completed)", description = "디저트 메이트 멤버 신청 수락합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "디저트 메이트 멤버 신청 수락 성공")
-    })
+    @ApiResponses(@ApiResponse(responseCode = "204", description = "디저트 메이트 멤버 신청 수락 성공"))
     @ApiErrorResponses({ErrorCode.MATE_MEMBER_NOT_FOUND})
     @PatchMapping("/apply")
     public ResponseEntity<Map<String, String>> acceptMember(@PathVariable UUID mateUuid, @RequestBody MateAcceptRequest request) {
@@ -124,9 +114,7 @@ public class MateMemberController {
      * 디저트 메이트 멤버 신청 거절 api
      * */
     @Operation(summary = "디저트 메이트 멤버 신청 거절(completed)", description = "디저트 메이트 멤버 신청 거절합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "디저트 메이트 멤버 신청 거절 성공")
-    })
+    @ApiResponses(@ApiResponse(responseCode = "204", description = "디저트 메이트 멤버 신청 거절 성공"))
     @ApiErrorResponses({ErrorCode.MATE_MEMBER_NOT_FOUND, ErrorCode.USER_NOT_FOUND})
     @DeleteMapping("/reject")
     public ResponseEntity<Map<String, String>> rejectMember(@PathVariable UUID mateUuid, @RequestBody MateRejectRequest request) {
@@ -141,9 +129,7 @@ public class MateMemberController {
      * 디저트 메이트 멤버 강퇴 api
      * */
     @Operation(summary = "디저트 메이트 멤버 신청 강퇴(completed)", description = "디저트 메이트 멤버 신청 강퇴합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "디저트 메이트 멤버 신청 강퇴 성공")
-    })
+    @ApiResponses(@ApiResponse(responseCode = "204", description = "디저트 메이트 멤버 신청 강퇴 성공"))
     @ApiErrorResponses({ErrorCode.MATE_MEMBER_NOT_FOUND, ErrorCode.USER_NOT_FOUND, ErrorCode.MATE_PERMISSION_DENIED})
     @DeleteMapping("/members")
     public ResponseEntity<Map<String, String>> bannedMember(@PathVariable UUID mateUuid, @RequestBody MateBannedRequest request) {
@@ -158,9 +144,7 @@ public class MateMemberController {
      * 디저트 메이트 멤버 탈퇴 api
      * */
     @Operation(summary = "디저트 메이트 멤버 신청 탈퇴(completed)", description = "디저트 메이트 멤버 신청 탈퇴합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "디저트 메이트 멤버 신청 탈퇴 성공")
-    })
+    @ApiResponses(@ApiResponse(responseCode = "204", description = "디저트 메이트 멤버 신청 탈퇴 성공"))
     @ApiErrorResponses({ErrorCode.MATE_MEMBER_NOT_FOUND})
     @DeleteMapping("/leave")
     public ResponseEntity<Map<String, String>> leaveMember(@PathVariable UUID mateUuid) {

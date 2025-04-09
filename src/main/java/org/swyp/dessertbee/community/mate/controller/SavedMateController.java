@@ -32,9 +32,7 @@ public class SavedMateController {
      * 디저트메이트 저장
      * */
     @Operation(summary = "디저트메이트 저장(completed)", description = "디저트메이트 저장합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "디저트메이트 저장 성공")
-    })
+    @ApiResponses(@ApiResponse(responseCode = "201", description = "디저트메이트 저장 성공"))
     @ApiErrorResponses({ErrorCode.MATE_NOT_FOUND, ErrorCode.DUPLICATION_SAVED_MATE, ErrorCode.USER_NOT_FOUND})
     @PostMapping("/{mateUuid}")
     public ResponseEntity<Map<String, String>> saveMate(@PathVariable UUID mateUuid) {
@@ -54,9 +52,7 @@ public class SavedMateController {
      * 디저트메이트 저장 삭제
      * */
     @Operation(summary = "디저트메이트 저장 삭제(completed)", description = "저장한 디저트메이트 삭제합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "디저트메이트 저장 삭제 성공")
-    })
+    @ApiResponses(@ApiResponse(responseCode = "204", description = "디저트메이트 저장 삭제 성공"))
     @ApiErrorResponses({ErrorCode.MATE_NOT_FOUND, ErrorCode.SAVED_MATE_NOT_FOUND, ErrorCode.USER_NOT_FOUND})
     @DeleteMapping("/{mateUuid}")
     public ResponseEntity<Map<String, String>> deleteSavedMate(@PathVariable UUID mateUuid) {
@@ -73,9 +69,7 @@ public class SavedMateController {
      * 저장된 디저트메이트 조회
      * */
     @Operation(summary = "저장된 디저트메이트 조회(completed)", description = "저장된 디저트메이트 조회합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200gin", description = "저장된 디저트메이트 조회 성공")
-    })
+    @ApiResponses(@ApiResponse(responseCode = "200", description = "저장된 디저트메이트 조회 성공"))
     @ApiErrorResponses({ErrorCode.USER_NOT_FOUND, ErrorCode.INVALID_RANGE})
     @GetMapping
     private ResponseEntity<MatesPageResponse> getSavedMates(

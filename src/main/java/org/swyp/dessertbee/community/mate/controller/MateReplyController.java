@@ -35,9 +35,7 @@ public class MateReplyController {
      * 디저트메이트 댓글 생성
      * */
     @Operation(summary = "메이트 댓글 생성(completed)", description = "디저트메이트를 댓글을 생성합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "디저트메이트 댓글 생성 성공")
-    })
+    @ApiResponses( @ApiResponse(responseCode = "201", description = "디저트메이트 댓글 생성 성공"))
     @PostMapping
     public ResponseEntity<MateReplyResponse> createReply(@RequestBody  MateReplyCreateRequest request,
                                                          @PathVariable UUID mateUuid) {
@@ -53,9 +51,7 @@ public class MateReplyController {
      * 디저트메이트 댓글 조회(한개만)
      * */
     @Operation(summary = "메이트 댓글 조회(한개만)(completed)", description = "디저트메이트의 댓글 Uuid에 맞는 하나의 댓글을 조회합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "디저트메이트 댓글 조회(한개만) 성공")
-    })
+    @ApiResponses(@ApiResponse(responseCode = "200", description = "디저트메이트 댓글 조회(한개만) 성공"))
     @ApiErrorResponses({ErrorCode.MATE_REPLY_NOT_FOUND, ErrorCode.USER_NOT_FOUND})
     @GetMapping("/{replyId}")
     public ResponseEntity<MateReplyResponse> getReplyDetail(@PathVariable UUID mateUuid, @PathVariable Long replyId) {
@@ -70,9 +66,7 @@ public class MateReplyController {
      * 디저트메이트 댓글 전체 조회
      * */
     @Operation(summary = "메이트 댓글 전체 조회(completed)", description = "디저트메이트의 댓글 전체 조회합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "디저트메이트 댓글 전체 조회 성공")
-    })
+    @ApiResponses(@ApiResponse(responseCode = "200", description = "디저트메이트 댓글 전체 조회 성공"))
     @ApiErrorResponses({ErrorCode.INVALID_RANGE})
     @GetMapping
     public ResponseEntity<MateReplyPageResponse> getReplies(@PathVariable UUID mateUuid,
@@ -93,9 +87,7 @@ public class MateReplyController {
      * 디저트메이트 댓글 수정
      * */
     @Operation(summary = "메이트 댓글 수정(completed)", description = "디저트메이트 댓글 수정합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "디저트메이트 댓글 수정 성공")
-    })
+    @ApiResponses(@ApiResponse(responseCode = "204", description = "디저트메이트 댓글 수정 성공"))
     @ApiErrorResponses({ErrorCode.MATE_REPLY_NOT_FOUND, ErrorCode.USER_NOT_FOUND})
     @PatchMapping("/{replyId}")
     public ResponseEntity<Map<String, String>>  updateReply(
@@ -116,9 +108,7 @@ public class MateReplyController {
      * 디저트메이트 댓글 삭제
      * */
     @Operation(summary = "메이트 댓글 삭제(completed)", description = "디저트메이트 댓글 삭제합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "디저트메이트 댓글 삭제 성공")
-    })
+    @ApiResponses(@ApiResponse(responseCode = "204", description = "디저트메이트 댓글 삭제 성공"))
     @ApiErrorResponses({ErrorCode.MATE_REPLY_NOT_FOUND, ErrorCode.USER_NOT_FOUND})
     @DeleteMapping("/{replyId}")
     public ResponseEntity<Map<String, String>> deleteReply(@PathVariable UUID mateUuid,
@@ -135,9 +125,7 @@ public class MateReplyController {
      * 디저트메이트 댓글 신고
      * */
     @Operation(summary = "메이트 댓글 신고(completed)", description = "디저트메이트 댓글 신고합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "디저트메이트 댓글 신고 성공")
-    })
+    @ApiResponses(@ApiResponse(responseCode = "204", description = "디저트메이트 댓글 신고 성공"))
     @ApiErrorResponses({ErrorCode.MATE_REPLY_NOT_FOUND, ErrorCode.DUPLICATION_REPORT})
     @PostMapping("/{replyId}/report")
     public ResponseEntity<Map<String, String>>  reportMateReply(@PathVariable UUID mateUuid,
