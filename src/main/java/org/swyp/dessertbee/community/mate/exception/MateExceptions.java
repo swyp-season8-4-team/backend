@@ -17,16 +17,6 @@ public class MateExceptions {
         }
     }
 
-    /**
-     * 유저 예외
-     * */
-    public static class UserNotFoundExcption extends BusinessException {
-        public UserNotFoundExcption(){super(ErrorCode.USER_NOT_FOUND);}
-
-        public UserNotFoundExcption(String message) {
-            super(ErrorCode.USER_NOT_FOUND,message );
-        }
-    }
 
     /**
      * 디저트 메이트 멤버 예외

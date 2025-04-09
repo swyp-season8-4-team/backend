@@ -22,7 +22,7 @@ public class MateReportResponse {
     private Long mateReportId;
 
     @NotBlank
-    @Schema(description = "디저트메이트 신고 id", example = "1")
+    @Schema(description = "신고 카테고리 id", example = "1")
     private Long reportCategoryId;
 
 
@@ -40,7 +40,7 @@ public class MateReportResponse {
     @Schema(description = "신고 내용", example = "욕설 및 폭언")
     private String comment;
 
-    @NotBlank
+    @NotNull
     @Schema(description = "신고 날짜", example = "2025-03-10 02:15")
     private LocalDateTime createdAt;
 

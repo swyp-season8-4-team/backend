@@ -14,11 +14,11 @@ import java.util.List;
 @AllArgsConstructor
 public class MatesPageResponse {
 
-    @NotBlank
+
     @Schema(description = "디저트메이트 정보", defaultValue = "false", example = "MateDetailResponse 전체")
     private List<MateDetailResponse> mates;
 
-    @NotBlank
+    @NotNull
     @Schema(description = "무한 스크롤 마지막 페이지 확인", example = "false")
     private boolean isLast;
 }

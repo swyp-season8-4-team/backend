@@ -29,22 +29,22 @@ public class MateDetailResponse {
     private Long storeId;
 
     @NotBlank
-    @Schema(description = "디저트메이트 작성하는 사람 uuid", defaultValue = "false", example = "19a40ec1-ac92-419e-aa2b-0fcfcbd42447")
+    @Schema(description = "디저트메이트 작성하는 사람 uuid", example = "19a40ec1-ac92-419e-aa2b-0fcfcbd42447")
     private UUID userUuid;
 
     @NotBlank
-    @Schema(description = "디저트메이트 작성하는 사람 닉네임", defaultValue = "false", example = "디저비1")
+    @Schema(description = "디저트메이트 작성하는 사람 닉네임", example = "디저비1")
     private String nickname;
 
     @NotBlank
-    @Schema(description = "디저트메이트 제목 작성", defaultValue = "false", example = "저랑 같이 홍대 빵지순례할 사람 찾습니다.")
+    @Schema(description = "디저트메이트 제목 작성", example = "저랑 같이 홍대 빵지순례할 사람 찾습니다.")
     private String title;
 
     @NotBlank
-    @Schema(description = "디저트메이트 내용 작성", defaultValue = "false", example = "홍대 빵지순례 리스트 200개 있습니다. 같이 맛있는거 먹으러 가요.")
+    @Schema(description = "디저트메이트 내용 작성",  example = "홍대 빵지순례 리스트 200개 있습니다. 같이 맛있는거 먹으러 가요.")
     private String content;
 
-    @NotBlank
+    @NotNull
     @Schema(description = "디저트메이트 모집 여부", defaultValue = "true", example = "true")
     private Boolean recruitYn;
 
@@ -59,18 +59,18 @@ public class MateDetailResponse {
     @Schema(description = "디저트메이트 지정 장소", example = " placeName : 모코모코, address : 서울 마포구 와우산로29길 47 1층, latitude: 37.55564710, longitude : 126.92734908")
     private MatePlace place;
 
-    @NotBlank
+    @NotNull
     @Schema(description = "디저트메이트 생성 날짜", example = "2025-03-10 02:15")
     private LocalDateTime createdAt;
 
     @Schema(description = "디저트메이트 수정 날짜", example = "2025-03-10 02:44")
     private LocalDateTime updatedAt;
 
-    @NotBlank
+    @NotNull
     @Schema(description = "현재 로그인한 사용자의 디저트메이트 저장 유무")
     private boolean saved;
 
-    @NotBlank
+    @NotNull
     @Schema(description = "현재 로그인한 사용자의 디저트메이트 신청 상태값", example = "APPROVED")
     private MateApplyStatus applyStatus;
 

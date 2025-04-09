@@ -3,6 +3,7 @@ package org.swyp.dessertbee.community.mate.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,7 +24,7 @@ public class MateMemberResponse {
     private Long userId;
 
     @NotBlank
-    @Schema(description = "디저트메이트 참여하는 사람 uuid", defaultValue = "false", example = "19a40ec1-ac92-419e-aa2b-0fcfcbd42447")
+    @Schema(description = "디저트메이트 참여하는 사람 uuid",  example = "19a40ec1-ac92-419e-aa2b-0fcfcbd42447")
     private UUID userUuid;
 
     @NotBlank
@@ -35,10 +36,10 @@ public class MateMemberResponse {
     private String profileImage;
 
     @NotBlank
-    @Schema(description = "작성하는 사람 닉네임", defaultValue = "false", example = "디저비1")
+    @Schema(description = "작성하는 사람 닉네임",  example = "디저비1")
     private String nickname;
 
-    @NotBlank
+    @NotNull
     @Schema(description = "현재 로그인한 사용자의 디저트메이트 신청 상태값", example = "APPROVED")
     private MateApplyStatus applyStatus;
 

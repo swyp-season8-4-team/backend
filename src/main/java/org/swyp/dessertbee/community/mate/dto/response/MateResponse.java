@@ -40,11 +40,11 @@ public class MateResponse {
     @Schema(description = "디저트메이트 내용 작성", defaultValue = "false", example = "홍대 빵지순례 리스트 200개 있습니다. 같이 맛있는거 먹으러 가요.")
     private String content;
 
-    @NotBlank
+    @NotNull
     @Schema(description = "디저트메이트 모집 여부", defaultValue = "true", example = "true")
     private Boolean recruitYn;
 
-    @NotBlank
+    @NotNull
     @Schema(description = "현재 로그인한 사용자의 디저트메이트 저장 유무")
     private boolean saved;
 }

@@ -1,7 +1,6 @@
 package org.swyp.dessertbee.community.mate.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,13 +11,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
-import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.community.mate.dto.request.MateReplyCreateRequest;
 import org.swyp.dessertbee.community.mate.dto.request.MateReportRequest;
-import org.swyp.dessertbee.community.mate.dto.response.MateMemberResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MateReplyPageResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MateReplyResponse;
+import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.community.mate.service.MateReplyService;
 
 import java.util.HashMap;
@@ -40,7 +38,6 @@ public class MateReplyController {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "디저트메이트 댓글 생성 성공")
     })
-    @Schema(implementation = MateReplyResponse.class)
     @PostMapping
     public ResponseEntity<MateReplyResponse> createReply(@RequestBody  MateReplyCreateRequest request,
                                                          @PathVariable UUID mateUuid) {
@@ -59,7 +56,6 @@ public class MateReplyController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "디저트메이트 댓글 조회(한개만) 성공")
     })
-    @Schema(implementation = MateReplyResponse.class)
     @ApiErrorResponses({ErrorCode.MATE_REPLY_NOT_FOUND, ErrorCode.USER_NOT_FOUND})
     @GetMapping("/{replyId}")
     public ResponseEntity<MateReplyResponse> getReplyDetail(@PathVariable UUID mateUuid, @PathVariable Long replyId) {
@@ -77,7 +73,6 @@ public class MateReplyController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "디저트메이트 댓글 전체 조회 성공")
     })
-    @Schema(implementation = MateReplyPageResponse.class)
     @ApiErrorResponses({ErrorCode.INVALID_RANGE})
     @GetMapping
     public ResponseEntity<MateReplyPageResponse> getReplies(@PathVariable UUID mateUuid,
@@ -85,9 +80,8 @@ public class MateReplyController {
                                                             @RequestParam(required = false, defaultValue = "10") int to) {
 
         if (from >= to) {
-            throw new BusinessException(ErrorCode.INVALID_RANGE);
+            throw new FromToMateException("잘못된 범위 요청입니다.");
         }
-
         int size = to - from;
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);

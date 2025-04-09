@@ -1,7 +1,6 @@
 package org.swyp.dessertbee.community.mate.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,6 +19,7 @@ import org.swyp.dessertbee.community.mate.dto.request.MateCreateRequest;
 import org.swyp.dessertbee.community.mate.dto.request.MateReportRequest;
 import org.swyp.dessertbee.community.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MatesPageResponse;
+import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.community.mate.service.MateService;
 
 import java.net.URLDecoder;
@@ -43,7 +43,6 @@ public class MateController{
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "디저트메이트 생성 성공")
     })
-    @Schema(implementation = MateDetailResponse.class)
     @ApiErrorResponses({ErrorCode.USER_NOT_FOUND})
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MateDetailResponse> createMate(@RequestPart("request")  MateCreateRequest request,
@@ -62,7 +61,6 @@ public class MateController{
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "디저트메이트 상세 정보 요청 성공")
     })
-    @Schema(implementation = MateDetailResponse.class)
     @ApiErrorResponses({ErrorCode.MATE_NOT_FOUND})
     @GetMapping("/{mateUuid}")
     public ResponseEntity<MateDetailResponse> getMateDetail(@PathVariable UUID mateUuid) {
@@ -122,7 +120,6 @@ public class MateController{
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "디저트메이트 전체 조회 성공")
     })
-    @Schema(implementation = MatesPageResponse.class)
     @ApiErrorResponses({ErrorCode.INVALID_RANGE})
     @GetMapping
     public ResponseEntity<MatesPageResponse> getMates(
@@ -133,7 +130,7 @@ public class MateController{
     ) {
 
         if (from >= to) {
-            throw new BusinessException(ErrorCode.INVALID_RANGE);
+            throw new FromToMateException("잘못된 범위 요청입니다.");
         }
 
         int size = to - from;
@@ -153,14 +150,13 @@ public class MateController{
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "내가 참여한 디저트메이트 조회 성공")
     })
-    @Schema(implementation = MatesPageResponse.class)
     @ApiErrorResponses({ErrorCode.INVALID_RANGE})
     @GetMapping("/me")
     public ResponseEntity<MatesPageResponse> getMyMates( @RequestParam(required = false, defaultValue = "0") int from,
                                                          @RequestParam(required = false, defaultValue = "10") int to){
 
         if (from >= to) {
-            throw new BusinessException(ErrorCode.INVALID_RANGE);
+            throw new FromToMateException("잘못된 범위 요청입니다.");
         }
         int size = to - from;
         int page = from / size;

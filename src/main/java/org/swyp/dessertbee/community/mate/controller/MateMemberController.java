@@ -1,7 +1,6 @@
 package org.swyp.dessertbee.community.mate.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,7 +13,6 @@ import org.swyp.dessertbee.community.mate.dto.request.MateAcceptRequest;
 import org.swyp.dessertbee.community.mate.dto.request.MateBannedRequest;
 import org.swyp.dessertbee.community.mate.dto.request.MateRejectRequest;
 import org.swyp.dessertbee.community.mate.dto.response.MateMemberResponse;
-import org.swyp.dessertbee.community.mate.dto.response.MatesPageResponse;
 import org.swyp.dessertbee.community.mate.service.MateMemberService;
 
 import java.util.HashMap;
@@ -37,7 +35,6 @@ public class MateMemberController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "디저트 메이트 멤버 전체 조회 성공")
     })
-    @Schema(implementation = MateMemberResponse.class)
     @ApiErrorResponses({ErrorCode.USER_NOT_FOUND})
     @GetMapping("/members")
     public ResponseEntity<List<MateMemberResponse>> getMembers(@PathVariable UUID mateUuid) {
@@ -94,7 +91,6 @@ public class MateMemberController {
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "디저트 메이트 대기 멤버 전체 조회 성공"),
     })
-    @Schema(implementation = MateMemberResponse.class)
     @ApiErrorResponses({ErrorCode.USER_NOT_FOUND})
     @GetMapping("/pending")
     public ResponseEntity<List<MateMemberResponse>> pendingMate(@PathVariable UUID mateUuid) {
