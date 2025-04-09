@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.swyp.dessertbee.auth.dto.request.PasswordResetRequest;
+import org.swyp.dessertbee.auth.dto.response.PasswordResetResponse;
 import org.swyp.dessertbee.auth.dto.response.TokenResponse;
 import org.swyp.dessertbee.auth.dto.request.LoginRequest;
 import org.swyp.dessertbee.auth.dto.response.LoginResponse;
@@ -209,4 +211,35 @@ public class AuthController {
         LoginResponse loginResponse = authService.login(request, deviceId, true);
         return ResponseEntity.ok(loginResponse);
     }
+
+    @Operation(
+            summary = "비밀번호 재설정",
+            description = "이메일 인증 토큰을 사용하여 비밀번호를 재설정합니다. 재설정이 성공하면 모든 디바이스에서 로그아웃됩니다.",
+            parameters = {
+                    @Parameter(
+                            name = "X-Email-Verification-Token",
+                            description = "이메일 인증 토큰 (분실한 비밀번호 찾기 요청 시 발급됨)",
+                            in = ParameterIn.HEADER,
+                            required = true,
+                            schema = @Schema(type = "string")
+                    )
+            }
+    )
+    @ApiResponse(responseCode = "200", description = "비밀번호 재설정 성공")
+    @ApiErrorResponses({ErrorCode.INVALID_VERIFICATION_TOKEN, ErrorCode.EXPIRED_VERIFICATION_TOKEN, ErrorCode.USER_NOT_FOUND})
+    @PostMapping("/password/reset")
+    public ResponseEntity<PasswordResetResponse> resetPassword(
+            @Parameter(description = "이메일 인증 토큰", required = true)
+            @RequestHeader("X-Email-Verification-Token") String verificationToken,
+            @Parameter(
+                    description = "비밀번호 재설정 정보",
+                    required = true,
+                    schema = @Schema(implementation = PasswordResetRequest.class)
+            )
+            @Valid @RequestBody PasswordResetRequest request
+    ) {
+        authService.resetPassword(request, verificationToken);
+        return ResponseEntity.ok().build();
+    }
+
 }

@@ -2,6 +2,7 @@ package org.swyp.dessertbee.auth.service;
 
 import org.swyp.dessertbee.auth.dto.request.LoginRequest;
 import org.swyp.dessertbee.auth.dto.response.LoginResponse;
+import org.swyp.dessertbee.auth.dto.response.PasswordResetResponse;
 import org.swyp.dessertbee.auth.dto.response.TokenResponse;
 import org.swyp.dessertbee.auth.dto.response.LogoutResponse;
 import org.swyp.dessertbee.auth.dto.request.SignUpRequest;
@@ -60,7 +61,7 @@ public interface AuthService {
      * @param verificationToken 이메일 인증 토큰
      * @throws InvalidVerificationTokenException 유효하지 않은 인증 토큰
      */
-    void resetPassword(PasswordResetRequest request, String verificationToken);
+    PasswordResetResponse resetPassword(PasswordResetRequest request, String verificationToken);
 
     /**
      * 로그아웃 처리
