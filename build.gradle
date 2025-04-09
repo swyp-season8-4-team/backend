@@ -65,6 +65,11 @@ dependencies {
     implementation 'software.amazon.awssdk:netty-nio-client:2.20.86'
 
     implementation 'org.springframework.boot:spring-boot-starter-test'
+
+    //qr
+    implementation 'com.google.zxing:core:3.5.2'
+    implementation 'com.google.zxing:javase:3.5.2'
+
 }
 
 tasks.named('test') {
