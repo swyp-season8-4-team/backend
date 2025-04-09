@@ -26,7 +26,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class StoreNoticeController {
 
-    private StoreNoticeService storeNoticeService;
+    private final StoreNoticeService storeNoticeService;
 
     /** 공지 추가 */
     @Operation(summary = "공지 추가 (completed)", description = "가게 공지를 추가합니다.")

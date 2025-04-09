@@ -11,7 +11,6 @@ import org.swyp.dessertbee.store.notice.repository.StoreNoticeRepository;
 import org.swyp.dessertbee.store.notice.exception.StoreNoticeExceptions.*;
 import org.swyp.dessertbee.store.store.exception.StoreExceptions.*;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
-import org.swyp.dessertbee.store.store.service.StoreService;
 
 import java.util.List;
 import java.util.UUID;
