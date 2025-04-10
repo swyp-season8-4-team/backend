@@ -56,7 +56,7 @@ public class StoreReviewController {
     @ApiErrorResponses({ErrorCode.INVALID_STORE_UUID, ErrorCode.STORE_REVIEW_SERVICE_ERROR})
     @GetMapping
     public ResponseEntity<List<StoreReviewResponse>> getReviews(@PathVariable UUID storeUuid) {
-        List<StoreReviewResponse> reviews = storeReviewService.getReviewsByStoreUuId(storeUuid);
+        List<StoreReviewResponse> reviews = storeReviewService.getReviewsByStoreUuid(storeUuid);
         return ResponseEntity.ok(reviews);
     }
 
