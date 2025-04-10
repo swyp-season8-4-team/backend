@@ -1,9 +1,9 @@
-package org.swyp.dessertbee.statistics.infra.repository.user;
+package org.swyp.dessertbee.statistics.user.repository;
 
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
-import org.swyp.dessertbee.statistics.common.dto.user.response.UserStatisticsResponseDto;
+import org.swyp.dessertbee.statistics.user.dto.response.UserStatisticsResponseDto;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.time.LocalDateTime;

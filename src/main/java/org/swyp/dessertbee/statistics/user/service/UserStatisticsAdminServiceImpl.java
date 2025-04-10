@@ -1,6 +1,5 @@
 package org.swyp.dessertbee.statistics.user.service;
 
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -8,10 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.util.YearWeek;
-import org.swyp.dessertbee.role.repository.UserRoleRepository;
-import org.swyp.dessertbee.statistics.common.dto.user.response.*;
-import org.swyp.dessertbee.statistics.infra.repository.user.UserStatisticsRepository;
-import org.swyp.dessertbee.user.repository.UserRepository;
+import org.swyp.dessertbee.statistics.user.dto.response.*;
+import org.swyp.dessertbee.statistics.user.repository.UserStatisticsRepository;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
