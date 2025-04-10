@@ -26,12 +26,17 @@ import org.swyp.dessertbee.community.review.repository.ReviewContentRepository;
 import org.swyp.dessertbee.community.review.repository.ReviewRepository;
 import org.swyp.dessertbee.community.review.repository.ReviewStatisticsRepository;
 import org.swyp.dessertbee.community.review.repository.SavedReviewRepository;
+import org.swyp.dessertbee.statistics.store.entity.CommunityReviewLog;
+import org.swyp.dessertbee.statistics.store.entity.enums.ReviewAction;
+import org.swyp.dessertbee.statistics.store.repostiory.CommunityReviewLogRepository;
+import org.swyp.dessertbee.statistics.store.repostiory.StoreStatisticsRepository;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.user.service.UserServiceImpl;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -49,6 +54,8 @@ public class ReviewService {
     private final ImageRepository imageRepository;
     private final ReviewContentRepository reviewContentRepository;
     private final ReviewStatisticsRepository reviewStatisticsRepository;
+    private final CommunityReviewLogRepository communityReviewLogRepository;
+    private final StoreStatisticsRepository storeStatisticsRepository;
 
 
     /**
@@ -123,6 +130,17 @@ public class ReviewService {
                         .reviews(0)
                         .build()
         );
+
+        communityReviewLogRepository.save(
+                CommunityReviewLog.builder()
+                        .storeId(storeId)
+                        .userId(userId) // todo: userUuid로 추후에 변경할 것
+                        .action(ReviewAction.CREATE)
+                        .actionAt(LocalDateTime.now())
+                        .build()
+        );
+
+        storeStatisticsRepository.increaseCommunityReviewCount(storeId);
 
         return getReviewDetail(review.getReviewUuid());
     }
@@ -217,7 +235,7 @@ public class ReviewService {
                         // 기존 imageUuid가 있으나 DB에 없다면 신규 업로드 처리
                         if (reviewImages == null) {
 
-                            if(imageCounter > reviewImages.size()){
+                            if (imageCounter > reviewImages.size()) {
                                 throw new BusinessException(ErrorCode.IMAGE_COUNT_MISMATCH);
 
                             }
@@ -272,19 +290,9 @@ public class ReviewService {
                     reviewContentRepository.save(newTextContent);
                 }
                 textCounter++; // 순서에 따른 인덱스 증가
-                }
             }
-
-
-
-}
-
-
-
-
-
-
-
+        }
+    }
 
     /**
      * 커뮤니티 리뷰 삭제
@@ -306,6 +314,17 @@ public class ReviewService {
             }
 
             imageService.deleteImagesByRefId(ImageType.REVIEW, review.getReviewId());
+
+            communityReviewLogRepository.save(
+                    CommunityReviewLog.builder()
+                            .storeId(review.getStoreId())
+                            .userId(review.getUserId()) // todo: userUuid로 변경 필요
+                            .action(ReviewAction.DELETE)
+                            .actionAt(LocalDateTime.now())
+                            .build()
+            );
+
+            storeStatisticsRepository.decreaseCommunityReviewCount(review.getStoreId());
         } catch (Exception e)
         {
             log.error("❌ S3 이미지 삭제 중 오류 발생: " + e.getMessage());
@@ -313,7 +332,6 @@ public class ReviewService {
         }
 
     }
-
 
     /**
      * 커뮤니티 리뷰 정보 조회 중복 코드

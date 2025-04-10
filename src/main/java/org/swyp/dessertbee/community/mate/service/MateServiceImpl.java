@@ -20,12 +20,15 @@ import org.swyp.dessertbee.community.mate.dto.response.MatesPageResponse;
 import org.swyp.dessertbee.community.mate.entity.*;
 import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.community.mate.repository.*;
+import org.swyp.dessertbee.statistics.store.entity.DessertMateLog;
+import org.swyp.dessertbee.statistics.store.repostiory.DessertMateLogRepository;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.exception.UserExceptions.*;
 import org.swyp.dessertbee.user.service.UserServiceImpl;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -45,6 +48,7 @@ public class MateServiceImpl implements MateService {
     private final StoreRepository storeRepository;
     private final ImageService imageService;
     private final UserServiceImpl userService;
+    private final DessertMateLogRepository dessertMateLogRepository;
 
 
     /** 메이트 등록 */
@@ -92,6 +96,14 @@ public class MateServiceImpl implements MateService {
 
             //디저트 메이트 mateId를 가진 member 데이터 생성
             mateMemberService.addCreatorAsMember(mate.getMateUuid(), user.getId());
+
+            dessertMateLogRepository.save(
+                    DessertMateLog.builder()
+                            .storeId(storeId)
+                            .userUuid(user.getUserUuid())
+                            .createdAt(LocalDateTime.now())
+                            .build()
+            );
 
             return getMateDetail(mate.getMateUuid());
 
