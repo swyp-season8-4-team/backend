@@ -18,6 +18,7 @@ public class StoreLink {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "store_id", nullable = false)
     private Long storeId;
 
     @Column(nullable = false)
