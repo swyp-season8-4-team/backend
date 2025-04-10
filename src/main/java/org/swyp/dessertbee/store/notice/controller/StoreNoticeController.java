@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +31,7 @@ public class StoreNoticeController {
 
     /** 공지 추가 */
     @Operation(summary = "공지 추가 (completed)", description = "가게 공지를 추가합니다.")
-    @ApiResponse(responseCode = "200", description = "공지 추가 성공")
+    @ApiResponse(responseCode = "201", description = "공지 추가 성공")
     @ApiErrorResponses({ErrorCode.INVALID_STORE_UUID, ErrorCode.STORE_NOTICE_SERVICE_ERROR, ErrorCode.STORE_NOTICE_CREATION_FAILED})
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_OWNER')")
     @PostMapping
@@ -38,7 +39,7 @@ public class StoreNoticeController {
             @PathVariable UUID storeUuid,
             @RequestBody StoreNoticeRequest request) {
         storeNoticeService.createNotice(storeUuid, request);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     /** 공지 수정 */
