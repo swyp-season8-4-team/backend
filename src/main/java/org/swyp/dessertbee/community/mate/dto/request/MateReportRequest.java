@@ -1,5 +1,7 @@
 package org.swyp.dessertbee.community.mate.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,11 +16,14 @@ import java.util.UUID;
 @AllArgsConstructor
 public class MateReportRequest {
 
-    @NotNull
+    @NotBlank(message = "작성하는 사람의 uuid를 넘겨주세요.")
+    @Schema(description = "작성하는 사람 uuid", defaultValue = "false")
     private UUID userUuid;
 
-    @NotNull
+    @NotBlank(message = "디저트메이트 신고 카테고리 선택해주세요.")
+    @Schema(description = "디저트메이트 신고 카테고리", defaultValue = "false", example = "1")
     private Long reportCategoryId;
 
+    @Schema(description = "디저트메이트 신고 기타 내용", example = "저 디저트메이트 사용자 자체에 문제가 있습니다.")
     private String reportComment;
 }

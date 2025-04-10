@@ -10,7 +10,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.entity.ReportCategory;
 import org.swyp.dessertbee.common.exception.BusinessException;
-import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.repository.ReportRepository;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.community.mate.dto.request.MateCreateRequest;
@@ -19,10 +18,12 @@ import org.swyp.dessertbee.community.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MateReportResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MatesPageResponse;
 import org.swyp.dessertbee.community.mate.entity.*;
+import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.community.mate.repository.*;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
+import org.swyp.dessertbee.user.exception.UserExceptions.*;
 import org.swyp.dessertbee.user.service.UserServiceImpl;
 
 import java.util.List;
@@ -95,7 +96,7 @@ public class MateServiceImpl implements MateService {
             return getMateDetail(mate.getMateUuid());
 
         }catch (BusinessException e) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+            throw new UserNotFoundException("사용자를 찾을 수 없습니다.");
         }
 
     }
@@ -108,7 +109,7 @@ public class MateServiceImpl implements MateService {
         UserEntity user = userService.getCurrentUser();
         //mateId로 디저트메이트 여부 확인
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
+                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
         // 현재 접속해 있는 사용자의 user 정보 (user가 null일 수 있으므로 null 체크)
         Long currentUserId = (user != null) ? user.getId() : null;
@@ -125,7 +126,7 @@ public class MateServiceImpl implements MateService {
 
         //mateId로 디저트메이트 여부 확인
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
+                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
         try {
             mate.softDelete();
@@ -154,7 +155,7 @@ public class MateServiceImpl implements MateService {
 
         //mateId 존재 여부 확인
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
+                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
         //위도,경도로 storeId 조회
         Store store = storeRepository.findByName(request.getPlace().getPlaceName());
@@ -228,7 +229,7 @@ public class MateServiceImpl implements MateService {
 
         //mateId 존재 여부 확인
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
+                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
         Long userId = user.getId();
 
@@ -236,7 +237,7 @@ public class MateServiceImpl implements MateService {
         MateReport report = mateReportRepository.findByMateIdAndUserId(mate.getMateId(), userId);
 
         if(report != null){
-            throw new BusinessException(ErrorCode.DUPLICATION_REPORT);
+            throw new DuplicationReportException("이미 신고된 게시물입니다.");
         }
 
 
@@ -324,12 +325,12 @@ public class MateServiceImpl implements MateService {
     @Transactional
     public void deleteMateByUuid(UUID mateUuid) {
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
+                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
         // mateUuid가 있는 신고 데이터 확인
         boolean isReported = mateReportRepository.existsByMateId(mate.getMateId());
         if (!isReported) {
-            throw new BusinessException(ErrorCode.MATE_NOT_REPORTED);
+            throw new MateReportNotFoundException("신고되지 않은 디저트메이트입니다.");
         }
 
         // 게시글 삭제 (soft delete)

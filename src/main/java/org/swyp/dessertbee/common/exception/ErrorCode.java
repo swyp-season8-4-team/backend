@@ -30,6 +30,8 @@ public enum ErrorCode {
     DEVICE_ID_MISSING(HttpStatus.BAD_REQUEST, "A012", "디바이스 ID가 제공되지 않았습니다."),
     INVALID_EMAIL(HttpStatus.UNAUTHORIZED, "A013", "이메일을 다시 확인해주세요."),
     INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "A014", "비밀번호를 다시 입력해주세요."),
+    ACCOUNT_LOCKED(HttpStatus.UNAUTHORIZED, "A015", "계정이 잠겼습니다."),
+
     // OAuth
     INVALID_PROVIDER(HttpStatus.BAD_REQUEST, "O001", "지원되지 않는 OAuth 제공자입니다."),
 
@@ -158,7 +160,11 @@ public enum ErrorCode {
     IMAGE_UUID_NOT_FOUND(HttpStatus.NOT_FOUND, "R005", "존재하지 않는 이미지 UUID 입니다."),
     IMAGE_UPLOAD_FAILED(HttpStatus.CONFLICT, "R006", "이미지 업로드 시 문제가 생겼습니다."),
     DUPLICATION_SAVED_REVIEW(HttpStatus.CONFLICT, "R007", "이미 저장된 커뮤니티 리뷰입니다."),
-    SAVED_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "R008", "저장된 커뮤니티 리뷰가 없습니다.");
+    SAVED_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "R008", "저장된 커뮤니티 리뷰가 없습니다."),
+
+    //관리자 페이지
+    INVALID_YEAR(HttpStatus.BAD_REQUEST,"ADMIN_001","잘못된 연도입니다."),
+    INVALID_MONTH(HttpStatus.BAD_REQUEST,"ADMIN_002","잘못된 월입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

@@ -36,9 +36,9 @@ server {
         proxy_set_header X-Device-ID $device_id;
         proxy_set_header Authorization $auth_header;
 
-        # CORS 처리
+        # CORS 처리 TODO : release 환경에서만 localhost:3000 허용, prod는 제외
         set $cors_origin "";
-        if ($http_origin ~* "(https://desserbee.com|https://www.desserbee.com|http://desserbee.com|http://www.desserbee.com|https://${SERVER_NAME}|https://frontend-desserbee-web-git-vercel-test-eepyzs-projects.vercel.app|https://www.test.desserbee.com|https://test.desserbee.com)") {
+        if ($http_origin ~* "(https://desserbee.com|https://www.desserbee.com|http://desserbee.com|http://www.desserbee.com|https://${SERVER_NAME}|https://frontend-desserbee-web-git-vercel-test-eepyzs-projects.vercel.app|https://www.test.desserbee.com|https://test.desserbee.com|http://localhost:3000)") {
             set $cors_origin $http_origin;
         }
 
