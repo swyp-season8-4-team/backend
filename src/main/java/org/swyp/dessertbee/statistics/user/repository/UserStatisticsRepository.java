@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface UserStatisticsRepository  extends Repository<UserEntity, Long> {
 
-    @Query("SELECT new org.swyp.dessertbee.statistics.common.dto.user.response.UserStatisticsResponseDto(u.userUuid, u.id, ur.role.id) " +
+    @Query("SELECT new org.swyp.dessertbee.statistics.user.dto.response.UserStatisticsResponseDto(u.userUuid, u.id, ur.role.id) " +
             "FROM UserEntity u " +
             "JOIN u.userRoles ur " +
             "JOIN ur.role r")
