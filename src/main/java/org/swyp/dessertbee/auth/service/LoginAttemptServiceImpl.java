@@ -27,7 +27,7 @@ public class LoginAttemptServiceImpl implements LoginAttemptService {
     // 계정 잠금 시간(분)
     private static final int LOCK_TIME_MINUTES = 10;
 
-    private static final String UNLIMITED_ATTEMPTS_EMAIL = "dudals9701@naver.com";
+    private static final String UNLIMITED_ATTEMPTS_EMAIL = "kjkksu2@naver.com";
 
     /**
      * 로그인 실패 처리와 잠금 만료 확인
