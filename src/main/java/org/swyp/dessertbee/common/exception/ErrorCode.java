@@ -30,6 +30,8 @@ public enum ErrorCode {
     DEVICE_ID_MISSING(HttpStatus.BAD_REQUEST, "A012", "디바이스 ID가 제공되지 않았습니다."),
     INVALID_EMAIL(HttpStatus.UNAUTHORIZED, "A013", "이메일을 다시 확인해주세요."),
     INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "A014", "비밀번호를 다시 입력해주세요."),
+    ACCOUNT_LOCKED(HttpStatus.UNAUTHORIZED, "A015", "계정이 잠겼습니다."),
+
     // OAuth
     INVALID_PROVIDER(HttpStatus.BAD_REQUEST, "O001", "지원되지 않는 OAuth 제공자입니다."),
 
@@ -107,6 +109,12 @@ public enum ErrorCode {
     MENU_DELETE_FAILED(HttpStatus.BAD_REQUEST, "S042", "단일 메뉴 삭제에 실패했습니다."),
     MENU_CREATION_FAILED(HttpStatus.BAD_REQUEST, "S043", "메뉴 등록에 실패했습니다."),
     STORE_DUPLICATE_PRIMARY_LINK(HttpStatus.CONFLICT, "S044", "대표 링크는 하나만 설정할 수 있습니다."),
+    STORE_NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "S045", "존재하지 않는 공지사항입니다."),
+    STORE_NOTICE_CREATION_FAILED(HttpStatus.BAD_REQUEST, "S046", "공지사항 등록에 실패했습니다."),
+    STORE_NOTICE_UPDATE_FAILED(HttpStatus.BAD_REQUEST, "S047", "공지사항 수정에 실패했습니다."),
+    STORE_NOTICE_DELETE_FAILED(HttpStatus.BAD_REQUEST, "S048", "공지사항 삭제에 실패했습니다."),
+    STORE_NOTICE_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S049", "가게 공지사항 서비스 처리 중 오류가 발생했습니다."),
+
 
     // 사장님 권한
     /**
@@ -152,7 +160,11 @@ public enum ErrorCode {
     IMAGE_UUID_NOT_FOUND(HttpStatus.NOT_FOUND, "R005", "존재하지 않는 이미지 UUID 입니다."),
     IMAGE_UPLOAD_FAILED(HttpStatus.CONFLICT, "R006", "이미지 업로드 시 문제가 생겼습니다."),
     DUPLICATION_SAVED_REVIEW(HttpStatus.CONFLICT, "R007", "이미 저장된 커뮤니티 리뷰입니다."),
-    SAVED_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "R008", "저장된 커뮤니티 리뷰가 없습니다.");
+    SAVED_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "R008", "저장된 커뮤니티 리뷰가 없습니다."),
+
+    //관리자 페이지
+    INVALID_YEAR(HttpStatus.BAD_REQUEST,"ADMIN_001","잘못된 연도입니다."),
+    INVALID_MONTH(HttpStatus.BAD_REQUEST,"ADMIN_002","잘못된 월입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

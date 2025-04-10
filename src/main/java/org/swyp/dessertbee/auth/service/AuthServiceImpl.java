@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.swyp.dessertbee.auth.dto.response.PasswordResetResponse;
 import org.swyp.dessertbee.auth.dto.response.TokenResponse;
 import org.swyp.dessertbee.auth.dto.request.LoginRequest;
 import org.swyp.dessertbee.auth.dto.response.LoginResponse;
@@ -43,6 +44,7 @@ public class AuthServiceImpl implements AuthService {
     private final ImageService imageService;
     private final PreferenceService preferenceService;
     private final EmailVerificationService emailVerificationService;
+    private final LoginAttemptService loginAttemptService;
 
     @Autowired
     private TokenService tokenService;
@@ -155,13 +157,36 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public LoginResponse login(LoginRequest request, String deviceId, boolean isDev) {
         try {
-            // 1. 사용자 인증
-            UserEntity user = authenticateUser(request);
 
-            // 2. 사용자 권한 확인 및 기본 역할 부여
+            // 계정 잠금 상태 확인
+            loginAttemptService.checkLoginAttempt(request.getEmail());
+
+            // 사용자 조회
+            UserEntity user = userService.findUserByEmail(request.getEmail(), ErrorCode.INVALID_EMAIL);
+
+            // 비밀번호 검증 및 실패 처리
+            // 비밀번호 검증
+            if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+                log.warn("로그인 실패 - 비밀번호 인증 실패: {}", request.getEmail());
+
+                // 로그인 실패 처리
+                int remainingAttempts = loginAttemptService.handleLoginFailure(request.getEmail());
+
+                // 남은 시도 횟수에 따라 다른 예외 발생
+                if (remainingAttempts <= 0) {
+                    throw new AccountLockedException();
+                } else {
+                    throw new InvalidPasswordException();
+                }
+            }
+
+            // 인증 성공 시 실패 카운트 초기화
+            loginAttemptService.resetFailedAttempts(request.getEmail());
+
+            // 사용자 권한 확인 및 기본 역할 부여
             List<String> roles = determineUserRoles(user);
 
-            // 3. 토큰 생성 (개발 모드 여부에 따라 다른 토큰 생성)
+            // 토큰 생성 (개발 모드 여부에 따라 다른 토큰 생성)
             String accessToken;
             String refreshToken;
             long expiresIn;
@@ -181,16 +206,16 @@ public class AuthServiceImpl implements AuthService {
                 expiresIn = tokenPair.expiresIn();
             }
 
-            // 4. 리프레시 토큰 저장
+            // 리프레시 토큰 저장
             String usedDeviceId = saveRefreshToken(user, refreshToken, deviceId);
 
-            // 5. 프로필 이미지 조회
+            // 프로필 이미지 조회
             String profileImageUrl = getProfileImage(user);
 
-            // 6. 선호도 설정 여부 확인
+            // 선호도 설정 여부 확인
             boolean isPreferenceSet = preferenceService.isUserPreferenceSet(user);
 
-            // 7. 로그인 응답 생성
+            // 로그인 응답 생성
             return LoginResponse.success(
                     accessToken,
                     refreshToken,
@@ -215,7 +240,7 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     @Transactional
-    public void resetPassword(PasswordResetRequest request, String verificationToken) {
+    public PasswordResetResponse resetPassword(PasswordResetRequest request, String verificationToken) {
         try {
             // 토큰 유효성 검사
             emailVerificationService.validateEmailVerificationToken(
@@ -227,6 +252,9 @@ public class AuthServiceImpl implements AuthService {
             // 사용자 조회
             UserEntity user = userService.findUserByEmail(request.getEmail());
 
+            // 계정 잠금 해제 (로그인 시도 카운터 초기화)
+            loginAttemptService.unlockAccount(request.getEmail());
+
             // 새 비밀번호 암호화 및 저장
             user.updatePassword(passwordEncoder.encode(request.getNewPassword()));
             userRepository.save(user);
@@ -235,7 +263,7 @@ public class AuthServiceImpl implements AuthService {
             revokeRefreshToken(user.getUserUuid());
 
             log.info("비밀번호 재설정 완료 - 이메일: {}", request.getEmail());
-
+            return PasswordResetResponse.success();
         } catch (BusinessException e) {
             log.warn("비밀번호 재설정 실패 - 이메일: {}, 사유: {}", request.getEmail(), e.getMessage());
             throw e;
@@ -282,18 +310,6 @@ public class AuthServiceImpl implements AuthService {
         }
 
         return LogoutResponse.success();
-    }
-
-    /**
-     * 사용자 인증: 이메일로 사용자 조회 후 비밀번호 검증
-     */
-    private UserEntity authenticateUser(LoginRequest request) {
-        UserEntity user = userService.findUserByEmail(request.getEmail(), ErrorCode.INVALID_EMAIL);
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            log.warn("로그인 실패 - 비밀번호 인증 실패: {}", request.getEmail());
-            throw new InvalidPasswordException();
-        }
-        return user;
     }
 
     /**
