@@ -15,7 +15,7 @@ import java.util.List;
 public class MatesPageResponse {
 
 
-    @Schema(description = "디저트메이트 정보", defaultValue = "false", example = "MateDetailResponse 전체")
+    @Schema(description = "디저트메이트 정보", example = "MateDetailResponse 전체")
     private List<MateDetailResponse> mates;
 
     @NotNull

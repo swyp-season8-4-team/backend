@@ -45,7 +45,7 @@ public class MateDetailResponse {
     private String content;
 
     @NotNull
-    @Schema(description = "디저트메이트 모집 여부", defaultValue = "true", example = "true")
+    @Schema(description = "디저트메이트 모집 여부", example = "true")
     private Boolean recruitYn;
 
     @NotBlank

@@ -20,23 +20,23 @@ import java.util.UUID;
 public class MateCreateRequest {
 
     @NotBlank(message = "작성하는 사람의 uuid를 넘겨주세요.")
-    @Schema(description = "작성하는 사람 uuid", defaultValue = "false")
+    @Schema(description = "작성하는 사람 uuid")
     private UUID userUuid;
 
     @NotBlank(message = "디저트메이트 카테고리 선택해주세요.")
-    @Schema(description = "디저트메이트 카테고리", defaultValue = "false", example = "1")
+    @Schema(description = "디저트메이트 카테고리", example = "1")
     private Long mateCategoryId;
 
     @NotBlank(message = "디저트메이트 제목을 작성해주세요.")
-    @Schema(description = "디저트메이트 제목 작성", defaultValue = "false", example = "저랑 같이 홍대 빵지순례할 사람 찾습니다.")
+    @Schema(description = "디저트메이트 제목 작성", example = "저랑 같이 홍대 빵지순례할 사람 찾습니다.")
     private String title;
 
     @NotBlank(message = "디저트메이트 내용을 작성해주세요.")
-    @Schema(description = "디저트메이트 내용 작성", defaultValue = "false", example = "홍대 빵지순례 리스트 200개 있습니다. 같이 맛있는거 먹으러 가요.")
+    @Schema(description = "디저트메이트 내용 작성", example = "홍대 빵지순례 리스트 200개 있습니다. 같이 맛있는거 먹으러 가요.")
     private String content;
 
     @NotBlank(message = "디저트메이트 모집 여부를 선택해주세요.")
-    @Schema(description = "디저트메이트 모집 여부", defaultValue = "true", example = "true")
+    @Schema(description = "디저트메이트 모집 여부", example = "true")
     private Boolean recruitYn;
 
     @Schema(description = "디저트메이트 지정 장소", example = " placeName : 모코모코, address : 서울 마포구 와우산로29길 47 1층, latitude: 37.55564710, longitude : 126.92734908")

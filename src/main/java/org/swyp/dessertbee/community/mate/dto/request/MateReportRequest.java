@@ -17,11 +17,11 @@ import java.util.UUID;
 public class MateReportRequest {
 
     @NotBlank(message = "작성하는 사람의 uuid를 넘겨주세요.")
-    @Schema(description = "작성하는 사람 uuid", defaultValue = "false")
+    @Schema(description = "작성하는 사람 uuid", example = "19a40ec1-ac92-419e-aa2b-0fcfcbd42447")
     private UUID userUuid;
 
     @NotBlank(message = "디저트메이트 신고 카테고리 선택해주세요.")
-    @Schema(description = "디저트메이트 신고 카테고리", defaultValue = "false", example = "1")
+    @Schema(description = "디저트메이트 신고 카테고리", example = "1")
     private Long reportCategoryId;
 
     @Schema(description = "디저트메이트 신고 기타 내용", example = "저 디저트메이트 사용자 자체에 문제가 있습니다.")

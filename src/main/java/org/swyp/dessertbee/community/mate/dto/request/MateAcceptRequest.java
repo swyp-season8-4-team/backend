@@ -16,11 +16,11 @@ import java.util.UUID;
 public class MateAcceptRequest {
 
     @NotBlank(message = "디저트메이트 생성한 사람의 uuid를 입력해주세요.")
-    @Schema(description = "디저트메이트 생성한 사람의 uuid", defaultValue = "false", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+    @Schema(description = "디저트메이트 생성한 사람의 uuid", example = "19a40ec1-ac92-419e-aa2b-0fcfcbd42447", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private UUID creatorUserUuid;
 
     @NotBlank(message = "신청 수락할 사람의 uuid를 입력해주세요.")
-    @Schema(description = "신청 수락될 사람 uuid", defaultValue = "false", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+    @Schema(description = "신청 수락될 사람 uuid", example = "19a40ec1-ac92-419e-aa2b-0fcfcbd4244", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     //디저트메이트 수락할 때
     private UUID acceptUserUuid;
 

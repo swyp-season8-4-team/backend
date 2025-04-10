@@ -29,19 +29,19 @@ public class MateResponse {
 
 
     @NotBlank
-    @Schema(description = "작성하는 사람 닉네임", defaultValue = "false", example = "디저비1")
+    @Schema(description = "작성하는 사람 닉네임", example = "디저비1")
     private String nickname;
 
     @NotBlank
-    @Schema(description = "디저트메이트 제목 작성", defaultValue = "false", example = "저랑 같이 홍대 빵지순례할 사람 찾습니다.")
+    @Schema(description = "디저트메이트 제목 작성", example = "저랑 같이 홍대 빵지순례할 사람 찾습니다.")
     private String title;
 
     @NotBlank
-    @Schema(description = "디저트메이트 내용 작성", defaultValue = "false", example = "홍대 빵지순례 리스트 200개 있습니다. 같이 맛있는거 먹으러 가요.")
+    @Schema(description = "디저트메이트 내용 작성", example = "홍대 빵지순례 리스트 200개 있습니다. 같이 맛있는거 먹으러 가요.")
     private String content;
 
     @NotNull
-    @Schema(description = "디저트메이트 모집 여부", defaultValue = "true", example = "true")
+    @Schema(description = "디저트메이트 모집 여부", example = "true")
     private Boolean recruitYn;
 
     @NotNull
