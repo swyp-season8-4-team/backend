@@ -1,9 +1,9 @@
-package org.swyp.dessertbee.statistics.infra.repository.user;
+package org.swyp.dessertbee.statistics.user.repository;
 
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
-import org.swyp.dessertbee.statistics.common.dto.user.response.UserStatisticsResponseDto;
+import org.swyp.dessertbee.statistics.user.dto.response.UserStatisticsResponseDto;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.time.LocalDateTime;
@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface UserStatisticsRepository  extends Repository<UserEntity, Long> {
 
-    @Query("SELECT new org.swyp.dessertbee.statistics.common.dto.user.response.UserStatisticsResponseDto(u.userUuid, u.id, ur.role.id) " +
+    @Query("SELECT new org.swyp.dessertbee.statistics.user.dto.response.UserStatisticsResponseDto(u.userUuid, u.id, ur.role.id) " +
             "FROM UserEntity u " +
             "JOIN u.userRoles ur " +
             "JOIN ur.role r")
