@@ -38,6 +38,7 @@ out/
 
 ### env ###
 src/main/resources/.env*
+.env*
 
 ### application-test.yml ###
 src/test/resources/application-test.yml

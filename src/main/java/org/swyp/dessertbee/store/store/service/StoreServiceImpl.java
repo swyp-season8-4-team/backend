@@ -11,6 +11,10 @@ import org.swyp.dessertbee.store.menu.converter.MenuConverter;
 import org.swyp.dessertbee.store.menu.entity.Menu;
 import org.swyp.dessertbee.store.menu.repository.MenuRepository;
 import org.swyp.dessertbee.store.menu.service.MenuService;
+import org.swyp.dessertbee.store.notice.dto.response.StoreNoticeResponse;
+import org.swyp.dessertbee.store.notice.entity.StoreNotice;
+import org.swyp.dessertbee.store.notice.repository.StoreNoticeRepository;
+import org.swyp.dessertbee.store.notice.service.StoreNoticeService;
 import org.swyp.dessertbee.store.store.dto.request.BaseStoreRequest;
 import org.swyp.dessertbee.store.store.exception.StoreExceptions.*;
 import org.swyp.dessertbee.common.entity.ImageType;
@@ -72,8 +76,10 @@ public class StoreServiceImpl implements StoreService {
     private final UserService userService;
     private final ReviewRepository reviewRepository;
     private final StoreLinkRepository storeLinkRepository;
+    private final StoreNoticeRepository storeNoticeRepository;
     private final StoreBreakTimeRepository storeBreakTimeRepository;
     private final MenuRepository menuRepository;
+    private final StoreNoticeService storeNoticeService;
 
     /** 가게 등록 (이벤트, 쿠폰, 메뉴 + 이미지 포함) */
     @Override
@@ -734,6 +740,9 @@ public class StoreServiceImpl implements StoreService {
             // 휴무일 조회
             List<HolidayResponse> holidayResponses = getHolidaysResponse(storeId);
 
+            // 공지사항 조회
+            List<StoreNoticeResponse> noticeResponses = storeNoticeService.getNoticesByStoreUuid(storeUuid);
+
             // 가게 취향 태그 top3 조회
             List<String> topPreferences = getTop3Preferences(storeId);
 
@@ -760,6 +769,7 @@ public class StoreServiceImpl implements StoreService {
                     totalReviewCount,
                     operatingHourResponses,
                     holidayResponses,
+                    noticeResponses,
                     menus,
                     storeImages,
                     ownerPickImages,
@@ -904,6 +914,13 @@ public class StoreServiceImpl implements StoreService {
 
             // 4. StoreLink 삭제
             storeLinkRepository.deleteByStoreId(storeId);
+
+            // 4-2. StoreNotice soft delete
+            List<StoreNotice> nos = storeNoticeRepository.findAllByStoreIdAndDeletedAtIsNull(storeId);
+            for (StoreNotice no : nos) {
+                no.softDelete();
+            }
+            storeNoticeRepository.saveAll(nos);
 
             // 5. StoreStatistics soft delete
             List<StoreStatistics> stats = storeStatisticsRepository.findAllByStoreIdAndDeletedAtIsNull(storeId);
