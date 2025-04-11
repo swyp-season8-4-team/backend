@@ -24,6 +24,8 @@ public class StoreReviewLog {
 
     private Long storeId;
 
+    private Long reviewId;
+
     private UUID userUuid;
 
     private BigDecimal rating;

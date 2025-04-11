@@ -67,6 +67,14 @@ public enum ErrorCode {
     POPULAR_KEYWORD_SYNC_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "K007", "인기 검색 기록 동기화에 실패했습니다."),
     POPULAR_KEYWORD_INIT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "K008", "인기 검색 기록 초기화에 실패했습니다."),
 
+    // Log
+    MATE_LOG_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "L001", "디저트 메이트 로그 저장에 실패했습니다."),
+    COUPON_USE_LOG_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "L002", "쿠폰 사용 후 로그 저장에 실패했습니다."),
+    STORE_REVIEW_LOG_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "L003", "가게 한줄리뷰 로그 저장에 실패했습니다."),
+    COMMUNITY_REVIEW_LOG_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "L004", "커뮤니티 리뷰 로그 저장에 실패했습니다."),
+    STORE_SAVE_LOG_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "L005", "가게 저장 관련 로그 저장에 실패했습니다."),
+    STORE_VIEW_LOG_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "L006", "가게 조회 후 로그 저장에 실패했습니다."),
+
     // Store
     STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "존재하지 않는 가게입니다."),
     STORE_CREATION_FAILED(HttpStatus.BAD_REQUEST, "S002", "가게 등록에 실패했습니다."),

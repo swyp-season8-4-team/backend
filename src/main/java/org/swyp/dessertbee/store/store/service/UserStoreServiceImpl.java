@@ -2,12 +2,12 @@ package org.swyp.dessertbee.store.store.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.common.entity.ImageType;
-import org.swyp.dessertbee.statistics.store.entity.StoreSaveLog;
 import org.swyp.dessertbee.statistics.store.entity.enums.SaveAction;
-import org.swyp.dessertbee.statistics.store.repostiory.StoreSaveLogRepository;
+import org.swyp.dessertbee.statistics.store.event.StoreSaveActionEvent;
 import org.swyp.dessertbee.store.store.exception.StoreExceptions.*;
 import org.swyp.dessertbee.store.store.exception.UserStoreExceptions.*;
 import org.swyp.dessertbee.user.exception.UserExceptions.*;
@@ -43,8 +43,8 @@ public class UserStoreServiceImpl implements UserStoreService {
     private final UserRepository userRepository;
     private final StoreRepository storeRepository;
     private final ImageService imageService;
-    private final StoreSaveLogRepository storeSaveLogRepository;
     private final UserService userService;
+    private final ApplicationEventPublisher eventPublisher;
 
     /** 저장 리스트 전체 조회 */
     @Override
@@ -216,14 +216,7 @@ public class UserStoreServiceImpl implements UserStoreService {
 
             UserEntity user = userService.getCurrentUser();
 
-            storeSaveLogRepository.save(
-                    StoreSaveLog.builder()
-                            .storeId(storeId)
-                            .userUuid(user.getUserUuid())
-                            .action(SaveAction.SAVE)
-                            .actionAt(LocalDateTime.now())
-                            .build()
-            );
+            eventPublisher.publishEvent(new StoreSaveActionEvent(storeId, user.getUserUuid(), SaveAction.SAVE));
 
             return new SavedStoreResponse(
                     list.getUser().getUserUuid(),
@@ -312,14 +305,7 @@ public class UserStoreServiceImpl implements UserStoreService {
 
             UserEntity user = userService.getCurrentUser();
 
-            storeSaveLogRepository.save(
-                    StoreSaveLog.builder()
-                            .storeId(storeId)
-                            .userUuid(user.getUserUuid())
-                            .action(SaveAction.UNSAVE)
-                            .actionAt(LocalDateTime.now())
-                            .build()
-            );
+            eventPublisher.publishEvent(new StoreSaveActionEvent(storeId, user.getUserUuid(), SaveAction.UNSAVE));
 
             savedStoreRepository.delete(savedStore);
         } catch (SavedStoreDeleteException e){

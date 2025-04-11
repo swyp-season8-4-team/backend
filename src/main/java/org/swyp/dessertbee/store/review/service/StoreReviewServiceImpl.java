@@ -2,13 +2,14 @@ package org.swyp.dessertbee.store.review.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.statistics.store.entity.StoreReviewLog;
 import org.swyp.dessertbee.statistics.store.entity.enums.ReviewAction;
-import org.swyp.dessertbee.statistics.store.repostiory.StoreReviewLogRepository;
+import org.swyp.dessertbee.statistics.store.event.StoreReviewActionEvent;
 import org.swyp.dessertbee.statistics.store.repostiory.StoreStatisticsRepository;
 import org.swyp.dessertbee.store.store.exception.StoreExceptions.*;
 import org.swyp.dessertbee.store.review.exception.StoreReviewExceptions.*;
@@ -40,8 +41,8 @@ public class StoreReviewServiceImpl implements StoreReviewService {
     private final UserRepository userRepository;
     private final ImageService imageService;
     private final StoreService storeService;
-    private final StoreReviewLogRepository storeReviewLogRepository;
     private final StoreStatisticsRepository storeStatisticsRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     /** 리뷰 등록 */
     @Override
@@ -79,14 +80,13 @@ public class StoreReviewServiceImpl implements StoreReviewService {
             // 리뷰 등록 후 평균 평점 업데이트
             storeService.updateAverageRating(storeId);
 
-            storeReviewLogRepository.save(
-                    StoreReviewLog.builder()
-                            .storeId(storeId)
-                            .userUuid(request.getUserUuid())
-                            .rating(request.getRating())
-                            .action(ReviewAction.CREATE)
-                            .actionAt(LocalDateTime.now())
-                            .build()
+            eventPublisher.publishEvent(
+                    new StoreReviewActionEvent(
+                            review.getStoreId(),
+                            review.getReviewId(),
+                            reviewer.getUserUuid(),
+                            ReviewAction.CREATE
+                    )
             );
 
             storeStatisticsRepository.increaseStoreReviewCount(storeId);
@@ -190,14 +190,13 @@ public class StoreReviewServiceImpl implements StoreReviewService {
 
             storeService.updateAverageRating(storeId);
 
-            storeReviewLogRepository.save(
-                    StoreReviewLog.builder()
-                            .storeId(storeId)
-                            .userUuid(review.getUserUuid())
-                            .rating(review.getRating())
-                            .action(ReviewAction.DELETE)
-                            .actionAt(LocalDateTime.now())
-                            .build()
+            eventPublisher.publishEvent(
+                    new StoreReviewActionEvent(
+                            review.getStoreId(),
+                            review.getReviewId(),
+                            review.getUserUuid(),
+                            ReviewAction.DELETE
+                    )
             );
 
             storeStatisticsRepository.decreaseStoreReviewCount(storeId);

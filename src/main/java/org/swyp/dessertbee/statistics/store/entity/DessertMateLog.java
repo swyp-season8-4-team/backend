@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.swyp.dessertbee.statistics.store.entity.enums.DessertMateAction;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -22,7 +23,12 @@ public class DessertMateLog {
 
     private Long storeId;
 
+    private Long mateId;
+
     private UUID userUuid;
 
-    private LocalDateTime createdAt;
+    @Enumerated(EnumType.STRING)
+    private DessertMateAction action;
+
+    private LocalDateTime actionAt;
 }

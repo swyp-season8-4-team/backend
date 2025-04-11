@@ -2,6 +2,7 @@ package org.swyp.dessertbee.community.review.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,9 +27,8 @@ import org.swyp.dessertbee.community.review.repository.ReviewContentRepository;
 import org.swyp.dessertbee.community.review.repository.ReviewRepository;
 import org.swyp.dessertbee.community.review.repository.ReviewStatisticsRepository;
 import org.swyp.dessertbee.community.review.repository.SavedReviewRepository;
-import org.swyp.dessertbee.statistics.store.entity.CommunityReviewLog;
 import org.swyp.dessertbee.statistics.store.entity.enums.ReviewAction;
-import org.swyp.dessertbee.statistics.store.repostiory.CommunityReviewLogRepository;
+import org.swyp.dessertbee.statistics.store.event.CommunityReviewActionEvent;
 import org.swyp.dessertbee.statistics.store.repostiory.StoreStatisticsRepository;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
@@ -36,7 +36,6 @@ import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.user.service.UserServiceImpl;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -54,8 +53,8 @@ public class ReviewService {
     private final ImageRepository imageRepository;
     private final ReviewContentRepository reviewContentRepository;
     private final ReviewStatisticsRepository reviewStatisticsRepository;
-    private final CommunityReviewLogRepository communityReviewLogRepository;
     private final StoreStatisticsRepository storeStatisticsRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
 
     /**
@@ -122,6 +121,7 @@ public class ReviewService {
         }
 
         // 4. 리뷰 통계 초기화
+        // todo: 이제 불필요한것 같은데 이거 삭제해도되나요 현경님
         reviewStatisticsRepository.save(
                 ReviewStatistics.builder()
                         .reviewId(review.getReviewId())
@@ -131,14 +131,9 @@ public class ReviewService {
                         .build()
         );
 
-        communityReviewLogRepository.save(
-                CommunityReviewLog.builder()
-                        .storeId(storeId)
-                        .userId(userId) // todo: userUuid로 추후에 변경할 것
-                        .action(ReviewAction.CREATE)
-                        .actionAt(LocalDateTime.now())
-                        .build()
-        );
+        UserEntity user = userService.getCurrentUser();
+
+        eventPublisher.publishEvent(new CommunityReviewActionEvent(review.getStoreId(), review.getReviewId(), user.getUserUuid(), ReviewAction.CREATE));
 
         storeStatisticsRepository.increaseCommunityReviewCount(storeId);
 
@@ -315,14 +310,8 @@ public class ReviewService {
 
             imageService.deleteImagesByRefId(ImageType.REVIEW, review.getReviewId());
 
-            communityReviewLogRepository.save(
-                    CommunityReviewLog.builder()
-                            .storeId(review.getStoreId())
-                            .userId(review.getUserId()) // todo: userUuid로 변경 필요
-                            .action(ReviewAction.DELETE)
-                            .actionAt(LocalDateTime.now())
-                            .build()
-            );
+            UserEntity user = userService.getCurrentUser();
+            eventPublisher.publishEvent(new CommunityReviewActionEvent(review.getStoreId(), review.getReviewId(), user.getUserUuid(), ReviewAction.DELETE));
 
             storeStatisticsRepository.decreaseCommunityReviewCount(review.getStoreId());
         } catch (Exception e)
