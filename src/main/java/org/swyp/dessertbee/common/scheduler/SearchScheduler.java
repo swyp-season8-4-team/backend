@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.common.util;
+package org.swyp.dessertbee.common.scheduler;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;

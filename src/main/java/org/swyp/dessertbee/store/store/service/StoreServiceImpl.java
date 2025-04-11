@@ -50,8 +50,6 @@ import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.user.service.UserService;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -86,6 +84,7 @@ public class StoreServiceImpl implements StoreService {
     private final MenuRepository menuRepository;
     private final StoreNoticeService storeNoticeService;
     private final ApplicationEventPublisher eventPublisher;
+    private final StoreTopTagRepository storeTopTagRepository;
 
     /** 가게 등록 (이벤트, 쿠폰, 메뉴 + 이미지 포함) */
     @Override
@@ -525,12 +524,8 @@ public class StoreServiceImpl implements StoreService {
     /**
      * 가게의 Top3 취향 태그 조회 메서드
      */
-    private List<String> getTop3Preferences(Long storeId) {
-        List<Object[]> preferenceCounts = savedStoreRepository.findTop3PreferencesByStoreId(storeId);
-
-        return preferenceCounts.stream()
-                .map(result -> (String) result[0])
-                .toList();
+    private List<TopPreferenceTagResponse> getTop3Preferences(Long storeId) {
+        return storeTopTagRepository.findTop3TagsByStoreId(storeId);
     }
 
     /**
@@ -677,7 +672,7 @@ public class StoreServiceImpl implements StoreService {
             List<HolidayResponse> holidayResponses = getHolidaysResponse(storeId);
 
             // 가게 취향 태그 top3 조회
-            List<String> topPreferences = getTop3Preferences(storeId);
+            List<TopPreferenceTagResponse> topPreferences = storeTopTagRepository.findTop3TagsByStoreId(storeId);
 
             return StoreSummaryResponse.fromEntity(
                     store,
@@ -737,7 +732,7 @@ public class StoreServiceImpl implements StoreService {
             List<StoreNoticeResponse> noticeResponses = storeNoticeService.getNoticesByStoreUuid(storeUuid);
 
             // 가게 취향 태그 top3 조회
-            List<String> topPreferences = getTop3Preferences(storeId);
+            List<TopPreferenceTagResponse> topPreferences = getTop3Preferences(storeId);
 
             // 메뉴 리스트 조회
             List<MenuResponse> menus = menuService.getMenusByStore(storeUuid);
