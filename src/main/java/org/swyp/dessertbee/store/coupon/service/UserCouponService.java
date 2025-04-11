@@ -12,10 +12,13 @@ import org.swyp.dessertbee.store.coupon.entity.UserCoupon;
 import org.swyp.dessertbee.store.coupon.repository.CouponRepository;
 import org.swyp.dessertbee.store.coupon.repository.UserCouponRepository;
 import org.swyp.dessertbee.store.coupon.dto.request.UseCouponRequest;
+import org.swyp.dessertbee.store.coupon.util.CouponCodeGenerator;
 import org.swyp.dessertbee.store.coupon.util.QRCodeGenerator;
+import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.util.Base64;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -24,17 +27,31 @@ import java.util.List;
 public class UserCouponService {
     private final UserCouponRepository userCouponRepository;
     private final CouponRepository couponRepository;
+    private final CouponCodeGenerator couponCodeGenerator;
 
-    public IssuedCouponResponse issueCoupon(IssueCouponRequest request) {
-        Coupon coupon = couponRepository.findById(request.getCouponId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 쿠폰입니다"));
+    public IssuedCouponResponse issueCoupon(IssueCouponRequest request, UserEntity user) {
+        Coupon coupon = couponRepository.findByCouponUuid(request.getCouponUuid())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 쿠폰입니다."));
 
-        UserCoupon userCoupon = new UserCoupon(request.getUserId(), coupon);
+        // 한 ID당 하나의 쿠폰 발급
+        boolean alreadyIssued = userCouponRepository.existsByUserAndCoupon(user, coupon);
+        if (alreadyIssued) {
+            throw new IllegalStateException("이미 해당 쿠폰을 발급받은 사용자입니다.");
+        }
+
+        String uniqueCouponCode = couponCodeGenerator.generateUniqueCouponCode();
+
+        UserCoupon userCoupon = UserCoupon.builder()
+                .user(user)
+                .coupon(coupon)
+                .couponCode(uniqueCouponCode)
+                .build();
+
         userCouponRepository.save(userCoupon);
 
         String qrBase64;
         try {
-            byte[] qrBytes = QRCodeGenerator.generateQRCodeImage(userCoupon.getCode());
+            byte[] qrBytes = QRCodeGenerator.generateQRCodeImage(userCoupon.getCouponCode());
             qrBase64 = Base64.getEncoder().encodeToString(qrBytes);
         } catch (Exception e) {
             throw new RuntimeException("QR 코드 생성 중 오류 발생", e);
@@ -43,17 +60,19 @@ public class UserCouponService {
         return new IssuedCouponResponse(
                 userCoupon.getId(),
                 coupon.getName(),
-                coupon.getCode(),
+                userCoupon.getCouponCode(),
                 qrBase64,
                 userCoupon.isUsed()
         );
     }
 
-    public List<IssuedCouponResponse> getUserCoupons(Long userId) {
-        return userCouponRepository.findAllByUserId(userId).stream()
+    public List<IssuedCouponResponse> getUserCoupons(UUID userUuid) {
+        return userCouponRepository.findAllByUser_UserUuid(userUuid).stream()
                 .map(uc -> new IssuedCouponResponse(
                         uc.getId(),
                         uc.getCoupon().getName(),
+                        uc.getCouponCode(),
+                        null, // QR 생략
                         uc.isUsed()
                 ))
                 .toList();
@@ -61,7 +80,7 @@ public class UserCouponService {
 
     @Transactional
     public UsedCouponResponse useCouponByCode(UseCouponRequest request) {
-        UserCoupon userCoupon = userCouponRepository.findByCode(request.getCode())
+        UserCoupon userCoupon = userCouponRepository.findByCouponCode(request.getCouponCode())
                 .orElseThrow(() -> new IllegalArgumentException("해당 쿠폰이 존재하지 않습니다."));
 
         if (userCoupon.isUsed()) {
@@ -73,7 +92,7 @@ public class UserCouponService {
         return new UsedCouponResponse(
                 userCoupon.getId(),
                 userCoupon.getCoupon().getName(),
-                userCoupon.getCode(),
+                userCoupon.getCouponCode(),
                 userCoupon.isUsed()
         );
     }

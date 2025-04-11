@@ -8,5 +8,5 @@ import lombok.*;
 @NoArgsConstructor
 @Getter
 public class UseCouponRequest {
-    private String code;
+    private String couponCode;
 }

@@ -5,11 +5,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 
+import java.util.UUID;
+
 @Data
 @Builder
 @AllArgsConstructor
 @Getter
 public class IssueCouponRequest {
-   private Long userId;
-   private Long couponId;
+   private UUID userUuid;
+   private UUID couponUuid;
 }

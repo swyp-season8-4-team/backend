@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -14,4 +15,5 @@ import java.time.LocalDateTime;
 public class CouponRequest {
     private String name;
     private LocalDateTime expiredAt;
+    private UUID storeUuid;
 }

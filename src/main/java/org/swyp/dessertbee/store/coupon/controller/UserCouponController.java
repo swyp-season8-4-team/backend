@@ -2,11 +2,13 @@ package org.swyp.dessertbee.store.coupon.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.store.coupon.dto.request.IssueCouponRequest;
 import org.swyp.dessertbee.store.coupon.dto.request.UseCouponRequest;
 import org.swyp.dessertbee.store.coupon.dto.response.IssuedCouponResponse;
 import org.swyp.dessertbee.store.coupon.service.UserCouponService;
+import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.util.List;
 
@@ -20,13 +22,19 @@ public class UserCouponController {
 
 
     @PostMapping("/issue")
-    public ResponseEntity<IssuedCouponResponse> issueCoupon(@RequestBody IssueCouponRequest request) {
-        return ResponseEntity.ok(userCouponService.issueCoupon(request));
+    public ResponseEntity<IssuedCouponResponse> issueCoupon(
+            @RequestBody IssueCouponRequest request,
+            @AuthenticationPrincipal UserEntity user // Spring Security로 로그인 유저 주입
+    ) {
+        return ResponseEntity.ok(userCouponService.issueCoupon(request, user));
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<List<IssuedCouponResponse>> getUserCoupons(@PathVariable Long userId) {
-        return ResponseEntity.ok(userCouponService.getUserCoupons(userId));
+
+    @GetMapping("/my")
+    public ResponseEntity<List<IssuedCouponResponse>> getMyCoupons(
+            @AuthenticationPrincipal UserEntity user
+    ) {
+        return ResponseEntity.ok(userCouponService.getUserCoupons(user.getUserUuid()));
     }
 
 }

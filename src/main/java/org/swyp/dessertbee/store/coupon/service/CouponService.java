@@ -9,6 +9,7 @@ import org.swyp.dessertbee.store.coupon.dto.response.CouponResponse;
 import org.swyp.dessertbee.store.coupon.entity.Coupon;
 import org.swyp.dessertbee.store.coupon.entity.CouponStatus;
 import org.swyp.dessertbee.store.coupon.repository.CouponRepository;
+import org.swyp.dessertbee.store.store.entity.Store;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,18 +25,19 @@ public class CouponService {
     private final CouponRepository couponRepository;
 
 
-    public CouponResponse createCoupon(CouponRequest request) {
+    public CouponResponse createCoupon(CouponRequest request, Store store) {
         Coupon coupon = Coupon.builder()
                 .name(request.getName())
-                .code(UUID.randomUUID().toString())
                 .status(CouponStatus.ISSUED)
                 .createdAt(LocalDateTime.now())
                 .expiredAt(request.getExpiredAt())
+                .store(store)
                 .build();
 
         couponRepository.save(coupon);
         return new CouponResponse(coupon);
     }
+
 
     public List<CouponResponse> getAllCoupons() {
         return couponRepository.findAllByOrderByCreatedAtDesc()

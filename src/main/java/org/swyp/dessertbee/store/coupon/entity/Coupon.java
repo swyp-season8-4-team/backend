@@ -4,9 +4,12 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 import org.springframework.security.core.userdetails.User;
+import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -21,14 +24,11 @@ public class Coupon {
     @Column(name = "coupon_id")
     private Long id;
 
+    @Column(name = "coupon_uuid", nullable = false, unique = true, updatable = false)
+    @UuidGenerator
+    private UUID couponUuid;
+
     private String name;
-
-    @Column(unique = true)
-    private String code; // 확인 코드 (QR 대상)
-
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "user_id")
-//    private UserEntity user;
 
     @Enumerated(EnumType.STRING)
     private CouponStatus status; //ISSUED, USED, EXPIRED
@@ -36,8 +36,14 @@ public class Coupon {
     private LocalDateTime createdAt;
     private LocalDateTime expiredAt;
     private LocalDateTime issuedAt;
-
     private LocalDateTime usedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_id")
+    private Store store;
+
+    @OneToMany(mappedBy = "coupon", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserCoupon> userCoupons = new ArrayList<>();
 
     public void markAsUsed() {
         if (this.status != CouponStatus.ISSUED) {

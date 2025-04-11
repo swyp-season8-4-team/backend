@@ -6,9 +6,11 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 import org.swyp.dessertbee.common.util.StringListConverter;
+import org.swyp.dessertbee.store.coupon.entity.Coupon;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -87,6 +89,9 @@ public class Store {
     @Column(columnDefinition = "TEXT")
     @Convert(converter = StringListConverter.class)
     private List<String> notice;
+
+    @OneToMany(mappedBy = "store")
+    private List<Coupon> coupons = new ArrayList<>();
 
     @PrePersist
     public void prePersist() {

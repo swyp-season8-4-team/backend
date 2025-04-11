@@ -27,7 +27,6 @@ public class CouponResponse {
 
     public CouponResponse(Coupon coupon) {
         this.name = coupon.getName();
-        this.code = coupon.getCode();
         this.status = coupon.getStatus();
         this.createdAt = coupon.getCreatedAt();
         this.expiredAt = coupon.getExpiredAt();

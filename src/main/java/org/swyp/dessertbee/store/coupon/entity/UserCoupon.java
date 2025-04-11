@@ -2,6 +2,8 @@ package org.swyp.dessertbee.store.coupon.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.security.core.userdetails.User;
+import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.util.UUID;
 
@@ -16,25 +18,23 @@ public class UserCoupon {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private UserEntity user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Coupon coupon;
 
+    @Column(unique = true, nullable = false)
+    private String couponCode; // QR에 들어갈 고유 식별자
+
     private boolean isUsed = false;
 
 
-    @Column(unique = true, nullable = false)
-    private String code;
-
-
-    public UserCoupon(Long userId, Coupon coupon) {
-        this.userId = userId;
-        this.coupon = coupon;
-        this.code = UUID.randomUUID().toString(); // QR에 들어갈 고유 식별자
-    }
-
     public void use() {
+        if (this.isUsed) {
+            throw new IllegalStateException("이미 사용된 쿠폰입니다.");
+        }
         this.isUsed = true;
     }
 }

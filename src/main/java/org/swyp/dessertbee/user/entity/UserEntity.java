@@ -10,6 +10,7 @@ import org.swyp.dessertbee.auth.entity.AuthEntity;
 import org.swyp.dessertbee.preference.entity.UserPreferenceEntity;
 import org.swyp.dessertbee.role.entity.RoleEntity;
 import org.swyp.dessertbee.role.entity.UserRoleEntity;
+import org.swyp.dessertbee.store.coupon.entity.UserCoupon;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -82,6 +83,9 @@ public class UserEntity {
     @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserPreferenceEntity> userPreferences = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserCoupon> userCoupons = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mbti_id", nullable = true)
