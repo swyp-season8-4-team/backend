@@ -3,10 +3,14 @@ package org.swyp.dessertbee.store.store.service;
 import com.nimbusds.jose.util.Pair;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.preference.exception.PreferenceExceptions.*;
+import org.swyp.dessertbee.statistics.store.entity.StoreStatistics;
+import org.swyp.dessertbee.statistics.store.event.StoreViewEvent;
+import org.swyp.dessertbee.statistics.store.repostiory.StoreStatisticsRepository;
 import org.swyp.dessertbee.store.menu.converter.MenuConverter;
 import org.swyp.dessertbee.store.menu.entity.Menu;
 import org.swyp.dessertbee.store.menu.repository.MenuRepository;
@@ -47,6 +51,7 @@ import org.swyp.dessertbee.user.service.UserService;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -80,6 +85,7 @@ public class StoreServiceImpl implements StoreService {
     private final StoreBreakTimeRepository storeBreakTimeRepository;
     private final MenuRepository menuRepository;
     private final StoreNoticeService storeNoticeService;
+    private final ApplicationEventPublisher eventPublisher;
 
     /** 가게 등록 (이벤트, 쿠폰, 메뉴 + 이미지 포함) */
     @Override
@@ -111,14 +117,11 @@ public class StoreServiceImpl implements StoreService {
             // 가게 링크 저장
             validateAndSaveStoreLinks(store, request.getStoreLinks());
 
-            // 가게 통계 초기화
+            // 새로운 가게 통계 저장
             storeStatisticsRepository.save(
                     StoreStatistics.builder()
                             .storeId(store.getStoreId())
-                            .views(0)
-                            .saves(0)
-                            .reviews(0)
-                            .createDate(LocalDate.now())  // 가게가 등록된 날짜
+                            .createDate(store.getCreatedAt().toLocalDate())  // 가게가 등록된 날짜
                             .build()
             );
 
@@ -652,16 +655,6 @@ public class StoreServiceImpl implements StoreService {
         }).toList();
     }
 
-    /**
-     * 가게 조회수 증가 메서드
-     */
-    private void increaseStoreViews(Long storeId) {
-        StoreStatistics statistics = storeStatisticsRepository.findTopByStoreIdAndDeletedAtIsNullOrderByCreatedAtDesc(storeId)
-                .orElseThrow(() -> new StoreInfoReadFailedException("통계 정보가 존재하지 않습니다."));
-        statistics.increaseViews();
-        storeStatisticsRepository.save(statistics);
-    }
-
     /** 가게 간략 정보 조회 */
     @Override
     public StoreSummaryResponse getStoreSummary(UUID storeUuid) {
@@ -760,7 +753,7 @@ public class StoreServiceImpl implements StoreService {
             List<MateResponse> mateResponses = getMateResponses(storeId, userId);
 
             // 조회수 증가
-            increaseStoreViews(storeId);
+            eventPublisher.publishEvent(new StoreViewEvent(storeId, userUuid));
 
             return StoreDetailResponse.fromEntity(
                     store,

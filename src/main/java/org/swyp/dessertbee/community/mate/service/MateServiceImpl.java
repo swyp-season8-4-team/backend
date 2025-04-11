@@ -2,6 +2,7 @@ package org.swyp.dessertbee.community.mate.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,8 @@ import org.swyp.dessertbee.community.mate.dto.response.MatesPageResponse;
 import org.swyp.dessertbee.community.mate.entity.*;
 import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.community.mate.repository.*;
+import org.swyp.dessertbee.statistics.store.entity.enums.DessertMateAction;
+import org.swyp.dessertbee.statistics.store.event.MateActionEvent;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
@@ -45,6 +48,7 @@ public class MateServiceImpl implements MateService {
     private final StoreRepository storeRepository;
     private final ImageService imageService;
     private final UserServiceImpl userService;
+    private final ApplicationEventPublisher eventPublisher;
 
 
     /** 메이트 등록 */
@@ -93,6 +97,8 @@ public class MateServiceImpl implements MateService {
             //디저트 메이트 mateId를 가진 member 데이터 생성
             mateMemberService.addCreatorAsMember(mate.getMateUuid(), user.getId());
 
+            eventPublisher.publishEvent(new MateActionEvent(storeId, mate.getMateId(), user.getUserUuid(), DessertMateAction.CREATE));
+
             return getMateDetail(mate.getMateUuid());
 
         }catch (BusinessException e) {
@@ -139,6 +145,17 @@ public class MateServiceImpl implements MateService {
             savedMateRepository.deleteByMate_MateId(mate.getMateId());
 
             imageService.deleteImagesByRefId(ImageType.MATE, mate.getMateId());
+
+            UserEntity user = userService.getCurrentUser();
+
+            eventPublisher.publishEvent(
+                    new MateActionEvent(
+                            mate.getStoreId(),
+                            mate.getMateId(),
+                            user.getUserUuid(),
+                            DessertMateAction.DELETE
+                    )
+            );
 
         } catch (Exception e) {
             log.error("❌ S3 이미지 삭제 중 오류 발생: " + e.getMessage());
