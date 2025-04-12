@@ -54,8 +54,8 @@ public class StoreSummaryResponse {
     @Schema(description = "특정 휴무일 정보", nullable = true)
     private List<HolidayResponse> holidays;
 
-    @Schema(description = "가게를 저장한 사용자들의 취향 태그 Top3", example = "[\"비건\", \"키토제닉\",\"락토프리\"]", nullable = true)
-    private List<String> topPreferences;
+    @Schema(description = "가게를 저장한 사용자들의 취향 태그 Top3", example = "[{\"tagId\":1,\"name\":\"비건\",\"rank\":1}]", nullable = true)
+    private List<TopPreferenceTagResponse> topPreferences;
 
     @NotBlank
     @Schema(description = "가게 주소", example = "서울 마포구 양화로 23길 8")
@@ -84,7 +84,7 @@ public class StoreSummaryResponse {
                                                   List<HolidayResponse> holidays,
                                                   List<String> storeImages,
                                                   List<String> ownerPickImages,
-                                                  List<String> topPreferences) {
+                                                  List<TopPreferenceTagResponse> topPreferences) {
         return StoreSummaryResponse.builder()
                 .storeId(store.getStoreId())
                 .storeUuid(store.getStoreUuid())
