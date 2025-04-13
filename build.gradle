@@ -24,6 +24,7 @@ repositories {
 }
 
 dependencies {
+    implementation 'org.json:json:20231013'
 
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
     implementation 'io.jsonwebtoken:jjwt-impl:0.12.6'
@@ -60,6 +61,9 @@ dependencies {
     // Spring Data Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'redis.clients:jedis:4.3.1'
+
+    // Elasticsearch
+    implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
 
     implementation 'software.amazon.awssdk:s3:2.20.86'
     implementation 'software.amazon.awssdk:netty-nio-client:2.20.86'

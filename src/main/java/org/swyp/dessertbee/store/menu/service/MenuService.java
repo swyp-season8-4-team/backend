@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.UUID;
 
 public interface MenuService {
+    /** 가게의 메뉴 이름들 불러오기 (검색용) */
+    List<String> getMenuNames(Long storeId);
     /** 특정 가게의 메뉴 목록 조회 */
     List<MenuResponse> getMenusByStore(UUID storeUuid);
 

@@ -42,6 +42,14 @@ public class MenuServiceImpl implements MenuService {
         return new CustomMultipartFile(file, newFilename);
     }
 
+    /** 가게의 메뉴 이름들 불러오기 (검색용) */
+    @Override
+    public List<String> getMenuNames(Long storeId) {
+        return menuRepository.findByStoreIdAndDeletedAtIsNull(storeId).stream()
+                .map(Menu::getName)
+                .toList();
+    }
+
     /** 특정 가게의 메뉴 목록 조회 */
     @Override
     public List<MenuResponse> getMenusByStore(UUID storeUuid) {

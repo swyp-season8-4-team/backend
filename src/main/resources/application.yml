@@ -62,6 +62,9 @@ spring:
           starttls:
             enable: true
 
+  elasticsearch:
+    uris: http://localhost:9200
+
 logging:
   level:
     org:
