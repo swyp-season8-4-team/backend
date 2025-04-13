@@ -116,8 +116,8 @@ public class StoreDetailResponse {
     @Schema(description = "특정 휴무일 정보", nullable = true)
     private List<HolidayResponse> holidays;
 
-    @Schema(description = "가게를 저장한 사용자들의 취향 태그 Top3", example = "[\"비건\", \"키토제닉\",\"락토프리\"]", nullable = true)
-    private List<String> topPreferences;
+    @Schema(description = "가게를 저장한 사용자들의 취향 태그 Top3", example = "[{\"tagId\":1,\"name\":\"비건\",\"rank\":1}]", nullable = true)
+    private List<TopPreferenceTagResponse> topPreferences;
 
     @Schema(description = "커뮤니티 리뷰 리스트", nullable = true)
     private List<ReviewSummaryResponse> communityReviews;
@@ -139,7 +139,7 @@ public class StoreDetailResponse {
                                                  List<MenuResponse> menus,
                                                  List<String> storeImages,
                                                  List<String> ownerPickImages,
-                                                 List<String> topPreferences,
+                                                 List<TopPreferenceTagResponse> topPreferences,
                                                  List<StoreReviewResponse> storeReviews,
                                                  List<String> tags,
                                                  List<String> storeLinks,

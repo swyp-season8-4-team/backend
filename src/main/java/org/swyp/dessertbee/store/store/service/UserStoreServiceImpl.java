@@ -2,9 +2,12 @@ package org.swyp.dessertbee.store.store.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.common.entity.ImageType;
+import org.swyp.dessertbee.statistics.store.entity.enums.SaveAction;
+import org.swyp.dessertbee.statistics.store.event.StoreSaveActionEvent;
 import org.swyp.dessertbee.store.store.exception.StoreExceptions.*;
 import org.swyp.dessertbee.store.store.exception.UserStoreExceptions.*;
 import org.swyp.dessertbee.user.exception.UserExceptions.*;
@@ -21,7 +24,9 @@ import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.store.store.repository.UserStoreListRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
+import org.swyp.dessertbee.user.service.UserService;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -38,6 +43,8 @@ public class UserStoreServiceImpl implements UserStoreService {
     private final UserRepository userRepository;
     private final StoreRepository storeRepository;
     private final ImageService imageService;
+    private final UserService userService;
+    private final ApplicationEventPublisher eventPublisher;
 
     /** 저장 리스트 전체 조회 */
     @Override
@@ -207,6 +214,10 @@ public class UserStoreServiceImpl implements UserStoreService {
                             .build()
             );
 
+            UserEntity user = userService.getCurrentUser();
+
+            eventPublisher.publishEvent(new StoreSaveActionEvent(storeId, user.getUserUuid(), SaveAction.SAVE));
+
             return new SavedStoreResponse(
                     list.getUser().getUserUuid(),
                     store.getStoreUuid(),
@@ -291,6 +302,10 @@ public class UserStoreServiceImpl implements UserStoreService {
 
             SavedStore savedStore = savedStoreRepository.findByUserStoreListAndStore(list, store)
                     .orElseThrow(() -> new SavedStoreNotFoundException());
+
+            UserEntity user = userService.getCurrentUser();
+
+            eventPublisher.publishEvent(new StoreSaveActionEvent(storeId, user.getUserUuid(), SaveAction.UNSAVE));
 
             savedStoreRepository.delete(savedStore);
         } catch (SavedStoreDeleteException e){

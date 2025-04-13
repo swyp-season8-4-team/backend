@@ -27,6 +27,8 @@ public class LoginAttemptServiceImpl implements LoginAttemptService {
     // 계정 잠금 시간(분)
     private static final int LOCK_TIME_MINUTES = 10;
 
+    private static final String UNLIMITED_ATTEMPTS_EMAIL = "kjkksu2@naver.com";
+
     /**
      * 로그인 실패 처리와 잠금 만료 확인
      * @param email 사용자 이메일
@@ -35,6 +37,11 @@ public class LoginAttemptServiceImpl implements LoginAttemptService {
     @Override
     @Transactional(readOnly = true)
     public void checkLoginAttempt(String email) {
+        // 특정 이메일은 무제한 로그인 시도 허용
+        if (UNLIMITED_ATTEMPTS_EMAIL.equals(email)) {
+            log.info("무제한 로그인 시도가 허용된 이메일: {}", email);
+            return;
+        }
         Optional<LoginAttemptEntity> attemptOpt = loginAttemptRepository.findByEmail(email);
 
         // 존재하지 않으면 잠금 상태 아님
@@ -68,6 +75,11 @@ public class LoginAttemptServiceImpl implements LoginAttemptService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public int handleLoginFailure(String email) {
+        // 특정 이메일은 실패 횟수를 기록하지 않음
+        if (UNLIMITED_ATTEMPTS_EMAIL.equals(email)) {
+            log.info("무제한 로그인 시도가 허용된 이메일의 실패 처리 무시: {}", email);
+            return MAX_FAILED_ATTEMPTS; // 항상 최대 시도 횟수 반환
+        }
         LoginAttemptEntity loginAttempt = getOrCreateLoginAttempt(email);
 
         // 잠금 시간이 만료된 경우 먼저 초기화

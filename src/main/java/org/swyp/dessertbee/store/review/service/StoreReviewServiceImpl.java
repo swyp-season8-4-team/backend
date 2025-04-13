@@ -2,10 +2,15 @@ package org.swyp.dessertbee.store.review.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
+import org.swyp.dessertbee.statistics.store.entity.StoreReviewLog;
+import org.swyp.dessertbee.statistics.store.entity.enums.ReviewAction;
+import org.swyp.dessertbee.statistics.store.event.StoreReviewActionEvent;
+import org.swyp.dessertbee.statistics.store.repostiory.StoreStatisticsRepository;
 import org.swyp.dessertbee.store.store.exception.StoreExceptions.*;
 import org.swyp.dessertbee.store.review.exception.StoreReviewExceptions.*;
 import org.swyp.dessertbee.store.store.service.StoreService;
@@ -20,6 +25,7 @@ import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -35,6 +41,8 @@ public class StoreReviewServiceImpl implements StoreReviewService {
     private final UserRepository userRepository;
     private final ImageService imageService;
     private final StoreService storeService;
+    private final StoreStatisticsRepository storeStatisticsRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     /** 리뷰 등록 */
     @Override
@@ -71,6 +79,17 @@ public class StoreReviewServiceImpl implements StoreReviewService {
 
             // 리뷰 등록 후 평균 평점 업데이트
             storeService.updateAverageRating(storeId);
+
+            eventPublisher.publishEvent(
+                    new StoreReviewActionEvent(
+                            review.getStoreId(),
+                            review.getReviewId(),
+                            reviewer.getUserUuid(),
+                            ReviewAction.CREATE
+                    )
+            );
+
+            storeStatisticsRepository.increaseStoreReviewCount(storeId);
 
             return StoreReviewResponse.fromEntity(review, reviewer,
                     profileImage.isEmpty() ? null : profileImage.get(0), imageUrls);
@@ -168,7 +187,19 @@ public class StoreReviewServiceImpl implements StoreReviewService {
             }
 
             review.softDelete();
+
             storeService.updateAverageRating(storeId);
+
+            eventPublisher.publishEvent(
+                    new StoreReviewActionEvent(
+                            review.getStoreId(),
+                            review.getReviewId(),
+                            review.getUserUuid(),
+                            ReviewAction.DELETE
+                    )
+            );
+
+            storeStatisticsRepository.decreaseStoreReviewCount(storeId);
         } catch (StoreReviewDeleteFailedException e){
             log.warn("가게 한줄리뷰 삭제 실패 - 사유: {}", e.getMessage());
             throw e;
