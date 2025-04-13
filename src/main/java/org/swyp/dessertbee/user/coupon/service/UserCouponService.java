@@ -37,7 +37,7 @@ public class UserCouponService {
      * 쿠폰 발급
      */
     public IssuedCouponResponse issueCoupon(IssueCouponRequest request, UserEntity user) {
-        Coupon coupon = couponRepository.findByCouponUuid(request.getCouponUuid())
+        Coupon coupon = couponRepository.findByCouponUuidForUpdate(request.getCouponUuid())
                 .orElseThrow(() -> new BusinessException(ErrorCode.COUPON_NOT_FOUND));
 
         // 한 ID당 하나의 쿠폰 발급
@@ -46,6 +46,10 @@ public class UserCouponService {
             throw new BusinessException(ErrorCode.ALREADY_ISSUED_COUPON);
         }
 
+        // 수량 부족 체크
+        if (coupon.getQuantity() <= 0) {
+            throw new BusinessException(ErrorCode.COUPON_OUT_OF_STOCK);
+        }
         String uniqueCouponCode = couponCodeGenerator.generateUniqueCouponCode();
 
         String qrBase64;
@@ -64,6 +68,7 @@ public class UserCouponService {
                 .build();
 
         userCouponRepository.save(userCoupon);
+
         //수량 감소
         coupon.decreaseQuantity();
 

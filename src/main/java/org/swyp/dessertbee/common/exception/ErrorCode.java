@@ -188,6 +188,7 @@ public enum ErrorCode {
     INVALID_GIFT_DETAIL(HttpStatus.BAD_REQUEST, "C009", "증정 쿠폰의 상세 정보가 유효하지 않습니다."),
     ALREADY_ISSUED_COUPON(HttpStatus.CONFLICT, "C010", "이미 해당 쿠폰을 발급받은 사용자입니다."),
     QR_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "C011", "QR 코드 생성 중 오류가 발생했습니다."),
+    COUPON_OUT_OF_STOCK(HttpStatus.BAD_REQUEST, "C012", "제공된 쿠폰 수량이 소진되었습니다."),
 
     // 사용조건 관련 에러코드
     INVALID_CONDITION_TYPE(HttpStatus.BAD_REQUEST, "CC001", "올바르지 않은 사용조건 타입입니다."),

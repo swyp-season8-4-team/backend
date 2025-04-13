@@ -106,7 +106,7 @@ public class CouponService {
                 request.getHasExpiryDate(),
                 request.getExpiryDate(),
                 request.getHasQuantity(),
-                request.getQuantity()
+                coupon.getQuantity() // 수량 고정
         );
 
         // 쿠폰 타입에 따른 필드 수정

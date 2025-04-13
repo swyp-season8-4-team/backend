@@ -3,6 +3,8 @@ package org.swyp.dessertbee.store.coupon.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.store.coupon.dto.request.couponCondition.*;
 import org.swyp.dessertbee.store.coupon.dto.request.couponType.CouponTypeRequest;
 import org.swyp.dessertbee.store.coupon.dto.request.couponType.DiscountCouponRequest;
@@ -106,7 +108,7 @@ public class Coupon {
 
     public void decreaseQuantity() {
         if (this.quantity <= 0) {
-            throw new IllegalStateException("쿠폰이 모두 소진되었습니다.");
+            throw new BusinessException(ErrorCode.COUPON_OUT_OF_STOCK);
         }
         this.quantity--;
     }
