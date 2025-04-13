@@ -37,6 +37,9 @@ public class Mate {
     @Column(name = "user_id")
     private Long userId;
 
+    @Column(name = "capacity", nullable = false)
+    private Long capacity;
+
     @Column(name = "store_id")
     private Long storeId;
 

@@ -58,6 +58,9 @@ public class MateServiceImpl implements MateService {
         // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
         UserEntity user = userService.getCurrentUser();
 
+        if(request.getCapacity() > 5){
+            throw new MateCapacityExceededException("최대 수용 인원 초과입니다.");
+        }
 
         try {
             userService.findById(user.getId());
@@ -71,6 +74,7 @@ public class MateServiceImpl implements MateService {
             // store가 null이면 storeId는 null, 아니면 store.getStoreId() 할당
             Long storeId = (store != null) ? store.getStoreId() : null;
 
+
             Mate mate = mateRepository.save(
                     Mate.builder()
                             .userId(user.getId())
@@ -78,6 +82,7 @@ public class MateServiceImpl implements MateService {
                             .mateCategoryId(request.getMateCategoryId())
                             .title(request.getTitle())
                             .content(request.getContent())
+                            .capacity(request.getCapacity())
                             .recruitYn(Boolean.TRUE.equals(request.getRecruitYn()))
                             .placeName(request.getPlace().getPlaceName())
                             .latitude(request.getPlace().getLatitude())

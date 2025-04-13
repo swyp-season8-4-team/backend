@@ -27,6 +27,10 @@ public class MateCreateRequest {
     @Schema(description = "디저트메이트 카테고리", example = "1")
     private Long mateCategoryId;
 
+    @NotBlank(message = "디저트메이트 수용 인원을 선택해주세요.")
+    @Schema(description = "디저트메이트 수용 인원", example = "2")
+    private Long capacity;
+
     @NotBlank(message = "디저트메이트 제목을 작성해주세요.")
     @Schema(description = "디저트메이트 제목 작성", example = "저랑 같이 홍대 빵지순례할 사람 찾습니다.")
     private String title;
