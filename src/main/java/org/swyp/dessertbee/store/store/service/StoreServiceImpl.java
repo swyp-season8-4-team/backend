@@ -50,6 +50,8 @@ import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.user.service.UserService;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -138,7 +140,8 @@ public class StoreServiceImpl implements StoreService {
             saveOrUpdateOperatingHours(store, request.getOperatingHours());
 
             // 휴무일 저장
-            //saveOrUpdateHolidays(store, request.getHolidays());
+            List<StoreHoliday> holidays = saveHolidays(request.getHolidays(), store.getStoreId());
+            storeHolidayRepository.saveAll(holidays);
         } catch (StoreCreationFailedException e) {
             log.warn("가게 등록 실패 - 업주Uuid: {}, 사유: {}", request.getUserUuid(), e.getMessage());
             throw e;
@@ -201,23 +204,37 @@ public class StoreServiceImpl implements StoreService {
         }
     }
 
-    /*
-     * 휴무일 저장/갱신 메서드
-     *
-     * private void saveOrUpdateHolidays(Store store, List<BaseStoreRequest.HolidayRequest> holidaysRequest) {
-     *     if (holidaysRequest != null) {
-     *         storeHolidayRepository.deleteByStoreId(store.getStoreId());
-     *         List<StoreHoliday> holidays = holidaysRequest.stream()
-     *                 .map(holiday -> StoreHoliday.builder()
-     *                         .storeId(store.getStoreId())
-     *                         .holidayDate(LocalDate.parse(holiday.getDate()))
-     *                         .reason(holiday.getReason())
-     *                         .build())
-     *                 .toList();
-     *         storeHolidayRepository.saveAll(holidays);
-     *     }
-     * }
-     */
+    private List<StoreHoliday> saveHolidays(List<BaseStoreRequest.HolidayRequest> requests, Long storeId) {
+        List<StoreHoliday> holidays = new ArrayList<>();
+
+        for (BaseStoreRequest.HolidayRequest req : requests) {
+            String dateStr = req.getDate(); // 예: 2025.02.10-14 또는 2025.02.14
+            String reason = req.getReason();
+
+            // 형식: yyyy.MM.dd[-dd]
+            String[] parts = dateStr.split("-");
+            LocalDate startDate = LocalDate.parse(parts[0], DateTimeFormatter.ofPattern("yyyy.MM.dd"));
+
+            LocalDate endDate;
+            if (parts.length == 2) {
+                // 뒤에 일만 있는 경우 (2025.02.10-14)
+                int endDay = Integer.parseInt(parts[1]);
+                endDate = startDate.withDayOfMonth(endDay);
+            } else {
+                endDate = startDate;
+            }
+
+            for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+                holidays.add(StoreHoliday.builder()
+                        .storeId(storeId)
+                        .holidayDate(date)
+                        .reason(reason)
+                        .build());
+            }
+        }
+
+        return holidays;
+    }
 
     /**
      * 링크 유효성 검사 및 저장 메서드
@@ -512,10 +529,14 @@ public class StoreServiceImpl implements StoreService {
      */
     private List<HolidayResponse> getHolidaysResponse(Long storeId) {
         List<StoreHoliday> holidays = storeHolidayRepository.findByStoreId(storeId);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+
+        if (holidays.isEmpty()) return Collections.emptyList();
 
         return holidays.stream()
+                .sorted(Comparator.comparing(StoreHoliday::getHolidayDate)) // 날짜 오름차순 정렬
                 .map(h -> HolidayResponse.builder()
-                        .date(h.getHolidayDate().toString())
+                        .date(h.getHolidayDate().format(formatter))
                         .reason(h.getReason())
                         .build())
                 .toList();
