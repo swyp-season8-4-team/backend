@@ -24,10 +24,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class StoreCreateRequest extends BaseStoreRequest {
 
-    @Builder.Default
-    @Schema(description = "가게 상태 (PENDING, APPROVED, REJECTED), 기본값 설정되어 있으므로 프론트에서 따로 보낼 필요 없음")
-    private StoreStatus status = StoreStatus.APPROVED;
-
     @Schema(description = "등록할 메뉴 정보 목록")
     private List<MenuCreateRequest> menus;
 
