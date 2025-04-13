@@ -14,6 +14,7 @@ import org.swyp.dessertbee.store.coupon.dto.request.UseCouponRequest;
 import org.swyp.dessertbee.store.coupon.dto.response.CouponResponse;
 import org.swyp.dessertbee.store.coupon.dto.response.UsedCouponResponse;
 import org.swyp.dessertbee.store.coupon.repository.CouponRepository;
+import org.swyp.dessertbee.store.coupon.scheduler.CouponScheduler;
 import org.swyp.dessertbee.store.coupon.service.CouponService;
 import org.swyp.dessertbee.store.coupon.service.UserCouponService;
 import org.swyp.dessertbee.store.store.entity.Store;
@@ -84,4 +85,5 @@ public class CouponController {
         UsedCouponResponse response = userCouponService.useCouponByCode(request);
         return ResponseEntity.ok(response);
     }
+
 }

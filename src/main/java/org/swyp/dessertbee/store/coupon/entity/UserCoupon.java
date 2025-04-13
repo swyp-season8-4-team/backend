@@ -29,6 +29,7 @@ public class UserCoupon {
     private String couponCode; // QR에 들어갈 고유 식별자
 
     private boolean isUsed = false;
+    private boolean isExpired=false;
 
     @Lob
     private String qrImageUrl; // base64 혹은 URL 저장
@@ -38,5 +39,9 @@ public class UserCoupon {
             throw new IllegalStateException("이미 사용된 쿠폰입니다.");
         }
         this.isUsed = true;
+    }
+
+    public void expire() {
+        this.isExpired = true;
     }
 }

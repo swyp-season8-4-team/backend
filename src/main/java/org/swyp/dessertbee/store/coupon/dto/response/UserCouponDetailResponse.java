@@ -19,4 +19,5 @@ public class UserCouponDetailResponse {
     private LocalDateTime expiryDate;
     private String couponCode;
     private CouponConditionType conditionType;
+    private boolean isExpired;
 }

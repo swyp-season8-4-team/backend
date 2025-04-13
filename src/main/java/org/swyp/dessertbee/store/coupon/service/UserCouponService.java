@@ -116,7 +116,8 @@ public class UserCouponService {
                 coupon.getName(),
                 coupon.getExpiryDate(),
                 userCoupon.getCouponCode(),
-                coupon.getConditionType()
+                coupon.getConditionType(),
+                userCoupon.isExpired()
         );
     }
 

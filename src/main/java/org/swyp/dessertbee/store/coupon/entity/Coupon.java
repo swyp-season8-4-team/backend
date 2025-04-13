@@ -110,6 +110,13 @@ public class Coupon {
         this.quantity--;
     }
 
+    public void expire() {
+        this.status = CouponStatus.EXPIRED;
+        for (UserCoupon userCoupon : userCoupons) {
+            userCoupon.expire();
+        }
+    }
+
 
     // --- 쿠폰 수정 관련 메서드 ---
     public void updateBasicInfo(String name, CouponTarget target, Boolean hasExposureDate,
