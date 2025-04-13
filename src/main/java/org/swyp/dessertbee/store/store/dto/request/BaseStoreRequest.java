@@ -69,7 +69,11 @@ public abstract class BaseStoreRequest {
     @Schema(description = "특정 휴무일 정보")
     private List<HolidayRequest> holidays;
 
-    @Schema(description = "가게 관련 링크 리스트", example = "[\"https://link1.com\", \"https://link2.com\"]", nullable = true)
+    @Schema(
+            description = "가게 관련 링크 리스트",
+            example = "[{\"url\": \"https://link1.com\", \"isPrimary\": true}, {\"url\": \"https://link2.com\", \"isPrimary\": false}]",
+            nullable = true
+    )
     private List<? extends StoreLinkRequest> storeLinks;
 
     /**
