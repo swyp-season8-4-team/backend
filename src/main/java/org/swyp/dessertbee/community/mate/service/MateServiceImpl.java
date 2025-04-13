@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.community.mate.service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -28,6 +29,7 @@ import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.exception.UserExceptions.*;
 import org.swyp.dessertbee.user.service.UserServiceImpl;
+import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 import java.util.List;
 import java.util.UUID;
@@ -54,9 +56,12 @@ public class MateServiceImpl implements MateService {
     /** 메이트 등록 */
     @Override
     @Transactional
-    public MateDetailResponse createMate(MateCreateRequest request, MultipartFile mateImage){
+    public MateDetailResponse createMate(MateCreateRequest request, MultipartFile mateImage, HttpServletRequest httpRequest){
         // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
         UserEntity user = userService.getCurrentUser();
+
+        String platformType = httpRequest.getHeader("Platform-Type");
+
 
         if(request.getCapacity() > 5){
             throw new MateCapacityExceededException("최대 수용 인원 초과입니다.");
@@ -66,33 +71,53 @@ public class MateServiceImpl implements MateService {
             userService.findById(user.getId());
 
 
-            //위도,경도로 storeId 조회
-            // 위도, 경도로 store 조회
-            Store store = storeRepository.findByName(request.getPlace().getPlaceName());
+            Long storeId = null;
+            Mate mate = null;
+            if("app".equalsIgnoreCase(platformType))
+            {
+                storeId = (request.getStoreId() != null) ? request.getStoreId() : null;
+
+                mate = mateRepository.save(
+                        Mate.builder()
+                                .userId(user.getId())
+                                .storeId(storeId)
+                                .mateCategoryId(request.getMateCategoryId())
+                                .title(request.getTitle())
+                                .content(request.getContent())
+                                .capacity(request.getCapacity())
+                                .currentMemberCount(1L)
+                                .recruitYn(Boolean.TRUE.equals(request.getRecruitYn()))
+                                .updatedAt(null)
+                                .build()
+                );
+
+            }else{
+                //위도,경도로 storeId 조회
+                // 위도, 경도로 store 조회
+                Store store = storeRepository.findByName(request.getPlace().getPlaceName());
 
 
-            // store가 null이면 storeId는 null, 아니면 store.getStoreId() 할당
-            Long storeId = (store != null) ? store.getStoreId() : null;
+                // store가 null이면 storeId는 null, 아니면 store.getStoreId() 할당
+                storeId = (store != null) ? store.getStoreId() : null;
 
+                mate = mateRepository.save(
+                        Mate.builder()
+                                .userId(user.getId())
+                                .storeId(storeId)
+                                .mateCategoryId(request.getMateCategoryId())
+                                .title(request.getTitle())
+                                .content(request.getContent())
+                                .capacity(request.getCapacity())
+                                .currentMemberCount(1L)
+                                .recruitYn(Boolean.TRUE.equals(request.getRecruitYn()))
+                                .placeName(request.getPlace().getPlaceName())
+                                .latitude(request.getPlace().getLatitude())
+                                .longitude(request.getPlace().getLongitude())
+                                .updatedAt(null)
+                                .build()
+                );
 
-            Mate mate = mateRepository.save(
-                    Mate.builder()
-                            .userId(user.getId())
-                            .storeId(storeId)
-                            .mateCategoryId(request.getMateCategoryId())
-                            .title(request.getTitle())
-                            .content(request.getContent())
-                            .capacity(request.getCapacity())
-                            .currentMemberCount(1L)
-                            .recruitYn(Boolean.TRUE.equals(request.getRecruitYn()))
-                            .placeName(request.getPlace().getPlaceName())
-                            .latitude(request.getPlace().getLatitude())
-                            .longitude(request.getPlace().getLongitude())
-                            .updatedAt(null)
-                            .build()
-            );
-
-
+            }
 
             //기존 이미지 삭제 후 새 이미지 업로드
             if (mateImage != null && !mateImage.isEmpty()) {
