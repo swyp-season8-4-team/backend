@@ -801,6 +801,60 @@ public class StoreServiceImpl implements StoreService {
         }
     }
 
+
+    /**
+     * 가게 상세 정보 조회
+     */
+    @Override
+    public StoreInfoResponse getStoreInfo(UUID storeUuid) {
+        try{
+            Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
+            Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
+                    .orElseThrow(() -> new StoreNotFoundException());
+
+            // 가게 이미지 조회
+            List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, storeId);
+            List<String> ownerPickImages = imageService.getImagesByTypeAndId(ImageType.OWNERPICK, storeId);
+
+            // 태그 조회
+            List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(storeId);
+
+            // 가게 링크 및 대표 링크 조회
+            Pair<List<String>, String> linkInfo = getStoreLinksAndPrimary(storeId);
+
+            // 운영 시간 조회
+            List<OperatingHourResponse> operatingHourResponses = getOperatingHoursResponse(storeId);
+
+            // 휴무일 조회
+            List<HolidayResponse> holidayResponses = getHolidaysResponse(storeId);
+
+            // 공지사항 조회
+            StoreNoticeResponse noticeResponse = storeNoticeService.getLatestNotice(storeUuid);
+
+            // 메뉴 리스트 조회
+            List<MenuResponse> menus = menuService.getMenusByStore(storeUuid);
+
+            return StoreInfoResponse.fromEntity(
+                    store,
+                    operatingHourResponses,
+                    holidayResponses,
+                    noticeResponse,
+                    menus,
+                    storeImages,
+                    ownerPickImages,
+                    tags,
+                    linkInfo.getLeft(),
+                    linkInfo.getRight()
+            );
+        } catch (StoreInfoReadFailedException e){
+            log.warn("가게 정보 조회 실패 - 사유: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("가게 정보 조회 처리 중 오류 발생", e);
+            throw new StoreServiceException("가게 정보 조회 처리 중 오류가 발생했습니다.");
+        }
+    }
+
     /** 가게의 평균 평점 업데이트 (리뷰 등록,수정,삭제 시 호출) */
     @Override
     public void updateAverageRating(Long storeId) {
@@ -818,7 +872,7 @@ public class StoreServiceImpl implements StoreService {
 
     /** 가게 수정 */
     @Override
-    public void updateStore(UUID storeUuid,
+    public StoreInfoResponse updateStore(UUID storeUuid,
                                            StoreUpdateRequest request,
                                            List<MultipartFile> storeImageFiles,
                                            List<MultipartFile> ownerPickImageFiles,
@@ -869,7 +923,9 @@ public class StoreServiceImpl implements StoreService {
             saveOrUpdateOperatingHours(store, request.getOperatingHours());
 
             // 휴무일 저장
-            //saveOrUpdateHolidays(store, request.getHolidays());
+            saveHolidays(request.getHolidays(), storeId);
+
+            return getStoreInfo(storeUuid);
         } catch (StoreUpdateException e) {
             log.warn("가게 수정 실패 - 사유: {}", e.getMessage());
             throw e;

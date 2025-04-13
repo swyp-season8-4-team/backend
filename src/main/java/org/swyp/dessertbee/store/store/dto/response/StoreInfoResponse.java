@@ -18,18 +18,12 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * 가게 상세 페이지 응답
+ * 가게 관리 페이지 응답 (가게 정보)
  */
 @Data
 @Builder
 @AllArgsConstructor
-public class StoreDetailResponse {
-
-    @Schema(description = "사용자 ID (비로그인 시 Null)", example = "3", nullable = true)
-    private Long userId;
-
-    @Schema(description = "사용자 UUID (비로그인 시 Null)", example = "1c95f3a7-0c7d-4e2b-95cf-ff123abc4567", nullable = true)
-    private UUID userUuid;
+public class StoreInfoResponse {
 
     @NotNull
     @Schema(description = "가게 ID", example = "12")
@@ -79,11 +73,8 @@ public class StoreDetailResponse {
     @Schema(description = "가게 소개글", example = "편안한 분위기의 감성 디저트 카페입니다.", nullable = true)
     private String description;
 
-    @Schema(description = "가게 공지사항 리스트", nullable = true)
-    private List<StoreNoticeResponse> notices;
-
-    @Schema(description = "평균 별점 (소수점 2자리)", example = "4.58")
-    private BigDecimal averageRating;
+    @Schema(description = "가게 최근 공지사항", nullable = true)
+    private StoreNoticeResponse notice;
 
     @NotNull
     @Schema(description = "메뉴 리스트")
@@ -102,13 +93,6 @@ public class StoreDetailResponse {
     private List<String> storeLinks;
 
     @NotNull
-    @Schema(description = "총 리뷰 개수", example = "128")
-    private Integer totalReviewCount;
-
-    @Schema(description = "한줄 리뷰 리스트", nullable = true)
-    private List<StoreReviewResponse> storeReviews;
-
-    @NotNull
     @Schema(description = "태그 리스트", example = "[\"케이크\", \"구움과자\"]")
     private List<String> tags;
 
@@ -119,41 +103,17 @@ public class StoreDetailResponse {
     @Schema(description = "특정 휴무일 정보", nullable = true)
     private List<HolidayResponse> holidays;
 
-    @Schema(description = "가게를 저장한 사용자들의 취향 태그 Top3", example = "[{\"tagId\":1,\"name\":\"비건\",\"rank\":1}]", nullable = true)
-    private List<TopPreferenceTagResponse> topPreferences;
-
-    @Schema(description = "커뮤니티 리뷰 리스트", nullable = true)
-    private List<ReviewSummaryResponse> communityReviews;
-
-    @Schema(description = "디저트 메이트 모집글 리스트", nullable = true)
-    private List<MateResponse> mate;
-
-    @Schema(description = "저장 여부", example = "true", nullable = true)
-    private Boolean saved;
-
-    @Schema(description = "저장 목록 ID", example = "1234", nullable = true)
-    private Long savedListId;
-
-    public static StoreDetailResponse fromEntity(Store store, Long userId, UUID userUuid,
-                                                 int totalReviewCount,
-                                                 List<OperatingHourResponse> operatingHours,
-                                                 List<HolidayResponse> holidays,
-                                                 List<StoreNoticeResponse> notices,
-                                                 List<MenuResponse> menus,
-                                                 List<String> storeImages,
-                                                 List<String> ownerPickImages,
-                                                 List<TopPreferenceTagResponse> topPreferences,
-                                                 List<StoreReviewResponse> storeReviews,
-                                                 List<String> tags,
-                                                 List<String> storeLinks,
-                                                 String primaryStoreLink,
-                                                 List<ReviewSummaryResponse> communityReviews,
-                                                 List<MateResponse> mate,
-                                                 boolean saved,
-                                                 Long savedListId) {
-        return StoreDetailResponse.builder()
-                .userId(userId)
-                .userUuid(userUuid)
+    public static StoreInfoResponse fromEntity(Store store,
+                                               List<OperatingHourResponse> operatingHours,
+                                               List<HolidayResponse> holidays,
+                                               StoreNoticeResponse notice,
+                                               List<MenuResponse> menus,
+                                               List<String> storeImages,
+                                               List<String> ownerPickImages,
+                                               List<String> tags,
+                                               List<String> storeLinks,
+                                               String primaryStoreLink) {
+        return StoreInfoResponse.builder()
                 .storeId(store.getStoreId())
                 .storeUuid(store.getStoreUuid())
                 .ownerId(store.getOwnerId())
@@ -167,23 +127,15 @@ public class StoreDetailResponse {
                 .tumblerYn(store.getTumblerYn())
                 .parkingYn(store.getParkingYn())
                 .description(store.getDescription())
-                .averageRating(store.getAverageRating())
                 .operatingHours(operatingHours)
                 .holidays(holidays)
-                .notices(notices)
-                .topPreferences(topPreferences)
+                .notice(notice)
                 .menus(menus)
                 .storeImages(storeImages)
                 .ownerPickImages(ownerPickImages)
                 .primaryStoreLink(primaryStoreLink)
                 .storeLinks(storeLinks)
-                .totalReviewCount(totalReviewCount)
-                .storeReviews(storeReviews)
                 .tags(tags)
-                .communityReviews(communityReviews)
-                .mate(mate)
-                .saved(saved)
-                .savedListId(savedListId)
                 .build();
     }
 }

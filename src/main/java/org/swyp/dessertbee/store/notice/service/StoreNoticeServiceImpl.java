@@ -28,6 +28,7 @@ public class StoreNoticeServiceImpl implements StoreNoticeService{
     private final StoreRepository storeRepository;
 
     /** 공지 추가 */
+    @Override
     public void createNotice(UUID storeUuid, StoreNoticeRequest request){
         try{
             Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
@@ -52,7 +53,39 @@ public class StoreNoticeServiceImpl implements StoreNoticeService{
         }
     }
 
+    /** 가게 최근 공지 조회 (1개) */
+    @Override
+    public StoreNoticeResponse getLatestNotice(UUID storeUuid) {
+        try {
+            Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
+            if (storeId == null) {
+                throw new InvalidStoreUuidException();
+            }
+
+            StoreNotice notice = storeNoticeRepository
+                    .findFirstByStoreIdAndDeletedAtIsNullOrderByCreatedAtDesc(storeId)
+                    .orElseThrow(StoreNoticeNotFoundException::new);
+
+            return new StoreNoticeResponse(
+                    notice.getNoticeId(),
+                    notice.getTag(),
+                    notice.getTitle(),
+                    notice.getContent(),
+                    notice.getCreatedAt(),
+                    notice.getUpdatedAt()
+            );
+
+        } catch (StoreNoticeNotFoundException e) {
+            log.warn("가게 최신 공지 없음 - storeUuid: {}", storeUuid);
+            throw e;
+        } catch (Exception e) {
+            log.error("가게 최신 공지 조회 중 오류 발생", e);
+            throw new StoreNoticeServiceException("가게 최신 공지 조회 중 오류가 발생했습니다.");
+        }
+    }
+
     /** 가게 공지 리스트 조회 */
+    @Override
     public List<StoreNoticeResponse> getNoticesByStoreUuid(UUID storeUuid){
         try{
             Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
@@ -81,6 +114,7 @@ public class StoreNoticeServiceImpl implements StoreNoticeService{
     }
 
     /** 특정 공지 조회 */
+    @Override
     public StoreNoticeResponse getNotice(Long noticeId){
         try {
             StoreNotice notice = storeNoticeRepository.findByNoticeIdAndDeletedAtIsNull(noticeId);
@@ -107,6 +141,7 @@ public class StoreNoticeServiceImpl implements StoreNoticeService{
     }
 
     /** 특정 공지 수정 */
+    @Override
     public StoreNoticeResponse updateNotice(UUID storeUuid, Long noticeId, StoreNoticeRequest request){
         try {
             Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
@@ -140,6 +175,7 @@ public class StoreNoticeServiceImpl implements StoreNoticeService{
     }
 
     /** 특정 공지 삭제 */
+    @Override
     public void deleteNotice(UUID storeUuid, Long noticeId){
         try {
             Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);

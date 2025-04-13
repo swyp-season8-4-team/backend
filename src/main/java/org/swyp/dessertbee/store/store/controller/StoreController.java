@@ -20,6 +20,7 @@ import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
 import org.swyp.dessertbee.store.store.dto.request.StoreCreateRequest;
 import org.swyp.dessertbee.store.store.dto.request.StoreUpdateRequest;
 import org.swyp.dessertbee.store.store.dto.response.StoreDetailResponse;
+import org.swyp.dessertbee.store.store.dto.response.StoreInfoResponse;
 import org.swyp.dessertbee.store.store.dto.response.StoreMapResponse;
 import org.swyp.dessertbee.store.store.dto.response.StoreSummaryResponse;
 import org.swyp.dessertbee.store.store.service.StoreService;
@@ -143,15 +144,15 @@ public class StoreController {
     @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.UNAUTHORIZED_ACCESS, ErrorCode.STORE_UPDATE_FAILED})
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @PatchMapping(value = "/{storeUuid}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Void> updateStore(
+    public ResponseEntity<StoreInfoResponse> updateStore(
             @PathVariable UUID storeUuid,
             @RequestPart("request") StoreUpdateRequest request,
             @RequestPart(value = "storeImageFiles", required = false) List<MultipartFile> storeImageFiles,
             @RequestPart(value = "ownerPickImageFiles", required = false) List<MultipartFile> ownerPickImageFiles,
             @RequestPart(value = "menuImageFiles", required = false) List<MultipartFile> menuImageFiles) {
 
-        storeService.updateStore(storeUuid, request, storeImageFiles, ownerPickImageFiles, menuImageFiles);
-        return ResponseEntity.ok().build();
+        StoreInfoResponse updatedInfo = storeService.updateStore(storeUuid, request, storeImageFiles, ownerPickImageFiles, menuImageFiles);
+        return ResponseEntity.ok(updatedInfo);
     }
 
     /** 가게 삭제 */

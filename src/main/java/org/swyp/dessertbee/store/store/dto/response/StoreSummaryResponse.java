@@ -12,6 +12,9 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * 가게 간략 페이지 응답
+ */
 @Data
 @Builder
 @AllArgsConstructor
