@@ -134,7 +134,7 @@ public class StoreServiceImpl implements StoreService {
             saveStoreTags(store, request.getTagIds());
 
             // 메뉴 저장
-            processMenus(store, request.getMenus(), menuImageFiles, false);
+            processMenus(store, request.getMenus(), menuImageFiles);
 
             // 영업 시간 저장
             saveOrUpdateOperatingHours(store, request.getOperatingHours());
@@ -309,17 +309,22 @@ public class StoreServiceImpl implements StoreService {
     /**
      * 메뉴 처리 메서드
      */
-    private <T> void processMenus(Store store, List<T> menuRequests, List<MultipartFile> menuImageFiles, boolean isUpdate) {
+    private <T> void processMenus(Store store, List<T> menuRequests, List<MultipartFile> menuImageFiles) {
         if (menuRequests != null && !menuRequests.isEmpty()) {
             Map<String, MultipartFile> menuImageMap = createMenuImageMap(menuImageFiles);
 
-            if (isUpdate) {
+            if (menuRequests.get(0) instanceof MenuCreateRequest) {
+                @SuppressWarnings("unchecked")
+                List<MenuCreateRequest> typedRequests = (List<MenuCreateRequest>) menuRequests;
+                menuService.addMenus(store.getStoreUuid(), typedRequests, menuImageMap);
+            }
+            /*if (isUpdate) {
                 // 업데이트 시 처리 로직
-                if (menuRequests.get(0) instanceof StoreUpdateRequest.MenuRequest) {
+                if (menuRequests.get(0) instanceof StoreCreateRequest.MenuRequest) {
                     @SuppressWarnings("unchecked")
-                    List<StoreUpdateRequest.MenuRequest> typedRequests = (List<StoreUpdateRequest.MenuRequest>) menuRequests;
+                    List<StoreCreateRequest.MenuRequest> typedRequests = (List<StoreCreateRequest.MenuRequest>) menuRequests;
 
-                    for (StoreUpdateRequest.MenuRequest menuRequest : typedRequests) {
+                    for (StoreCreateRequest.MenuRequest menuRequest : typedRequests) {
                         MultipartFile file = null;
                         if (menuRequest.getImageFileKey() != null) {
                             file = menuImageMap.get(menuRequest.getImageFileKey());
@@ -341,7 +346,7 @@ public class StoreServiceImpl implements StoreService {
                     List<MenuCreateRequest> typedRequests = (List<MenuCreateRequest>) menuRequests;
                     menuService.addMenus(store.getStoreUuid(), typedRequests, menuImageMap);
                 }
-            }
+            }*/
         }
     }
 
@@ -875,8 +880,7 @@ public class StoreServiceImpl implements StoreService {
     public StoreInfoResponse updateStore(UUID storeUuid,
                                            StoreUpdateRequest request,
                                            List<MultipartFile> storeImageFiles,
-                                           List<MultipartFile> ownerPickImageFiles,
-                                           List<MultipartFile> menuImageFiles) {
+                                           List<MultipartFile> ownerPickImageFiles) {
         try {
             // 가게 존재 여부 및 삭제 여부 체크
             Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
@@ -917,7 +921,7 @@ public class StoreServiceImpl implements StoreService {
             }
 
             // 메뉴 처리
-            processMenus(store, request.getMenus(), menuImageFiles, true);
+            //processMenus(store, request.getMenus(), menuImageFiles, true);
 
             // 영업 시간 저장
             saveOrUpdateOperatingHours(store, request.getOperatingHours());

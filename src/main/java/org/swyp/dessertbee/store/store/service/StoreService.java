@@ -48,8 +48,7 @@ public interface StoreService {
     StoreInfoResponse updateStore(UUID storeUuid,
                                     StoreUpdateRequest request,
                                     List<MultipartFile> storeImageFiles,
-                                    List<MultipartFile> ownerPickImageFiles,
-                                    List<MultipartFile> menuImageFiles);
+                                    List<MultipartFile> ownerPickImageFiles);
 
     /** 가게 삭제 */
     void deleteStore(UUID storeUuid);

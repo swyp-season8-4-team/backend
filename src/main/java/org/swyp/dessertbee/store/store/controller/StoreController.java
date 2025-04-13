@@ -148,10 +148,9 @@ public class StoreController {
             @PathVariable UUID storeUuid,
             @RequestPart("request") StoreUpdateRequest request,
             @RequestPart(value = "storeImageFiles", required = false) List<MultipartFile> storeImageFiles,
-            @RequestPart(value = "ownerPickImageFiles", required = false) List<MultipartFile> ownerPickImageFiles,
-            @RequestPart(value = "menuImageFiles", required = false) List<MultipartFile> menuImageFiles) {
+            @RequestPart(value = "ownerPickImageFiles", required = false) List<MultipartFile> ownerPickImageFiles) {
 
-        StoreInfoResponse updatedInfo = storeService.updateStore(storeUuid, request, storeImageFiles, ownerPickImageFiles, menuImageFiles);
+        StoreInfoResponse updatedInfo = storeService.updateStore(storeUuid, request, storeImageFiles, ownerPickImageFiles);
         return ResponseEntity.ok(updatedInfo);
     }
 
