@@ -305,7 +305,7 @@ public class MateMemberServiceImpl implements MateMemberService {
             }
 
             // capacity와 딱 맞아지면 모집 마감 처리
-            if (mate.getCurrentMemberCount().equals(mate.getCapacity())) {
+            if ((mate.getCurrentMemberCount() +1 ) == mate.getCapacity()) {
                 mate.updateRecruitYn(false);
             }
 

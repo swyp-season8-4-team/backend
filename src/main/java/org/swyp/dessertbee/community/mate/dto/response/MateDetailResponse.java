@@ -37,6 +37,10 @@ public class MateDetailResponse {
     private Long capacity;
 
     @NotBlank
+    @Schema(description = "디저트메이트 현재 참여 인원", example = "1")
+    private Long currentMemberCount;
+
+    @NotBlank
     @Schema(description = "디저트메이트 작성하는 사람 닉네임", example = "디저비1")
     private String nickname;
 
@@ -106,6 +110,7 @@ public class MateDetailResponse {
                 .title(mate.getTitle())
                 .content(mate.getContent())
                 .capacity(mate.getCapacity())
+                .currentMemberCount(mate.getCurrentMemberCount())
                 .recruitYn(mate.getRecruitYn())
                 .mateImage(mateImage)
                 .mateCategory(category)
