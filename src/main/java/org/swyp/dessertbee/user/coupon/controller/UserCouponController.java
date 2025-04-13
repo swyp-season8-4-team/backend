@@ -7,6 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.auth.security.CustomUserDetails;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.user.coupon.dto.request.IssueCouponRequest;
 import org.swyp.dessertbee.user.coupon.dto.response.CouponUsageStatusResponse;
 import org.swyp.dessertbee.user.coupon.dto.response.IssuedCouponResponse;
@@ -40,7 +42,7 @@ public class UserCouponController {
     ) {
         UUID userUuid = userDetails.getUserUuid();
         UserEntity user = userRepository.findByUserUuid(userUuid)
-                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         return ResponseEntity.ok(userCouponService.issueCoupon(request, user));
     }
 

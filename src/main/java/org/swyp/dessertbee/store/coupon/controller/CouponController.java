@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.store.coupon.dto.request.CouponRequest;
 import org.swyp.dessertbee.user.coupon.dto.request.UseCouponRequest;
 import org.swyp.dessertbee.store.coupon.dto.response.CouponResponse;
@@ -36,7 +38,7 @@ public class CouponController {
     @PostMapping("/create")
     public ResponseEntity<CouponResponse> createCoupon(@RequestBody CouponRequest request) {
         Store store = storeRepository.findByStoreUuid(request.getStoreUuid())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 매장입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
         return ResponseEntity.ok(couponService.createCoupon(request, store));
     }
     /**
@@ -50,7 +52,7 @@ public class CouponController {
             @RequestBody @Valid CouponRequest request
     ) {
         Store store = storeRepository.findByStoreUuid(request.getStoreUuid())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 매장입니다."));
+                .orElseThrow(() ->new BusinessException(ErrorCode.STORE_NOT_FOUND));
         CouponResponse updated = couponService.updateCoupon(couponId, request, store);
         return ResponseEntity.ok(updated);
     }
