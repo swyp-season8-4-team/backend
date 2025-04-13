@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.store.coupon.dto.response;
+package org.swyp.dessertbee.user.coupon.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

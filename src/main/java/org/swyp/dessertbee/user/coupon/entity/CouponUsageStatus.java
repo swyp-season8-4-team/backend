@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.store.coupon.entity;
+package org.swyp.dessertbee.user.coupon.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

@@ -1,8 +1,8 @@
-package org.swyp.dessertbee.store.coupon.util;
+package org.swyp.dessertbee.user.coupon.util;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.swyp.dessertbee.store.coupon.repository.UserCouponRepository;
+import org.swyp.dessertbee.user.coupon.repository.UserCouponRepository;
 
 import java.security.SecureRandom;
 

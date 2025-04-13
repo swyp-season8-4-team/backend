@@ -1,15 +1,15 @@
-package org.swyp.dessertbee.store.coupon.controller;
+package org.swyp.dessertbee.user.coupon.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.auth.security.CustomUserDetails;
-import org.swyp.dessertbee.store.coupon.dto.request.IssueCouponRequest;
-import org.swyp.dessertbee.store.coupon.dto.response.CouponUsageStatusResponse;
-import org.swyp.dessertbee.store.coupon.dto.response.IssuedCouponResponse;
-import org.swyp.dessertbee.store.coupon.dto.response.UserCouponDetailResponse;
-import org.swyp.dessertbee.store.coupon.service.UserCouponService;
+import org.swyp.dessertbee.user.coupon.dto.request.IssueCouponRequest;
+import org.swyp.dessertbee.user.coupon.dto.response.CouponUsageStatusResponse;
+import org.swyp.dessertbee.user.coupon.dto.response.IssuedCouponResponse;
+import org.swyp.dessertbee.user.coupon.dto.response.UserCouponDetailResponse;
+import org.swyp.dessertbee.user.coupon.service.UserCouponService;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/coupons")
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserCouponController {
 
@@ -29,7 +29,7 @@ public class UserCouponController {
     /**
      * 쿠폰 발급
      */
-    @PostMapping("/issue")
+    @PostMapping("/coupons/issue")
     public ResponseEntity<IssuedCouponResponse> issueCoupon(
             @RequestBody IssueCouponRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails
@@ -44,7 +44,7 @@ public class UserCouponController {
     /**
      * 발급 받은 쿠폰 목록 조회
      */
-    @GetMapping("/myCoupon")
+    @GetMapping("coupons/my")
     public ResponseEntity<List<IssuedCouponResponse>> getMyCoupons(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
@@ -55,7 +55,7 @@ public class UserCouponController {
     /**
      * 발급 받은 쿠폰 상세 조회
      */
-    @GetMapping("/myCoupon/{userCouponId}")
+    @GetMapping("/my/{userCouponId}")
     public ResponseEntity<UserCouponDetailResponse> getUserCouponDetail(
             @PathVariable Long userCouponId,
             @AuthenticationPrincipal CustomUserDetails userDetails
@@ -67,7 +67,7 @@ public class UserCouponController {
     /**
      * 쿠폰 사용 현황 조회
      */
-    @GetMapping("/status-count")
+    @GetMapping("/coupon/usage-status")
     public ResponseEntity<CouponUsageStatusResponse> getCouponStatusCounts(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {

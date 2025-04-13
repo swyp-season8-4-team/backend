@@ -1,10 +1,8 @@
-package org.swyp.dessertbee.store.coupon.repository;
+package org.swyp.dessertbee.user.coupon.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
 import org.swyp.dessertbee.store.coupon.entity.Coupon;
-import org.swyp.dessertbee.store.coupon.entity.UserCoupon;
+import org.swyp.dessertbee.user.coupon.entity.UserCoupon;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.util.List;

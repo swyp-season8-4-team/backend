@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.store.coupon.dto.request;
+package org.swyp.dessertbee.user.coupon.dto.request;
 
 import lombok.*;
 

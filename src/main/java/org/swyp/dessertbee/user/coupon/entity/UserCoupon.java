@@ -1,11 +1,9 @@
-package org.swyp.dessertbee.store.coupon.entity;
+package org.swyp.dessertbee.user.coupon.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.security.core.userdetails.User;
+import org.swyp.dessertbee.store.coupon.entity.Coupon;
 import org.swyp.dessertbee.user.entity.UserEntity;
-
-import java.util.UUID;
 
 @Entity
 @Getter

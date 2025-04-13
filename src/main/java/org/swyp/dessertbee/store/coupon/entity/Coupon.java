@@ -9,6 +9,7 @@ import org.swyp.dessertbee.store.coupon.dto.request.couponType.DiscountCouponReq
 import org.swyp.dessertbee.store.coupon.dto.request.couponType.GiftCouponRequest;
 import org.swyp.dessertbee.store.coupon.entity.enums.*;
 import org.swyp.dessertbee.store.store.entity.Store;
+import org.swyp.dessertbee.user.coupon.entity.UserCoupon;
 
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;

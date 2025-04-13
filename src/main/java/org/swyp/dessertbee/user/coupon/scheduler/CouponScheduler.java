@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.store.coupon.scheduler;
+package org.swyp.dessertbee.user.coupon.scheduler;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;

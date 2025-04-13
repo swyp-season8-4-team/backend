@@ -10,11 +10,10 @@ import org.swyp.dessertbee.auth.entity.AuthEntity;
 import org.swyp.dessertbee.preference.entity.UserPreferenceEntity;
 import org.swyp.dessertbee.role.entity.RoleEntity;
 import org.swyp.dessertbee.role.entity.UserRoleEntity;
-import org.swyp.dessertbee.store.coupon.entity.UserCoupon;
+import org.swyp.dessertbee.user.coupon.entity.UserCoupon;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Stream;
 
 @Entity
 @Table(

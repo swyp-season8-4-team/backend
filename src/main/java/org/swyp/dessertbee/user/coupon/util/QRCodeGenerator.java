@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.store.coupon.util;
+package org.swyp.dessertbee.user.coupon.util;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.client.j2se.MatrixToImageWriter;

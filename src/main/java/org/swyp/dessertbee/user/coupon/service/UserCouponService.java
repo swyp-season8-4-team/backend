@@ -1,21 +1,21 @@
-package org.swyp.dessertbee.store.coupon.service;
+package org.swyp.dessertbee.user.coupon.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.swyp.dessertbee.store.coupon.dto.request.IssueCouponRequest;
-import org.swyp.dessertbee.store.coupon.dto.response.CouponUsageStatusResponse;
-import org.swyp.dessertbee.store.coupon.dto.response.IssuedCouponResponse;
-import org.swyp.dessertbee.store.coupon.dto.response.UsedCouponResponse;
-import org.swyp.dessertbee.store.coupon.dto.response.UserCouponDetailResponse;
+import org.swyp.dessertbee.user.coupon.dto.request.IssueCouponRequest;
+import org.swyp.dessertbee.user.coupon.dto.response.CouponUsageStatusResponse;
+import org.swyp.dessertbee.user.coupon.dto.response.IssuedCouponResponse;
+import org.swyp.dessertbee.user.coupon.dto.response.UsedCouponResponse;
+import org.swyp.dessertbee.user.coupon.dto.response.UserCouponDetailResponse;
 import org.swyp.dessertbee.store.coupon.entity.Coupon;
-import org.swyp.dessertbee.store.coupon.entity.UserCoupon;
+import org.swyp.dessertbee.user.coupon.entity.UserCoupon;
 import org.swyp.dessertbee.store.coupon.repository.CouponRepository;
-import org.swyp.dessertbee.store.coupon.repository.UserCouponRepository;
-import org.swyp.dessertbee.store.coupon.dto.request.UseCouponRequest;
-import org.swyp.dessertbee.store.coupon.util.CouponCodeGenerator;
-import org.swyp.dessertbee.store.coupon.util.QRCodeGenerator;
+import org.swyp.dessertbee.user.coupon.repository.UserCouponRepository;
+import org.swyp.dessertbee.user.coupon.dto.request.UseCouponRequest;
+import org.swyp.dessertbee.user.coupon.util.CouponCodeGenerator;
+import org.swyp.dessertbee.user.coupon.util.QRCodeGenerator;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.util.Base64;
