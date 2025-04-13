@@ -13,7 +13,7 @@ import org.swyp.dessertbee.user.coupon.dto.request.IssueCouponRequest;
 import org.swyp.dessertbee.user.coupon.dto.response.CouponUsageStatusResponse;
 import org.swyp.dessertbee.user.coupon.dto.response.IssuedCouponResponse;
 import org.swyp.dessertbee.user.coupon.dto.response.UserCouponDetailResponse;
-import org.swyp.dessertbee.user.coupon.service.UserCouponService;
+import org.swyp.dessertbee.user.coupon.service.UserCouponServiceImpl;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
@@ -27,7 +27,7 @@ import java.util.UUID;
 public class UserCouponController {
 
 
-    private final UserCouponService userCouponService;
+    private final UserCouponServiceImpl userCouponServiceImpl;
     private final UserRepository userRepository;
 
 
@@ -43,7 +43,7 @@ public class UserCouponController {
         UUID userUuid = userDetails.getUserUuid();
         UserEntity user = userRepository.findByUserUuid(userUuid)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        return ResponseEntity.ok(userCouponService.issueCoupon(request, user));
+        return ResponseEntity.ok(userCouponServiceImpl.issueCoupon(request, user));
     }
 
 
@@ -56,7 +56,7 @@ public class UserCouponController {
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         UUID userUuid = userDetails.getUserUuid();
-        return ResponseEntity.ok(userCouponService.getUserCoupons(userUuid));
+        return ResponseEntity.ok(userCouponServiceImpl.getUserCoupons(userUuid));
     }
 
     /**
@@ -69,7 +69,7 @@ public class UserCouponController {
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         UUID userUuid = userDetails.getUserUuid();
-        UserCouponDetailResponse response = userCouponService.getUserCouponDetail(userCouponId, userUuid);
+        UserCouponDetailResponse response = userCouponServiceImpl.getUserCouponDetail(userCouponId, userUuid);
         return ResponseEntity.ok(response);
     }
     /**
@@ -82,7 +82,7 @@ public class UserCouponController {
     ) {
         UUID userUuid = userDetails.getUserUuid();
 
-        CouponUsageStatusResponse response = userCouponService.getCouponUsageStats(userUuid);
+        CouponUsageStatusResponse response = userCouponServiceImpl.getCouponUsageStats(userUuid);
         return ResponseEntity.ok(response);
     }
 }

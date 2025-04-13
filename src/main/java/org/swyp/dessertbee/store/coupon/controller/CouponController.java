@@ -13,8 +13,8 @@ import org.swyp.dessertbee.store.coupon.dto.request.CouponRequest;
 import org.swyp.dessertbee.user.coupon.dto.request.UseCouponRequest;
 import org.swyp.dessertbee.store.coupon.dto.response.CouponResponse;
 import org.swyp.dessertbee.user.coupon.dto.response.UsedCouponResponse;
-import org.swyp.dessertbee.store.coupon.service.CouponService;
-import org.swyp.dessertbee.user.coupon.service.UserCouponService;
+import org.swyp.dessertbee.store.coupon.service.CouponServiceImpl;
+import org.swyp.dessertbee.user.coupon.service.UserCouponServiceImpl;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 
@@ -26,8 +26,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CouponController {
 
-    private final CouponService couponService;
-    private final UserCouponService userCouponService;
+    private final CouponServiceImpl couponServiceImpl;
+    private final UserCouponServiceImpl userCouponServiceImpl;
     private final StoreRepository storeRepository;
 
     /**
@@ -39,7 +39,7 @@ public class CouponController {
     public ResponseEntity<CouponResponse> createCoupon(@RequestBody CouponRequest request) {
         Store store = storeRepository.findByStoreUuid(request.getStoreUuid())
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
-        return ResponseEntity.ok(couponService.createCoupon(request, store));
+        return ResponseEntity.ok(couponServiceImpl.createCoupon(request, store));
     }
     /**
      * 쿠폰 수정
@@ -53,7 +53,7 @@ public class CouponController {
     ) {
         Store store = storeRepository.findByStoreUuid(request.getStoreUuid())
                 .orElseThrow(() ->new BusinessException(ErrorCode.STORE_NOT_FOUND));
-        CouponResponse updated = couponService.updateCoupon(couponId, request, store);
+        CouponResponse updated = couponServiceImpl.updateCoupon(couponId, request, store);
         return ResponseEntity.ok(updated);
     }
 
@@ -66,7 +66,7 @@ public class CouponController {
     public ResponseEntity<Void> deleteCoupon(
             @PathVariable Long couponId
             ) {
-        couponService.deleteCoupon(couponId);
+        couponServiceImpl.deleteCoupon(couponId);
 
         return ResponseEntity.noContent().build(); // 삭제 성공 시, 204 No Content 응답
     }
@@ -77,7 +77,7 @@ public class CouponController {
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @GetMapping("/all")
     public ResponseEntity<List<CouponResponse>> getAllCoupons() {
-        return ResponseEntity.ok(couponService.getAllCoupons());
+        return ResponseEntity.ok(couponServiceImpl.getAllCoupons());
     }
 
     /**
@@ -87,7 +87,7 @@ public class CouponController {
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @PostMapping("/use")
     public ResponseEntity<UsedCouponResponse> useCoupon(@RequestBody UseCouponRequest request) {
-        UsedCouponResponse response = userCouponService.useCouponByCode(request);
+        UsedCouponResponse response = userCouponServiceImpl.useCouponByCode(request);
         return ResponseEntity.ok(response);
     }
 
