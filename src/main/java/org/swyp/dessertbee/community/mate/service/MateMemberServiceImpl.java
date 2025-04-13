@@ -285,6 +285,8 @@ public class MateMemberServiceImpl implements MateMemberService {
         Long mateId = creatorIds.getMateId();
         Long creatorId = creatorIds.getUserId();
 
+        Mate mate = mateRepository.findById(mateId).orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+
         //mateMember 테이블에서 생성자 조회
         MateMember creator = mateMemberRepository.findGradeByMateIdAndUserIdAndDeletedAtIsNull(mateId, creatorId)
                 .orElseThrow(() -> new MateMemberNotFoundExcption("디저트메이트 멤버가 아닙니다."));
@@ -298,7 +300,21 @@ public class MateMemberServiceImpl implements MateMemberService {
                     .orElseThrow(() -> new MateMemberNotFoundExcption("디저트메이트 멤버가 아닙니다."));
 
 
+            if (mate.getCurrentMemberCount() + 1 > mate.getCapacity()) {
+                throw new MateCapacityExceededException("최대 수용 인원 초과입니다.");
+            }
+
+            // capacity와 딱 맞아지면 모집 마감 처리
+            if (mate.getCurrentMemberCount().equals(mate.getCapacity())) {
+                mate.updateRecruitYn(false);
+            }
+
+            // 모집 인원 추가 처리
+            mate.updateCurrentMemberCount(mate.getCurrentMemberCount() + 1);
+            mateRepository.save(mate);
+
             mateMemberRepository.updateApplyStatus(MateApplyStatus.APPROVED, mateId, acceptUser.getUserId());
+
         }
 
 
@@ -363,6 +379,10 @@ public class MateMemberServiceImpl implements MateMemberService {
         Long mateId = creatorIds.getMateId();
         Long creatorId = creatorIds.getUserId();
 
+
+        Mate mate = mateRepository.findById(mateId).orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+
+
         //mateMember 테이블에서 생성자 조회
         MateMember creator = mateMemberRepository.findGradeByMateIdAndUserIdAndDeletedAtIsNull(mateId, creatorId)
                 .orElseThrow(() -> new MateMemberNotFoundExcption("디저트메이트 멤버가 아닙니다."));
@@ -386,6 +406,17 @@ public class MateMemberServiceImpl implements MateMemberService {
 
                 // 변경된 모든 멤버 저장
                 mateMemberRepository.save(banUser);
+
+                Long currentMemberCount = mate.getCurrentMemberCount() -1;
+                // 모집 인원 삭제 처리
+                mate.updateCurrentMemberCount(currentMemberCount);
+
+                // 현재 인원이 정원보다 작아지면 다시 모집 가능하게
+                if (currentMemberCount < mate.getCapacity()) {
+                    mate.updateRecruitYn(true);
+                }
+
+                mateRepository.save(mate);
 
             }  catch (BusinessException e){
                 throw new UserNotFoundException("사용자를 찾을 수 없습니다.");

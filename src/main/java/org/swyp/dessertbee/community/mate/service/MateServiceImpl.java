@@ -83,6 +83,7 @@ public class MateServiceImpl implements MateService {
                             .title(request.getTitle())
                             .content(request.getContent())
                             .capacity(request.getCapacity())
+                            .currentMemberCount(1L)
                             .recruitYn(Boolean.TRUE.equals(request.getRecruitYn()))
                             .placeName(request.getPlace().getPlaceName())
                             .latitude(request.getPlace().getLatitude())

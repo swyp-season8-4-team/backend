@@ -40,6 +40,9 @@ public class Mate {
     @Column(name = "capacity", nullable = false)
     private Long capacity;
 
+    @Column(name = "current_member_count")
+    private Long currentMemberCount;
+
     @Column(name = "store_id")
     private Long storeId;
 
@@ -92,6 +95,13 @@ public class Mate {
             this.longitude = store.getLongitude();
             this.address = store.getAddress();
         }
+    }
+    public void updateRecruitYn(boolean recruitYn) {
+        this.recruitYn = recruitYn;
+    }
+
+    public void updateCurrentMemberCount(Long currentMemberCount) {
+        this.currentMemberCount = currentMemberCount;
     }
 
     public void softDelete(){
