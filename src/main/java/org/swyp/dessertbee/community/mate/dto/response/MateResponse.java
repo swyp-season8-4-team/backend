@@ -27,7 +27,6 @@ public class MateResponse {
     @Schema(description = "디저트메이트 사진 썸네일")
     private String thumbnail;
 
-
     @NotBlank
     @Schema(description = "작성하는 사람 닉네임", example = "디저비1")
     private String nickname;
@@ -44,7 +43,6 @@ public class MateResponse {
     @Schema(description = "디저트메이트 모집 여부", example = "true")
     private Boolean recruitYn;
 
-    @NotNull
     @Schema(description = "현재 로그인한 사용자의 디저트메이트 저장 유무")
     private boolean saved;
 }
