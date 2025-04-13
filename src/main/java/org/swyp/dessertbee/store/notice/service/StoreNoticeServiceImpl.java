@@ -37,6 +37,7 @@ public class StoreNoticeServiceImpl implements StoreNoticeService{
 
             StoreNotice notice = StoreNotice.builder()
                     .storeId(storeId)
+                    .tag(request.tag())
                     .title(request.title())
                     .content(request.content())
                     .build();
@@ -63,6 +64,7 @@ public class StoreNoticeServiceImpl implements StoreNoticeService{
             return notices.stream()
                     .map(n -> new StoreNoticeResponse(
                             n.getNoticeId(),
+                            n.getTag(),
                             n.getTitle(),
                             n.getContent(),
                             n.getCreatedAt(),
@@ -88,6 +90,7 @@ public class StoreNoticeServiceImpl implements StoreNoticeService{
 
             return new StoreNoticeResponse(
                     notice.getNoticeId(),
+                    notice.getTag(),
                     notice.getTitle(),
                     notice.getContent(),
                     notice.getCreatedAt(),
@@ -116,10 +119,11 @@ public class StoreNoticeServiceImpl implements StoreNoticeService{
                 throw new StoreNoticeNotFoundException();
             }
 
-            notice.update(request.title(), request.content());
+            notice.update(request.title(), request.content(), request.tag());
 
             return new StoreNoticeResponse(
                     notice.getNoticeId(),
+                    notice.getTag(),
                     notice.getTitle(),
                     notice.getContent(),
                     notice.getCreatedAt(),
