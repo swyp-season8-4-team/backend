@@ -13,15 +13,18 @@ public record StoreNoticeResponse(
         Long noticeId,
 
         @NotNull
-        @Schema(description = "공지 태그", example = "공지사항 태그입니다.")
+        @Schema(
+                description = "공지 태그 (ALERT: 알림, EMERGENCY: 긴급, COMMON: 일반",
+                allowableValues = {"ALERT", "EMERGENCY", "COMMON"}
+        )
         NoticeTag tag,
 
         @NotBlank
-        @Schema(description = "공지 제목", example = "공지사항 제목입니다.")
+        @Schema(description = "공지 제목", example = "이벤트 공지입니다.")
         String title,
 
         @NotBlank
-        @Schema(description = "공지 내용", example = "공지사항 내용입니다.")
+        @Schema(description = "공지 내용", example = "금일 오후 3시에 이벤트가 진행됩니다.")
         String content,
 
         @Schema(description = "공지 등록 시간", example = "2025-04-03T14:30:00")
