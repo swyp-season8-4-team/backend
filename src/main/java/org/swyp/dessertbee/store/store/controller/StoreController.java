@@ -1,6 +1,7 @@
 package org.swyp.dessertbee.store.store.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -64,7 +65,17 @@ public class StoreController {
     }
 
     /** 반경 내 가게 조회 */
-    @Operation(summary = "반경 내 가게 조회 (completed)", description = "지도 반경 내 가게를 조회합니다.")
+    @Operation(
+            summary = "반경 내 가게 조회 (completed)",
+            description = """
+        위치(latitude, longitude)와 반경(radius)을 기준으로 가게 목록을 조회합니다.
+        아래 3가지 방식 중 **하나만** 사용할 수 있습니다:
+
+        1. 기본 요청 (전체 가게 조회)
+        2. preferenceTagIds로 필터링 (복수 개 가능, 예: preferenceTagIds=1&preferenceTagIds=2)
+        3. 검색어(searchKeyword) 기반 조회 (예: 검색어를 URL 인코딩해서 전달)
+        """
+    )
     @ApiResponse(
             responseCode = "200",
             description = "지도 반경 내 가게 조회 성공",
@@ -73,10 +84,33 @@ public class StoreController {
     @ApiErrorResponses({ErrorCode.STORE_MAP_READ_FAILED, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.STORE_SEARCH_FAILED})
     @GetMapping("/map")
     public List<StoreMapResponse> getStoresByLocation(
+            @Parameter(description = "위도", example = "37.785834", required = true)
             @RequestParam Double latitude,
+
+            @Parameter(description = "경도", example = "122.406417", required = true)
             @RequestParam Double longitude,
+
+            @Parameter(description = "검색 반경(km)", example = "3.0", required = true)
             @RequestParam Double radius,
+
+            @Parameter(
+                    description = """
+                (선택) 사용자 선호 태그 ID 리스트
+                복수 개 전달 가능 → 예: preferenceTagIds=1&preferenceTagIds=2
+                searchKeyword와 동시 사용 불가
+                """,
+                    example = "1"
+            )
             @RequestParam(required = false) List<Long> preferenceTagIds,
+
+            @Parameter(
+                    description = """
+                (선택) 검색어 (예: 매장명, 태그 등)
+                반드시 URL 인코딩 필요 → 예: '커플' → %EC%BB%A4%ED%94%8C
+                preferenceTagIds와 동시 사용 불가
+                """,
+                    example = "%EC%BB%A4%ED%94%8C"
+            )
             @RequestParam(required = false) String searchKeyword) {
 
         if (searchKeyword != null) {
