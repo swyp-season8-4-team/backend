@@ -6,7 +6,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.auth.security.CustomUserDetails;
 import org.swyp.dessertbee.store.coupon.dto.request.IssueCouponRequest;
-import org.swyp.dessertbee.store.coupon.dto.request.UseCouponRequest;
+import org.swyp.dessertbee.store.coupon.dto.response.CouponUsageStatusResponse;
 import org.swyp.dessertbee.store.coupon.dto.response.IssuedCouponResponse;
 import org.swyp.dessertbee.store.coupon.dto.response.UserCouponDetailResponse;
 import org.swyp.dessertbee.store.coupon.service.UserCouponService;
@@ -62,6 +62,18 @@ public class UserCouponController {
     ) {
         UUID userUuid = userDetails.getUserUuid();
         UserCouponDetailResponse response = userCouponService.getUserCouponDetail(userCouponId, userUuid);
+        return ResponseEntity.ok(response);
+    }
+    /**
+     * 쿠폰 사용 현황 조회
+     */
+    @GetMapping("/status-count")
+    public ResponseEntity<CouponUsageStatusResponse> getCouponStatusCounts(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        UUID userUuid = userDetails.getUserUuid();
+
+        CouponUsageStatusResponse response = userCouponService.getCouponUsageStats(userUuid);
         return ResponseEntity.ok(response);
     }
 }

@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.store.coupon.dto.request.IssueCouponRequest;
+import org.swyp.dessertbee.store.coupon.dto.response.CouponUsageStatusResponse;
 import org.swyp.dessertbee.store.coupon.dto.response.IssuedCouponResponse;
 import org.swyp.dessertbee.store.coupon.dto.response.UsedCouponResponse;
 import org.swyp.dessertbee.store.coupon.dto.response.UserCouponDetailResponse;
@@ -142,5 +143,31 @@ public class UserCouponService {
                 userCoupon.getCouponCode(),
                 userCoupon.isUsed()
         );
+    }
+
+    /**
+     * 쿠폰 사용 현황
+     */
+
+    public CouponUsageStatusResponse getCouponUsageStats(UUID userUuid) {
+        List<UserCoupon> userCoupons = userCouponRepository.findAllByUser_UserUuid(userUuid);
+
+        long expiredCount = 0;
+        long usedCount = 0;
+        long unusedCount = 0;
+
+        for (UserCoupon userCoupon : userCoupons) {
+            if (userCoupon.isExpired()) {
+                expiredCount++;
+            } else {
+                if (userCoupon.isUsed()) {
+                    usedCount++;
+                } else {
+                    unusedCount++;
+                }
+            }
+        }
+
+        return new CouponUsageStatusResponse(usedCount, unusedCount, expiredCount);
     }
 }

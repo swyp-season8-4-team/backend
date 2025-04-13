@@ -31,6 +31,10 @@ public class UserCoupon {
     private boolean isUsed = false;
     private boolean isExpired=false;
 
+    private long usedCount;
+    private long unusedCount;
+    private long expiredCount;
+
     @Lob
     private String qrImageUrl; // base64 혹은 URL 저장
 
@@ -43,5 +47,11 @@ public class UserCoupon {
 
     public void expire() {
         this.isExpired = true;
+    }
+
+    public void CouponUsageStatus(long usedCount, long unusedCount, long expiredCount) {
+        this.usedCount = usedCount;
+        this.unusedCount = unusedCount;
+        this.expiredCount = expiredCount;
     }
 }
