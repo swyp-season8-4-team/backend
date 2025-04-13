@@ -8,7 +8,7 @@ import lombok.Getter;
 import org.swyp.dessertbee.store.coupon.dto.response.couponCondition.CouponConditionResponse;
 import org.swyp.dessertbee.store.coupon.dto.response.couponType.CouponTypeResponse;
 import org.swyp.dessertbee.store.coupon.entity.Coupon;
-import org.swyp.dessertbee.store.coupon.entity.CouponStatus;
+import org.swyp.dessertbee.store.coupon.entity.enums.CouponStatus;
 import org.swyp.dessertbee.store.coupon.entity.enums.CouponTarget;
 import org.swyp.dessertbee.store.coupon.entity.enums.CouponType;
 
@@ -22,6 +22,7 @@ import java.util.UUID;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CouponResponse {
 
+    private Long couponId;
     private UUID couponUuid;
     private UUID storeUuid;
     private String name;
@@ -46,6 +47,7 @@ public class CouponResponse {
 
     public static CouponResponse from(Coupon coupon) {
         return CouponResponse.builder()
+                .couponId(coupon.getId())
                 .couponUuid(coupon.getCouponUuid())
                 .storeUuid(coupon.getStore().getStoreUuid())
                 .name(coupon.getName())
@@ -61,6 +63,24 @@ public class CouponResponse {
                 .type(CouponTypeResponse.of(coupon))
                 .condition(CouponConditionResponse.of(coupon))
                 .createdAt(coupon.getCreatedAt())
+                .build();
+    }
+
+    public static CouponResponse list(Coupon coupon) {
+        return CouponResponse.builder()
+                .couponId(coupon.getId())
+                .couponUuid(coupon.getCouponUuid())
+                .storeUuid(coupon.getStore().getStoreUuid())
+                .name(coupon.getName())
+                .status(coupon.getStatus())
+                .target(coupon.getCouponTarget())
+                .hasExposureDate(coupon.getHasExposureDate())
+                .exposureStartAt(coupon.getExposureStartAt())
+                .exposureEndAt(coupon.getExposureEndAt())
+                .hasQuantity(coupon.getHasQuantity())
+                .quantity(coupon.getQuantity())
+                .type(CouponTypeResponse.of(coupon))
+                .condition(CouponConditionResponse.of(coupon))
                 .build();
     }
 }

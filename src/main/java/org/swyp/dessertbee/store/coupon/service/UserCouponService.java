@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.store.coupon.dto.request.IssueCouponRequest;
 import org.swyp.dessertbee.store.coupon.dto.response.IssuedCouponResponse;
 import org.swyp.dessertbee.store.coupon.dto.response.UsedCouponResponse;
+import org.swyp.dessertbee.store.coupon.dto.response.UserCouponDetailResponse;
 import org.swyp.dessertbee.store.coupon.entity.Coupon;
 import org.swyp.dessertbee.store.coupon.entity.UserCoupon;
 import org.swyp.dessertbee.store.coupon.repository.CouponRepository;
@@ -29,6 +30,9 @@ public class UserCouponService {
     private final CouponRepository couponRepository;
     private final CouponCodeGenerator couponCodeGenerator;
 
+    /**
+     * 쿠폰 발급
+     */
     public IssuedCouponResponse issueCoupon(IssueCouponRequest request, UserEntity user) {
         Coupon coupon = couponRepository.findByCouponUuid(request.getCouponUuid())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 쿠폰입니다."));
@@ -41,43 +45,85 @@ public class UserCouponService {
 
         String uniqueCouponCode = couponCodeGenerator.generateUniqueCouponCode();
 
-        UserCoupon userCoupon = UserCoupon.builder()
-                .user(user)
-                .coupon(coupon)
-                .couponCode(uniqueCouponCode)
-                .build();
-
-        userCouponRepository.save(userCoupon);
-
         String qrBase64;
         try {
-            byte[] qrBytes = QRCodeGenerator.generateQRCodeImage(userCoupon.getCouponCode());
+            byte[] qrBytes = QRCodeGenerator.generateQRCodeImage(uniqueCouponCode);
             qrBase64 = Base64.getEncoder().encodeToString(qrBytes);
         } catch (Exception e) {
             throw new RuntimeException("QR 코드 생성 중 오류 발생", e);
         }
+
+        UserCoupon userCoupon = UserCoupon.builder()
+                .user(user)
+                .coupon(coupon)
+                .couponCode(uniqueCouponCode)
+                .qrImageUrl(qrBase64) // QR 이미지 저장
+                .build();
+
+        userCouponRepository.save(userCoupon);
+        //수량 감소
+        coupon.decreaseQuantity();
 
         return new IssuedCouponResponse(
                 userCoupon.getId(),
                 coupon.getName(),
                 userCoupon.getCouponCode(),
                 qrBase64,
-                userCoupon.isUsed()
+                userCoupon.isUsed(),
+                coupon.getStore().getName(),
+                coupon.getExpiryDate()
         );
     }
 
+    /**
+     * 발급받은 쿠폰 목록 조회
+     */
     public List<IssuedCouponResponse> getUserCoupons(UUID userUuid) {
         return userCouponRepository.findAllByUser_UserUuid(userUuid).stream()
-                .map(uc -> new IssuedCouponResponse(
-                        uc.getId(),
-                        uc.getCoupon().getName(),
-                        uc.getCouponCode(),
-                        null, // QR 생략
-                        uc.isUsed()
-                ))
+                .map(uc -> {
+                    Coupon coupon = uc.getCoupon();
+                    return new IssuedCouponResponse(
+                            uc.getId(),
+                            coupon.getName(),
+                            uc.getCouponCode(),
+                            null, // QR 생략
+                            uc.isUsed(),
+                            coupon.getStore().getName(),
+                            coupon.getExpiryDate()
+                    );
+                })
                 .toList();
     }
 
+    /**
+     * 쿠폰 상세 정보 조회
+     */
+    @Transactional(readOnly = true)
+    public UserCouponDetailResponse getUserCouponDetail(Long userCouponId, UUID userUuid) {
+        UserCoupon userCoupon = userCouponRepository.findById(userCouponId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 쿠폰이 존재하지 않습니다."));
+
+        if (!userCoupon.getUser().getUserUuid().equals(userUuid)) {
+            throw new IllegalArgumentException("본인의 쿠폰만 조회할 수 있습니다.");
+        }
+
+        Coupon coupon = userCoupon.getCoupon();
+
+        return new UserCouponDetailResponse(
+                userCoupon.getId(),
+                userCoupon.getQrImageUrl(),
+                coupon.getStore().getName(),
+                coupon.getName(),
+                coupon.getExpiryDate(),
+                userCoupon.getCouponCode(),
+                coupon.getConditionType()
+        );
+    }
+
+
+    /**
+     * 쿠폰 사용
+     */
     @Transactional
     public UsedCouponResponse useCouponByCode(UseCouponRequest request) {
         UserCoupon userCoupon = userCouponRepository.findByCouponCode(request.getCouponCode())

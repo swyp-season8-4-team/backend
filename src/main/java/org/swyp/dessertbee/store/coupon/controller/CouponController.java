@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.store.coupon.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -7,6 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.swyp.dessertbee.auth.security.CustomUserDetails;
 import org.swyp.dessertbee.store.coupon.dto.request.CouponRequest;
 import org.swyp.dessertbee.store.coupon.dto.request.UseCouponRequest;
 import org.swyp.dessertbee.store.coupon.dto.response.CouponResponse;
@@ -41,7 +43,31 @@ public class CouponController {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 매장입니다."));
         return ResponseEntity.ok(couponService.createCoupon(request, store));
     }
+    /**
+     * 쿠폰 수정
+     */
+    @PutMapping("/{couponId}")
+    public ResponseEntity<CouponResponse> updateCoupon(
+            @PathVariable Long couponId,
+            @RequestBody @Valid CouponRequest request
+    ) {
+        Store store = storeRepository.findByStoreUuid(request.getStoreUuid())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 매장입니다."));
+        CouponResponse updated = couponService.updateCoupon(couponId, request, store);
+        return ResponseEntity.ok(updated);
+    }
 
+    /**
+     * 쿠폰 삭제
+     */
+    @DeleteMapping("/{couponId}")
+    public ResponseEntity<Void> deleteCoupon(
+            @PathVariable Long couponId
+            ) {
+        couponService.deleteCoupon(couponId);
+
+        return ResponseEntity.noContent().build(); // 삭제 성공 시, 204 No Content 응답
+    }
     /**
      * 생성한 쿠폰 조회
      */
@@ -50,6 +76,9 @@ public class CouponController {
         return ResponseEntity.ok(couponService.getAllCoupons());
     }
 
+    /**
+     * 쿠폰 사용처리
+     */
     @PostMapping("/use")
     public ResponseEntity<UsedCouponResponse> useCoupon(@RequestBody UseCouponRequest request) {
         UsedCouponResponse response = userCouponService.useCouponByCode(request);

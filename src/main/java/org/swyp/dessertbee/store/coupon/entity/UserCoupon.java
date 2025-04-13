@@ -30,6 +30,8 @@ public class UserCoupon {
 
     private boolean isUsed = false;
 
+    @Lob
+    private String qrImageUrl; // base64 혹은 URL 저장
 
     public void use() {
         if (this.isUsed) {

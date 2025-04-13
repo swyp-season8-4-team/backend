@@ -11,7 +11,7 @@ import org.swyp.dessertbee.store.coupon.dto.request.couponType.DiscountCouponReq
 import org.swyp.dessertbee.store.coupon.dto.request.couponType.GiftCouponRequest;
 import org.swyp.dessertbee.store.coupon.dto.response.CouponResponse;
 import org.swyp.dessertbee.store.coupon.entity.Coupon;
-import org.swyp.dessertbee.store.coupon.entity.CouponStatus;
+import org.swyp.dessertbee.store.coupon.entity.enums.CouponStatus;
 import org.swyp.dessertbee.store.coupon.repository.CouponRepository;
 import org.swyp.dessertbee.store.store.entity.Store;
 
@@ -27,7 +27,9 @@ public class CouponService {
 
     private final CouponRepository couponRepository;
 
-
+    /**
+     * 쿠폰 생성
+     */
     public CouponResponse createCoupon(CouponRequest request, Store store) {
         Coupon.CouponBuilder builder = Coupon.builder()
                 .name(request.getName())
@@ -82,7 +84,62 @@ public class CouponService {
         return CouponResponse.from(coupon);
     }
 
+    /**
+     * 쿠폰 수정
+     */
+    @Transactional
+    public CouponResponse updateCoupon(Long couponId, CouponRequest request, Store store) {
+        Coupon coupon = couponRepository.findById(couponId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 쿠폰입니다."));
 
+        // 소속 가게 체크
+        if (!coupon.getStore().getStoreId().equals(store.getStoreId())) {
+            throw new IllegalStateException("해당 쿠폰에 대한 수정 권한이 없습니다.");
+        }
+
+        coupon.updateBasicInfo(
+                request.getName(),
+                request.getCouponTarget(),
+                request.getHasExposureDate(),
+                request.getExposureStartAt(),
+                request.getExposureEndAt(),
+                request.getHasExpiryDate(),
+                request.getExpiryDate(),
+                request.getHasQuantity(),
+                request.getQuantity()
+        );
+
+        // 쿠폰 타입에 따른 필드 수정
+        CouponTypeRequest detail = request.getCouponDetail();
+        coupon.updateType(detail);
+
+        // 쿠폰 조건 수정
+        CouponConditionRequest condition = request.getCouponCondition();
+        coupon.updateCondition(condition);
+
+        return CouponResponse.from(coupon);
+    }
+
+    /**
+     * 쿠폰 삭제
+     */
+    @Transactional
+    public void deleteCoupon(Long couponId) {
+        Coupon coupon = couponRepository.findById(couponId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 쿠폰입니다."));
+
+        // 소속 가게 체크
+        Store store = coupon.getStore();
+        if (!coupon.getStore().getStoreId().equals(store.getStoreId())) {
+            throw new IllegalStateException("해당 쿠폰에 대한 삭제 권한이 없습니다.");
+        }
+
+        couponRepository.delete(coupon);
+    }
+
+    /**
+     * 생성한 쿠폰 조회
+     */
     public List<CouponResponse> getAllCoupons() {
         return couponRepository.findAllByOrderByCreatedAtDesc()
                 .stream()

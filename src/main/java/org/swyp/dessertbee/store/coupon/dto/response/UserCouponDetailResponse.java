@@ -4,19 +4,19 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import org.swyp.dessertbee.store.coupon.entity.enums.CouponConditionType;
 
 import java.time.LocalDateTime;
 
 @Data
-@Builder
-@AllArgsConstructor
 @Getter
-public class IssuedCouponResponse {
+@AllArgsConstructor
+public class UserCouponDetailResponse {
     private Long userCouponId;
-    private String couponName;
-    private String couponCode;
-    private String qrImageBase64;
-    private boolean isUsed;
+    private String qrImageUrl;
     private String storeName;
+    private String couponName;
     private LocalDateTime expiryDate;
+    private String couponCode;
+    private CouponConditionType conditionType;
 }

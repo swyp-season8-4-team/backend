@@ -3,10 +3,11 @@ package org.swyp.dessertbee.store.coupon.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
-import org.swyp.dessertbee.store.coupon.entity.enums.CouponConditionType;
-import org.swyp.dessertbee.store.coupon.entity.enums.CouponTarget;
-import org.swyp.dessertbee.store.coupon.entity.enums.DiscountType;
-import org.swyp.dessertbee.store.coupon.entity.enums.CouponType;
+import org.swyp.dessertbee.store.coupon.dto.request.couponCondition.*;
+import org.swyp.dessertbee.store.coupon.dto.request.couponType.CouponTypeRequest;
+import org.swyp.dessertbee.store.coupon.dto.request.couponType.DiscountCouponRequest;
+import org.swyp.dessertbee.store.coupon.dto.request.couponType.GiftCouponRequest;
+import org.swyp.dessertbee.store.coupon.entity.enums.*;
 import org.swyp.dessertbee.store.store.entity.Store;
 
 import java.time.DayOfWeek;
@@ -94,8 +95,6 @@ public class Coupon {
     private Integer quantity;
 
     private LocalDateTime createdAt;
-    private LocalDateTime issuedAt;
-    private LocalDateTime usedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id")
@@ -104,11 +103,65 @@ public class Coupon {
     @OneToMany(mappedBy = "coupon", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserCoupon> userCoupons = new ArrayList<>();
 
-    public void markAsUsed() {
-        if (this.status != CouponStatus.CREATED) {
-            throw new IllegalStateException("이미 사용된 쿠폰입니다.");
+    public void decreaseQuantity() {
+        if (this.quantity <= 0) {
+            throw new IllegalStateException("쿠폰이 모두 소진되었습니다.");
         }
-        this.status = CouponStatus.USED;
-        this.usedAt = LocalDateTime.now();
+        this.quantity--;
     }
+
+
+    // --- 쿠폰 수정 관련 메서드 ---
+    public void updateBasicInfo(String name, CouponTarget target, Boolean hasExposureDate,
+                                LocalDateTime exposureStartAt, LocalDateTime exposureEndAt,
+                                Boolean hasExpiryDate, LocalDateTime expiryDate,
+                                Boolean hasQuantity, Integer quantity) {
+        this.name = name;
+        this.couponTarget = target;
+        this.hasExposureDate = hasExposureDate;
+        this.exposureStartAt = exposureStartAt;
+        this.exposureEndAt = exposureEndAt;
+        this.hasExpiryDate = hasExpiryDate;
+        this.expiryDate = expiryDate;
+        this.hasQuantity = hasQuantity;
+        this.quantity = quantity;
+    }
+
+    public void updateType(CouponTypeRequest detail) {
+        this.type = detail.getType();
+        this.discountAmount = null;
+        this.discountType = null;
+        this.giftMenuName = null;
+
+        if (detail instanceof DiscountCouponRequest d) {
+            this.discountType = d.getDiscountType();
+            this.discountAmount = d.getDiscountAmount();
+        } else if (detail instanceof GiftCouponRequest g) {
+            this.giftMenuName = g.getGiftMenuName();
+        }
+    }
+
+    public void updateCondition(CouponConditionRequest condition) {
+        this.conditionType = condition.getConditionType();
+
+        this.minimumPurchaseAmount = null;
+        this.conditionStartTime = null;
+        this.conditionEndTime = null;
+        this.conditionDays = null;
+        this.exclusiveOnly = false;
+        this.customConditionText = null;
+
+        if (condition instanceof AmountConditionRequest a) {
+            this.minimumPurchaseAmount = a.getMinimumPurchaseAmount();
+        } else if (condition instanceof TimeDayConditionRequest t) {
+            this.conditionStartTime = t.getConditionStartTime();
+            this.conditionEndTime = t.getConditionEndTime();
+            this.conditionDays = t.getConditionDays();
+        } else if (condition instanceof ExclusiveConditionRequest) {
+            this.exclusiveOnly = true;
+        } else if (condition instanceof CustomConditionRequest c) {
+            this.customConditionText = c.getCustomConditionText();
+        }
+    }
+
 }
