@@ -41,7 +41,7 @@ public class StoreSummaryResponse {
     @Schema(description = "태그 리스트", example = "[\"케이크\", \"구움과자\"]")
     private List<String> tags;
 
-    @Schema(description = "가게 대표 링크", example = "https://instagram.com/dessertbee", nullable = true)
+    @Schema(description = "가게 대표 링크", example = "https://link1.com", nullable = true)
     private String primaryStoreLink;
 
     @Schema(description = "가게 관련 링크 리스트", example = "[\"https://link1.com\", \"https://link2.com\"]", nullable = true)

@@ -92,7 +92,7 @@ public class StoreDetailResponse {
     @Schema(description = "업주가 직접 고른 추가 이미지 URL 리스트", nullable = true)
     private List<String> ownerPickImages;
 
-    @Schema(description = "가게 대표 링크", example = "https://instagram.com/dessertbee", nullable = true)
+    @Schema(description = "가게 대표 링크", example = "https://link1.com", nullable = true)
     private String primaryStoreLink;
 
     @Schema(description = "가게 관련 링크 리스트", example = "[\"https://link1.com\", \"https://link2.com\"]", nullable = true)
