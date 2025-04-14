@@ -11,7 +11,6 @@ import org.swyp.dessertbee.preference.exception.PreferenceExceptions.*;
 import org.swyp.dessertbee.statistics.store.entity.StoreStatistics;
 import org.swyp.dessertbee.statistics.store.event.StoreViewEvent;
 import org.swyp.dessertbee.statistics.store.repostiory.StoreStatisticsRepository;
-import org.swyp.dessertbee.store.menu.converter.MenuConverter;
 import org.swyp.dessertbee.store.menu.entity.Menu;
 import org.swyp.dessertbee.store.menu.repository.MenuRepository;
 import org.swyp.dessertbee.store.menu.service.MenuService;
@@ -219,6 +218,10 @@ public class StoreServiceImpl implements StoreService {
      * @return 저장할 StoreHoliday 리스트
      */
     private List<StoreHoliday> saveHolidays(List<BaseStoreRequest.HolidayRequest> requests, Long storeId) {
+        if (requests == null || requests.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         List<StoreHoliday> holidays = new ArrayList<>();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
 
