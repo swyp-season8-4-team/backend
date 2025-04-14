@@ -224,15 +224,16 @@ public class MateServiceImpl implements MateService {
      * */
     @Override
     @Transactional
-    public MatesPageResponse getMates(Pageable pageable, String keyword, Long mateCategoryId) {
+    public MatesPageResponse getMates(Pageable pageable, String keyword, Long mateCategoryId, Boolean recruitYn) {
 
         // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
         UserEntity user = userService.getCurrentUser();
 
         Long currentUserId = (user != null) ? user.getId() : null;
 
+
         // 페이지 단위로 메이트 조회 (한 번의 호출로 처리)
-        Page<Mate> matesPage = mateRepository.findByDeletedAtIsNullAndMateCategoryId(mateCategoryId, keyword, pageable);
+        Page<Mate> matesPage = mateRepository.findByDeletedAtIsNullAndMateCategoryIdAndRecruitYn(mateCategoryId, keyword, recruitYn, pageable);
 
         // 각 메이트 엔티티를 DTO로 변환
         List<MateDetailResponse> mates = matesPage.stream()

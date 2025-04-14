@@ -27,7 +27,7 @@ public interface MateService {
     void updateMate(UUID mateUuid, MateCreateRequest request, MultipartFile mateImage);
 
     /** 디저트메이트 전체 조회 */
-    MatesPageResponse getMates(Pageable pageable, String keyword, Long mateCategoryId);
+    MatesPageResponse getMates(Pageable pageable, String keyword, Long mateCategoryId, Boolean recruitYn);
 
     /** 내가 참여한 디저트메이트 조회 */
     MatesPageResponse getMyMates(Pageable pageable);

@@ -26,6 +26,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Tag(name = "Mate", description = "디저트메이트 관련 API")
@@ -117,7 +118,8 @@ public class MateController{
             @RequestParam(required = false, defaultValue = "0") int from,
             @RequestParam(required = false, defaultValue = "10") int to,
             @RequestParam(required = false, defaultValue = "") String keyword,
-            @RequestParam(required = false) Long mateCategoryId
+            @RequestParam(required = false) Long mateCategoryId,
+            @RequestParam(required = false) Optional<Boolean> recruit
     ) {
 
         if (from >= to) {
@@ -128,10 +130,14 @@ public class MateController{
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
 
+        Boolean recruitYn = recruit.orElse(null);
+
         if(keyword != null) {
             keyword = URLDecoder.decode(keyword, StandardCharsets.UTF_8);
         }
-        return ResponseEntity.ok(mateService.getMates(pageable, keyword, mateCategoryId));
+
+
+        return ResponseEntity.ok(mateService.getMates(pageable, keyword, mateCategoryId, recruitYn));
     }
 
     /**
