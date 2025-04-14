@@ -14,7 +14,7 @@ import java.util.List;
 public interface StoreTopTagRepository extends JpaRepository<StoreTopTag, Long> {
 
     @Query(value = """
-    SELECT stt.tag_id AS tagId, st.name AS name, stt.tag_rank AS rank
+    SELECT stt.tag_id AS tagId, st.name AS name, stt.tag_rank AS `rank`
     FROM store_top_tag stt
     JOIN store_tag st ON stt.tag_id = st.id
     WHERE stt.store_id = :storeId
@@ -24,7 +24,7 @@ public interface StoreTopTagRepository extends JpaRepository<StoreTopTag, Long> 
     List<TopPreferenceTagResponse> findTop3TagsByStoreId(@Param("storeId") Long storeId);
 
     @Query(value = """
-    SELECT stt.tag_id AS tagId, st.name AS name, stt.tag_rank AS rank
+    SELECT stt.tag_id AS tagId, st.name AS name, stt.tag_rank AS `rank`
     FROM store_top_tag stt
     JOIN store_tag st ON stt.tag_id = st.id
     WHERE stt.store_id = :storeId
