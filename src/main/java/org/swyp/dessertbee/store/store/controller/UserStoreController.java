@@ -42,7 +42,7 @@ public class UserStoreController {
     /** 저장 리스트 생성 */
     @Operation(summary = "저장 리스트 생성 (completed)", description = "유저의 가게 저장 리스트를 생성합니다.")
     @ApiResponse( responseCode = "200", description = "저장 리스트 생성 성", content = @Content(schema = @Schema(implementation = UserStoreListResponse.class)))
-    @ApiErrorResponses({ErrorCode.USER_NOT_FOUND, ErrorCode.USER_STORE_SERVICE_ERROR, ErrorCode.INVALID_USER_UUID, ErrorCode.STORE_LIST_CREATION_FAILED})
+    @ApiErrorResponses({ErrorCode.USER_NOT_FOUND, ErrorCode.USER_STORE_SERVICE_ERROR, ErrorCode.INVALID_USER_UUID, ErrorCode.STORE_LIST_CREATION_FAILED, ErrorCode.STORE_DUPLICATE_LIST_NAME})
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
     @PostMapping("/{userUuid}/lists")
     public ResponseEntity<UserStoreListResponse> createUserStoreList(@PathVariable UUID userUuid,
