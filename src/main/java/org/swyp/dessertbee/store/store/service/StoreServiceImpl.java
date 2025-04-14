@@ -52,6 +52,7 @@ import org.swyp.dessertbee.user.service.UserService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -204,24 +205,35 @@ public class StoreServiceImpl implements StoreService {
         }
     }
 
+    /**
+     * 휴무일 저장
+     * @param requests 휴무일 요청 리스트
+     * @param storeId 가게 ID
+     * @return 저장할 StoreHoliday 리스트
+     */
     private List<StoreHoliday> saveHolidays(List<BaseStoreRequest.HolidayRequest> requests, Long storeId) {
         List<StoreHoliday> holidays = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
 
         for (BaseStoreRequest.HolidayRequest req : requests) {
-            String dateStr = req.getDate(); // 예: 2025.02.10-14 또는 2025.02.14
+            String dateStr = req.getDate(); // 예: 2025.02.10-2025.02.14 또는 2025.02.14
             String reason = req.getReason();
 
-            // 형식: yyyy.MM.dd[-dd]
-            String[] parts = dateStr.split("-");
-            LocalDate startDate = LocalDate.parse(parts[0], DateTimeFormatter.ofPattern("yyyy.MM.dd"));
-
+            LocalDate startDate;
             LocalDate endDate;
-            if (parts.length == 2) {
-                // 뒤에 일만 있는 경우 (2025.02.10-14)
-                int endDay = Integer.parseInt(parts[1]);
-                endDate = startDate.withDayOfMonth(endDay);
-            } else {
-                endDate = startDate;
+
+            try {
+                String[] parts = dateStr.split("-");
+                startDate = LocalDate.parse(parts[0], formatter);
+                endDate = (parts.length == 2)
+                        ? LocalDate.parse(parts[1], formatter)
+                        : startDate;
+            } catch (DateTimeParseException e) {
+                throw new StoreHolidayTypeException(); // 잘못된 날짜 형식
+            }
+
+            if (endDate.isBefore(startDate)) {
+                throw new StoreHolidayTermException(); // 종료일이 시작일보다 빠름
             }
 
             for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {

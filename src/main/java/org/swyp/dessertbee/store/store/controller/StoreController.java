@@ -49,7 +49,9 @@ public class StoreController {
             ErrorCode.STORE_SERVICE_ERROR,
             ErrorCode.STORE_TAG_SAVE_FAILED,
             ErrorCode.INVALID_TAG_SELECTION,
-            ErrorCode.INVALID_TAG_INCLUDED
+            ErrorCode.INVALID_TAG_INCLUDED,
+            ErrorCode.STORE_HOLIDAY_TERM_ERROR,
+            ErrorCode.STORE_HOLIDAY_TYPE_ERROR
     })
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -141,7 +143,8 @@ public class StoreController {
     /** 가게 수정 */
     @Operation(summary = "가게 수정", description = "업주가 가게의 정보를 수정합니다.")
     @ApiResponse( responseCode = "200", description = "가게 수정 성공")
-    @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.UNAUTHORIZED_ACCESS, ErrorCode.STORE_UPDATE_FAILED})
+    @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.UNAUTHORIZED_ACCESS, ErrorCode.STORE_UPDATE_FAILED,
+            ErrorCode.STORE_HOLIDAY_TERM_ERROR, ErrorCode.STORE_HOLIDAY_TYPE_ERROR})
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @PatchMapping(value = "/{storeUuid}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StoreInfoResponse> updateStore(
