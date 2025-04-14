@@ -62,21 +62,22 @@ public class StoreNoticeServiceImpl implements StoreNoticeService{
                 throw new InvalidStoreUuidException();
             }
 
-            StoreNotice notice = storeNoticeRepository
+            return storeNoticeRepository
                     .findFirstByStoreIdAndDeletedAtIsNullOrderByCreatedAtDesc(storeId)
-                    .orElseThrow(StoreNoticeNotFoundException::new);
+                    .map(notice -> new StoreNoticeResponse(
+                            notice.getNoticeId(),
+                            notice.getTag(),
+                            notice.getTitle(),
+                            notice.getContent(),
+                            notice.getCreatedAt(),
+                            notice.getUpdatedAt()
+                    ))
+                    .orElseGet(() -> {
+                        log.info("가게 최신 공지 없음 - storeUuid: {}", storeUuid);
+                        return new StoreNoticeResponse(null, null, null, null, null, null);
+                    });
 
-            return new StoreNoticeResponse(
-                    notice.getNoticeId(),
-                    notice.getTag(),
-                    notice.getTitle(),
-                    notice.getContent(),
-                    notice.getCreatedAt(),
-                    notice.getUpdatedAt()
-            );
-
-        } catch (StoreNoticeNotFoundException e) {
-            log.warn("가게 최신 공지 없음 - storeUuid: {}", storeUuid);
+        } catch (InvalidStoreUuidException e) {
             throw e;
         } catch (Exception e) {
             log.error("가게 최신 공지 조회 중 오류 발생", e);
