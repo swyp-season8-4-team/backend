@@ -20,10 +20,7 @@ import org.swyp.dessertbee.common.service.SearchService;
 import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
 import org.swyp.dessertbee.store.store.dto.request.StoreCreateRequest;
 import org.swyp.dessertbee.store.store.dto.request.StoreUpdateRequest;
-import org.swyp.dessertbee.store.store.dto.response.StoreDetailResponse;
-import org.swyp.dessertbee.store.store.dto.response.StoreInfoResponse;
-import org.swyp.dessertbee.store.store.dto.response.StoreMapResponse;
-import org.swyp.dessertbee.store.store.dto.response.StoreSummaryResponse;
+import org.swyp.dessertbee.store.store.dto.response.*;
 import org.swyp.dessertbee.store.store.service.StoreService;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.service.UserService;
@@ -66,6 +63,19 @@ public class StoreController {
         // 가게 생성
         storeService.createStore(request, storeImageFiles, ownerPickImageFiles, menuImageFiles);
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    /** 업주가 등록한 가게 조회 */
+    @Operation(summary = "업주 UUID로 등록된 가게 목록 조회", description = "ownerUuid에 해당하는 가게들의 ID, UUID, 이름 목록을 반환합니다.")
+    @ApiResponse(responseCode = "200", description = "업주가 등록한 가게 목록 조회 성공",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = StoreInfoResponse.class))))
+    @ApiErrorResponses({ErrorCode.STORE_SERVICE_ERROR})
+    @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
+    @GetMapping("/owner")
+    public ResponseEntity<List<StoreShortInfoResponse>> getStoresByOwner() {
+        UUID ownerUuid = userService.getCurrentUser().getUserUuid();
+        List<StoreShortInfoResponse> stores = storeService.getStoresByOwnerUuid(ownerUuid);
+        return ResponseEntity.ok(stores);
     }
 
     /** 반경 내 가게 조회 */

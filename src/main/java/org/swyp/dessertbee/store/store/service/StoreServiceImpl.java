@@ -159,6 +159,26 @@ public class StoreServiceImpl implements StoreService {
     }
 
     /**
+     * 업주가 등록한 가게 (id, uuid, name) 리스트 조회
+     */
+    @Override
+    public List<StoreShortInfoResponse> getStoresByOwnerUuid(UUID ownerUuid) {
+        List<Store> stores = storeRepository.findAllByOwnerUuidAndDeletedAtIsNull(ownerUuid);
+
+        if (stores.isEmpty()) {
+            log.info("해당 업주가 등록한 가게가 없습니다 - ownerUuid: {}", ownerUuid);
+            return Collections.emptyList();
+        }
+
+        return stores.stream()
+                .map(store -> new StoreShortInfoResponse(
+                        store.getStoreId(),
+                        store.getStoreUuid(),
+                        store.getName()))
+                .toList();
+    }
+
+    /**
      * 영업 시간 저장/갱신 메서드
      */
     private void saveOrUpdateOperatingHours(Store store, List<BaseStoreRequest.OperatingHourRequest> operatingHoursRequest) {

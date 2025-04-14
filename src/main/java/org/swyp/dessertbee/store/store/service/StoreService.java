@@ -3,10 +3,7 @@ package org.swyp.dessertbee.store.store.service;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.store.store.dto.request.StoreCreateRequest;
 import org.swyp.dessertbee.store.store.dto.request.StoreUpdateRequest;
-import org.swyp.dessertbee.store.store.dto.response.StoreDetailResponse;
-import org.swyp.dessertbee.store.store.dto.response.StoreInfoResponse;
-import org.swyp.dessertbee.store.store.dto.response.StoreMapResponse;
-import org.swyp.dessertbee.store.store.dto.response.StoreSummaryResponse;
+import org.swyp.dessertbee.store.store.dto.response.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,6 +14,11 @@ public interface StoreService {
                                     List<MultipartFile> storeImageFiles,
                                     List<MultipartFile> ownerPickImageFiles,
                                     List<MultipartFile> menuImageFiles);
+
+    /**
+     * 업주가 등록한 가게 (id, uuid, name) 리스트 조회
+     */
+    List<StoreShortInfoResponse> getStoresByOwnerUuid(UUID ownerUuid);
 
     /** 반경 내 가게 조회 */
     List<StoreMapResponse> getStoresByLocation(Double lat, Double lng, Double radius);
