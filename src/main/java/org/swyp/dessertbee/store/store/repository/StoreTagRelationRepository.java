@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.store.store.entity.Store;
+import org.swyp.dessertbee.store.store.entity.StoreTag;
 import org.swyp.dessertbee.store.store.entity.StoreTagRelation;
 
 import java.util.List;
@@ -19,6 +20,14 @@ public interface StoreTagRelationRepository extends JpaRepository<StoreTagRelati
     // 가게 ID를 기반으로 태그 목록 조회
     @Query("SELECT t.name FROM StoreTagRelation str JOIN str.tag t WHERE str.store.storeId = :storeId")
     List<String> findTagNamesByStoreId(@Param("storeId") Long storeId);
+
+    @Query("""
+        SELECT StoreTag
+        FROM StoreTagRelation str
+        JOIN StoreTag st ON str.tag.id = st.id
+        WHERE str.store.storeId = :storeId
+    """)
+    List<StoreTag> findTagsByStoreId(@Param("storeId") Long storeId);
 
     @Transactional
     @Modifying

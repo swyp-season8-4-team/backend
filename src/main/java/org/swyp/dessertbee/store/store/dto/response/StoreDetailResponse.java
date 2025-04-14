@@ -12,6 +12,7 @@ import org.swyp.dessertbee.store.menu.dto.response.MenuResponse;
 import org.swyp.dessertbee.store.notice.dto.response.StoreNoticeResponse;
 import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
 import org.swyp.dessertbee.store.store.entity.Store;
+import org.swyp.dessertbee.store.store.entity.StoreTag;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -109,8 +110,30 @@ public class StoreDetailResponse {
     private List<StoreReviewResponse> storeReviews;
 
     @NotNull
-    @Schema(description = "태그 리스트", example = "[\"케이크\", \"구움과자\"]")
-    private List<String> tags;
+    @Schema(
+            description = "태그 리스트",
+            example = """
+        [
+          {
+            "id": 11,
+            "name": "케이크",
+            "category": {
+              "id": 2,
+              "name": "디저트"
+            }
+          },
+          {
+            "id": 12,
+            "name": "구움과자",
+            "category": {
+              "id": 2,
+              "name": "디저트"
+            }
+          }
+        ]
+        """
+    )
+    private List<StoreTag> tags;
 
     @NotNull
     @Schema(description = "운영 시간 정보")
@@ -144,7 +167,7 @@ public class StoreDetailResponse {
                                                  List<String> ownerPickImages,
                                                  List<TopPreferenceTagResponse> topPreferences,
                                                  List<StoreReviewResponse> storeReviews,
-                                                 List<String> tags,
+                                                 List<StoreTag> tags,
                                                  List<String> storeLinks,
                                                  String primaryStoreLink,
                                                  List<ReviewSummaryResponse> communityReviews,

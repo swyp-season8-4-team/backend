@@ -68,8 +68,7 @@ public class StoreController {
     /** 업주가 등록한 가게 조회 */
     @Operation(summary = "업주 UUID로 등록된 가게 목록 조회", description = "ownerUuid에 해당하는 가게들의 ID, UUID, 이름 목록을 반환합니다.")
     @ApiResponse(responseCode = "200", description = "업주가 등록한 가게 목록 조회 성공",
-            content = @Content(array = @ArraySchema(schema = @Schema(implementation = StoreInfoResponse.class))))
-    @ApiErrorResponses({ErrorCode.STORE_SERVICE_ERROR})
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = StoreShortInfoResponse.class))))
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @GetMapping("/owner")
     public ResponseEntity<List<StoreShortInfoResponse>> getStoresByOwner() {

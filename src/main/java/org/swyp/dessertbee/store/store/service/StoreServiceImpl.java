@@ -785,7 +785,7 @@ public class StoreServiceImpl implements StoreService {
             List<String> ownerPickImages = imageService.getImagesByTypeAndId(ImageType.OWNERPICK, storeId);
 
             // 태그 조회
-            List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(storeId);
+            List<StoreTag> tags = storeTagRelationRepository.findTagsByStoreId(storeId);
 
             // 가게 링크 및 대표 링크 조회
             Pair<List<String>, String> linkInfo = getStoreLinksAndPrimary(storeId);
@@ -864,7 +864,7 @@ public class StoreServiceImpl implements StoreService {
             List<String> ownerPickImages = imageService.getImagesByTypeAndId(ImageType.OWNERPICK, storeId);
 
             // 태그 조회
-            List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(storeId);
+            List<StoreTag> tags = storeTagRelationRepository.findTagsByStoreId(storeId);
 
             // 가게 링크 및 대표 링크 조회
             Pair<List<String>, String> linkInfo = getStoreLinksAndPrimary(storeId);
