@@ -1,6 +1,7 @@
 package org.swyp.dessertbee.store.menu.converter;
 
 import org.swyp.dessertbee.store.menu.dto.request.MenuCreateRequest;
+import org.swyp.dessertbee.store.store.dto.request.StoreCreateRequest;
 import org.swyp.dessertbee.store.store.dto.request.StoreUpdateRequest;
 
 /**
@@ -10,7 +11,7 @@ public class MenuConverter {
     /**
      * MenuRequest를 MenuCreateRequest로 변환
      */
-    public static MenuCreateRequest convertToMenuCreateRequest(StoreUpdateRequest.MenuRequest menuRequest) {
+    public static MenuCreateRequest convertToMenuCreateRequest(StoreCreateRequest.MenuRequest menuRequest) {
         return new MenuCreateRequest(
                 menuRequest.getName(),
                 menuRequest.getPrice(),

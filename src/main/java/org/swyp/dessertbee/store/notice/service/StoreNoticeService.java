@@ -10,6 +10,9 @@ public interface StoreNoticeService {
     /** 공지 추가 */
     void createNotice(UUID storeUuid, StoreNoticeRequest request);
 
+    /** 가게 최근 공지 조회 */
+    StoreNoticeResponse getLatestNotice(UUID storeUuid);
+
     /** 가게 공지 리스트 조회 */
     List<StoreNoticeResponse> getNoticesByStoreUuid(UUID storeUuid);
 

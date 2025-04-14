@@ -27,7 +27,16 @@ public class UserStoreListResponse {
     private String listName;
 
     @NotNull
-    @Schema(description = "저장 목록 아이콘 색 ID", example = "1")
+    @Schema(
+            description = """
+        저장 목록 아이콘 색 ID
+        1 → 노랑 (#FFC803)
+        2 → 주황 (#FF8803)
+        3 → 초록 (#05D352)
+        4 → 파랑 (#00C6D8)
+        """,
+            example = "1"
+    )
     private Long iconColorId;
 
     @NotNull

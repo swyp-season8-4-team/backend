@@ -21,6 +21,7 @@ import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
 import org.swyp.dessertbee.store.store.dto.request.StoreCreateRequest;
 import org.swyp.dessertbee.store.store.dto.request.StoreUpdateRequest;
 import org.swyp.dessertbee.store.store.dto.response.StoreDetailResponse;
+import org.swyp.dessertbee.store.store.dto.response.StoreInfoResponse;
 import org.swyp.dessertbee.store.store.dto.response.StoreMapResponse;
 import org.swyp.dessertbee.store.store.dto.response.StoreSummaryResponse;
 import org.swyp.dessertbee.store.store.service.StoreService;
@@ -49,7 +50,10 @@ public class StoreController {
             ErrorCode.STORE_SERVICE_ERROR,
             ErrorCode.STORE_TAG_SAVE_FAILED,
             ErrorCode.INVALID_TAG_SELECTION,
-            ErrorCode.INVALID_TAG_INCLUDED
+            ErrorCode.INVALID_TAG_INCLUDED,
+            ErrorCode.STORE_HOLIDAY_TERM_ERROR,
+            ErrorCode.STORE_HOLIDAY_TYPE_ERROR,
+            ErrorCode.STORE_TAG_SAVE_FAILED
     })
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -81,7 +85,8 @@ public class StoreController {
             description = "지도 반경 내 가게 조회 성공",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = StoreMapResponse.class)))
     )
-    @ApiErrorResponses({ErrorCode.STORE_MAP_READ_FAILED, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.STORE_SEARCH_FAILED})
+    @ApiErrorResponses({ErrorCode.STORE_MAP_READ_FAILED, ErrorCode.STORE_SERVICE_ERROR,
+            ErrorCode.STORE_SEARCH_FAILED, ErrorCode.PREFERENCES_NOT_FOUND})
     @GetMapping("/map")
     public List<StoreMapResponse> getStoresByLocation(
             @Parameter(description = "위도", example = "37.785834", required = true)
@@ -141,7 +146,8 @@ public class StoreController {
     @Operation(summary = "반경 내 사용자 취향 가게 조회 (completed)", description = "반경 내에서 사용자의 취향 태그를 가진 가게를 조회합니다.")
     @ApiResponse( responseCode = "200", description = "지도 반경 내 사용자 취향 태그 가진 가게 조회 성공",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = StoreMapResponse.class))))
-    @ApiErrorResponses({ErrorCode.PREFERENCE_STORE_READ_FAILED, ErrorCode.STORE_SERVICE_ERROR})
+    @ApiErrorResponses({ErrorCode.PREFERENCE_STORE_READ_FAILED, ErrorCode.STORE_SERVICE_ERROR,
+            ErrorCode.INVALID_USER_STATUS, ErrorCode.USER_PREFERENCES_NOT_FOUND})
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
     @GetMapping("/map/my-preferences")
     public ResponseEntity<List<StoreMapResponse>> getStoresByMyPreferences(
@@ -156,7 +162,8 @@ public class StoreController {
     /** 가게 간략 정보 조회 */
     @Operation(summary = "가게 간략 정보 조회", description = "가게의 간략한 정보를 조회합니다.")
     @ApiResponse( responseCode = "200", description = "가게 간략 정보 조회 성공", content = @Content(schema = @Schema(implementation = StoreSummaryResponse.class)))
-    @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.STORE_INFO_READ_FAILED})
+    @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR,
+            ErrorCode.STORE_INFO_READ_FAILED})
     @GetMapping("/{storeUuid}/summary")
     public StoreSummaryResponse getStoreSummary(@PathVariable UUID storeUuid) {
         return storeService.getStoreSummary(storeUuid);
@@ -165,7 +172,9 @@ public class StoreController {
     /** 가게 상세 정보 조회 */
     @Operation(summary = "가게 상세 정보 조회", description = "가게의 상세한 정보를 조회합니다.")
     @ApiResponse( responseCode = "200", description = "가게 상세 정보 조회 성공", content = @Content(schema = @Schema(implementation = StoreDetailResponse.class)))
-    @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.STORE_INFO_READ_FAILED})
+    @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR,
+            ErrorCode.STORE_INFO_READ_FAILED, ErrorCode.STORE_NOTICE_SERVICE_ERROR,
+            ErrorCode.MENU_SERVICE_ERROR})
     @GetMapping("/{storeUuid}/details")
     public StoreDetailResponse getStoreDetails(@PathVariable UUID storeUuid) {
         return storeService.getStoreDetails(storeUuid);
@@ -174,24 +183,27 @@ public class StoreController {
     /** 가게 수정 */
     @Operation(summary = "가게 수정", description = "업주가 가게의 정보를 수정합니다.")
     @ApiResponse( responseCode = "200", description = "가게 수정 성공")
-    @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.UNAUTHORIZED_ACCESS, ErrorCode.STORE_UPDATE_FAILED})
+    @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR,
+            ErrorCode.UNAUTHORIZED_ACCESS, ErrorCode.STORE_UPDATE_FAILED,
+            ErrorCode.STORE_HOLIDAY_TERM_ERROR, ErrorCode.STORE_HOLIDAY_TYPE_ERROR,
+            ErrorCode.STORE_TAG_SAVE_FAILED})
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @PatchMapping(value = "/{storeUuid}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Void> updateStore(
+    public ResponseEntity<StoreInfoResponse> updateStore(
             @PathVariable UUID storeUuid,
             @RequestPart("request") StoreUpdateRequest request,
             @RequestPart(value = "storeImageFiles", required = false) List<MultipartFile> storeImageFiles,
-            @RequestPart(value = "ownerPickImageFiles", required = false) List<MultipartFile> ownerPickImageFiles,
-            @RequestPart(value = "menuImageFiles", required = false) List<MultipartFile> menuImageFiles) {
+            @RequestPart(value = "ownerPickImageFiles", required = false) List<MultipartFile> ownerPickImageFiles) {
 
-        storeService.updateStore(storeUuid, request, storeImageFiles, ownerPickImageFiles, menuImageFiles);
-        return ResponseEntity.ok().build();
+        StoreInfoResponse updatedInfo = storeService.updateStore(storeUuid, request, storeImageFiles, ownerPickImageFiles);
+        return ResponseEntity.ok(updatedInfo);
     }
 
     /** 가게 삭제 */
     @Operation(summary = "가게 삭제 (completed)", description = "업주가 가게를 삭제합니다.")
     @ApiResponse(responseCode = "204", description = "가게 삭제 성공")
-    @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR, ErrorCode.UNAUTHORIZED_ACCESS, ErrorCode.STORE_DELETE_FAILED})
+    @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR,
+            ErrorCode.UNAUTHORIZED_ACCESS, ErrorCode.STORE_DELETE_FAILED})
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @DeleteMapping("/{storeUuid}")
     public ResponseEntity<Void> deleteStore(@PathVariable UUID storeUuid) {
@@ -203,5 +215,4 @@ public class StoreController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
-
 }
