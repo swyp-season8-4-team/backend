@@ -9,8 +9,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.swyp.dessertbee.auth.dto.request.SignUpWithProfileRequest;
+import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.statistics.user.service.UserStatisticsAdminService;
 import org.swyp.dessertbee.auth.dto.request.PasswordResetRequest;
 import org.swyp.dessertbee.auth.dto.response.PasswordResetResponse;
@@ -52,6 +56,13 @@ public class AuthController {
                             in = ParameterIn.COOKIE,
                             schema = @Schema(type = "string"),
                             required = false
+                    ),
+                    @Parameter(
+                            name = "X-Email-Verification-Token",
+                            description = "이메일 인증 토큰",
+                            in = ParameterIn.HEADER,
+                            schema = @Schema(type = "string"),
+                            required = true
                     )
             }
     )
@@ -72,6 +83,46 @@ public class AuthController {
         return ResponseEntity.ok(signupResponse);
     }
 
+    // 프로필 이미지 포함한 회원가입 API (Multipart)
+    @Operation(
+            summary = "프로필 이미지 포함 회원가입",
+            description = "새로운 사용자를 등록합니다. 프로필 이미지를 함께 업로드할 수 있습니다. 앱에서는 X-Device-ID 헤더를, 웹에서는 deviceId 쿠키를 사용하여 디바이스를 식별합니다. 프로필 이미지는 JPG, JPEG, PNG, GIF 형식의 5MB 이하 파일만 허용됩니다.",
+            parameters = {
+                    @Parameter(
+                            name = "X-Device-ID",
+                            description = "디바이스 식별자 (앱 환경에서 사용). 없을 경우 서버에서 생성됩니다.",
+                            in = ParameterIn.HEADER,
+                            schema = @Schema(type = "string"),
+                            required = false
+                    ),
+                    @Parameter(
+                            name = "deviceId",
+                            description = "디바이스 식별자 쿠키 (웹 환경에서 사용). Nginx에서 X-Device-ID 헤더로 변환됩니다.",
+                            in = ParameterIn.COOKIE,
+                            schema = @Schema(type = "string"),
+                            required = false
+                    ),
+                    @Parameter(
+                            name = "X-Email-Verification-Token",
+                            description = "이메일 인증 토큰",
+                            in = ParameterIn.HEADER,
+                            schema = @Schema(type = "string"),
+                            required = true
+                    )
+            }
+    )
+    @ApiResponse(responseCode = "200", description = "회원가입 성공", content = @Content(schema = @Schema(implementation = LoginResponse.class)))
+    @ApiErrorResponses({ ErrorCode.PASSWORD_MISMATCH, ErrorCode.DUPLICATE_NICKNAME, ErrorCode.DUPLICATE_EMAIL, ErrorCode.INVALID_VERIFICATION_TOKEN, ErrorCode.INVALID_FILE_TYPE, ErrorCode.FILE_SIZE_EXCEEDED, ErrorCode.FILE_UPLOAD_ERROR})
+    @PostMapping(value = "/signup-with-profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<LoginResponse> signupWithProfile(
+            @RequestHeader("X-Email-Verification-Token") String verificationToken,
+            @Parameter(hidden = true) @RequestHeader(value = "X-Device-ID", required = false) String deviceId,
+            @Valid @ModelAttribute SignUpWithProfileRequest request
+    ) {
+        log.debug("프로필 이미지 포함 회원가입 요청: {}", request.getEmail());
+        LoginResponse signupResponse = authService.signupWithProfileImage(request, request.getProfileImage(), verificationToken, deviceId);
+        return ResponseEntity.ok(signupResponse);
+    }
 
     @Operation(
             summary = "로그인 (completed)",

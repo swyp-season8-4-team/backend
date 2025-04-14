@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.auth.service;
 
+import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.auth.dto.request.LoginRequest;
 import org.swyp.dessertbee.auth.dto.response.LoginResponse;
 import org.swyp.dessertbee.auth.dto.response.PasswordResetResponse;
@@ -46,6 +47,18 @@ public interface AuthService {
      * @throws DuplicateEmailException 이메일 중복
      */
     LoginResponse signup(SignUpRequest request, String verificationToken, String deviceId);
+
+    /**
+     * 회원가입 처리 (프로필 이미지 포함)
+     * 이미지 유효성 검사를 수행하고 실패 시 비즈니스 예외를 발생시킴
+     *
+     * @param request 회원가입 요청 정보
+     * @param profileImage 프로필 이미지
+     * @param verificationToken 이메일 인증 토큰
+     * @param deviceId 디바이스 ID
+     * @return 회원가입 결과
+     */
+    LoginResponse signupWithProfileImage(SignUpRequest request, MultipartFile profileImage, String verificationToken, String deviceId);
 
     /**
      * 로그인 처리
