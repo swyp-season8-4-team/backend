@@ -175,7 +175,43 @@ public enum ErrorCode {
 
     //관리자 페이지
     INVALID_YEAR(HttpStatus.BAD_REQUEST,"ADMIN_001","잘못된 연도입니다."),
-    INVALID_MONTH(HttpStatus.BAD_REQUEST,"ADMIN_002","잘못된 월입니다.");
+    INVALID_MONTH(HttpStatus.BAD_REQUEST,"ADMIN_002","잘못된 월입니다."),
+
+    //Coupon
+    // 쿠폰 유효성 검사 관련 에러코드
+    COUPON_NOT_FOUND(HttpStatus.NOT_FOUND,"C001","존재하지 않는 쿠폰입니다."),
+    INVALID_COUPON_NAME(HttpStatus.BAD_REQUEST, "C002", "쿠폰 이름은 필수입니다."),
+    QUANTITY_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "C003", "수량 제한이 없을 경우 수량 필드는 비워야 합니다."),
+    EXPIRY_DATE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "C004", "유효기간 설정이 없을 경우 유효기간은 비워야 합니다."),
+    EXPOSURE_DATE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "C005", "노출기간 설정이 없을 경우 노출 시작일과 종료일은 비워야 합니다."),
+
+    INVALID_COUPON_DETAIL(HttpStatus.BAD_REQUEST, "C006", "쿠폰 상세 정보가 유효하지 않습니다."),
+    INVALID_DISCOUNT_DETAIL(HttpStatus.BAD_REQUEST, "C007", "할인 쿠폰의 상세 정보가 유효하지 않습니다."),
+    INVALID_DISCOUNT_FOR_GIFT(HttpStatus.BAD_REQUEST, "C008", "증정 쿠폰에 할인 정보가 포함될 수 없습니다."),
+    INVALID_GIFT_DETAIL(HttpStatus.BAD_REQUEST, "C009", "증정 쿠폰의 상세 정보가 유효하지 않습니다."),
+    ALREADY_ISSUED_COUPON(HttpStatus.CONFLICT, "C010", "이미 해당 쿠폰을 발급받은 사용자입니다."),
+    QR_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "C011", "QR 코드 생성 중 오류가 발생했습니다."),
+    COUPON_OUT_OF_STOCK(HttpStatus.BAD_REQUEST, "C012", "제공된 쿠폰 수량이 소진되었습니다."),
+
+    // 사용조건 관련 에러코드
+    INVALID_CONDITION_TYPE(HttpStatus.BAD_REQUEST, "CC001", "올바르지 않은 사용조건 타입입니다."),
+
+    MIN_PURCHASE_AMOUNT_REQUIRED(HttpStatus.BAD_REQUEST, "CC002", "최소 구매 금액은 필수입니다."),
+    EXTRA_FIELDS_NOT_ALLOWED_FOR_AMOUNT(HttpStatus.BAD_REQUEST, "CC003", "최소 구매 금액 조건 외의 필드는 입력할 수 없습니다."),
+
+    TIME_DAY_FIELDS_REQUIRED(HttpStatus.BAD_REQUEST, "CC004", "요일 및 시간 조건에는 시작 시간, 종료 시간, 요일이 필수입니다."),
+    EXTRA_FIELDS_NOT_ALLOWED_FOR_TIME_DAY(HttpStatus.BAD_REQUEST, "CC005", "요일 및 시간 조건 외의 필드는 입력할 수 없습니다."),
+
+    CUSTOM_CONDITION_TEXT_REQUIRED(HttpStatus.BAD_REQUEST, "CC006", "커스텀 조건 텍스트는 필수입니다."),
+    EXTRA_FIELDS_NOT_ALLOWED_FOR_CUSTOM(HttpStatus.BAD_REQUEST, "CC007", "커스텀 조건 외의 필드는 입력할 수 없습니다."),
+
+    EXCLUSIVE_FIELD_REQUIRED(HttpStatus.BAD_REQUEST, "CC008", "단독 사용 조건은 false로 설정되어야 합니다."),
+    EXTRA_FIELDS_NOT_ALLOWED_FOR_EXCLUSIVE(HttpStatus.BAD_REQUEST, "CC009", "단독 사용 조건 외의 필드는 입력할 수 없습니다."),
+
+    //사용자-쿠폰
+    USER_COUPON_NOT_FOUND(HttpStatus.NOT_FOUND, "UC001", "해당 쿠폰이 존재하지 않습니다."),
+    USER_COUPON_FORBIDDEN(HttpStatus.FORBIDDEN, "UC002", "본인의 쿠폰만 조회할 수 있습니다."),
+    ALREADY_USED_COUPON(HttpStatus.CONFLICT, "UC003", "이미 사용된 쿠폰입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

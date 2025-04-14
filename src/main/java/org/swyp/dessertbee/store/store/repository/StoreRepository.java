@@ -83,4 +83,6 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
 
 
     Store findByName(String placeName);
+
+   Optional<Store> findByStoreUuid(UUID storeUuid);
 }
