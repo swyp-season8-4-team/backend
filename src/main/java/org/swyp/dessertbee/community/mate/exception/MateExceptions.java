@@ -192,4 +192,18 @@ public class MateExceptions {
             super(ErrorCode.MATE_REPLY_NOT_REPORTED, message);
         }
     }
+
+    /**(HTTP code 500) server error - Ports are not available: exposing port TCP 0.0.0.0:6379 -> 127.0.0.1:0: listen tcp 0.0.0.0:6379: bind: address already in use
+     * 디저트메이트 수용인원 제한 예외
+     * */
+    public static class MateCapacityExceededException extends BusinessException {
+
+        public MateCapacityExceededException(){
+            super(ErrorCode.MATE_CAPACITY_EXCEEDED);
+        }
+
+        public MateCapacityExceededException(String message) {
+         super(ErrorCode.MATE_CAPACITY_EXCEEDED, message);
+        }
+    }
 }

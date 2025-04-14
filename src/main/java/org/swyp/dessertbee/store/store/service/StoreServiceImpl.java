@@ -50,6 +50,9 @@ import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.user.service.UserService;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -132,13 +135,14 @@ public class StoreServiceImpl implements StoreService {
             saveStoreTags(store, request.getTagIds());
 
             // 메뉴 저장
-            processMenus(store, request.getMenus(), menuImageFiles, false);
+            processMenus(store, request.getMenus(), menuImageFiles);
 
             // 영업 시간 저장
             saveOrUpdateOperatingHours(store, request.getOperatingHours());
 
             // 휴무일 저장
-            //saveOrUpdateHolidays(store, request.getHolidays());
+            List<StoreHoliday> holidays = saveHolidays(request.getHolidays(), store.getStoreId());
+            storeHolidayRepository.saveAll(holidays);
         } catch (StoreCreationFailedException e) {
             log.warn("가게 등록 실패 - 업주Uuid: {}, 사유: {}", request.getUserUuid(), e.getMessage());
             throw e;
@@ -201,23 +205,48 @@ public class StoreServiceImpl implements StoreService {
         }
     }
 
-    /*
-     * 휴무일 저장/갱신 메서드
-     *
-     * private void saveOrUpdateHolidays(Store store, List<BaseStoreRequest.HolidayRequest> holidaysRequest) {
-     *     if (holidaysRequest != null) {
-     *         storeHolidayRepository.deleteByStoreId(store.getStoreId());
-     *         List<StoreHoliday> holidays = holidaysRequest.stream()
-     *                 .map(holiday -> StoreHoliday.builder()
-     *                         .storeId(store.getStoreId())
-     *                         .holidayDate(LocalDate.parse(holiday.getDate()))
-     *                         .reason(holiday.getReason())
-     *                         .build())
-     *                 .toList();
-     *         storeHolidayRepository.saveAll(holidays);
-     *     }
-     * }
+    /**
+     * 휴무일 저장
+     * @param requests 휴무일 요청 리스트
+     * @param storeId 가게 ID
+     * @return 저장할 StoreHoliday 리스트
      */
+    private List<StoreHoliday> saveHolidays(List<BaseStoreRequest.HolidayRequest> requests, Long storeId) {
+        List<StoreHoliday> holidays = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+
+        for (BaseStoreRequest.HolidayRequest req : requests) {
+            String dateStr = req.getDate(); // 예: 2025.02.10-2025.02.14 또는 2025.02.14
+            String reason = req.getReason();
+
+            LocalDate startDate;
+            LocalDate endDate;
+
+            try {
+                String[] parts = dateStr.split("-");
+                startDate = LocalDate.parse(parts[0], formatter);
+                endDate = (parts.length == 2)
+                        ? LocalDate.parse(parts[1], formatter)
+                        : startDate;
+            } catch (DateTimeParseException e) {
+                throw new StoreHolidayTypeException(); // 잘못된 날짜 형식
+            }
+
+            if (endDate.isBefore(startDate)) {
+                throw new StoreHolidayTermException(); // 종료일이 시작일보다 빠름
+            }
+
+            for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+                holidays.add(StoreHoliday.builder()
+                        .storeId(storeId)
+                        .holidayDate(date)
+                        .reason(reason)
+                        .build());
+            }
+        }
+
+        return holidays;
+    }
 
     /**
      * 링크 유효성 검사 및 저장 메서드
@@ -292,17 +321,22 @@ public class StoreServiceImpl implements StoreService {
     /**
      * 메뉴 처리 메서드
      */
-    private <T> void processMenus(Store store, List<T> menuRequests, List<MultipartFile> menuImageFiles, boolean isUpdate) {
+    private <T> void processMenus(Store store, List<T> menuRequests, List<MultipartFile> menuImageFiles) {
         if (menuRequests != null && !menuRequests.isEmpty()) {
             Map<String, MultipartFile> menuImageMap = createMenuImageMap(menuImageFiles);
 
-            if (isUpdate) {
+            if (menuRequests.get(0) instanceof MenuCreateRequest) {
+                @SuppressWarnings("unchecked")
+                List<MenuCreateRequest> typedRequests = (List<MenuCreateRequest>) menuRequests;
+                menuService.addMenus(store.getStoreUuid(), typedRequests, menuImageMap);
+            }
+            /*if (isUpdate) {
                 // 업데이트 시 처리 로직
-                if (menuRequests.get(0) instanceof StoreUpdateRequest.MenuRequest) {
+                if (menuRequests.get(0) instanceof StoreCreateRequest.MenuRequest) {
                     @SuppressWarnings("unchecked")
-                    List<StoreUpdateRequest.MenuRequest> typedRequests = (List<StoreUpdateRequest.MenuRequest>) menuRequests;
+                    List<StoreCreateRequest.MenuRequest> typedRequests = (List<StoreCreateRequest.MenuRequest>) menuRequests;
 
-                    for (StoreUpdateRequest.MenuRequest menuRequest : typedRequests) {
+                    for (StoreCreateRequest.MenuRequest menuRequest : typedRequests) {
                         MultipartFile file = null;
                         if (menuRequest.getImageFileKey() != null) {
                             file = menuImageMap.get(menuRequest.getImageFileKey());
@@ -324,7 +358,7 @@ public class StoreServiceImpl implements StoreService {
                     List<MenuCreateRequest> typedRequests = (List<MenuCreateRequest>) menuRequests;
                     menuService.addMenus(store.getStoreUuid(), typedRequests, menuImageMap);
                 }
-            }
+            }*/
         }
     }
 
@@ -512,10 +546,14 @@ public class StoreServiceImpl implements StoreService {
      */
     private List<HolidayResponse> getHolidaysResponse(Long storeId) {
         List<StoreHoliday> holidays = storeHolidayRepository.findByStoreId(storeId);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+
+        if (holidays.isEmpty()) return Collections.emptyList();
 
         return holidays.stream()
+                .sorted(Comparator.comparing(StoreHoliday::getHolidayDate)) // 날짜 오름차순 정렬
                 .map(h -> HolidayResponse.builder()
-                        .date(h.getHolidayDate().toString())
+                        .date(h.getHolidayDate().format(formatter))
                         .reason(h.getReason())
                         .build())
                 .toList();
@@ -780,6 +818,60 @@ public class StoreServiceImpl implements StoreService {
         }
     }
 
+
+    /**
+     * 가게 상세 정보 조회
+     */
+    @Override
+    public StoreInfoResponse getStoreInfo(UUID storeUuid) {
+        try{
+            Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
+            Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
+                    .orElseThrow(() -> new StoreNotFoundException());
+
+            // 가게 이미지 조회
+            List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, storeId);
+            List<String> ownerPickImages = imageService.getImagesByTypeAndId(ImageType.OWNERPICK, storeId);
+
+            // 태그 조회
+            List<String> tags = storeTagRelationRepository.findTagNamesByStoreId(storeId);
+
+            // 가게 링크 및 대표 링크 조회
+            Pair<List<String>, String> linkInfo = getStoreLinksAndPrimary(storeId);
+
+            // 운영 시간 조회
+            List<OperatingHourResponse> operatingHourResponses = getOperatingHoursResponse(storeId);
+
+            // 휴무일 조회
+            List<HolidayResponse> holidayResponses = getHolidaysResponse(storeId);
+
+            // 공지사항 조회
+            StoreNoticeResponse noticeResponse = storeNoticeService.getLatestNotice(storeUuid);
+
+            // 메뉴 리스트 조회
+            List<MenuResponse> menus = menuService.getMenusByStore(storeUuid);
+
+            return StoreInfoResponse.fromEntity(
+                    store,
+                    operatingHourResponses,
+                    holidayResponses,
+                    noticeResponse,
+                    menus,
+                    storeImages,
+                    ownerPickImages,
+                    tags,
+                    linkInfo.getLeft(),
+                    linkInfo.getRight()
+            );
+        } catch (StoreInfoReadFailedException e){
+            log.warn("가게 정보 조회 실패 - 사유: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("가게 정보 조회 처리 중 오류 발생", e);
+            throw new StoreServiceException("가게 정보 조회 처리 중 오류가 발생했습니다.");
+        }
+    }
+
     /** 가게의 평균 평점 업데이트 (리뷰 등록,수정,삭제 시 호출) */
     @Override
     public void updateAverageRating(Long storeId) {
@@ -797,11 +889,10 @@ public class StoreServiceImpl implements StoreService {
 
     /** 가게 수정 */
     @Override
-    public void updateStore(UUID storeUuid,
+    public StoreInfoResponse updateStore(UUID storeUuid,
                                            StoreUpdateRequest request,
                                            List<MultipartFile> storeImageFiles,
-                                           List<MultipartFile> ownerPickImageFiles,
-                                           List<MultipartFile> menuImageFiles) {
+                                           List<MultipartFile> ownerPickImageFiles) {
         try {
             // 가게 존재 여부 및 삭제 여부 체크
             Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
@@ -842,13 +933,15 @@ public class StoreServiceImpl implements StoreService {
             }
 
             // 메뉴 처리
-            processMenus(store, request.getMenus(), menuImageFiles, true);
+            //processMenus(store, request.getMenus(), menuImageFiles, true);
 
             // 영업 시간 저장
             saveOrUpdateOperatingHours(store, request.getOperatingHours());
 
             // 휴무일 저장
-            //saveOrUpdateHolidays(store, request.getHolidays());
+            saveHolidays(request.getHolidays(), storeId);
+
+            return getStoreInfo(storeUuid);
         } catch (StoreUpdateException e) {
             log.warn("가게 수정 실패 - 사유: {}", e.getMessage());
             throw e;

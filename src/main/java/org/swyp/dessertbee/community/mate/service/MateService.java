@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.community.mate.service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.community.mate.dto.request.MateCreateRequest;
@@ -14,7 +15,7 @@ import java.util.UUID;
 public interface MateService {
 
     /** 메이트 등록 */
-    MateDetailResponse createMate(MateCreateRequest request, MultipartFile mateImage);
+    MateDetailResponse createMate(MateCreateRequest request, MultipartFile mateImage, HttpServletRequest httpRequest);
 
     /** 메이트 상세 정보 */
     MateDetailResponse getMateDetail(UUID mateUuid);

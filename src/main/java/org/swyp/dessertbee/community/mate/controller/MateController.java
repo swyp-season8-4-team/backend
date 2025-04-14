@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -43,10 +44,11 @@ public class MateController{
     @ApiErrorResponses({ErrorCode.USER_NOT_FOUND})
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MateDetailResponse> createMate(@RequestPart("request")  MateCreateRequest request,
-                                                         @RequestPart(value = "mateImage", required = false) MultipartFile mateImage) {
+                                                         @RequestPart(value = "mateImage", required = false) MultipartFile mateImage,
+                                                         HttpServletRequest httpRequest) {
 
 
-        MateDetailResponse response = mateService.createMate(request, mateImage);
+        MateDetailResponse response = mateService.createMate(request, mateImage, httpRequest);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

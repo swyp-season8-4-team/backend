@@ -122,6 +122,8 @@ public enum ErrorCode {
     STORE_NOTICE_UPDATE_FAILED(HttpStatus.BAD_REQUEST, "S047", "공지사항 수정에 실패했습니다."),
     STORE_NOTICE_DELETE_FAILED(HttpStatus.BAD_REQUEST, "S048", "공지사항 삭제에 실패했습니다."),
     STORE_NOTICE_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S049", "가게 공지사항 서비스 처리 중 오류가 발생했습니다."),
+    STORE_HOLIDAY_TERM_ERROR(HttpStatus.BAD_REQUEST, "S050", "휴무일의 종료일은 시작일 이후여야 합니다."),
+    STORE_HOLIDAY_TYPE_ERROR(HttpStatus.BAD_REQUEST, "S051", "날짜 형식이 올바르지 않습니다. yyyy.MM.dd 또는 yyyy.MM.dd-yyyy.MM.dd 형식을 사용해주세요."),
 
 
     // 사장님 권한
@@ -159,6 +161,7 @@ public enum ErrorCode {
     DUPLICATION_SAVED_MATE(HttpStatus.CONFLICT, "M017", "이미 저장된 디저트메이트입니다."),
     MATE_NOT_REPORTED(HttpStatus.NOT_FOUND, "M018" , "신고되지 않은 디저트메이트입니다." ),
     MATE_REPLY_NOT_REPORTED(HttpStatus.NOT_FOUND, "M019" , "신고되지 않은 디저트메이트 댓글입니다." ),
+    MATE_CAPACITY_EXCEEDED(HttpStatus.BAD_REQUEST, "M020", "최대 수용 인원 초과입니다." ),
 
     //커뮤니티 리뷰
     COMMUNITY_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "R001" , "존재하지 않는 리뷰입니다." ),

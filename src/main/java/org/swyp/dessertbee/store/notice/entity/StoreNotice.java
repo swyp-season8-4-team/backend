@@ -23,6 +23,10 @@ public class StoreNotice {
     private Long storeId;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private NoticeTag tag;
+
+    @Column(nullable = false)
     private String title;
 
     @Lob
@@ -42,7 +46,8 @@ public class StoreNotice {
         this.deletedAt = LocalDateTime.now();
     }
 
-    public void update(String title, String content) {
+    public void update(String title, String content, NoticeTag tag) {
+        this.tag = tag;
         this.title = title;
         this.content = content;
         this.updatedAt = LocalDateTime.now();

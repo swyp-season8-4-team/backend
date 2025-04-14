@@ -8,6 +8,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -65,10 +66,14 @@ public abstract class BaseStoreRequest {
     @Schema(description = "운영 시간 정보")
     private List<OperatingHourRequest> operatingHours;
 
-/*    @Schema(description = "특정 휴무일 정보")
-    private List<HolidayRequest> holidays;*/
+    @Schema(description = "특정 휴무일 정보")
+    private List<HolidayRequest> holidays;
 
-    @Schema(description = "가게 관련 링크 리스트", example = "[\"https://link1.com\", \"https://link2.com\"]", nullable = true)
+    @Schema(
+            description = "가게 관련 링크 리스트",
+            example = "[{\"url\": \"https://link1.com\", \"isPrimary\": true}, {\"url\": \"https://link2.com\", \"isPrimary\": false}]",
+            nullable = true
+    )
     private List<? extends StoreLinkRequest> storeLinks;
 
     /**
@@ -140,19 +145,22 @@ public abstract class BaseStoreRequest {
         private List<BreakTimeRequest> breakTimes;
     }
 
-    /*
+    /**
      * 휴무일 요청 클래스
-     *
-     * @Data
-     * @SuperBuilder
-     * @AllArgsConstructor
-     * @NoArgsConstructor
-     * public static class HolidayRequest {
-     *     @Schema(description = "휴무 일자", example = "2025-01-01")
-     *     private String date;
-     *
-     *     @Schema(description = "휴무 사유", example = "신정")
-     *     private String reason;
-     * }
      */
+    @Data
+    @SuperBuilder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class HolidayRequest {
+
+        @Schema(
+                description = "휴무일 입력 (예: '2025.02.10-14' 또는 '2025.02.10')",
+                example = "2025.02.10-14"
+        )
+        private String date; // 입력값을 파싱해서 LocalDate로 변환
+
+        @Schema(description = "휴무 사유", example = "내부 공사")
+        private String reason;
+    }
 }

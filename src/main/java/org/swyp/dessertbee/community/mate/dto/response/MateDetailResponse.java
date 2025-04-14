@@ -32,6 +32,14 @@ public class MateDetailResponse {
     @Schema(description = "디저트메이트 작성하는 사람 uuid", example = "19a40ec1-ac92-419e-aa2b-0fcfcbd42447")
     private UUID userUuid;
 
+    @NotBlank(message = "디저트메이트 수용 인원을 선택해주세요.")
+    @Schema(description = "디저트메이트 수용 인원", example = "2")
+    private Long capacity;
+
+    @NotBlank
+    @Schema(description = "디저트메이트 현재 참여 인원", example = "1")
+    private Long currentMemberCount;
+
     @NotBlank
     @Schema(description = "디저트메이트 작성하는 사람 닉네임", example = "디저비1")
     private String nickname;
@@ -101,6 +109,8 @@ public class MateDetailResponse {
                 .profileImage(profileImage)
                 .title(mate.getTitle())
                 .content(mate.getContent())
+                .capacity(mate.getCapacity())
+                .currentMemberCount(mate.getCurrentMemberCount())
                 .recruitYn(mate.getRecruitYn())
                 .mateImage(mateImage)
                 .mateCategory(category)
