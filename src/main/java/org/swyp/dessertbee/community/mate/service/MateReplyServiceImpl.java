@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.community.mate.service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -15,9 +16,7 @@ import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.community.mate.dto.MateUserIds;
 import org.swyp.dessertbee.community.mate.dto.request.MateReplyCreateRequest;
 import org.swyp.dessertbee.community.mate.dto.request.MateReportRequest;
-import org.swyp.dessertbee.community.mate.dto.response.MateReplyPageResponse;
-import org.swyp.dessertbee.community.mate.dto.response.MateReplyResponse;
-import org.swyp.dessertbee.community.mate.dto.response.MateReportResponse;
+import org.swyp.dessertbee.community.mate.dto.response.*;
 import org.swyp.dessertbee.community.mate.entity.Mate;
 import org.swyp.dessertbee.community.mate.entity.MateReply;
 import org.swyp.dessertbee.community.mate.entity.MateReport;
@@ -29,6 +28,7 @@ import org.swyp.dessertbee.community.mate.repository.MateRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.exception.UserExceptions.*;
 import org.swyp.dessertbee.user.service.UserService;
+import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 import java.util.List;
 import java.util.UUID;
@@ -53,7 +53,7 @@ public class MateReplyServiceImpl implements MateReplyService {
      * */
     @Override
     @Transactional
-    public MateReplyResponse createReply(UUID mateUuid, MateReplyCreateRequest request) {
+    public MateReplyResponse createReply(UUID mateUuid, MateReplyCreateRequest request, HttpServletRequest httpRequest) {
 
 
         //디저트 메이트 유효성 검사
@@ -61,16 +61,38 @@ public class MateReplyServiceImpl implements MateReplyService {
         Long mateId = mateUserIds.getMateId();
         Long userId = mateUserIds.getUserId();
 
-        MateReply mateReply = replyRepository.save(
-                MateReply.builder()
-                        .mateId(mateId)
-                        .userId(userId)
-                        .content(request.getContent())
-                .build()
-        );
 
-        return getReplyDetail(mateUuid, mateReply.getMateReplyId());
+        String platformType = httpRequest.getHeader("Platform-Type");
+
+
+
+        if("app".equalsIgnoreCase(platformType)) {
+            MateReply mateReply = replyRepository.save(
+                    MateReply.builder()
+                            .mateId(mateId)
+                            .userId(userId)
+                            .content(request.getContent())
+                            .parentMateReplyId(request.getParentMateReplyId())
+                            .build()
+            );
+
+            return getReplyDetail(mateUuid, mateReply.getMateReplyId());
+        }else{
+            MateReply mateReply = replyRepository.save(
+                    MateReply.builder()
+                            .mateId(mateId)
+                            .userId(userId)
+                            .content(request.getContent())
+                            .build()
+            );
+
+
+            return getReplyDetail(mateUuid, mateReply.getMateReplyId());
+        }
+
+
     }
+
 
     /**
      * 디저트메이트 댓글 조회(한개만)
@@ -81,7 +103,7 @@ public class MateReplyServiceImpl implements MateReplyService {
         //디저트 메이트 유효성 검사
         validateMate(mateUuid);
 
-        MateReply mateReply = mateReplyRepository.findById(replyId)
+        MateReply mateReply = mateReplyRepository.findByMateReplyIdAndDeletedAtIsNull(replyId)
                 .orElseThrow(() -> new MateReplyNotFoundException("존재하지 않는 댓글입니다."));
 
         try {
@@ -97,6 +119,26 @@ public class MateReplyServiceImpl implements MateReplyService {
 
 
     }
+
+    public MateAppReplyResponse getAppReplyDetail(UUID mateUuid, Long mateReplyId) {
+        MateReply reply = mateReplyRepository.findByMateReplyIdAndDeletedAtIsNull(mateReplyId)
+                .orElseThrow(() -> new MateReplyNotFoundException("댓글이 존재하지 않습니다."));
+
+        UserEntity user = userService.findById(reply.getUserId());
+
+        // 사용자별 프로필 이미지 조회
+        String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, user.getId());
+
+        // 자식 대댓글 조회
+        List<MateReply> childReplies = mateReplyRepository.findByParentMateReplyIdAndDeletedAtIsNull(reply.getMateReplyId());
+
+        List<MateAppReplyResponse> children = childReplies.stream()
+                .map(child -> getAppReplyDetail(mateUuid, child.getMateReplyId()))
+                .collect(Collectors.toList());
+
+        return MateAppReplyResponse.fromEntity(reply, mateUuid, user, profileImage, children);
+    }
+
 
     /**
      * 디저트메이트 댓글 전체 조회
@@ -123,6 +165,32 @@ public class MateReplyServiceImpl implements MateReplyService {
 
         return new MateReplyPageResponse(repliesResponse, isLast, count);
     }
+
+    /**
+     * 디저트메이트 댓글 전체 조회(앱)
+     * */
+    @Override
+    @Transactional
+    public MateAppReplyPageResponse getAppReplies(UUID mateUuid, Pageable pageable){
+
+        MateUserIds mateUserIds = validateMate(mateUuid);
+        Long mateId = mateUserIds.getMateId();
+
+        Page<MateReply> repliesPage = mateReplyRepository.findAllByDeletedAtIsNull(mateId, pageable);
+
+        // 최상위 댓글만 필터링 (parentMateReplyId == null)
+        List<MateAppReplyResponse> repliesResponse = repliesPage.getContent()
+                .stream()
+                .filter(reply -> reply.getParentMateReplyId() == null)
+                .map(reply -> getAppReplyDetail(mateUuid, reply.getMateReplyId()))
+                .collect(Collectors.toList());
+
+        boolean isLast = repliesPage.isLast();
+        Long count = repliesPage.getTotalElements();
+
+        return new MateAppReplyPageResponse(repliesResponse, isLast, count);
+    }
+
 
 
     /**

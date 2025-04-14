@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -14,8 +15,10 @@ import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.community.mate.dto.request.MateReplyCreateRequest;
 import org.swyp.dessertbee.community.mate.dto.request.MateReportRequest;
+import org.swyp.dessertbee.community.mate.dto.response.MateReplyPageBaseResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MateReplyPageResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MateReplyResponse;
+import org.swyp.dessertbee.community.mate.entity.Mate;
 import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.community.mate.service.MateReplyService;
 
@@ -38,10 +41,12 @@ public class MateReplyController {
     @ApiResponses( @ApiResponse(responseCode = "201", description = "디저트메이트 댓글 생성 성공"))
     @PostMapping
     public ResponseEntity<MateReplyResponse> createReply(@RequestBody  MateReplyCreateRequest request,
-                                                         @PathVariable UUID mateUuid) {
+                                                         @PathVariable UUID mateUuid,
 
-        MateReplyResponse response = mateReplyService.createReply(mateUuid, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+                                                         HttpServletRequest httpRequest) {
+            MateReplyResponse response = mateReplyService.createReply(mateUuid, request, httpRequest);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
 
     }
 
@@ -69,9 +74,10 @@ public class MateReplyController {
     @ApiResponses(@ApiResponse(responseCode = "200", description = "디저트메이트 댓글 전체 조회 성공"))
     @ApiErrorResponses({ErrorCode.INVALID_RANGE})
     @GetMapping
-    public ResponseEntity<MateReplyPageResponse> getReplies(@PathVariable UUID mateUuid,
-                                                            @RequestParam(required = false, defaultValue = "0") int from,
-                                                            @RequestParam(required = false, defaultValue = "10") int to) {
+    public ResponseEntity<MateReplyPageBaseResponse> getReplies(@PathVariable UUID mateUuid,
+                                                                @RequestParam(required = false, defaultValue = "0") int from,
+                                                                @RequestParam(required = false, defaultValue = "10") int to,
+                                                                HttpServletRequest httpRequest) {
 
         if (from >= to) {
             throw new FromToMateException("잘못된 범위 요청입니다.");
@@ -80,7 +86,13 @@ public class MateReplyController {
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
 
-        return ResponseEntity.ok(mateReplyService.getReplies(mateUuid, pageable));
+        String platformType = httpRequest.getHeader("Platform-Type");
+
+        if("app".equalsIgnoreCase(platformType)) {
+            return ResponseEntity.ok(mateReplyService.getAppReplies(mateUuid, pageable));
+        }else{
+            return ResponseEntity.ok(mateReplyService.getReplies(mateUuid, pageable));
+        }
     }
 
     /**

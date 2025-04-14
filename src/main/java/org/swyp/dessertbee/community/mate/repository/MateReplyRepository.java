@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.swyp.dessertbee.community.mate.entity.MateReply;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -23,4 +24,6 @@ public interface MateReplyRepository extends JpaRepository<MateReply, Long> {
     Optional<MateReply> findByMateIdAndMateReplyIdAndDeletedAtIsNull(Long mateId, Long replyId);
 
     Optional<MateReply> findByMateReplyIdAndDeletedAtIsNull(Long mateReplyId);
+
+    List<MateReply> findByParentMateReplyIdAndDeletedAtIsNull(Long mateReplyId);
 }
