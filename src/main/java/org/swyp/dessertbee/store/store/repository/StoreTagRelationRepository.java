@@ -22,10 +22,10 @@ public interface StoreTagRelationRepository extends JpaRepository<StoreTagRelati
     List<String> findTagNamesByStoreId(@Param("storeId") Long storeId);
 
     @Query("""
-        SELECT StoreTag
-        FROM StoreTagRelation str
-        JOIN StoreTag st ON str.tag.id = st.id
-        WHERE str.store.storeId = :storeId
+    SELECT st
+    FROM StoreTagRelation str
+    JOIN str.tag st
+    WHERE str.store.storeId = :storeId
     """)
     List<StoreTag> findTagsByStoreId(@Param("storeId") Long storeId);
 
