@@ -123,7 +123,14 @@ public class StoreServiceImpl implements StoreService {
             storeStatisticsRepository.save(
                     StoreStatistics.builder()
                             .storeId(store.getStoreId())
-                            .createDate(store.getCreatedAt().toLocalDate())  // 가게가 등록된 날짜
+                            .views(0)
+                            .saves(0)
+                            .storeReviewCount(0)
+                            .communityReviewCount(0)
+                            .dessertMateCount(0)
+                            .couponUseCount(0)
+                            .averageRating(BigDecimal.ZERO)
+                            .createDate(store.getCreatedAt().toLocalDate())
                             .build()
             );
 
