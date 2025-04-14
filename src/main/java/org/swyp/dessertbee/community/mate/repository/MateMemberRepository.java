@@ -41,4 +41,7 @@ public interface MateMemberRepository extends JpaRepository<MateMember, Long> {
             "AND m.deletedAt IS NULL " +
             "AND m.applyStatus = 'APPROVED' AND m.grade = 'NORMAL'")
     List<MateMember> findByMateIdAndDeletedAtIsNullAndApplyStatusAndGrade_Normal(Long mateId, MateApplyStatus mateApplyStatus, MateMemberGrade mateMemberGrade);
+
+    @Query("SELECT COUNT(m) FROM MateMember  m WHERE m.mateId = :mateId AND m.deletedAt IS NULL")
+    Long countByMateId(Long mateId);
 }
