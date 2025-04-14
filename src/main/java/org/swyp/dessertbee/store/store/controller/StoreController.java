@@ -104,7 +104,7 @@ public class StoreController {
             @Parameter(description = "경도", example = "122.406417", required = true)
             @RequestParam Double longitude,
 
-            @Parameter(description = "검색 반경(km)", example = "3.0", required = true)
+            @Parameter(description = "검색 반경(m)", example = "3.0", required = true)
             @RequestParam Double radius,
 
             @Parameter(
