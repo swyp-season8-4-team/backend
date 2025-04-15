@@ -26,7 +26,10 @@ public class UserCoupon {
     @Column(unique = true, nullable = false)
     private String couponCode; // QR에 들어갈 고유 식별자
 
+    @Builder.Default
     private boolean isUsed = false;
+
+    @Builder.Default
     private boolean isExpired=false;
 
     private long usedCount;

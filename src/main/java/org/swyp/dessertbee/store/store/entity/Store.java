@@ -90,6 +90,7 @@ public class Store {
     @Convert(converter = StringListConverter.class)
     private List<String> notice;
 
+    @Builder.Default
     @OneToMany(mappedBy = "store")
     private List<Coupon> coupons = new ArrayList<>();
 
