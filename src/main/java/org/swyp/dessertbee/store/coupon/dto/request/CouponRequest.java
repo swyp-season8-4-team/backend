@@ -66,7 +66,7 @@ public class CouponRequest {
             GiftCouponRequest.class
     })
     @NotNull
-    private CouponTypeRequest couponDetail;
+    private CouponTypeRequest couponType;
 
     @Schema(description = "쿠폰 제공 대상 (모든고객:ALL 알림받기한:SUBSRCRIBED 기타: CUSTOM)", example = "ALL")
     @NotNull

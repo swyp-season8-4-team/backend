@@ -67,7 +67,7 @@ public class CouponResponse {
     private Integer quantity;
 
     @Schema(description = "쿠폰 타입", oneOf = {DiscountCouponResponse.class, GiftCouponResponse.class}, requiredMode = Schema.RequiredMode.REQUIRED)
-    private CouponTypeResponse type;
+    private CouponTypeResponse couponType;
 
     @Schema(description = "쿠폰 사용 조건", oneOf = {
             AmountConditionResponse.class,
@@ -95,7 +95,7 @@ public class CouponResponse {
                 .expiryDate(coupon.getExpiryDate())
                 .hasQuantity(coupon.getHasQuantity())
                 .quantity(coupon.getQuantity())
-                .type(CouponTypeResponse.of(coupon))
+                .couponType(CouponTypeResponse.of(coupon))
                 .condition(CouponConditionResponse.of(coupon))
                 .createdAt(coupon.getCreatedAt())
                 .build();
@@ -114,7 +114,7 @@ public class CouponResponse {
                 .exposureEndAt(coupon.getExposureEndAt())
                 .hasQuantity(coupon.getHasQuantity())
                 .quantity(coupon.getQuantity())
-                .type(CouponTypeResponse.of(coupon))
+                .couponType(CouponTypeResponse.of(coupon))
                 .condition(CouponConditionResponse.of(coupon))
                 .build();
     }

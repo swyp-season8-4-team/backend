@@ -22,5 +22,5 @@ public class UsedCouponResponse {
     private String userCouponCode;
 
     @Schema(description = "사용 여부", example = "true", requiredMode = Schema.RequiredMode.REQUIRED)
-    private boolean used;
+    private boolean isUsed;
 }

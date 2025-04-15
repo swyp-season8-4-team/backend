@@ -23,8 +23,8 @@ public class IssuedCouponResponse {
     @Schema(description = "쿠폰 코드", example = "ZH1i6D", requiredMode = Schema.RequiredMode.REQUIRED)
     private String couponCode;
 
-    @Schema(description = "QR 코드 이미지URL (Base64 인코딩)", example = "iVBORw0KGgoAAA...", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String qrImageBase64;
+    @Schema(description = "QR 코드 이미지URL (Base64 인코딩)", example = "iVBORw0KGgoAAA...")
+    private String qrImageUrl;
 
     @Schema(description = "사용 여부", example = "false", requiredMode = Schema.RequiredMode.REQUIRED)
     private boolean isUsed;
