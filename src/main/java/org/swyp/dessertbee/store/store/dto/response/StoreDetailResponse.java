@@ -113,27 +113,27 @@ public class StoreDetailResponse {
     @Schema(
             description = "태그 리스트",
             example = """
-        [
-          {
-            "id": 11,
-            "name": "케이크",
-            "category": {
-              "id": 2,
-              "name": "디저트"
-            }
-          },
-          {
-            "id": 12,
-            "name": "구움과자",
-            "category": {
-              "id": 2,
-              "name": "디저트"
-            }
-          }
-        ]
-        """
+    [
+      {
+        "id": 11,
+        "name": "케이크",
+        "category": {
+          "id": 2,
+          "name": "디저트"
+        }
+      },
+      {
+        "id": 12,
+        "name": "구움과자",
+        "category": {
+          "id": 2,
+          "name": "디저트"
+        }
+      }
+    ]
+    """
     )
-    private List<StoreTag> tags;
+    private List<StoreTagResponse> tags;
 
     @NotNull
     @Schema(description = "운영 시간 정보")
@@ -167,7 +167,7 @@ public class StoreDetailResponse {
                                                  List<String> ownerPickImages,
                                                  List<TopPreferenceTagResponse> topPreferences,
                                                  List<StoreReviewResponse> storeReviews,
-                                                 List<StoreTag> tags,
+                                                 List<StoreTagResponse> tags,
                                                  List<String> storeLinks,
                                                  String primaryStoreLink,
                                                  List<ReviewSummaryResponse> communityReviews,
