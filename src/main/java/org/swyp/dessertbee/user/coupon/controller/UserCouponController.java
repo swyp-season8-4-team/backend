@@ -73,7 +73,7 @@ public class UserCouponController {
     /**
      * 발급 받은 쿠폰 상세 조회
      */
-    @Operation(summary = "발급 받은 쿠폰 상세 조회", description = "특정 쿠폰 ID를 기반으로 로그인한 사용자의 쿠폰 상세 정보를 조회합니다.")
+    @Operation(summary = "발급 받은 쿠폰 상세 조회 (completed)", description = "특정 쿠폰 ID를 기반으로 로그인한 사용자의 쿠폰 상세 정보를 조회합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "쿠폰 상세 조회 성공"),
             @ApiResponse(responseCode = "404", description = "해당 쿠폰을 찾을 수 없거나 접근 권한이 없을 경우")
@@ -90,7 +90,7 @@ public class UserCouponController {
     /**
      * 쿠폰 사용 현황 조회
      */
-    @Operation(summary = "쿠폰 사용 수 현황 조회", description = "로그인한 사용자의 쿠폰 사용 현황(총 개수, 사용/미사용 수 등)을 조회합니다.")
+    @Operation(summary = "쿠폰 사용 수 현황 조회 (completed)", description = "로그인한 사용자의 쿠폰 사용 현황(총 개수, 사용/미사용 수 등)을 조회합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "쿠폰 사용 현황 조회 성공"),
             @ApiResponse(responseCode = "401", description = "인증 실패 시")
