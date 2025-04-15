@@ -23,21 +23,27 @@ public class StoreStatistics {
     @Column(name = "store_id")
     private Long storeId;
 
+    @Builder.Default
     @Column(nullable = false)
     private Integer views = 0;
 
+    @Builder.Default
     @Column(nullable = false)
     private Integer saves = 0;
 
+    @Builder.Default
     @Column(name = "store_review_count", nullable = false)
     private Integer storeReviewCount = 0;
 
+    @Builder.Default
     @Column(name = "community_review_count", nullable = false)
     private Integer communityReviewCount = 0;
 
+    @Builder.Default
     @Column(name = "dessert_mate_count", nullable = false)
     private Integer dessertMateCount = 0;
 
+    @Builder.Default
     @Column(name = "coupon_use_count", nullable = false)
     private Integer couponUseCount = 0;
 

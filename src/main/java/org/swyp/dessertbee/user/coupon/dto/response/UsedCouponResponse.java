@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.user.coupon.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,11 +10,17 @@ import lombok.Getter;
 @Builder
 @AllArgsConstructor
 @Getter
+@Schema(description = "사용된 쿠폰 응답")
 public class UsedCouponResponse {
+    @Schema(description = "사용자 쿠폰 ID", example = "1")
+    private Long userCouponId;
 
-    Long userCouponId;
-    String couponName;
-    String userCouponCode;
-    boolean used;
+    @Schema(description = "쿠폰 이름", example = "10% 할인 쿠폰")
+    private String couponName;
 
+    @Schema(description = "쿠폰 코드", example = "ZH1i6D")
+    private String userCouponCode;
+
+    @Schema(description = "사용 여부", example = "true")
+    private boolean used;
 }

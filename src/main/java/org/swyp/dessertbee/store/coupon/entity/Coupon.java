@@ -63,6 +63,7 @@ public class Coupon {
 
     // 노출 기한
     @Column(nullable = false)
+    @Builder.Default
     private Boolean hasExposureDate = true;
     private LocalDateTime exposureStartAt;
     private LocalDateTime exposureEndAt;
@@ -83,17 +84,20 @@ public class Coupon {
     @Enumerated(EnumType.STRING)
     private Set<DayOfWeek> conditionDays; // TIME_DAY 조건일 경우
 
+    @Builder.Default
     private Boolean exclusiveOnly=false; //EXCLUSIVE 조건일 경우
 
     private String customConditionText; // CUSTOM 조건일 경우
 
     // 유효 기간
     @Column(nullable = false)
+    @Builder.Default
     private Boolean hasExpiryDate = true;
     private LocalDateTime expiryDate;
 
     // 수량 제한
     @Column(nullable = false)
+    @Builder.Default
     private Boolean hasQuantity = true;
     private Integer quantity;
 
@@ -103,6 +107,7 @@ public class Coupon {
     @JoinColumn(name = "store_id")
     private Store store;
 
+    @Builder.Default
     @OneToMany(mappedBy = "coupon", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserCoupon> userCoupons = new ArrayList<>();
 
