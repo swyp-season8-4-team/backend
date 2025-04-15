@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -304,4 +305,32 @@ public class ImageService {
         return reviewUploadAndSaveImage(newFiles, refType, refId, folder);
 
     }
+
+    /**
+     * 프로필 이미지 유효성 검증
+     */
+    public void validateImage(MultipartFile file) {
+        // 1. 파일 타입 검증
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new BusinessException(ErrorCode.INVALID_FILE_TYPE, "이미지 파일만 업로드 가능합니다.");
+        }
+
+        // 2. 파일 크기 검증 (예: 5MB 제한)
+        long maxSizeBytes = 5 * 1024 * 1024; // 5MB
+        if (file.getSize() > maxSizeBytes) {
+            throw new BusinessException(ErrorCode.FILE_SIZE_EXCEEDED, "이미지 크기는 5MB를 초과할 수 없습니다.");
+        }
+
+        // 3. 추가 이미지 형식 검증 (필요시)
+        String filename = file.getOriginalFilename();
+        if (filename != null) {
+            String extension = filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
+            if (!Arrays.asList("jpg", "jpeg", "png", "gif").contains(extension)) {
+                throw new BusinessException(ErrorCode.INVALID_FILE_TYPE,
+                        "지원되지 않는 이미지 형식입니다. JPG, JPEG, PNG, GIF 형식만 지원합니다.");
+            }
+        }
+    }
+
 }

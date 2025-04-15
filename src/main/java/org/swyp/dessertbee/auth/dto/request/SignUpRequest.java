@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import org.swyp.dessertbee.role.entity.RoleType;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
@@ -15,7 +16,7 @@ import java.util.List;
  * 회원가입 요청을 위한 DTO 클래스
  */
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 public class SignUpRequest {

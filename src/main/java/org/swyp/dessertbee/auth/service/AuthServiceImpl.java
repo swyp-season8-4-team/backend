@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.auth.dto.response.PasswordResetResponse;
 import org.swyp.dessertbee.auth.dto.response.TokenResponse;
 import org.swyp.dessertbee.auth.dto.request.LoginRequest;
@@ -20,6 +21,7 @@ import org.swyp.dessertbee.auth.jwt.JWTUtil;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
+import org.swyp.dessertbee.common.exception.ErrorResponse;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.email.entity.EmailVerificationPurpose;
 import org.swyp.dessertbee.email.service.EmailVerificationService;
@@ -139,6 +141,45 @@ public class AuthServiceImpl implements AuthService {
             log.error("회원가입 처리 중 오류 발생 - 이메일: {}", request.getEmail(), e);
             throw new AuthServiceException("회원가입 처리 중 오류가 발생했습니다.");
         }
+    }
+
+    /**
+     * 프로필 이미지를 포함한 회원가입 처리
+     * 이미지 유효성 검증을 수행하고 실패 시 예외를 발생시킴
+     */
+    @Override
+    @Transactional
+    public LoginResponse signupWithProfileImage(SignUpRequest request, MultipartFile profileImage, String verificationToken, String deviceId) {
+
+        // 기본 회원가입 로직 실행
+        LoginResponse response = signup(request, verificationToken, deviceId);
+
+        // 프로필 이미지 업로드 (실패해도 회원가입은 성공)
+        if (profileImage != null && !profileImage.isEmpty()) {
+            try {
+                imageService.validateImage(profileImage);
+
+                // 사용자 조회
+                UserEntity user = userService.findByUserUuid(response.getUserUuid());
+
+                // S3 업로드
+                String folder = String.format("profile/%d", user.getId());
+                imageService.updateImage(ImageType.PROFILE, user.getId(), profileImage, folder);
+
+                // URL 조회 및 응답 설정
+                String profileImageUrl = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId())
+                        .stream()
+                        .findFirst()
+                        .orElse(null);
+                response.setProfileImageUrl(profileImageUrl);
+            } catch (BusinessException e) {
+                log.error("프로필 이미지 업로드 실패 - 사용자: {}, 오류: {}", response.getUserUuid(), e.getMessage());
+                // 기존 ErrorResponse 활용
+                response.setImageError(ErrorResponse.from(e.getErrorCode()));
+            }
+        }
+
+        return response;
     }
 
     /**

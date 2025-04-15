@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.swyp.dessertbee.common.exception.ErrorResponse;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.util.UUID;
@@ -79,6 +80,22 @@ public class LoginResponse {
     )
     private String deviceId;        // 디바이스 식별자
 
+    @Schema(
+            description = "이미지 관련 오류 메시지 (이미지 업로드 실패 시에만 존재)",
+            implementation = ErrorResponse.class,
+            nullable = true,
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+            example = """
+                {
+                  "status": 400,
+                  "code": "F004",
+                  "message": "지원하지 않는 파일 형식입니다.",
+                  "timestamp": "2025-04-15T02:45:12"
+                }
+            """
+    )
+    private ErrorResponse imageError;     // 이미지 오류 정보
+
     /**
      * 로그인 성공 응답 생성 (디바이스 ID 포함)
      * @param accessToken JWT 액세스 토큰
@@ -125,5 +142,4 @@ public class LoginResponse {
     public static LoginResponse success(String accessToken, String refreshToken, long expiresIn, UserEntity user, String profileImageUrl) {
         return success(accessToken, refreshToken, expiresIn, user, profileImageUrl, null, false);
     }
-
 }
