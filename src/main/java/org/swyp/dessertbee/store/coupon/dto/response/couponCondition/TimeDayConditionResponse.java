@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.store.coupon.dto.response.couponCondition;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,9 +13,16 @@ import java.util.Set;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Schema(description = "요일/시간 조건 응답")
 public class TimeDayConditionResponse implements CouponConditionResponse {
     private CouponConditionType conditionType;
+
+    @Schema(description = "조건 시작 시간", example = "09:00:00")
     private LocalTime conditionStartTime;
+
+    @Schema(description = "조건 종료 시간", example = "18:00:00")
     private LocalTime conditionEndTime;
+
+    @Schema(description = "조건 요일들", example = "[\"MONDAY\", \"WEDNESDAY\"]")
     private Set<DayOfWeek> conditionDays;
 }
