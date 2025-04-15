@@ -11,9 +11,10 @@ import org.swyp.dessertbee.store.coupon.entity.enums.CouponConditionType;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AmountConditionResponse implements CouponConditionResponse {
-    @Schema(description = "조건 타입", example = "AMOUNT")
+    @Schema(description = "조건 타입", example = "AMOUNT", requiredMode = Schema.RequiredMode.REQUIRED)
     private CouponConditionType conditionType;
 
-    @Schema(description = "최소 구매 금액", example = "15000")
+    @Schema(description = "최소 구매 금액", example = "15000", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer minimumPurchaseAmount;
 }
+

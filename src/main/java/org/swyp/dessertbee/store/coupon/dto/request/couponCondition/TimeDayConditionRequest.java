@@ -33,6 +33,7 @@ public class TimeDayConditionRequest extends BaseCouponConditionRequest {
     private Set<DayOfWeek> conditionDays;
 
     @Override
+    @NotNull
     public CouponConditionType getConditionType() {
         return CouponConditionType.TIME_DAY;
     }

@@ -2,6 +2,7 @@ package org.swyp.dessertbee.store.coupon.dto.request.couponType;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,7 @@ public class GiftCouponRequest implements CouponTypeRequest {
     private String giftMenuName;
 
     @Override
+    @NotNull
     public CouponType getType() {
         return CouponType.GIFT;
     }

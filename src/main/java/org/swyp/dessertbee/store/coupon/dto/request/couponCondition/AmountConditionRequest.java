@@ -21,6 +21,7 @@ public class AmountConditionRequest extends BaseCouponConditionRequest {
     private Integer minimumPurchaseAmount;
 
     @Override
+    @NotNull
     public CouponConditionType getConditionType() {
         return CouponConditionType.AMOUNT;
     }
