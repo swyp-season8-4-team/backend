@@ -23,6 +23,7 @@ public class DiscountCouponRequest implements CouponTypeRequest {
     private Integer discountAmount;
 
     @Override
+    @NotNull
     public CouponType getType() {
         return CouponType.DISCOUNT;
     }

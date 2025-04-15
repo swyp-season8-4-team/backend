@@ -13,27 +13,27 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Schema(description = "사용자 쿠폰 상세 응답")
 public class UserCouponDetailResponse {
-    @Schema(description = "사용자 쿠폰 ID", example = "1")
+    @Schema(description = "사용자 쿠폰 ID", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long userCouponId;
 
-    @Schema(description = "QR 이미지 URL", example = "iVBORw0KGgoAAAANSUhEUgAAAPoAAAD6AQAAAACgl2eQAAAAzUlEQVR4Xu2S6w3EIAyD2ZyM1s16fgA9VbpbwHElQ+KvfyzG/V/XeG9easBqwGrAasDKAmpIU6cdZyCgAV5T9uzSgGJByMb8mpIBEA3oxi8WOF47igSGNE9NmvKALUUKtrKAQkesSRee3MmzAM1KfDBMBPBQuJK7tf1wsgBmWBQp7QklAgpMLcZ5HiCxHzHITWQBrMgtITj3QEAjXPnkD6EAV3BmciyEpAKuaKWxAG+aFpgHPNhdREOBISng3p4H/FYDVgNWA1YDVgPW9QFq2OuUw3JTZQAAAABJRU5ErkJggg==")
+    @Schema(description = "QR 이미지 URL", example = "iVBORw0KGgoAAA...", requiredMode = Schema.RequiredMode.REQUIRED)
     private String qrImageUrl;
 
-    @Schema(description = "가게 이름", example = "스타벅스")
+    @Schema(description = "가게 이름", example = "스타벅스", requiredMode = Schema.RequiredMode.REQUIRED)
     private String storeName;
 
-    @Schema(description = "쿠폰 이름", example = "아메리카노 증정 쿠폰")
+    @Schema(description = "쿠폰 이름", example = "아메리카노 증정 쿠폰", requiredMode = Schema.RequiredMode.REQUIRED)
     private String couponName;
 
     @Schema(description = "쿠폰 만료일", example = "2025-05-01T23:59:59")
     private LocalDateTime expiryDate;
 
-    @Schema(description = "쿠폰 코드", example = "ZH1i6D")
+    @Schema(description = "쿠폰 코드", example = "ZH1i6D", requiredMode = Schema.RequiredMode.REQUIRED)
     private String couponCode;
 
-    @Schema(description = "조건 타입", example = "AMOUNT")
+    @Schema(description = "조건 타입", example = "AMOUNT", requiredMode = Schema.RequiredMode.REQUIRED)
     private CouponConditionType conditionType;
 
-    @Schema(description = "만료 여부", example = "false")
+    @Schema(description = "만료 여부", example = "false", requiredMode = Schema.RequiredMode.REQUIRED)
     private boolean isExpired;
 }

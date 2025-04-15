@@ -10,12 +10,12 @@ import lombok.Getter;
 @AllArgsConstructor
 @Schema(description = "쿠폰 사용 상태 통계 응답")
 public class CouponUsageStatusResponse {
-    @Schema(description = "사용된 쿠폰 수")
+    @Schema(description = "사용된 쿠폰 수", requiredMode = Schema.RequiredMode.REQUIRED)
     private long usedCount;
 
-    @Schema(description = "사용되지 않은 쿠폰 수")
+    @Schema(description = "사용되지 않은 쿠폰 수", requiredMode = Schema.RequiredMode.REQUIRED)
     private long unusedCount;
 
-    @Schema(description = "만료된 쿠폰 수")
+    @Schema(description = "만료된 쿠폰 수", requiredMode = Schema.RequiredMode.REQUIRED)
     private long expiredCount;
 }

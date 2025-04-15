@@ -1,6 +1,7 @@
 package org.swyp.dessertbee.store.coupon.dto.request.couponCondition;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +17,7 @@ import org.swyp.dessertbee.store.coupon.entity.enums.CouponConditionType;
 public class ExclusiveConditionRequest extends BaseCouponConditionRequest {
 
     @Override
+    @NotNull
     public CouponConditionType getConditionType() {
         return CouponConditionType.EXCLUSIVE;
     }

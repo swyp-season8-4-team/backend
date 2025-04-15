@@ -15,14 +15,15 @@ import java.util.Set;
 @NoArgsConstructor
 @Schema(description = "요일/시간 조건 응답")
 public class TimeDayConditionResponse implements CouponConditionResponse {
+    @Schema(description = "조건 타입", example = "TIME_DAY", requiredMode = Schema.RequiredMode.REQUIRED)
     private CouponConditionType conditionType;
 
-    @Schema(description = "조건 시작 시간", example = "09:00:00")
+    @Schema(description = "조건 시작 시간", example = "09:00:00", requiredMode = Schema.RequiredMode.REQUIRED)
     private LocalTime conditionStartTime;
 
-    @Schema(description = "조건 종료 시간", example = "18:00:00")
+    @Schema(description = "조건 종료 시간", example = "18:00:00", requiredMode = Schema.RequiredMode.REQUIRED)
     private LocalTime conditionEndTime;
 
-    @Schema(description = "조건 요일들", example = "[\"MONDAY\", \"WEDNESDAY\"]")
+    @Schema(description = "조건 요일들", example = "[\"MONDAY\", \"WEDNESDAY\"]", requiredMode = Schema.RequiredMode.REQUIRED)
     private Set<DayOfWeek> conditionDays;
 }

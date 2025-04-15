@@ -52,7 +52,7 @@ public class CouponServiceImpl implements CouponService {
                 .quantity(request.getQuantity());
 
         //쿠폰 타입
-        CouponTypeRequest detail = request.getCouponDetail();
+        CouponTypeRequest detail = request.getCouponType();
 
         builder.type(detail.getType());
 
@@ -110,7 +110,7 @@ public class CouponServiceImpl implements CouponService {
         );
 
         // 쿠폰 타입에 따른 필드 수정
-        CouponTypeRequest detail = request.getCouponDetail();
+        CouponTypeRequest detail = request.getCouponType();
         coupon.updateType(detail);
 
         // 쿠폰 조건 수정
@@ -174,7 +174,7 @@ public class CouponServiceImpl implements CouponService {
         }
 
         // 쿠폰 상세 정보
-        CouponTypeRequest detail = request.getCouponDetail();
+        CouponTypeRequest detail = request.getCouponType();
         if (detail == null || detail.getType() == null) {
             throw new BusinessException(ErrorCode.INVALID_COUPON_DETAIL);
         }

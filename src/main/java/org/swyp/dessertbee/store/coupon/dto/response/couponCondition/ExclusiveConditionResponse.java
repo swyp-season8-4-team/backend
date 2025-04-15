@@ -11,7 +11,6 @@ import org.swyp.dessertbee.store.coupon.entity.enums.CouponConditionType;
 @NoArgsConstructor
 @Schema(description = "단독 사용 불가 조건(false) 응답")
 public class ExclusiveConditionResponse implements CouponConditionResponse {
-
-    @Schema(description = "조건 타입", example = "EXCLUSIVE")
+    @Schema(description = "조건 타입", example = "EXCLUSIVE", requiredMode = Schema.RequiredMode.REQUIRED)
     private CouponConditionType conditionType;
 }

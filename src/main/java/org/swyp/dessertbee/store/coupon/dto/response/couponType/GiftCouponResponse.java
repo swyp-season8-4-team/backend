@@ -12,9 +12,9 @@ import org.swyp.dessertbee.store.coupon.entity.enums.CouponType;
 @Schema(description = "증정 쿠폰 응답")
 public class GiftCouponResponse implements CouponTypeResponse {
 
-    @Schema(description = "쿠폰 타입", example = "GIFT")
+    @Schema(description = "쿠폰 타입", example = "GIFT", requiredMode = Schema.RequiredMode.REQUIRED)
     private CouponType type;
 
-    @Schema(description = "증정 메뉴 이름", example = "아메리카노")
+    @Schema(description = "증정 메뉴 이름", example = "아메리카노", requiredMode = Schema.RequiredMode.REQUIRED)
     private String giftMenuName;
 }
