@@ -80,6 +80,9 @@ public class StoreDetailResponse {
     @Schema(description = "가게 소개글", example = "편안한 분위기의 감성 디저트 카페입니다.", nullable = true)
     private String description;
 
+    @Schema(description = "가게 소개글 등록(수정)시간", example = "2025-04-15T23:30:00", nullable = true)
+    private String descriptionUpdateTime;
+
     @Schema(description = "가게 공지사항 리스트", nullable = true)
     private List<StoreNoticeResponse> notices;
 
@@ -190,6 +193,11 @@ public class StoreDetailResponse {
                 .tumblerYn(store.getTumblerYn())
                 .parkingYn(store.getParkingYn())
                 .description(store.getDescription())
+                .descriptionUpdateTime(
+                        store.getDescription() != null
+                                ? store.getUpdatedAt().toString()
+                                : null
+                )
                 .averageRating(store.getAverageRating())
                 .operatingHours(operatingHours)
                 .holidays(holidays)
