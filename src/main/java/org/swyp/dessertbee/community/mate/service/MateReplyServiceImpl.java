@@ -165,7 +165,6 @@ public class MateReplyServiceImpl implements MateReplyService {
      * 디저트메이트 댓글 전체 조회
      * */
     @Override
-    @Transactional
     public MateReplyPageResponse getReplies(UUID mateUuid, Pageable pageable) {
         MateUserIds mateUserIds = validateMate(mateUuid);
         Long mateId = mateUserIds.getMateId();
@@ -191,7 +190,6 @@ public class MateReplyServiceImpl implements MateReplyService {
      * 디저트메이트 댓글 전체 조회(앱)
      * */
     @Override
-    @Transactional
     public MateAppReplyPageResponse getAppReplies(UUID mateUuid, Pageable pageable){
 
         MateUserIds mateUserIds = validateMate(mateUuid);
