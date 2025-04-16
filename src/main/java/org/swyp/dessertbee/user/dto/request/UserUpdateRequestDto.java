@@ -72,10 +72,19 @@ public class UserUpdateRequestDto {
     )
     private String mbti;
 
+    @Schema(
+            description = "사용자 역할 목록 (ROLE_USER/ROLE_OWNER)",
+            example = "[\"ROLE_OWNER\", \"ROLE_USER\"]",
+            nullable = true,
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    )
+    private List<String> roles;
+
+
     @Builder
     public UserUpdateRequestDto(String nickname, List<Long> preferences, String name,
                                 String phoneNumber, String address, UserEntity.Gender gender,
-                                String mbti) {
+                                String mbti, List<String> roles) {
         this.nickname = nickname;
         this.preferences = preferences;
         this.name = name;
@@ -83,5 +92,6 @@ public class UserUpdateRequestDto {
         this.address = address;
         this.gender = gender;
         this.mbti = mbti;
+        this.roles = roles;
     }
 }

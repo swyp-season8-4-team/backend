@@ -12,9 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.auth.dto.request.SignUpWithProfileRequest;
-import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.statistics.user.service.UserStatisticsAdminService;
 import org.swyp.dessertbee.auth.dto.request.PasswordResetRequest;
 import org.swyp.dessertbee.auth.dto.response.PasswordResetResponse;
@@ -217,7 +215,7 @@ public class AuthController {
             }
     )
     @ApiResponse(responseCode = "200", description = "토큰 재발급 성공", content = @Content(schema = @Schema(implementation = TokenResponse.class)))
-    @ApiErrorResponses({ErrorCode.INVALID_CREDENTIALS, ErrorCode.INVALID_VERIFICATION_TOKEN, ErrorCode.EXPIRED_VERIFICATION_TOKEN, ErrorCode.DEVICE_ID_MISSING})
+    @ApiErrorResponses({ErrorCode.INVALID_CREDENTIALS, ErrorCode.INVALID_VERIFICATION_TOKEN, ErrorCode.JWT_TOKEN_EXPIRED, ErrorCode.DEVICE_ID_MISSING})
     @PostMapping("/token/refresh")
     public ResponseEntity<TokenResponse> refreshToken(
             @Parameter(description = "리프레시 토큰 (Bearer 형식)", required = true)
@@ -284,7 +282,7 @@ public class AuthController {
             }
     )
     @ApiResponse(responseCode = "200", description = "비밀번호 재설정 성공")
-    @ApiErrorResponses({ErrorCode.INVALID_VERIFICATION_TOKEN, ErrorCode.EXPIRED_VERIFICATION_TOKEN, ErrorCode.USER_NOT_FOUND})
+    @ApiErrorResponses({ErrorCode.INVALID_VERIFICATION_TOKEN, ErrorCode.JWT_TOKEN_EXPIRED, ErrorCode.USER_NOT_FOUND})
     @PostMapping("/password/reset")
     public ResponseEntity<PasswordResetResponse> resetPassword(
             @Parameter(description = "이메일 인증 토큰", required = true)

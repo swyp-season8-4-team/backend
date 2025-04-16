@@ -1,10 +1,12 @@
 package org.swyp.dessertbee.config;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
 import org.springframework.http.HttpMethod;
+
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,17 +19,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
+
 import org.swyp.dessertbee.auth.jwt.JWTFilter;
 import org.swyp.dessertbee.auth.jwt.JWTUtil;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.swyp.dessertbee.auth.repository.AuthRepository;
 import org.swyp.dessertbee.auth.service.CustomUserDetailsService;
-import org.swyp.dessertbee.user.repository.UserRepository;
 
-import java.util.Arrays;
-import java.util.Collections;
+import org.swyp.dessertbee.user.repository.UserRepository;
 
 /**
  * 스프링 시큐리티 설정 클래스
