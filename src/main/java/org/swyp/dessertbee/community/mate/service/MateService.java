@@ -15,7 +15,10 @@ import java.util.UUID;
 public interface MateService {
 
     /** 메이트 등록 */
-    MateDetailResponse createMate(MateCreateRequest request, MultipartFile mateImage, HttpServletRequest httpRequest);
+    MateDetailResponse createMate(MateCreateRequest request, MultipartFile mateImage);
+
+    /** 메이트 등록(앱)*/
+    MateDetailResponse createAppMate(MateCreateRequest request, MultipartFile mateImage);
 
     /** 메이트 상세 정보 */
     MateDetailResponse getMateDetail(UUID mateUuid);

@@ -13,7 +13,7 @@ import java.util.List;
 @Data
 @Builder
 @AllArgsConstructor
-public class MateAppReplyPageResponse implements MateReplyPageBaseResponse {
+public class MateAppReplyPageResponse {
 
     @Schema(description = "디저트메이트 댓글 정보", example = "MateReplyResponse에서 주는 값")
     private List<MateAppReplyResponse> mateReplies;

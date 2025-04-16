@@ -14,6 +14,7 @@ import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.repository.ReportRepository;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.community.mate.dto.MateUserIds;
+import org.swyp.dessertbee.community.mate.dto.request.MateAppReplyCreateRequest;
 import org.swyp.dessertbee.community.mate.dto.request.MateReplyCreateRequest;
 import org.swyp.dessertbee.community.mate.dto.request.MateReportRequest;
 import org.swyp.dessertbee.community.mate.dto.response.*;
@@ -53,7 +54,7 @@ public class MateReplyServiceImpl implements MateReplyService {
      * */
     @Override
     @Transactional
-    public MateReplyResponse createReply(UUID mateUuid, MateReplyCreateRequest request, HttpServletRequest httpRequest) {
+    public MateReplyResponse createReply(UUID mateUuid, MateReplyCreateRequest request) {
 
 
         //디저트 메이트 유효성 검사
@@ -61,12 +62,30 @@ public class MateReplyServiceImpl implements MateReplyService {
         Long mateId = mateUserIds.getMateId();
         Long userId = mateUserIds.getUserId();
 
+            MateReply mateReply = replyRepository.save(
+                    MateReply.builder()
+                            .mateId(mateId)
+                            .userId(userId)
+                            .content(request.getContent())
+                            .build()
+            );
 
-        String platformType = httpRequest.getHeader("Platform-Type");
+
+            return getReplyDetail(mateUuid, mateReply.getMateReplyId());
 
 
+    }
 
-        if("app".equalsIgnoreCase(platformType)) {
+
+    @Override
+    @Transactional
+    public MateReplyResponse createAppReply(UUID mateUuid, MateAppReplyCreateRequest request){
+
+        //디저트 메이트 유효성 검사
+        MateUserIds mateUserIds = validateMateAndUser(mateUuid, request.getUserUuid());
+        Long mateId = mateUserIds.getMateId();
+        Long userId = mateUserIds.getUserId();
+
             MateReply mateReply = replyRepository.save(
                     MateReply.builder()
                             .mateId(mateId)
@@ -76,24 +95,10 @@ public class MateReplyServiceImpl implements MateReplyService {
                             .build()
             );
 
-            return getReplyDetail(mateUuid, mateReply.getMateReplyId());
-        }else{
-            MateReply mateReply = replyRepository.save(
-                    MateReply.builder()
-                            .mateId(mateId)
-                            .userId(userId)
-                            .content(request.getContent())
-                            .build()
-            );
-
 
             return getReplyDetail(mateUuid, mateReply.getMateReplyId());
-        }
-
 
     }
-
-
     /**
      * 디저트메이트 댓글 조회(한개만)
      * */
@@ -230,7 +235,7 @@ public class MateReplyServiceImpl implements MateReplyService {
         UserEntity user = userService.getCurrentUser();
 
         MateUserIds mateUserIds = validateMateAndUser(mateUuid, user.getUserUuid());
-        Long mateId = mateUserIds.getMateId();
+
 
         MateReply mateReply = mateReplyRepository.findById(replyId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MATE_REPLY_NOT_FOUND));

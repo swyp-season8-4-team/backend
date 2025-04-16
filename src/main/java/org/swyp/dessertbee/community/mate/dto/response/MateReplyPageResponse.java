@@ -12,7 +12,7 @@ import java.util.List;
 @Data
 @Builder
 @AllArgsConstructor
-public class MateReplyPageResponse implements MateReplyPageBaseResponse{
+public class MateReplyPageResponse{
 
 
     @Schema(description = "디저트메이트 댓글 정보", example = "MateReplyResponse에서 주는 값")

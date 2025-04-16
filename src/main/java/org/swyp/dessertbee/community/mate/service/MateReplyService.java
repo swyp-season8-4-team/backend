@@ -3,6 +3,7 @@ package org.swyp.dessertbee.community.mate.service;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.data.domain.Pageable;
+import org.swyp.dessertbee.community.mate.dto.request.MateAppReplyCreateRequest;
 import org.swyp.dessertbee.community.mate.dto.request.MateReplyCreateRequest;
 import org.swyp.dessertbee.community.mate.dto.request.MateReportRequest;
 import org.swyp.dessertbee.community.mate.dto.response.MateAppReplyPageResponse;
@@ -16,8 +17,9 @@ import java.util.UUID;
 public interface MateReplyService {
 
     /** 디저트메이트 댓글 생성 */
-    MateReplyResponse createReply(UUID mateUuid, MateReplyCreateRequest request, HttpServletRequest httpRequest);
+    MateReplyResponse createReply(UUID mateUuid, MateReplyCreateRequest request);
 
+    MateReplyResponse createAppReply(UUID mateUuid, MateAppReplyCreateRequest request);
     /** 디저트메이트 댓글 조회(한개만) */
     MateReplyResponse getReplyDetail(UUID mateUuid, Long replyId);
 
@@ -44,5 +46,4 @@ public interface MateReplyService {
 
     /** 신고된 Mate 댓글 삭제*/
     void deleteReportedMateReply(Long mateReplyId);
-
 }

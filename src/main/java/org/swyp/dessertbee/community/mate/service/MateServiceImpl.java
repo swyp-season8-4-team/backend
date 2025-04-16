@@ -29,7 +29,6 @@ import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.exception.UserExceptions.*;
 import org.swyp.dessertbee.user.service.UserServiceImpl;
-import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 import java.util.List;
 import java.util.UUID;
@@ -56,12 +55,9 @@ public class MateServiceImpl implements MateService {
     /** 메이트 등록 */
     @Override
     @Transactional
-    public MateDetailResponse createMate(MateCreateRequest request, MultipartFile mateImage, HttpServletRequest httpRequest){
+    public MateDetailResponse createMate(MateCreateRequest request, MultipartFile mateImage){
         // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
         UserEntity user = userService.getCurrentUser();
-
-        String platformType = httpRequest.getHeader("Platform-Type");
-
 
         if(request.getCapacity() > 5){
             throw new MateCapacityExceededException("최대 수용 인원 초과입니다.");
@@ -71,36 +67,16 @@ public class MateServiceImpl implements MateService {
             userService.findById(user.getId());
 
 
-            Long storeId = null;
-            Mate mate = null;
-            if("app".equalsIgnoreCase(platformType))
-            {
-                storeId = (request.getStoreId() != null) ? request.getStoreId() : null;
 
-                mate = mateRepository.save(
-                        Mate.builder()
-                                .userId(user.getId())
-                                .storeId(storeId)
-                                .mateCategoryId(request.getMateCategoryId())
-                                .title(request.getTitle())
-                                .content(request.getContent())
-                                .capacity(request.getCapacity())
-                                .currentMemberCount(1L)
-                                .recruitYn(Boolean.TRUE.equals(request.getRecruitYn()))
-                                .updatedAt(null)
-                                .build()
-                );
-
-            }else{
                 //위도,경도로 storeId 조회
                 // 위도, 경도로 store 조회
-                Store store = storeRepository.findByName(request.getPlace().getPlaceName());
+            Store store = storeRepository.findByName(request.getPlace().getPlaceName());
 
 
                 // store가 null이면 storeId는 null, 아니면 store.getStoreId() 할당
-                storeId = (store != null) ? store.getStoreId() : null;
+            Long storeId = (store != null) ? store.getStoreId() : null;
 
-                mate = mateRepository.save(
+            Mate mate = mateRepository.save(
                         Mate.builder()
                                 .userId(user.getId())
                                 .storeId(storeId)
@@ -117,7 +93,6 @@ public class MateServiceImpl implements MateService {
                                 .build()
                 );
 
-            }
 
             //기존 이미지 삭제 후 새 이미지 업로드
             if (mateImage != null && !mateImage.isEmpty()) {
@@ -136,6 +111,54 @@ public class MateServiceImpl implements MateService {
             throw new UserNotFoundException("사용자를 찾을 수 없습니다.");
         }
 
+    }
+
+    @Override
+    public MateDetailResponse createAppMate(MateCreateRequest request, MultipartFile mateImage) {
+        // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
+        UserEntity user = userService.getCurrentUser();
+
+        if(request.getCapacity() > 5){
+            throw new MateCapacityExceededException("최대 수용 인원 초과입니다.");
+        }
+
+        try {
+            userService.findById(user.getId());
+
+
+            Long storeId = (request.getStoreId() != null) ? request.getStoreId() : null;
+
+            Mate  mate = mateRepository.save(
+                        Mate.builder()
+                                .userId(user.getId())
+                                .storeId(storeId)
+                                .mateCategoryId(request.getMateCategoryId())
+                                .title(request.getTitle())
+                                .content(request.getContent())
+                                .capacity(request.getCapacity())
+                                .currentMemberCount(1L)
+                                .recruitYn(Boolean.TRUE.equals(request.getRecruitYn()))
+                                .updatedAt(null)
+                                .build()
+                );
+
+
+            //기존 이미지 삭제 후 새 이미지 업로드
+            if (mateImage != null && !mateImage.isEmpty()) {
+                String folder = "mate/" + mate.getMateId();
+                imageService.uploadAndSaveImage(mateImage, ImageType.MATE, mate.getMateId(), folder);
+            }
+
+            //디저트 메이트 mateId를 가진 member 데이터 생성
+            mateMemberService.addCreatorAsMember(mate.getMateUuid(), user.getId());
+
+            eventPublisher.publishEvent(new MateActionEvent(storeId, mate.getMateId(), user.getUserUuid(), DessertMateAction.CREATE));
+
+            return getMateDetail(mate.getMateUuid());
+
+        }catch (BusinessException e) {
+            throw new UserNotFoundException("사용자를 찾을 수 없습니다.");
+        }
     }
 
 
