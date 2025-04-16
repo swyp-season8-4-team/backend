@@ -23,9 +23,6 @@ public class MateAppReplyResponse {
     @Schema(description = "디저트메이트 댓글 id", example = "2")
     private Long mateReplyId;
 
-    @NotBlank
-    @Schema(description = "디저트메이트 uuid", example = "3037ab04-195e-48d1-83e2-e005899fc74d")
-    private UUID mateUuid;
 
     @Schema(description = "디저트메이트 상위 댓글 id(앱전용)", example = "3")
     private Long parentMateReplyId;
@@ -59,6 +56,10 @@ public class MateAppReplyResponse {
     private LocalDateTime updatedAt;
 
 
+    @Schema(description = "댓글 삭제 날짜", example = "2025-03-10 02:44")
+    private LocalDateTime deletedAt;
+
+
     @Schema(description = "대댓글 리스트 (자식 댓글)", implementation = MateAppReplyResponse.class)
     private List<MateAppReplyResponse> children;
 
@@ -72,7 +73,6 @@ public class MateAppReplyResponse {
 
         return MateAppReplyResponse.builder()
                 .mateReplyId(reply.getMateReplyId())
-                .mateUuid(mateUuid)
                 .nickname(user.getNickname())
                 .parentMateReplyId(reply.getParentMateReplyId())
                 .gender(user.getGender())
@@ -82,6 +82,7 @@ public class MateAppReplyResponse {
                 .children(children)
                 .createdAt(reply.getCreatedAt())
                 .updatedAt(reply.getUpdatedAt())
+                .deletedAt(reply.getDeletedAt())
                 .build();
 
     }

@@ -138,8 +138,11 @@ public class MateReplyServiceImpl implements MateReplyService {
 
     }
 
+    /**
+     * 디저트메이트 댓글 조회(한개만)(앱)
+     * */
     public MateAppReplyResponse getAppReplyDetail(UUID mateUuid, Long mateReplyId) {
-        MateReply reply = mateReplyRepository.findByMateReplyIdAndDeletedAtIsNull(mateReplyId)
+        MateReply reply = mateReplyRepository.findByMateReplyId(mateReplyId)
                 .orElseThrow(() -> new MateReplyNotFoundException("댓글이 존재하지 않습니다."));
 
         UserEntity user = userService.findById(reply.getUserId());
@@ -148,7 +151,7 @@ public class MateReplyServiceImpl implements MateReplyService {
         String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, user.getId());
 
         // 자식 대댓글 조회
-        List<MateReply> childReplies = mateReplyRepository.findByParentMateReplyIdAndDeletedAtIsNull(reply.getMateReplyId());
+        List<MateReply> childReplies = mateReplyRepository.findByParentMateReplyId(reply.getMateReplyId());
 
         List<MateAppReplyResponse> children = childReplies.stream()
                 .map(child -> getAppReplyDetail(mateUuid, child.getMateReplyId()))
@@ -195,7 +198,8 @@ public class MateReplyServiceImpl implements MateReplyService {
         Long mateId = mateUserIds.getMateId();
 
 
-        Page<MateReply> repliesPage = mateReplyRepository.findAllByDeletedAtIsNull(mateId, pageable);
+        Page<MateReply> repliesPage = mateReplyRepository.findAllByMateId(mateId, pageable);
+
 
         // 최상위 댓글만 필터링 (parentMateReplyId == null)
         List<MateAppReplyResponse> repliesResponse = repliesPage.getContent()
@@ -207,7 +211,7 @@ public class MateReplyServiceImpl implements MateReplyService {
         boolean isLast = repliesPage.isLast();
         Long count = repliesPage.getTotalElements();
 
-        return new MateAppReplyPageResponse(repliesResponse, isLast, count);
+        return new MateAppReplyPageResponse(mateUuid, repliesResponse, isLast, count);
     }
 
 
