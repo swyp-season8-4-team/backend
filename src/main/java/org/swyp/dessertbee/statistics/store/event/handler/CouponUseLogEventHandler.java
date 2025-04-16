@@ -23,16 +23,26 @@ public class CouponUseLogEventHandler {
     @Transactional
     public void handlCouponUseLogAction(CouponUseEvent event) {
         try {
+            boolean isDuplicate = couponUseLogRepository.existsByCouponUuidAndUserUuid(
+                    event.getCouponUuid(),
+                    event.getUserUuid()
+            );
+
+            if (isDuplicate) {
+                log.info("[쿠폰 로그] 중복 사용 감지 - 저장 생략 (couponUuid={}, userUuid={})", event.getCouponUuid(), event.getUserUuid());
+                return;
+            }
+
             couponUseLogRepository.save(
                     CouponUseLog.builder()
                             .storeId(event.getStoreId())
                             .userUuid(event.getUserUuid())
                             .usedAt(LocalDateTime.now())
-                            .couponCode(event.getCouponCode())
+                            .couponUuid(event.getCouponUuid())
                             .build()
             );
         } catch (Exception e) {
-            log.warn("[쿠폰 사용 로그] 저장 실패: storeId={}, userUuid={}, couponCode={}", event.getStoreId(), event.getUserUuid(), event.getCouponCode(), e);
+            log.warn("[쿠폰 사용 로그] 저장 실패: storeId={}, userUuid={}, couponUuid={}", event.getStoreId(), event.getUserUuid(), event.getCouponUuid(), e);
             throw new CouponUseLogCreateFailedException();
         }
     }

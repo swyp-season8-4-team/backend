@@ -22,9 +22,9 @@ public class CouponUseLog {
 
     private Long storeId;
 
+    private UUID couponUuid;
+
     private UUID userUuid;
 
     private LocalDateTime usedAt;
-
-    private String couponCode; // todo: 쿠폰 식별자 역할 (미정)
 }
