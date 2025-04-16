@@ -9,11 +9,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.auth.entity.AuthEntity;
+import org.swyp.dessertbee.auth.repository.AuthRepository;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.preference.service.PreferenceService;
+import org.swyp.dessertbee.role.service.UserRoleService;
 import org.swyp.dessertbee.user.dto.response.UserDetailResponseDto;
 import org.swyp.dessertbee.user.dto.response.UserResponseDto;
 import org.swyp.dessertbee.user.dto.request.UserUpdateRequestDto;
@@ -39,7 +41,7 @@ public class UserServiceImpl implements UserService {
     private final MbtiRepository mbtiRepository;
     private final ImageService imageService;
     private final PreferenceService preferenceService;
-
+    private final UserRoleService userRoleService;
 
 
 
@@ -142,6 +144,7 @@ public class UserServiceImpl implements UserService {
         // 프로필 이미지 URL 조회
         List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
         String profileImageUrl = profileImages.isEmpty() ? null : profileImages.get(0);
+        List<String> roles = userRoleService.getUserRoles(user);
 
         return UserDetailResponseDto.detailBuilder()
                 .userUuid(user.getUserUuid().toString())
@@ -151,10 +154,11 @@ public class UserServiceImpl implements UserService {
                 .phoneNumber(user.getPhoneNumber())
                 .address(user.getAddress())
                 .gender(user.getGender())
-                .profileImage(profileImageUrl)  // imageId 대신 imageUrl 사용
+                .profileImage(profileImageUrl)
                 .preferences(preferenceService.convertToPreferenceIds(user.getUserPreferences()))
                 .mbti(user.getMbti() != null ? user.getMbti().getMbtiType() : null)
                 .isPreferencesSet(user.isPreferenceSetFlag())  // preferenceSetFlag 값을 사용
+                .roles(roles)
                 .build();
     }
 
@@ -217,6 +221,10 @@ public class UserServiceImpl implements UserService {
         // MBTI 업데이트
         if (updateRequest.getMbti() != null) {
             updateMbti(user, updateRequest.getMbti());
+        }
+
+        if (updateRequest.getRoles() != null) {
+            userRoleService.updateUserRoles(user, updateRequest.getRoles());
         }
 
         userRepository.save(user);

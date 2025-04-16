@@ -52,16 +52,26 @@ public class UserDetailResponseDto extends UserResponseDto {
     )
     private Boolean isPreferencesSet;  // 선호도 설정 여부
 
+    @Schema(
+            description = "사용자 역할 목록 (ROLE_USER/ROLE_OWNER)",
+            example = "[\"ROLE_OWNER\"]",
+            nullable = true,
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    )
+    private List<String> roles;
+
+
     @Builder(builderMethodName = "detailBuilder")
     public UserDetailResponseDto(String userUuid, String nickname, UserEntity.Gender gender,
                                  String profileImage, List<Long> preferences, String mbti,
                                  String email, String name, String phoneNumber, String address,
-                                 Boolean isPreferencesSet) {
+                                 Boolean isPreferencesSet, List<String> roles) {
         super(userUuid, nickname, gender, profileImage, preferences, mbti);
         this.email = email;
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.address = address;
         this.isPreferencesSet = isPreferencesSet;
+        this.roles = roles;
     }
 }
