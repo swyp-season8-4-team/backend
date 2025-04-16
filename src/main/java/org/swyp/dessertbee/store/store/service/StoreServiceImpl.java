@@ -122,14 +122,8 @@ public class StoreServiceImpl implements StoreService {
             storeStatisticsRepository.save(
                     StoreStatistics.builder()
                             .storeId(store.getStoreId())
-                            .views(0)
-                            .saves(0)
-                            .storeReviewCount(0)
-                            .communityReviewCount(0)
-                            .dessertMateCount(0)
-                            .couponUseCount(0)
+                            .statDate(LocalDate.now())
                             .averageRating(BigDecimal.ZERO)
-                            .createDate(store.getCreatedAt().toLocalDate())
                             .build()
             );
 
