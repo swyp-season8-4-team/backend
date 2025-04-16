@@ -15,7 +15,10 @@ import java.util.UUID;
 public interface MateService {
 
     /** 메이트 등록 */
-    MateDetailResponse createMate(MateCreateRequest request, MultipartFile mateImage, HttpServletRequest httpRequest);
+    MateDetailResponse createMate(MateCreateRequest request, MultipartFile mateImage);
+
+    /** 메이트 등록(앱)*/
+    MateDetailResponse createAppMate(MateCreateRequest request, MultipartFile mateImage);
 
     /** 메이트 상세 정보 */
     MateDetailResponse getMateDetail(UUID mateUuid);
@@ -27,7 +30,7 @@ public interface MateService {
     void updateMate(UUID mateUuid, MateCreateRequest request, MultipartFile mateImage);
 
     /** 디저트메이트 전체 조회 */
-    MatesPageResponse getMates(Pageable pageable, String keyword, Long mateCategoryId);
+    MatesPageResponse getMates(Pageable pageable, String keyword, Long mateCategoryId, Boolean recruitYn);
 
     /** 내가 참여한 디저트메이트 조회 */
     MatesPageResponse getMyMates(Pageable pageable);

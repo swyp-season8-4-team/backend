@@ -1,10 +1,8 @@
 package org.swyp.dessertbee.community.mate.dto.response;
 
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jdk.jfr.Name;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,15 +16,13 @@ import java.util.UUID;
 @Data
 @Builder
 @AllArgsConstructor
-public class MateReplyResponse {
+public class MateAppReplyResponse {
+
 
     @NotBlank
     @Schema(description = "디저트메이트 댓글 id", example = "2")
     private Long mateReplyId;
 
-    @NotBlank
-    @Schema(description = "디저트메이트 uuid", example = "3037ab04-195e-48d1-83e2-e005899fc74d")
-    private UUID mateUuid;
 
     @Schema(description = "디저트메이트 상위 댓글 id(앱전용)", example = "3")
     private Long parentMateReplyId;
@@ -60,23 +56,32 @@ public class MateReplyResponse {
     private LocalDateTime updatedAt;
 
 
-    public static MateReplyResponse fromEntity(MateReply reply,
-                                               UUID mateUuid,
-                                               UserEntity user,
-                                               String profileImage
-                                               ) {
+    @Schema(description = "댓글 삭제 날짜", example = "2025-03-10 02:44")
+    private LocalDateTime deletedAt;
 
-        return MateReplyResponse.builder()
+
+    @Schema(description = "대댓글 리스트 (자식 댓글)", implementation = MateAppReplyResponse.class)
+    private List<MateAppReplyResponse> children;
+
+
+    public static MateAppReplyResponse fromEntity(MateReply reply,
+                                                  UserEntity user,
+                                                  String profileImage,
+                                                  List<MateAppReplyResponse> children
+    ) {
+
+        return MateAppReplyResponse.builder()
                 .mateReplyId(reply.getMateReplyId())
-                .mateUuid(mateUuid)
                 .nickname(user.getNickname())
                 .parentMateReplyId(reply.getParentMateReplyId())
                 .gender(user.getGender())
                 .userUuid(user.getUserUuid())
                 .content(reply.getContent())
                 .profileImage(profileImage)
+                .children(children)
                 .createdAt(reply.getCreatedAt())
                 .updatedAt(reply.getUpdatedAt())
+                .deletedAt(reply.getDeletedAt())
                 .build();
 
     }

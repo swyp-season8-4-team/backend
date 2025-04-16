@@ -181,14 +181,14 @@ public class MateExceptions {
     /**
      * 디저트메이트 댓글 신고되지 않은 예외
      * */
-    public static class MateReplyNotRepotedException extends BusinessException {
+    public static class MateReplyNotReportedException extends BusinessException {
 
-        public MateReplyNotRepotedException()
+        public MateReplyNotReportedException()
         {
             super(ErrorCode.MATE_REPLY_NOT_REPORTED);
         }
 
-        public MateReplyNotRepotedException(String message) {
+        public MateReplyNotReportedException(String message) {
             super(ErrorCode.MATE_REPLY_NOT_REPORTED, message);
         }
     }
@@ -205,5 +205,20 @@ public class MateExceptions {
         public MateCapacityExceededException(String message) {
          super(ErrorCode.MATE_CAPACITY_EXCEEDED, message);
         }
+    }
+
+    /**
+     * 디저트메이트 대댓글 제한 예외처리
+     * */
+    public static class InvalidReplyDepthException extends BusinessException {
+
+        public InvalidReplyDepthException(){
+            super(ErrorCode.INVALID_REPLY_DEPTH);
+        }
+
+        public InvalidReplyDepthException(String message) {
+            super(ErrorCode.INVALID_REPLY_DEPTH, message);
+        }
+
     }
 }
