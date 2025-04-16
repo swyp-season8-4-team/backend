@@ -77,6 +77,9 @@ public class MateReplyServiceImpl implements MateReplyService {
     }
 
 
+    /**
+     * 디저트메이트 댓글 생성(앱)
+     * */
     @Override
     @Transactional
     public MateReplyResponse createAppReply(UUID mateUuid, MateAppReplyCreateRequest request){
@@ -85,6 +88,16 @@ public class MateReplyServiceImpl implements MateReplyService {
         MateUserIds mateUserIds = validateMateAndUser(mateUuid, request.getUserUuid());
         Long mateId = mateUserIds.getMateId();
         Long userId = mateUserIds.getUserId();
+
+        if (request.getParentMateReplyId() != null) {
+            MateReply parentReply = mateReplyRepository.findById(request.getParentMateReplyId())
+                    .orElseThrow(() -> new MateReplyNotFoundException("부모 댓글이 존재하지 않습니다."));
+
+            // 부모 댓글이 이미 대댓글이면 예외
+            if (parentReply.getParentMateReplyId() != null) {
+                throw new InvalidReplyDepthException("대댓글에는 댓글을 달 수 없습니다.");
+            }
+        }
 
             MateReply mateReply = replyRepository.save(
                     MateReply.builder()
@@ -180,6 +193,7 @@ public class MateReplyServiceImpl implements MateReplyService {
 
         MateUserIds mateUserIds = validateMate(mateUuid);
         Long mateId = mateUserIds.getMateId();
+
 
         Page<MateReply> repliesPage = mateReplyRepository.findAllByDeletedAtIsNull(mateId, pageable);
 
@@ -373,11 +387,11 @@ public class MateReplyServiceImpl implements MateReplyService {
     public void deleteReportedMateReply(Long mateReplyId) {
         boolean isReported = mateReportRepository.existsByMateReplyId(mateReplyId);
         if (!isReported) {
-            throw new MateReplyNotRepotedException("신고되지 않은 디저트메이트 댓글입니다.");
+            throw new MateReplyNotReportedException("신고되지 않은 디저트메이트 댓글입니다.");
         }
 
         MateReply mateReply = mateReplyRepository.findByMateReplyIdAndDeletedAtIsNull(mateReplyId)
-                .orElseThrow(() ->  new MateReplyNotRepotedException("신고되지 않은 디저트메이트 댓글입니다."));
+                .orElseThrow(() ->  new MateReplyNotReportedException("신고되지 않은 디저트메이트 댓글입니다."));
 
         mateReply.softDelete();
         mateReplyRepository.save(mateReply);

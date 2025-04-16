@@ -96,6 +96,9 @@ public class MateReplyController {
 
     }
 
+    /**
+     * 디저트메이트 댓글 전체 조회(앱)
+     * */
     @Operation(summary = "[App]메이트 댓글 전체 조회(completed)", description = "디저트메이트의 댓글 전체 조회합니다.")
     @ApiResponses(@ApiResponse(responseCode = "200", description = "디저트메이트 댓글 전체 조회 성공"))
     @ApiErrorResponses({ErrorCode.INVALID_RANGE})
