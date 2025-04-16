@@ -183,6 +183,18 @@ public class UserRoleService {
                     "ADMIN 권한은 부여할 수 없습니다.");
         }
 
+        // 사장 권한 부여 시도 여부 확인
+        boolean attemptToGrantOwner = roleNames.stream()
+                .anyMatch(role -> role.equals("ROLE_OWNER"));
+
+        // 사장 권한 부여 시 이름과 전화번호 유효성 검증
+        if (attemptToGrantOwner) {
+            if (user.getName() == null || user.getName().trim().isEmpty() ||
+                    user.getPhoneNumber() == null || user.getPhoneNumber().trim().isEmpty()) {
+                throw new BusinessException(ErrorCode.OWNER_ROLE_MISSING_INFO);
+            }
+        }
+
         // 현재 사용자가 이미 ADMIN 권한을 가지고 있는지 확인
         boolean hasAdminRole = hasUserRole(user, RoleType.ROLE_ADMIN);
 
