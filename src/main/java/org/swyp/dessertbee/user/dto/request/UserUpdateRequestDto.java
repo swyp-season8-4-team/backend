@@ -74,7 +74,7 @@ public class UserUpdateRequestDto {
 
     @Schema(
             description = "사용자 역할 목록 (ROLE_USER/ROLE_OWNER)",
-            example = "[\"ROLE_OWNER\"]",
+            example = "[\"ROLE_OWNER\", \"ROLE_USER\"]",
             nullable = true,
             requiredMode = Schema.RequiredMode.NOT_REQUIRED
     )
