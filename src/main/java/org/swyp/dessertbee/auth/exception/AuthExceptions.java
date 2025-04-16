@@ -48,19 +48,6 @@ public class AuthExceptions {
     }
 
     /**
-     * 인증 토큰 만료 예외
-     */
-    public static class ExpiredVerificationTokenException extends BusinessException {
-        public ExpiredVerificationTokenException() {
-            super(ErrorCode.EXPIRED_VERIFICATION_TOKEN);
-        }
-
-        public ExpiredVerificationTokenException(String message) {
-            super(ErrorCode.EXPIRED_VERIFICATION_TOKEN, message);
-        }
-    }
-
-    /**
      * 비밀번호 불일치 예외
      */
     public static class PasswordMismatchException extends BusinessException {

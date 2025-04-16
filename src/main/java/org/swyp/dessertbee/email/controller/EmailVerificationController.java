@@ -68,7 +68,7 @@ public class EmailVerificationController {
     )
     @ApiErrorResponses({
             ErrorCode.INVALID_VERIFICATION_TOKEN,
-            ErrorCode.EXPIRED_VERIFICATION_TOKEN,
+            ErrorCode.EXPIRED_EMAIL_VERIFICATION_CODE,
             ErrorCode.INTERNAL_SERVER_ERROR
     })
     @PostMapping("/verify")

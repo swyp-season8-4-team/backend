@@ -213,12 +213,6 @@ public class TokenService {
                 throw new JwtTokenException(ErrorCode.INVALID_VERIFICATION_TOKEN, "유효하지 않은 리프레시 토큰입니다.");
             }
 
-            // 리프레시 토큰 만료 여부 KST 기준으로 확인
-            if (auth.getRefreshTokenExpiresAt().isBefore(LocalDateTime.now(KST))) {
-                log.warn("리프레시 토큰 검증 실패 - 만료된 토큰: {}, 디바이스: {}", email, deviceId);
-                throw new JwtTokenException(ErrorCode.EXPIRED_VERIFICATION_TOKEN, "리프레시 토큰이 만료되었습니다.");
-            }
-
             // 새로운 Access Token 생성
             List<String> roles = user.getUserRoles().stream()
                     .map(userRole -> userRole.getRole().getName().getRoleName())

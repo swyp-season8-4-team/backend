@@ -96,7 +96,7 @@ public class UserController {
                     schema = @Schema(implementation = UserDetailResponseDto.class)
             )
     )
-    @ApiErrorResponses({ErrorCode.UNAUTHORIZED_ACCESS, ErrorCode.INVALID_INPUT_VALUE, ErrorCode.DUPLICATE_NICKNAME})
+    @ApiErrorResponses({ErrorCode.UNAUTHORIZED_ACCESS, ErrorCode.INVALID_INPUT_VALUE, ErrorCode.DUPLICATE_NICKNAME, ErrorCode.FORBIDDEN_OPERATION})
     @PatchMapping(value="/me")
     public ResponseEntity<UserDetailResponseDto> updateMyInfo(@RequestBody @Valid UserUpdateRequestDto updateRequest) {
 
