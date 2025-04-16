@@ -157,7 +157,7 @@ public class MateReplyServiceImpl implements MateReplyService {
                 .map(child -> getAppReplyDetail(mateUuid, child.getMateReplyId()))
                 .collect(Collectors.toList());
 
-        return MateAppReplyResponse.fromEntity(reply, mateUuid, user, profileImage, children);
+        return MateAppReplyResponse.fromEntity(reply, user, profileImage, children);
     }
 
 

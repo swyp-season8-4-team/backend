@@ -65,10 +65,9 @@ public class MateAppReplyResponse {
 
 
     public static MateAppReplyResponse fromEntity(MateReply reply,
-                                               UUID mateUuid,
-                                               UserEntity user,
-                                               String profileImage,
-                                               List<MateAppReplyResponse> children
+                                                  UserEntity user,
+                                                  String profileImage,
+                                                  List<MateAppReplyResponse> children
     ) {
 
         return MateAppReplyResponse.builder()
