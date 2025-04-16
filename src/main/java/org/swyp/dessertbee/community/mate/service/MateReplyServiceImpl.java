@@ -141,6 +141,7 @@ public class MateReplyServiceImpl implements MateReplyService {
     /**
      * 디저트메이트 댓글 조회(한개만)(앱)
      * */
+    @Override
     public MateAppReplyResponse getAppReplyDetail(UUID mateUuid, Long mateReplyId) {
         MateReply reply = mateReplyRepository.findByMateReplyId(mateReplyId)
                 .orElseThrow(() -> new MateReplyNotFoundException("댓글이 존재하지 않습니다."));
