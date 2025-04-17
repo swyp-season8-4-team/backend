@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.swyp.dessertbee.statistics.store.entity.enums.PeriodType;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -37,8 +38,9 @@ public class StoreStatisticsSummary {
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String periodType; // WEEK, MONTH, CUSTOM
+    private PeriodType periodType; // WEEK, MONTH, CUSTOM
 
     private Integer totalViews;
     private Integer totalSaves;

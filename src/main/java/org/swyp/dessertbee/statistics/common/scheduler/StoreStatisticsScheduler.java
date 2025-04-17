@@ -6,6 +6,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.statistics.store.entity.StoreStatistics;
+import org.swyp.dessertbee.statistics.store.entity.enums.PeriodType;
 import org.swyp.dessertbee.statistics.store.repostiory.StoreStatisticsRepository;
 import org.swyp.dessertbee.statistics.store.repostiory.StoreStatisticsSummaryRepository;
 
@@ -41,15 +42,15 @@ public class StoreStatisticsScheduler {
             LocalDate targetDate = today.minusDays(1);
 
             // 주간
-            summarizePeriod(storeId, targetDate.minusDays(6), targetDate, "WEEK");
+            summarizePeriod(storeId, targetDate.minusDays(6), targetDate, PeriodType.WEEK);
             // 월간
-            summarizePeriod(storeId, targetDate.minusDays(29), targetDate, "MONTH");
+            summarizePeriod(storeId, targetDate.minusDays(29), targetDate, PeriodType.MONTH);
         }
 
         log.info("[통계 요약] 집계 완료");
     }
 
-    private void summarizePeriod(Long storeId, LocalDate startDate, LocalDate endDate, String periodType) {
+    private void summarizePeriod(Long storeId, LocalDate startDate, LocalDate endDate, PeriodType periodType) {
         List<StoreStatistics> stats = statisticsRepository
                 .findByStoreIdAndDeletedAtIsNullAndStatDateBetweenOrderByStatDateAsc(storeId, startDate, endDate);
 
@@ -57,7 +58,7 @@ public class StoreStatisticsScheduler {
 
         summaryRepository.upsertSummary(
                 storeId,
-                periodType,
+                periodType.name(),
                 startDate,
                 endDate,
                 stats.stream().mapToInt(StoreStatistics::getViews).sum(),
