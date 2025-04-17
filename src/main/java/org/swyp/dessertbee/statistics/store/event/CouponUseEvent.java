@@ -10,5 +10,5 @@ import java.util.UUID;
 public class CouponUseEvent {
     private final Long storeId;
     private final UUID userUuid;
-    private final String couponCode;
+    private final UUID couponUuid;
 }
