@@ -140,13 +140,12 @@ public class CouponServiceImpl implements CouponService {
     /**
      * 생성한 쿠폰 조회
      */
-    public List<CouponResponse> getAllCoupons() {
-        return couponRepository.findAllByOrderByCreatedAtDesc()
+    public List<CouponResponse> getCouponsByStore(Store store) {
+        return couponRepository.findAllByStoreOrderByCreatedAtAsc(store)
                 .stream()
                 .map(CouponResponse::from)
                 .collect(Collectors.toList());
     }
-
     //----------------------validate---------------
 
     /**
