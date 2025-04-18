@@ -7,7 +7,9 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.swyp.dessertbee.store.coupon.entity.Coupon;
 import org.swyp.dessertbee.store.coupon.entity.enums.CouponStatus;
+import org.swyp.dessertbee.store.store.entity.Store;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,5 +24,7 @@ public interface CouponRepository extends JpaRepository<Coupon, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT c FROM Coupon c WHERE c.couponUuid = :couponUuid")
     Optional<Coupon> findByCouponUuidForUpdate(@Param("couponUuid") UUID couponUuid);
+
+    List<Coupon> findAllByStoreOrderByCreatedAtAsc(Store store);
 
 }

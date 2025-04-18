@@ -24,6 +24,7 @@ import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @Tag(name = "Coupon", description = "가게 쿠폰 관련 API")
@@ -119,12 +120,15 @@ public class CouponController {
     /**
      * 생성한 쿠폰 조회
      */
-    @Operation(summary = "생성한 쿠폰 조회", description = "가게가 생성한 모든 쿠폰을 조회합니다.")
+    @Operation(summary = "생성한 쿠폰 조회 (completed)", description = "가게가 생성한 모든 쿠폰을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "쿠폰 조회 성공", content = @Content(array = @ArraySchema(schema = @Schema(implementation = CouponResponse.class))))
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
-    @GetMapping("/all")
-    public ResponseEntity<List<CouponResponse>> getAllCoupons() {
-        return ResponseEntity.ok(couponServiceImpl.getAllCoupons());
+    @GetMapping("/{storeUuid}")
+    public ResponseEntity<List<CouponResponse>> getCouponsByStore(
+            @PathVariable UUID storeUuid
+    ) {
+        List<CouponResponse> coupons = couponServiceImpl.getCouponsByStore(storeUuid);
+        return ResponseEntity.ok(coupons);
     }
 
     /**
