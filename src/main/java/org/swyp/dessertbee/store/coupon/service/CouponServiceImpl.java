@@ -18,9 +18,11 @@ import org.swyp.dessertbee.store.coupon.entity.enums.CouponStatus;
 import org.swyp.dessertbee.store.coupon.entity.enums.CouponType;
 import org.swyp.dessertbee.store.coupon.repository.CouponRepository;
 import org.swyp.dessertbee.store.store.entity.Store;
+import org.swyp.dessertbee.store.store.repository.StoreRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -30,6 +32,7 @@ import java.util.stream.Collectors;
 public class CouponServiceImpl implements CouponService {
 
     private final CouponRepository couponRepository;
+    private final StoreRepository storeRepository;
 
     /**
      * 쿠폰 생성
@@ -140,7 +143,10 @@ public class CouponServiceImpl implements CouponService {
     /**
      * 생성한 쿠폰 조회
      */
-    public List<CouponResponse> getCouponsByStore(Store store) {
+    public List<CouponResponse> getCouponsByStore(UUID storeUuid) {
+        Store store = storeRepository.findByStoreUuid(storeUuid)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
+
         return couponRepository.findAllByStoreOrderByCreatedAtAsc(store)
                 .stream()
                 .map(CouponResponse::from)

@@ -18,5 +18,5 @@ public interface CouponService {
     CouponResponse createCoupon(CouponRequest request, Store store);
     CouponResponse updateCoupon(Long couponId, CouponRequest request, Store store);
     void deleteCoupon(Long couponId);
-    List<CouponResponse> getCouponsByStore(Store store);
+    List<CouponResponse> getCouponsByStore(UUID storeUuid);
 }

@@ -127,9 +127,7 @@ public class CouponController {
     public ResponseEntity<List<CouponResponse>> getCouponsByStore(
             @PathVariable UUID storeUuid
     ) {
-        Store store = storeRepository.findByStoreUuid(storeUuid)
-                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
-        List<CouponResponse> coupons = couponServiceImpl.getCouponsByStore(store);
+        List<CouponResponse> coupons = couponServiceImpl.getCouponsByStore(storeUuid);
         return ResponseEntity.ok(coupons);
     }
 
