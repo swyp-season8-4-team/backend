@@ -29,6 +29,8 @@ spring:
     redis:
       host: localhost
       port: ${SPRING_DATA_REDIS_PORT}
+  elasticsearch:
+    uris: http://localhost:9200
 app:
   client:
     redirect-url: "http://localhost:3000"
@@ -42,5 +44,12 @@ logging:
         orm:
           jdbc:
             bind: trace
+      springframework:
+        data:
+          elasticsearch:
+            client: debug
+      co:
+        elastic:
+          clients: debug
     com:
       dessertbee: debug
