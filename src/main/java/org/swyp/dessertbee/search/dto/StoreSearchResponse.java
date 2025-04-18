@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.store.store.dto.response;
+package org.swyp.dessertbee.search.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;

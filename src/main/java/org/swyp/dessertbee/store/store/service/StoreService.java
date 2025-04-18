@@ -1,7 +1,7 @@
 package org.swyp.dessertbee.store.store.service;
 
 import org.springframework.web.multipart.MultipartFile;
-import org.swyp.dessertbee.store.store.dto.response.StoreSearchResponse;
+import org.swyp.dessertbee.search.dto.StoreSearchResponse;
 import org.swyp.dessertbee.store.store.dto.request.StoreCreateRequest;
 import org.swyp.dessertbee.store.store.dto.request.StoreUpdateRequest;
 import org.swyp.dessertbee.store.store.dto.response.*;

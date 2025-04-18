@@ -14,7 +14,7 @@ import org.swyp.dessertbee.preference.exception.PreferenceExceptions.*;
 import org.swyp.dessertbee.search.exception.SearchExceptions.*;
 import org.swyp.dessertbee.search.doc.StoreDocument;
 import org.swyp.dessertbee.search.service.StoreSearchService;
-import org.swyp.dessertbee.store.store.dto.response.StoreSearchResponse;
+import org.swyp.dessertbee.search.dto.StoreSearchResponse;
 import org.swyp.dessertbee.statistics.store.entity.StoreStatistics;
 import org.swyp.dessertbee.statistics.store.event.StoreViewEvent;
 import org.swyp.dessertbee.statistics.store.repostiory.StoreStatisticsRepository;

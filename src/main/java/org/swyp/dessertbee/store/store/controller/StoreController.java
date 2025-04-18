@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
 import org.swyp.dessertbee.common.exception.ErrorCode;
-import org.swyp.dessertbee.store.store.dto.response.StoreSearchResponse;
-import org.swyp.dessertbee.search.exception.SearchExceptions;
+import org.swyp.dessertbee.search.dto.StoreSearchResponse;
+import org.swyp.dessertbee.search.dto.StoreSearchWrapperResponse;
 import org.swyp.dessertbee.search.service.SearchService;
 import org.swyp.dessertbee.store.store.dto.request.StoreCreateRequest;
 import org.swyp.dessertbee.store.store.dto.request.StoreUpdateRequest;
@@ -152,18 +152,18 @@ public class StoreController {
 
     /** 검색어 기반 가게 검색 */
     @Operation(
-            summary = "검색어 기반 가게 검색 - APP 전용 (completed)",
+            summary = "검색어 기반 가게 검색 - ⚠️ APP 전용 (completed)",
             description = """
         검색어(searchKeyword)를 기준으로 가게 목록을 검색합니다.
         검색어는 URL 인코딩되어야 하며, 예: '케이크' → %EC%BC%80%EC%9D%B4%ED%81%AC
         검색된 결과는 앱 내 추천 기능에 사용될 수 있습니다.
-        헤더에 'Platform-Type: app'이 반드시 포함되어야 합니다.
+        ⚠️ 이 API는 Platform-Type: app 헤더가 필요합니다. (전역 헤더에 자동 포함됨)
         """
     )
     @ApiResponse(
             responseCode = "200",
             description = "검색어 기반 가게 검색 성공",
-            content = @Content(array = @ArraySchema(schema = @Schema(implementation = StoreSearchResponse.class)))
+            content = @Content(schema = @Schema(implementation = StoreSearchWrapperResponse.class))
     )
     @ApiErrorResponses({
             ErrorCode.INVALID_PLATFORM_VALUE,
@@ -174,16 +174,7 @@ public class StoreController {
             ErrorCode.ELASTICSEARCH_COMMUNICATION_FAILED
     })
     @GetMapping("/search")
-    public List<StoreSearchResponse> searchStores(
-            @Parameter(description = "플랫폼 구분자. 'app'만 허용됨", example = "app", required = true)
-            @RequestHeader("Platform-Type") String platformType,
-
-            @Parameter(description = "검색어 (URL 인코딩 필수)", example = "%EC%BC%80%EC%9D%B4%ED%81%AC", required = true)
-            @RequestParam String searchKeyword) {
-
-        if (!"app".equalsIgnoreCase(platformType)) {
-            throw new SearchExceptions.InvalidPlatformException("해당 API를 실행하려면 'app'을 플랫폼 헤더로 지정해야합니다.");
-        }
+    public StoreSearchWrapperResponse searchStores(@RequestParam String searchKeyword) {
 
         searchKeyword = URLDecoder.decode(searchKeyword, StandardCharsets.UTF_8);
         searchKeyword = searchService.removeTrailingSpaces(searchKeyword);
@@ -194,7 +185,19 @@ public class StoreController {
         }
         searchService.savePopularSearch(searchKeyword);
 
-        return storeService.searchStores(searchKeyword);
+        List<StoreSearchResponse> searchResults = storeService.searchStores(searchKeyword);
+
+        if (searchResults.size() == 1) {
+            StoreSearchResponse result = searchResults.get(0);
+            StoreSummaryResponse summary = storeService.getStoreSummary(result.getStoreUuid());
+            return StoreSearchWrapperResponse.builder()
+                    .summary(summary)
+                    .build();
+        }
+
+        return StoreSearchWrapperResponse.builder()
+                .stores(searchResults)
+                .build();
     }
 
     /**
