@@ -32,9 +32,10 @@ public class StoreStatistics {
     @Schema(description = "가게 ID", example = "1001")
     private Long storeId;
 
+    @Builder.Default
     @Column(name = "stat_date", nullable = false)
     @Schema(description = "통계 집계 기준 날짜", example = "2025-04-17")
-    private LocalDate statDate;
+    private LocalDate statDate = LocalDate.now();
 
     @Builder.Default
     @Column(nullable = false)
