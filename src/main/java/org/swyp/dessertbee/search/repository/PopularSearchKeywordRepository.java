@@ -1,8 +1,8 @@
-package org.swyp.dessertbee.common.repository;
+package org.swyp.dessertbee.search.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import org.swyp.dessertbee.common.entity.PopularSearchKeyword;
+import org.swyp.dessertbee.search.entity.PopularSearchKeyword;
 
 import java.util.Optional;
 

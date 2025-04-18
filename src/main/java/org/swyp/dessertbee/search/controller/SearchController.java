@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.common.controller;
+package org.swyp.dessertbee.search.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -11,11 +11,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
-import org.swyp.dessertbee.common.dto.PopularSearchesList;
-import org.swyp.dessertbee.common.dto.UserSearchHistoryDto;
-import org.swyp.dessertbee.common.exception.SearchExceptions.*;
+import org.swyp.dessertbee.search.dto.PopularSearchesList;
+import org.swyp.dessertbee.search.dto.UserSearchHistoryDto;
+import org.swyp.dessertbee.search.exception.SearchExceptions.*;
 import org.swyp.dessertbee.common.exception.ErrorCode;
-import org.swyp.dessertbee.common.service.SearchService;
+import org.swyp.dessertbee.search.service.SearchService;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.service.UserService;
 

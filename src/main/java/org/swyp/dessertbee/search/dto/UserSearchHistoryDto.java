@@ -1,11 +1,11 @@
-package org.swyp.dessertbee.common.dto;
+package org.swyp.dessertbee.search.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.swyp.dessertbee.common.entity.UserSearchHistory;
+import org.swyp.dessertbee.search.entity.UserSearchHistory;
 
 import java.time.LocalDateTime;
 

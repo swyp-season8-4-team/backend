@@ -1,4 +1,7 @@
-package org.swyp.dessertbee.common.exception;
+package org.swyp.dessertbee.search.exception;
+
+import org.swyp.dessertbee.common.exception.BusinessException;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 
 /**
  * 가게 한줄리뷰 관련 예외 클래스들을 모아둔 클래스
@@ -106,6 +109,19 @@ public class SearchExceptions {
 
         public PopularInitFailedException(String message) {
             super(ErrorCode.POPULAR_KEYWORD_INIT_FAILED, message);
+        }
+    }
+
+    /**
+     * 인기 검색어 초기화 예외
+     */
+    public static class InvalidPlatformException extends BusinessException {
+        public InvalidPlatformException() {
+            super(ErrorCode.INVALID_PLATFORM_VALUE);
+        }
+
+        public InvalidPlatformException(String message) {
+            super(ErrorCode.INVALID_PLATFORM_VALUE, message);
         }
     }
 }

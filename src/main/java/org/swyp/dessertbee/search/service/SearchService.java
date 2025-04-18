@@ -1,7 +1,7 @@
-package org.swyp.dessertbee.common.service;
+package org.swyp.dessertbee.search.service;
 
-import org.swyp.dessertbee.common.dto.PopularSearchesList;
-import org.swyp.dessertbee.common.dto.UserSearchHistoryDto;
+import org.swyp.dessertbee.search.dto.PopularSearchesList;
+import org.swyp.dessertbee.search.dto.UserSearchHistoryDto;
 
 import java.util.List;
 
