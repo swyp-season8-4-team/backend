@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
+import org.swyp.dessertbee.search.service.StoreSearchService;
 import org.swyp.dessertbee.store.menu.exception.MenuExceptions.*;
 import org.swyp.dessertbee.store.store.exception.StoreExceptions.*;
 import org.swyp.dessertbee.common.service.ImageService;
@@ -30,6 +31,7 @@ public class MenuServiceImpl implements MenuService {
     private final MenuRepository menuRepository;
     private final ImageService imageService;
     private final StoreRepository storeRepository;
+    private final StoreSearchService storeSearchService;
 
     /** 파일명 재정의 */
     private MultipartFile renameFile(MultipartFile file, String menuName) {
@@ -96,6 +98,8 @@ public class MenuServiceImpl implements MenuService {
                     .description(request.getDescription())
                     .build();
             menuRepository.save(menu);
+
+            storeSearchService.indexStore(storeId);
 
             // 이미지 파일이 있는 경우 재정의된 파일명으로 업로드
             if (file != null) {
@@ -166,6 +170,8 @@ public class MenuServiceImpl implements MenuService {
 
             menu.update(request.getName(), request.getPrice(), request.getIsPopular(), request.getDescription());
 
+            storeSearchService.indexStore(storeId);
+
             if (file != null) {
                 MultipartFile renamedFile = renameFile(file, menu.getName());
                 imageService.updateImage(ImageType.MENU, menuId, renamedFile, "menu/" + menuId);
@@ -190,6 +196,7 @@ public class MenuServiceImpl implements MenuService {
 
             menu.softDelete();
             menuRepository.save(menu);
+            storeSearchService.indexStore(storeId);
             imageService.deleteImagesByRefId(ImageType.MENU, menuId);
         } catch (MenuDeleteFailedException e){
             log.warn("단일 메뉴 삭제 실패 - 가게 Uuid: {}, 메뉴 Uuid: {}, 사유: {}", storeUuid, menuUuid, e.getMessage());
