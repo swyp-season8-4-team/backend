@@ -1,6 +1,7 @@
 package org.swyp.dessertbee.store.store.service;
 
 import org.springframework.web.multipart.MultipartFile;
+import org.swyp.dessertbee.store.store.dto.response.StoreSearchResponse;
 import org.swyp.dessertbee.store.store.dto.request.StoreCreateRequest;
 import org.swyp.dessertbee.store.store.dto.request.StoreUpdateRequest;
 import org.swyp.dessertbee.store.store.dto.response.*;
@@ -31,6 +32,9 @@ public interface StoreService {
 
     /** 반경 내 사용자 취향 태그에 해당하는 가게 조회 */
     List<StoreMapResponse> getStoresByMyPreferences(Double lat, Double lng, Double radius);
+
+    /** 검색결과와 일치하는 전체 가게 조회 */
+    List<StoreSearchResponse> searchStores(String keyword);
 
     /** 가게 간략 정보 조회 */
     StoreSummaryResponse getStoreSummary(UUID storeUuid);

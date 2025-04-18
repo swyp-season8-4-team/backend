@@ -16,8 +16,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
 import org.swyp.dessertbee.common.exception.ErrorCode;
-import org.swyp.dessertbee.common.service.SearchService;
-import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
+import org.swyp.dessertbee.store.store.dto.response.StoreSearchResponse;
+import org.swyp.dessertbee.search.exception.SearchExceptions;
+import org.swyp.dessertbee.search.service.SearchService;
 import org.swyp.dessertbee.store.store.dto.request.StoreCreateRequest;
 import org.swyp.dessertbee.store.store.dto.request.StoreUpdateRequest;
 import org.swyp.dessertbee.store.store.dto.response.*;
@@ -66,7 +67,7 @@ public class StoreController {
     }
 
     /** 업주가 등록한 가게 조회 */
-    @Operation(summary = "업주 UUID로 등록된 가게 목록 조회", description = "ownerUuid에 해당하는 가게들의 ID, UUID, 이름 목록을 반환합니다.")
+    @Operation(summary = "업주 UUID로 등록된 가게 목록 조회 (completed)", description = "ownerUuid에 해당하는 가게들의 ID, UUID, 이름 목록을 반환합니다.")
     @ApiResponse(responseCode = "200", description = "업주가 등록한 가게 목록 조회 성공",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = StoreShortInfoResponse.class))))
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
@@ -86,7 +87,7 @@ public class StoreController {
 
         1. 기본 요청 (전체 가게 조회)
         2. preferenceTagIds로 필터링 (복수 개 가능, 예: preferenceTagIds=1&preferenceTagIds=2)
-        3. 검색어(searchKeyword) 기반 조회 (예: 검색어를 URL 인코딩해서 전달)
+        3. 검색어(searchKeyword) 기반 조회 - WEB 전용 (예: 검색어를 URL 인코딩해서 전달)
         """
     )
     @ApiResponse(
@@ -149,6 +150,52 @@ public class StoreController {
         }
     }
 
+    /** 검색어 기반 가게 검색 */
+    @Operation(
+            summary = "검색어 기반 가게 검색 - APP 전용 (completed)",
+            description = """
+        검색어(searchKeyword)를 기준으로 가게 목록을 검색합니다.
+        검색어는 URL 인코딩되어야 하며, 예: '케이크' → %EC%BC%80%EC%9D%B4%ED%81%AC
+        검색된 결과는 앱 내 추천 기능에 사용될 수 있습니다.
+        헤더에 'Platform-Type: app'이 반드시 포함되어야 합니다.
+        """
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "검색어 기반 가게 검색 성공",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = StoreSearchResponse.class)))
+    )
+    @ApiErrorResponses({
+            ErrorCode.INVALID_PLATFORM_VALUE,
+            ErrorCode.SEARCH_KEYWORD_NOT_FOUND,
+            ErrorCode.SEARCH_SERVICE_ERROR,
+            ErrorCode.RECENT_KEYWORD_CREATION_FAILED,
+            ErrorCode.POPULAR_KEYWORD_CREATION_FAILED
+    })
+    @GetMapping("/search")
+    public List<StoreSearchResponse> searchStores(
+            @Parameter(description = "플랫폼 구분자. 'app'만 허용됨", example = "app", required = true)
+            @RequestHeader("Platform-Type") String platformType,
+
+            @Parameter(description = "검색어 (URL 인코딩 필수)", example = "%EC%BC%80%EC%9D%B4%ED%81%AC", required = true)
+            @RequestParam String searchKeyword) {
+
+        if (!"app".equalsIgnoreCase(platformType)) {
+            throw new SearchExceptions.InvalidPlatformException("해당 API를 실행하려면 'app'을 플랫폼 헤더로 지정해야합니다.");
+        }
+
+        searchKeyword = URLDecoder.decode(searchKeyword, StandardCharsets.UTF_8);
+        searchKeyword = searchService.removeTrailingSpaces(searchKeyword);
+
+        UserEntity user = userService.getCurrentUser();
+        if (user != null) {
+            searchService.saveRecentSearch(user.getId(), searchKeyword);
+        }
+        searchService.savePopularSearch(searchKeyword);
+
+        return storeService.searchStores(searchKeyword);
+    }
+
     /**
      * 반경 내 가게 조회 (인증된 사용자의 취향 태그 기반)
      */
@@ -169,7 +216,7 @@ public class StoreController {
     }
 
     /** 가게 간략 정보 조회 */
-    @Operation(summary = "가게 간략 정보 조회", description = "가게의 간략한 정보를 조회합니다.")
+    @Operation(summary = "가게 간략 정보 조회 (completed)", description = "가게의 간략한 정보를 조회합니다.")
     @ApiResponse( responseCode = "200", description = "가게 간략 정보 조회 성공", content = @Content(schema = @Schema(implementation = StoreSummaryResponse.class)))
     @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR,
             ErrorCode.STORE_INFO_READ_FAILED})
@@ -179,7 +226,7 @@ public class StoreController {
     }
 
     /** 가게 상세 정보 조회 */
-    @Operation(summary = "가게 상세 정보 조회", description = "가게의 상세한 정보를 조회합니다.")
+    @Operation(summary = "가게 상세 정보 조회 (completed)", description = "가게의 상세한 정보를 조회합니다.")
     @ApiResponse( responseCode = "200", description = "가게 상세 정보 조회 성공", content = @Content(schema = @Schema(implementation = StoreDetailResponse.class)))
     @ApiErrorResponses({ErrorCode.STORE_NOT_FOUND, ErrorCode.STORE_SERVICE_ERROR,
             ErrorCode.STORE_INFO_READ_FAILED, ErrorCode.STORE_NOTICE_SERVICE_ERROR,
