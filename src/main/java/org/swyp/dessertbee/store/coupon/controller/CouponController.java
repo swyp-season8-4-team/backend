@@ -120,7 +120,7 @@ public class CouponController {
     /**
      * 생성한 쿠폰 조회
      */
-    @Operation(summary = "생성한 쿠폰 조회", description = "가게가 생성한 모든 쿠폰을 조회합니다.")
+    @Operation(summary = "생성한 쿠폰 조회 (completed)", description = "가게가 생성한 모든 쿠폰을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "쿠폰 조회 성공", content = @Content(array = @ArraySchema(schema = @Schema(implementation = CouponResponse.class))))
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @GetMapping("/{storeUuid}")
