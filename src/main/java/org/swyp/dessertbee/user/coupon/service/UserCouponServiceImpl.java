@@ -143,6 +143,12 @@ public class UserCouponServiceImpl implements UserCouponService {
         UserCoupon userCoupon = userCouponRepository.findByCouponCode(request.getCouponCode())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_COUPON_NOT_FOUND));
 
+        // 쿠폰이 속한 가게의 UUID와 요청한 storeUuid가 일치하는지 검증
+        UUID couponStoreUuid = userCoupon.getCoupon().getStore().getStoreUuid();
+        if (!couponStoreUuid.equals(request.getStoreUuid())) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS); // 혹은 적절한 에러코드 사용
+        }
+
         UserEntity user = userService.getCurrentUser();
 
         if (userCoupon.isUsed()) {
