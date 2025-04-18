@@ -14,6 +14,7 @@ public enum ErrorCode {
     // Common
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "C001", "잘못된 입력값입니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "C002", "서버 에러가 발생했습니다."),
+    INVALID_PLATFORM_VALUE(HttpStatus.BAD_REQUEST, "C003", "잘못된 플랫폼 헤더 입력값입니다."),
 
     // Auth
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "A001", "이미 등록된 이메일입니다."),
@@ -68,6 +69,7 @@ public enum ErrorCode {
     POPULAR_KEYWORD_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "K006", "인기 검색 기록 생성에 실패했습니다."),
     POPULAR_KEYWORD_SYNC_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "K007", "인기 검색 기록 동기화에 실패했습니다."),
     POPULAR_KEYWORD_INIT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "K008", "인기 검색 기록 초기화에 실패했습니다."),
+    ELASTICSEARCH_COMMUNICATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "K009", "Elasticsearch 통신 중 오류가 발생했습니다."),
 
     // Log
     MATE_LOG_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "L001", "디저트 메이트 로그 저장에 실패했습니다."),

@@ -124,4 +124,21 @@ public class SearchExceptions {
             super(ErrorCode.INVALID_PLATFORM_VALUE, message);
         }
     }
+
+    /**
+     * Elasticsearch 통신 오류 예외
+     */
+    public static class ElasticsearchCommunicationException extends BusinessException {
+        public ElasticsearchCommunicationException() {
+            super(ErrorCode.ELASTICSEARCH_COMMUNICATION_FAILED);
+        }
+
+        public ElasticsearchCommunicationException(String message) {
+            super(ErrorCode.ELASTICSEARCH_COMMUNICATION_FAILED, message);
+        }
+
+        public ElasticsearchCommunicationException(String message, Throwable cause) {
+            super(ErrorCode.ELASTICSEARCH_COMMUNICATION_FAILED, message, cause);
+        }
+    }
 }
