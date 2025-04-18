@@ -31,6 +31,7 @@ public class StoreSearchController {
                 """
     )
     @ApiResponse(responseCode = "200", description = "Elasticsearch 색인 마이그레이션 완료")
+    @ApiResponse(responseCode = "500", description = "Elasticsearch 색인 중 오류 발생 (IOException 또는 연결 실패)")
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_ADMIN')")
     @PostMapping("/migrate")
     public ResponseEntity<String> migrateAllStoresToElasticsearch() {
