@@ -10,10 +10,7 @@ import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.statistics.store.event.CouponUseEvent;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.user.coupon.dto.request.IssueCouponRequest;
-import org.swyp.dessertbee.user.coupon.dto.response.CouponUsageStatusResponse;
-import org.swyp.dessertbee.user.coupon.dto.response.IssuedCouponResponse;
-import org.swyp.dessertbee.user.coupon.dto.response.UsedCouponResponse;
-import org.swyp.dessertbee.user.coupon.dto.response.UserCouponDetailResponse;
+import org.swyp.dessertbee.user.coupon.dto.response.*;
 import org.swyp.dessertbee.store.coupon.entity.Coupon;
 import org.swyp.dessertbee.user.coupon.entity.UserCoupon;
 import org.swyp.dessertbee.store.coupon.repository.CouponRepository;
@@ -27,6 +24,7 @@ import org.swyp.dessertbee.user.service.UserService;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -197,4 +195,28 @@ public class UserCouponServiceImpl implements UserCouponService {
 
         return new CouponUsageStatusResponse(usedCount, unusedCount, expiredCount);
     }
+
+    /**
+     * 특정 가게에서 생성한 모든 쿠폰들에 대해 사용자가 발급받았는지 여부 조회
+     */
+    public List<CouponIssuedStatusResponse> getCouponIssuedStatusByStore(UUID storeUuid, UUID userUuid) {
+        // 가게의 모든 쿠폰 조회
+        List<Coupon> storeCoupons = couponRepository.findAllByStore_StoreUuid(storeUuid);
+
+        // 사용자가 발급받은 해당 가게 쿠폰 ID 목록 조회
+        List<Long> issuedCouponIds = userCouponRepository.findAllByUser_UserUuidAndCoupon_Store_StoreUuid(userUuid, storeUuid)
+                .stream()
+                .map(uc -> uc.getCoupon().getId())
+                .collect(Collectors.toList());
+
+
+        return storeCoupons.stream()
+                .map(coupon -> new CouponIssuedStatusResponse(
+                        coupon.getId(),
+                        coupon.getName(),
+                        issuedCouponIds.contains(coupon.getId())
+                ))
+                .collect(Collectors.toList());
+    }
+
 }

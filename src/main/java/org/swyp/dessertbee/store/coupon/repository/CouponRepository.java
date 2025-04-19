@@ -27,4 +27,5 @@ public interface CouponRepository extends JpaRepository<Coupon, Long> {
 
     List<Coupon> findAllByStoreOrderByCreatedAtAsc(Store store);
 
+    List<Coupon> findAllByStore_StoreUuid(UUID storeUuid);
 }
