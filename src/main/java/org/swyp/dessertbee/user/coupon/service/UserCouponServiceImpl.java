@@ -18,6 +18,7 @@ import org.swyp.dessertbee.user.coupon.dto.request.UseCouponRequest;
 import org.swyp.dessertbee.user.coupon.util.CouponCodeGenerator;
 import org.swyp.dessertbee.user.coupon.util.QRCodeGenerator;
 import org.swyp.dessertbee.user.entity.UserEntity;
+import org.swyp.dessertbee.user.service.UserService;
 
 import java.util.Base64;
 import java.util.List;
@@ -32,6 +33,7 @@ public class UserCouponServiceImpl implements UserCouponService {
     private final UserCouponRepository userCouponRepository;
     private final CouponRepository couponRepository;
     private final CouponCodeGenerator couponCodeGenerator;
+    private final UserService userService;
 
     /**
      * 쿠폰 발급
