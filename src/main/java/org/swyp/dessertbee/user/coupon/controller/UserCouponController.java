@@ -1,6 +1,8 @@
 package org.swyp.dessertbee.user.coupon.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,6 +14,7 @@ import org.swyp.dessertbee.auth.security.CustomUserDetails;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.user.coupon.dto.request.IssueCouponRequest;
+import org.swyp.dessertbee.user.coupon.dto.response.CouponIssuedStatusResponse;
 import org.swyp.dessertbee.user.coupon.dto.response.CouponUsageStatusResponse;
 import org.swyp.dessertbee.user.coupon.dto.response.IssuedCouponResponse;
 import org.swyp.dessertbee.user.coupon.dto.response.UserCouponDetailResponse;
@@ -95,7 +98,7 @@ public class UserCouponController {
             @ApiResponse(responseCode = "200", description = "쿠폰 사용 현황 조회 성공"),
             @ApiResponse(responseCode = "401", description = "인증 실패 시")
     })
-    @GetMapping("/coupon/usage-status")
+    @GetMapping("/coupons/usage-status")
     public ResponseEntity<CouponUsageStatusResponse> getCouponStatusCounts(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
@@ -104,4 +107,26 @@ public class UserCouponController {
         CouponUsageStatusResponse response = userCouponServiceImpl.getCouponUsageStats(userUuid);
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * 특정 가게에서 생성한 모든 쿠폰들에 대해 사용자가 발급받았는지 여부 조회
+     */
+    @Operation(
+            summary = "특정 가게의 쿠폰별 사용자 발급 여부 조회 (completed)",
+            description = "특정 가게에서 생성한 모든 쿠폰에 대해 로그인 사용자가 발급받았는지 여부를 리스트로 반환합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(schema = @Schema(implementation = CouponIssuedStatusResponse.class))),
+            @ApiResponse(responseCode = "401", description = "인증 실패 시")
+    })
+    @GetMapping("/coupons/{storeUuid}/issued")
+    public ResponseEntity<List<CouponIssuedStatusResponse>> getCouponIssuedStatusByStore(
+            @PathVariable UUID storeUuid,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        UUID userUuid = userDetails.getUserUuid();
+        List<CouponIssuedStatusResponse> result = userCouponServiceImpl.getCouponIssuedStatusByStore(storeUuid, userUuid);
+        return ResponseEntity.ok(result);
+    }
+
 }
