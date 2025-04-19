@@ -37,7 +37,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
      * @param nickname 사용자 닉네임
      * @return boolean
      */
-    @Query("SELECT COUNT(u) > 0 FROM UserEntity u WHERE u.nickname = :nickname AND u.deletedAt IS NULL")
+    @Query("SELECT COUNT(u) > 0 FROM UserEntity u WHERE u.nickname = :nickname")
     boolean existsByNickname(String nickname);
 
     /**
