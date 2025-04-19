@@ -7,6 +7,7 @@ import lombok.Getter;
 import org.swyp.dessertbee.store.coupon.entity.enums.CouponConditionType;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @Getter
@@ -36,4 +37,10 @@ public class UserCouponDetailResponse {
 
     @Schema(description = "만료 여부", example = "false", requiredMode = Schema.RequiredMode.REQUIRED)
     private boolean isExpired;
+
+    @Schema(description = "가게uuid", example = "41530807-7...", requiredMode = Schema.RequiredMode.REQUIRED)
+    private UUID storeUuid;
+
+    @Schema(description = "쿠폰uuid", example = "41530807-7...", requiredMode = Schema.RequiredMode.REQUIRED)
+    private UUID couponUuid;
 }

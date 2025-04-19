@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.statistics.store.event.CouponUseEvent;
+import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.user.coupon.dto.request.IssueCouponRequest;
 import org.swyp.dessertbee.user.coupon.dto.response.CouponUsageStatusResponse;
 import org.swyp.dessertbee.user.coupon.dto.response.IssuedCouponResponse;
@@ -121,6 +122,7 @@ public class UserCouponServiceImpl implements UserCouponService {
         }
 
         Coupon coupon = userCoupon.getCoupon();
+        Store store = coupon.getStore();
 
         return new UserCouponDetailResponse(
                 userCoupon.getId(),
@@ -130,7 +132,9 @@ public class UserCouponServiceImpl implements UserCouponService {
                 coupon.getExpiryDate(),
                 userCoupon.getCouponCode(),
                 coupon.getConditionType(),
-                userCoupon.isExpired()
+                userCoupon.isExpired(),
+                store.getStoreUuid(),
+                coupon.getCouponUuid()
         );
     }
 
