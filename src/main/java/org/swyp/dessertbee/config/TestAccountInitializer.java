@@ -80,9 +80,7 @@ public class TestAccountInitializer implements ApplicationRunner {
             UserEntity user = UserEntity.builder()
                     .email(email)
                     .password(passwordEncoder.encode(USER_PASSWORD))
-                    .name("테스트사용자")
                     .nickname("테스트유저")
-                    .phoneNumber("010-1234-5678")
                     .userUuid(UUID.randomUUID())
                     .build();
 
