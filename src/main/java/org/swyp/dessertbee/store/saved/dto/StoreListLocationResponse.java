@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.store.store.dto.response;
+package org.swyp.dessertbee.store.saved.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Data
 @AllArgsConstructor
@@ -22,6 +23,10 @@ public class StoreListLocationResponse {
     @NotNull
     @Schema(description = "가게 ID", example = "12")
     private Long storeId;
+
+    @NotNull
+    @Schema(description = "가게 UUID", example = "58fbeb5e-ff24-41e6-8460-301b1a424e53")
+    private UUID storeUuid;
 
     @NotBlank
     @Schema(description = "가게 이름", example = "디저트비 합정점")

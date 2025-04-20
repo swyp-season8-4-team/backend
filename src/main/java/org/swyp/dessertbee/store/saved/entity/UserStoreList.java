@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.store.store.entity;
+package org.swyp.dessertbee.store.saved.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

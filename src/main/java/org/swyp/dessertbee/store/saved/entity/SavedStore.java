@@ -1,8 +1,10 @@
-package org.swyp.dessertbee.store.store.entity;
+package org.swyp.dessertbee.store.saved.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.swyp.dessertbee.store.saved.entity.UserStoreList;
+import org.swyp.dessertbee.store.store.entity.Store;
 
 import java.time.LocalDateTime;
 import java.util.List;

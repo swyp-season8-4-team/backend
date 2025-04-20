@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.store.store.exception;
+package org.swyp.dessertbee.store.saved.exception;
 
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;

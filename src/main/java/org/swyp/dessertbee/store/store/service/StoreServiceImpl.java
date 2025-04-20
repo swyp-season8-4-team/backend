@@ -25,6 +25,8 @@ import org.swyp.dessertbee.store.notice.dto.response.StoreNoticeResponse;
 import org.swyp.dessertbee.store.notice.entity.StoreNotice;
 import org.swyp.dessertbee.store.notice.repository.StoreNoticeRepository;
 import org.swyp.dessertbee.store.notice.service.StoreNoticeService;
+import org.swyp.dessertbee.store.saved.entity.SavedStore;
+import org.swyp.dessertbee.store.saved.repository.SavedStoreRepository;
 import org.swyp.dessertbee.store.store.dto.request.BaseStoreRequest;
 import org.swyp.dessertbee.store.store.exception.StoreExceptions.*;
 import org.swyp.dessertbee.common.entity.ImageType;

@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.store.store.dto.response;
+package org.swyp.dessertbee.store.saved.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
