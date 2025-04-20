@@ -49,7 +49,7 @@ services:
     command: ["redis-server", "--appendonly", "yes"]
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.2
     container_name: desserbee-es
     environment:
       - discovery.type=single-node
