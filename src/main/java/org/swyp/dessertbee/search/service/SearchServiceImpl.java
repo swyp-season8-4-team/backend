@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.common.service;
+package org.swyp.dessertbee.search.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,14 +8,14 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.swyp.dessertbee.common.dto.PopularSearchResponse;
-import org.swyp.dessertbee.common.dto.PopularSearchesList;
-import org.swyp.dessertbee.common.dto.UserSearchHistoryDto;
-import org.swyp.dessertbee.common.exception.SearchExceptions.*;
-import org.swyp.dessertbee.common.entity.PopularSearchKeyword;
-import org.swyp.dessertbee.common.entity.UserSearchHistory;
-import org.swyp.dessertbee.common.repository.PopularSearchKeywordRepository;
-import org.swyp.dessertbee.common.repository.UserSearchHistoryRepository;
+import org.swyp.dessertbee.search.dto.PopularSearchResponse;
+import org.swyp.dessertbee.search.dto.PopularSearchesList;
+import org.swyp.dessertbee.search.dto.UserSearchHistoryDto;
+import org.swyp.dessertbee.search.exception.SearchExceptions.*;
+import org.swyp.dessertbee.search.entity.PopularSearchKeyword;
+import org.swyp.dessertbee.search.entity.UserSearchHistory;
+import org.swyp.dessertbee.search.repository.PopularSearchKeywordRepository;
+import org.swyp.dessertbee.search.repository.UserSearchHistoryRepository;
 
 import java.time.Duration;
 import java.time.Instant;

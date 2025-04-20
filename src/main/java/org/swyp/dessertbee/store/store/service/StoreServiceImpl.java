@@ -1,5 +1,8 @@
 package org.swyp.dessertbee.store.store.service;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.nimbusds.jose.util.Pair;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,6 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.preference.exception.PreferenceExceptions.*;
+import org.swyp.dessertbee.search.exception.SearchExceptions.*;
+import org.swyp.dessertbee.search.doc.StoreDocument;
+import org.swyp.dessertbee.search.service.StoreSearchService;
+import org.swyp.dessertbee.search.dto.StoreSearchResponse;
 import org.swyp.dessertbee.statistics.store.entity.StoreStatistics;
 import org.swyp.dessertbee.statistics.store.event.StoreViewEvent;
 import org.swyp.dessertbee.statistics.store.repostiory.StoreStatisticsRepository;
@@ -48,6 +55,7 @@ import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.user.service.UserService;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -87,6 +95,9 @@ public class StoreServiceImpl implements StoreService {
     private final StoreNoticeService storeNoticeService;
     private final ApplicationEventPublisher eventPublisher;
     private final StoreTopTagRepository storeTopTagRepository;
+    private final StoreSearchService storeSearchService;
+    private final ElasticsearchClient client;
+
 
     /** 가게 등록 (이벤트, 쿠폰, 메뉴 + 이미지 포함) */
     @Override
@@ -143,6 +154,8 @@ public class StoreServiceImpl implements StoreService {
             // 휴무일 저장
             List<StoreHoliday> holidays = saveHolidays(request.getHolidays(), store.getStoreId());
             storeHolidayRepository.saveAll(holidays);
+
+            storeSearchService.indexStore(store.getStoreId());
         } catch (StoreCreationFailedException e) {
             log.warn("가게 등록 실패 - 업주Uuid: {}, 사유: {}", request.getUserUuid(), e.getMessage());
             throw e;
@@ -512,6 +525,51 @@ public class StoreServiceImpl implements StoreService {
         } catch (Exception e) {
             log.error("반경 내 사용자 취향 맞춤 가게 조회 처리 중 오류 발생", e);
             throw new StoreServiceException("반경 내 사용자 취향 맞춤 가게 조회 처리 중 오류가 발생했습니다.");
+        }
+    }
+
+    /**
+     * 검색결과와 정확히 일치하는 전체 가게 조회 (match_phrase 사용)
+     */
+    public List<StoreSearchResponse> searchStores(String keyword) {
+        try {
+            SearchResponse<StoreDocument> response = client.search(s -> s
+                            .index("stores")
+                            .query(q -> q
+                                    .bool(b -> b
+                                            .should(sh -> sh.matchPhrase(m -> m.field("storeName").query(keyword)))
+                                            .should(sh -> sh.matchPhrase(m -> m.field("address").query(keyword)))
+                                            .should(sh -> sh.matchPhrase(m -> m.field("menuNames").query(keyword)))
+                                            .should(sh -> sh.matchPhrase(m -> m.field("tagNames").query(keyword)))
+                                            .minimumShouldMatch("1")
+                                            .filter(f -> f.term(t -> t.field("deleted").value(false)))
+                                    )
+                            ),
+                    StoreDocument.class
+            );
+
+            return response.hits().hits().stream()
+                    .map(Hit::source)
+                    .filter(Objects::nonNull)
+                    .map(doc -> {
+                        List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, doc.getStoreId());
+                        String thumbnail = storeImages.isEmpty() ? null : storeImages.get(0);
+
+                        return StoreSearchResponse.builder()
+                                .storeId(doc.getStoreId())
+                                .storeUuid(doc.getStoreUuid())
+                                .name(doc.getStoreName())
+                                .address(doc.getAddress())
+                                .thumbnail(thumbnail)
+                                .build();
+                    })
+                    .toList();
+
+        } catch (IOException e) {
+            log.error("Elasticsearch 검색 중 네트워크 오류 발생", e);
+            throw new ElasticsearchCommunicationException(
+                    "Elasticsearch 검색 중 IOException 발생", e
+            );
         }
     }
 
@@ -962,14 +1020,13 @@ public class StoreServiceImpl implements StoreService {
                 saveStoreTags(store, request.getTagIds());
             }
 
-            // 메뉴 처리
-            //processMenus(store, request.getMenus(), menuImageFiles, true);
-
             // 영업 시간 저장
             saveOrUpdateOperatingHours(store, request.getOperatingHours());
 
             // 휴무일 저장
             saveHolidays(request.getHolidays(), storeId);
+
+            storeSearchService.indexStore(storeId);
 
             return getStoreInfo(storeUuid);
         } catch (StoreUpdateException e) {
@@ -1002,6 +1059,7 @@ public class StoreServiceImpl implements StoreService {
 
             store.softDelete();
             storeRepository.save(store);
+            storeSearchService.indexStore(storeId);
         } catch (StoreDeleteException e){
             log.warn("가게 삭제 실패 - 사유: {}", e.getMessage());
             throw e;

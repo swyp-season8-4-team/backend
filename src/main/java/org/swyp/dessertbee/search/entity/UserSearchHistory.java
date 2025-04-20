@@ -1,4 +1,4 @@
-package org.swyp.dessertbee.common.entity;
+package org.swyp.dessertbee.search.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
