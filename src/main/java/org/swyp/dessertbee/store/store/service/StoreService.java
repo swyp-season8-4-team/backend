@@ -1,21 +1,12 @@
 package org.swyp.dessertbee.store.store.service;
 
-import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.search.dto.StoreSearchResponse;
-import org.swyp.dessertbee.store.store.dto.request.StoreCreateRequest;
-import org.swyp.dessertbee.store.store.dto.request.StoreUpdateRequest;
 import org.swyp.dessertbee.store.store.dto.response.*;
 
 import java.util.List;
 import java.util.UUID;
 
 public interface StoreService {
-    /** 가게 등록 (이벤트, 쿠폰, 메뉴 + 이미지 포함) */
-    void createStore(StoreCreateRequest request,
-                                    List<MultipartFile> storeImageFiles,
-                                    List<MultipartFile> ownerPickImageFiles,
-                                    List<MultipartFile> menuImageFiles);
-
     /**
      * 업주가 등록한 가게 (id, uuid, name) 리스트 조회
      */
@@ -42,20 +33,6 @@ public interface StoreService {
     /** 가게 상세 정보 조회 */
     StoreDetailResponse getStoreDetails(UUID storeUuid);
 
-    /**
-     * 가게 정보 조회
-     */
-    StoreInfoResponse getStoreInfo(UUID storeUuid);
-
     /** 가게의 평균 평점 업데이트 (리뷰 등록,수정,삭제 시 호출) */
     void updateAverageRating(Long storeId);
-
-    /** 가게 수정 */
-    StoreInfoResponse updateStore(UUID storeUuid,
-                                    StoreUpdateRequest request,
-                                    List<MultipartFile> storeImageFiles,
-                                    List<MultipartFile> ownerPickImageFiles);
-
-    /** 가게 삭제 */
-    void deleteStore(UUID storeUuid);
 }

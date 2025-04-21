@@ -6,6 +6,9 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import org.swyp.dessertbee.store.preference.dto.TopPreferenceTagResponse;
+import org.swyp.dessertbee.store.schedule.dto.HolidayResponse;
+import org.swyp.dessertbee.store.schedule.dto.OperatingHourResponse;
 import org.swyp.dessertbee.store.store.entity.Store;
 
 import java.math.BigDecimal;

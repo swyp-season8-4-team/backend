@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
-import org.swyp.dessertbee.statistics.store.entity.StoreReviewLog;
 import org.swyp.dessertbee.statistics.store.entity.enums.ReviewAction;
 import org.swyp.dessertbee.statistics.store.event.StoreReviewActionEvent;
 import org.swyp.dessertbee.statistics.store.repostiory.StoreStatisticsRepository;
@@ -25,7 +24,6 @@ import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;

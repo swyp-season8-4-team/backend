@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.store.saved.service;
 
+import com.nimbusds.jose.util.Pair;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -47,16 +48,10 @@ public class UserStoreServiceImpl implements UserStoreService {
     @Override
     public List<UserStoreListSummaryResponse> getUserStoreLists(UUID userUuid) {
         try {
-            Long userId = userRepository.findIdByUserUuid(userUuid);
-            if (userId == null) {
-                throw new InvalidUserUuidException();
-            }
-
-            UserEntity user = userRepository.findById(userId)
-                    .orElseThrow(UserNotFoundException::new);
+            UserEntity user = userService.findByUserUuid(userUuid);
 
             List<UserStoreList> lists = userStoreListRepository.findByUser(user);
-            List<StoreListLocationResponse> allLocations = savedStoreRepository.findAllLocationByUserId(userId);
+            List<StoreListLocationResponse> allLocations = savedStoreRepository.findAllLocationByUserId(user.getId());
 
             Map<Long, List<StoreListLocationResponse>> grouped = allLocations.stream()
                     .collect(Collectors.groupingBy(StoreListLocationResponse::getListId));
@@ -187,22 +182,30 @@ public class UserStoreServiceImpl implements UserStoreService {
         }
     }
 
+    /** 리스트와 스토어 객체를 한번에 조회 */
+    private Pair<UserStoreList, Store> findListAndStore(Long listId, UUID storeUuid) {
+        UserStoreList list = userStoreListRepository.findById(listId)
+                .orElseThrow(StoreListNotFoundException::new);
+
+        Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
+        if (storeId == null) {
+            throw new InvalidStoreUuidException();
+        }
+
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(StoreNotFoundException::new);
+
+        return Pair.of(list, store);
+    }
+
     /** 리스트에 가게 추가 */
     @Override
     public SavedStoreResponse addStoreToList(Long listId, UUID storeUuid, List<Long> userPreferences) {
         try{
-            UserStoreList list = userStoreListRepository.findById(listId)
-                    .orElseThrow(StoreListNotFoundException::new);
+            Pair<UserStoreList, Store> pair = findListAndStore(listId, storeUuid);
+            UserStoreList list = pair.getLeft();
+            Store store = pair.getRight();
 
-            Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
-            if (storeId == null) {
-                throw new InvalidStoreUuidException();
-            }
-
-            Store store = storeRepository.findById(storeId)
-                    .orElseThrow(StoreNotFoundException::new);
-
-            // 이미 리스트에 존재하는 가게인지 확인
             boolean exists = savedStoreRepository.findByUserStoreListAndStore(list, store).isPresent();
             if (exists) {
                 throw new DuplicateStoreSaveException();
@@ -216,9 +219,7 @@ public class UserStoreServiceImpl implements UserStoreService {
                             .build()
             );
 
-            UserEntity user = userService.getCurrentUser();
-
-            eventPublisher.publishEvent(new StoreSaveActionEvent(storeId, user.getUserUuid(), SaveAction.SAVE));
+            eventPublisher.publishEvent(new StoreSaveActionEvent(store.getStoreId(), userService.getCurrentUser().getUserUuid(), SaveAction.SAVE));
 
             return new SavedStoreResponse(
                     list.getUser().getUserUuid(),
@@ -291,24 +292,14 @@ public class UserStoreServiceImpl implements UserStoreService {
     @Override
     public void removeStoreFromList(Long listId, UUID storeUuid) {
         try{
-            UserStoreList list = userStoreListRepository.findById(listId)
-                    .orElseThrow(StoreListNotFoundException::new);
-
-            Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
-            if (storeId == null) {
-                throw new InvalidStoreUuidException();
-            }
-
-            Store store = storeRepository.findById(storeId)
-                    .orElseThrow(StoreNotFoundException::new);
+            Pair<UserStoreList, Store> pair = findListAndStore(listId, storeUuid);
+            UserStoreList list = pair.getLeft();
+            Store store = pair.getRight();
 
             SavedStore savedStore = savedStoreRepository.findByUserStoreListAndStore(list, store)
                     .orElseThrow(SavedStoreNotFoundException::new);
 
-            UserEntity user = userService.getCurrentUser();
-
-            eventPublisher.publishEvent(new StoreSaveActionEvent(storeId, user.getUserUuid(), SaveAction.UNSAVE));
-
+            eventPublisher.publishEvent(new StoreSaveActionEvent(store.getStoreId(), userService.getCurrentUser().getUserUuid(), SaveAction.UNSAVE));
             savedStoreRepository.delete(savedStore);
         } catch (SavedStoreDeleteException e){
             log.warn("리스트에 가게 저장 취소 실패 - 사유: {}", e.getMessage());

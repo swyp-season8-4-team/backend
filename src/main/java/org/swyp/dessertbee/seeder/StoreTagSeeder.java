@@ -4,10 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.swyp.dessertbee.store.store.entity.StoreTag;
-import org.swyp.dessertbee.store.store.entity.TagCategory;
-import org.swyp.dessertbee.store.store.repository.StoreTagRepository;
-import org.swyp.dessertbee.store.store.repository.TagCategoryRepository;
+import org.swyp.dessertbee.store.tag.entity.StoreTag;
+import org.swyp.dessertbee.store.tag.entity.TagCategory;
+import org.swyp.dessertbee.store.tag.repository.StoreTagRepository;
+import org.swyp.dessertbee.store.tag.repository.TagCategoryRepository;
 
 import java.util.List;
 

@@ -6,8 +6,9 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import org.swyp.dessertbee.store.schedule.dto.HolidayResponse;
+import org.swyp.dessertbee.store.schedule.dto.OperatingHourResponse;
 import org.swyp.dessertbee.store.store.entity.Store;
-import org.swyp.dessertbee.store.store.entity.StoreOperatingHour;
 
 import java.util.List;
 import java.util.UUID;

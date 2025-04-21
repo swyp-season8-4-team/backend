@@ -22,6 +22,7 @@ import org.swyp.dessertbee.search.service.SearchService;
 import org.swyp.dessertbee.store.store.dto.request.StoreCreateRequest;
 import org.swyp.dessertbee.store.store.dto.request.StoreUpdateRequest;
 import org.swyp.dessertbee.store.store.dto.response.*;
+import org.swyp.dessertbee.store.store.service.StoreManageService;
 import org.swyp.dessertbee.store.store.service.StoreService;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.service.UserService;
@@ -39,6 +40,7 @@ public class StoreController {
     private final StoreService storeService;
     private final SearchService searchService;
     private final UserService userService;
+    private final StoreManageService storeManageService;
 
     /** 가게 등록 */
     @Operation(summary = "가게 등록 (completed)", description = "업주가 가게를 등록합니다.")
@@ -62,7 +64,7 @@ public class StoreController {
             @RequestPart(value = "menuImageFiles", required = false) List<MultipartFile> menuImageFiles) {
 
         // 가게 생성
-        storeService.createStore(request, storeImageFiles, ownerPickImageFiles, menuImageFiles);
+        storeManageService.createStore(request, storeImageFiles, ownerPickImageFiles, menuImageFiles);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
@@ -255,7 +257,7 @@ public class StoreController {
             @RequestPart(value = "storeImageFiles", required = false) List<MultipartFile> storeImageFiles,
             @RequestPart(value = "ownerPickImageFiles", required = false) List<MultipartFile> ownerPickImageFiles) {
 
-        StoreInfoResponse updatedInfo = storeService.updateStore(storeUuid, request, storeImageFiles, ownerPickImageFiles);
+        StoreInfoResponse updatedInfo = storeManageService.updateStore(storeUuid, request, storeImageFiles, ownerPickImageFiles);
         return ResponseEntity.ok(updatedInfo);
     }
 
@@ -268,7 +270,7 @@ public class StoreController {
     @DeleteMapping("/{storeUuid}")
     public ResponseEntity<Void> deleteStore(@PathVariable UUID storeUuid) {
         try {
-            storeService.deleteStore(storeUuid);
+            storeManageService.deleteStore(storeUuid);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             e.printStackTrace();

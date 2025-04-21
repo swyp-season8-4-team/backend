@@ -28,13 +28,8 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
     """, nativeQuery = true)
     List<Store> findStoresByLocation(@Param("lat") Double lat, @Param("lng") Double lng, @Param("radius") Double radius);
 
-    /** 반경 내 특정 취향 태그를 가지는 가게 조회
-     *
-     * @param lat
-     * @param lng
-     * @param radius
-     * @param preferenceTagIds
-     * @return
+    /**
+     * 반경 내 특정 취향 태그를 가지는 가게 조회
      */
     @Query(value = """
     SELECT DISTINCT s.*
@@ -49,13 +44,8 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
                                            @Param("lng") Double lng,
                                            @Param("radius") Double radius, @Param("preferenceTagIds") List<Long> preferenceTagIds);
 
-    /** 반경 내 검색어에 맞는 가게 조회 메서드
-     *
-     * @param lat
-     * @param lng
-     * @param radius
-     * @param searchKeyword
-     * @return
+    /**
+     * 반경 내 검색어에 맞는 가게 조회 메서드
      */
     @Query(value = "SELECT DISTINCT s.* " +
             "FROM store s " +
