@@ -1,8 +1,7 @@
-# 변수 매핑 - 요청 시 동적으로 처리할 헤더를 안정적으로 지정
-# 덮어쓰기가 되는지 테스트하기 위한 용도의 주석
-map $cookie_deviceId $device_id {
-    default $cookie_deviceId;
-    ""      "";
+# 변수 매핑 - 헤더 또는 쿠키에서 디바이스 ID 가져오기 (헤더 우선)
+map $http_x_device_id $device_id {
+    default $http_x_device_id;  # 헤더 값이 있으면 사용
+    ""      $cookie_deviceId;   # 헤더 값이 없으면 쿠키 값 사용
 }
 
 map $http_authorization $auth_header {
