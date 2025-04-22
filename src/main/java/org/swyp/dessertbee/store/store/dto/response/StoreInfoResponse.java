@@ -6,13 +6,12 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import org.swyp.dessertbee.community.mate.dto.response.MateResponse;
-import org.swyp.dessertbee.community.review.dto.response.ReviewSummaryResponse;
 import org.swyp.dessertbee.store.menu.dto.response.MenuResponse;
 import org.swyp.dessertbee.store.notice.dto.response.StoreNoticeResponse;
-import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
+import org.swyp.dessertbee.store.schedule.dto.HolidayResponse;
+import org.swyp.dessertbee.store.schedule.dto.OperatingHourResponse;
 import org.swyp.dessertbee.store.store.entity.Store;
-import org.swyp.dessertbee.store.store.entity.StoreTag;
+import org.swyp.dessertbee.store.tag.dto.StoreTagResponse;
 
 import java.math.BigDecimal;
 import java.util.List;

@@ -13,7 +13,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
-import org.swyp.dessertbee.common.dto.UserSearchHistoryDto;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.store.menu.dto.request.MenuCreateRequest;
 import org.swyp.dessertbee.store.menu.dto.response.MenuResponse;

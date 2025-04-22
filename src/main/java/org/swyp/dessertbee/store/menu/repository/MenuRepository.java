@@ -16,6 +16,11 @@ public interface MenuRepository extends JpaRepository<Menu, Long> {
     // 특정 가게의 전체 메뉴 조회
     List<Menu> findByStoreIdAndDeletedAtIsNull(Long storeId);
     Optional<Menu> findByMenuIdAndStoreIdAndDeletedAtIsNull(Long menuId, Long storeId);
+
     @Query("SELECT m.menuId FROM Menu m WHERE m.menuUuid = :menuUuid")
     Long findMenuIdByMenuUuid(@Param("menuUuid") UUID menuUuid);
+
+    @Query("SELECT m.name FROM Menu m WHERE m.storeId = :storeId AND m.deletedAt IS NULL")
+    List<String> findMenuNamesByStoreId(@Param("storeId") Long storeId);
+
 }
