@@ -11,7 +11,6 @@ import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.store.store.exception.StoreExceptions.*;
 
-import java.io.IOException;
 import java.util.List;
 
 @RequiredArgsConstructor

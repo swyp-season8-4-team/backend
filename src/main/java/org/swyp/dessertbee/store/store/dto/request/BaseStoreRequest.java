@@ -8,11 +8,10 @@ import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import org.swyp.dessertbee.store.store.entity.RegularClosureType;
+import org.swyp.dessertbee.store.schedule.entity.RegularClosureType;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;

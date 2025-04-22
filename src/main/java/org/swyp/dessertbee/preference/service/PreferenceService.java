@@ -9,10 +9,10 @@ import org.swyp.dessertbee.preference.dto.PreferenceResponseDto;
 import org.swyp.dessertbee.preference.entity.PreferenceEntity;
 import org.swyp.dessertbee.preference.entity.UserPreferenceEntity;
 import org.swyp.dessertbee.preference.repository.PreferenceRepository;
-import org.swyp.dessertbee.store.store.entity.SavedStore;
-import org.swyp.dessertbee.store.store.entity.UserStoreList;
-import org.swyp.dessertbee.store.store.repository.SavedStoreRepository;
-import org.swyp.dessertbee.store.store.repository.UserStoreListRepository;
+import org.swyp.dessertbee.store.saved.entity.SavedStore;
+import org.swyp.dessertbee.store.saved.entity.UserStoreList;
+import org.swyp.dessertbee.store.saved.repository.SavedStoreRepository;
+import org.swyp.dessertbee.store.saved.repository.UserStoreListRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.util.HashSet;

@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 import org.swyp.dessertbee.search.doc.StoreDocument;
 import org.swyp.dessertbee.store.menu.repository.MenuRepository;
 import org.swyp.dessertbee.store.store.entity.Store;
-import org.swyp.dessertbee.store.store.repository.StoreTagRelationRepository;
+import org.swyp.dessertbee.store.tag.repository.StoreTagRelationRepository;
 
 import java.util.List;
 
