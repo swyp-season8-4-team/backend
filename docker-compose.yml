@@ -48,20 +48,20 @@ services:
       - redis-data:/data
     command: ["redis-server", "--appendonly", "yes"]
 
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.2
-    container_name: desserbee-es
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-    ports:
-      - "9200:9200"
-    volumes:
-      - es-data:/usr/share/elasticsearch/data
-    networks:
-      - app-network
-    restart: always
+#  elasticsearch:
+#    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.2
+#    container_name: desserbee-es
+#    environment:
+#      - discovery.type=single-node
+#      - xpack.security.enabled=false
+#      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+#    ports:
+#      - "9200:9200"
+#    volumes:
+#      - es-data:/usr/share/elasticsearch/data
+#    networks:
+#      - app-network
+#    restart: always
 
 networks:
   app-network:

@@ -73,7 +73,7 @@ dependencies {
     implementation 'org.springdoc:springdoc-openapi-ui:1.6.14'
 
     // Java API Client (Elasticsearch)
-    implementation 'co.elastic.clients:elasticsearch-java:8.13.2'
+    //implementation 'co.elastic.clients:elasticsearch-java:8.13.2'
 
 }
 
