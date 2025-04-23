@@ -19,7 +19,7 @@ import java.util.List;
 @Transactional
 public class StoreLinkServiceImpl implements StoreLinkService {
 
-    private StoreLinkRepository storeLinkRepository;
+    private final StoreLinkRepository storeLinkRepository;
 
     /**
      * 링크 유효성 검사 및 저장 메서드

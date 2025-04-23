@@ -8,7 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.service.ImageService;
-import org.swyp.dessertbee.search.service.StoreSearchService;
 import org.swyp.dessertbee.statistics.store.entity.StoreStatistics;
 import org.swyp.dessertbee.statistics.store.repostiory.StoreStatisticsRepository;
 import org.swyp.dessertbee.store.link.repository.StoreLinkRepository;
@@ -72,7 +71,7 @@ public class StoreManageServiceImpl implements StoreManageService{
     private final StoreNoticeRepository storeNoticeRepository;
     private final StoreBreakTimeRepository storeBreakTimeRepository;
     private final MenuRepository menuRepository;
-    private final StoreSearchService storeSearchService;
+    //private final StoreSearchService storeSearchService;
     private final StoreLinkService storeLinkService;
     private final StoreImageHandler storeImageHandler;
     private final StoreMenuHandler storeMenuHandler;
@@ -138,7 +137,7 @@ public class StoreManageServiceImpl implements StoreManageService{
             List<StoreHoliday> holidays = storeScheduleService.saveHolidays(request.getHolidays(), store.getStoreId());
             storeHolidayRepository.saveAll(holidays);
 
-            storeSearchService.indexStore(store.getStoreId());
+            //storeSearchService.indexStore(store.getStoreId());
         } catch (StoreExceptions.StoreCreationFailedException e) {
             log.warn("가게 등록 실패 - 업주Uuid: {}, 사유: {}", request.getUserUuid(), e.getMessage());
             throw e;
@@ -199,7 +198,7 @@ public class StoreManageServiceImpl implements StoreManageService{
             // 휴무일 저장
             storeScheduleService.saveHolidays(request.getHolidays(), storeId);
 
-            storeSearchService.indexStore(storeId);
+            //storeSearchService.indexStore(storeId);
 
             return getStoreInfo(storeUuid);
         } catch (StoreExceptions.StoreUpdateException e) {
@@ -289,7 +288,7 @@ public class StoreManageServiceImpl implements StoreManageService{
 
             store.softDelete();
             storeRepository.save(store);
-            storeSearchService.indexStore(storeId);
+            //storeSearchService.indexStore(storeId);
         } catch (StoreExceptions.StoreDeleteException e){
             log.warn("가게 삭제 실패 - 사유: {}", e.getMessage());
             throw e;
