@@ -172,8 +172,7 @@ public class StoreController {
             ErrorCode.SEARCH_KEYWORD_NOT_FOUND,
             ErrorCode.SEARCH_SERVICE_ERROR,
             ErrorCode.RECENT_KEYWORD_CREATION_FAILED,
-            ErrorCode.POPULAR_KEYWORD_CREATION_FAILED,
-            ErrorCode.ELASTICSEARCH_COMMUNICATION_FAILED
+            ErrorCode.POPULAR_KEYWORD_CREATION_FAILED
     })
     @GetMapping("/search")
     public StoreSearchWrapperResponse searchStores(@RequestParam String searchKeyword) {
