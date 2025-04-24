@@ -14,8 +14,8 @@ spring:
         registration:
           kakao:
             redirect-uri: ${KAKAO_REDIRECT_URI_PROD}
-  elasticsearch:
-    uris: http://desserbee-es:9200
+#  elasticsearch:
+#    uris: http://desserbee-es:9200
 #  graphql:
 #    cors:
 #      allowed-origins: "https://desserbee.com,https://www.desserbee.com,http://desserbee.com,http://www.desserbee.com,https://api.desserbee.com,https://frontend-desserbee-web-git-vercel-test-eepyzs-projects.vercel.app/"

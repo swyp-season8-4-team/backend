@@ -32,8 +32,8 @@ spring:
         registration:
           kakao:
             redirect-uri: ${KAKAO_REDIRECT_URI_TEST}
-  elasticsearch:
-    uris: http://desserbee-es:9200
+#  elasticsearch:
+#    uris: http://desserbee-es:9200
 
 logging:
   level:

@@ -1,17 +1,13 @@
 package org.swyp.dessertbee.store.store.service;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch.core.SearchResponse;
-import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.nimbusds.jose.util.Pair;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.swyp.dessertbee.common.util.SearchUtil;
 import org.swyp.dessertbee.preference.exception.PreferenceExceptions.*;
-import org.swyp.dessertbee.search.exception.SearchExceptions.*;
-import org.swyp.dessertbee.search.doc.StoreDocument;
 import org.swyp.dessertbee.search.dto.StoreSearchResponse;
 import org.swyp.dessertbee.statistics.store.event.StoreViewEvent;
 import org.swyp.dessertbee.store.link.service.StoreLinkService;
@@ -41,7 +37,6 @@ import org.swyp.dessertbee.store.store.repository.*;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.service.UserService;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -62,7 +57,7 @@ public class StoreServiceImpl implements StoreService {
     private final StoreNoticeService storeNoticeService;
     private final ApplicationEventPublisher eventPublisher;
     private final StoreTopTagRepository storeTopTagRepository;
-    private final ElasticsearchClient client;
+    //private final ElasticsearchClient client;
     private final StoreSupportService storeSupportService;
     private final StoreLinkService storeLinkService;
     private final StoreScheduleService storeScheduleService;
@@ -134,7 +129,8 @@ public class StoreServiceImpl implements StoreService {
     @Override
     public List<StoreMapResponse> getStoresByLocationAndKeyword(Double lat, Double lng, Double radius, String searchKeyword) {
         try{
-            List<Store> stores = storeRepository.findStoresByLocationAndKeyword(lat, lng, radius, searchKeyword);
+            String transformed = SearchUtil.toBooleanFulltextQuery(searchKeyword);
+            List<Store> stores = storeRepository.findStoresByLocationAndKeyword(lat, lng, radius, transformed);
 
             return stores.stream()
                     .map(this::convertToStoreMapResponse)
@@ -183,50 +179,78 @@ public class StoreServiceImpl implements StoreService {
         }
     }
 
-    /**
-     * 검색결과와 정확히 일치하는 전체 가게 조회 (match_phrase 사용)
-     */
+    /** 검색어 조건에 맞는 가게 검색 */
+    @Override
     public List<StoreSearchResponse> searchStores(String keyword) {
         try {
-            SearchResponse<StoreDocument> response = client.search(s -> s
-                            .index("stores")
-                            .query(q -> q
-                                    .bool(b -> b
-                                            .should(sh -> sh.matchPhrase(m -> m.field("storeName").query(keyword)))
-                                            .should(sh -> sh.matchPhrase(m -> m.field("address").query(keyword)))
-                                            .should(sh -> sh.matchPhrase(m -> m.field("menuNames").query(keyword)))
-                                            .should(sh -> sh.matchPhrase(m -> m.field("tagNames").query(keyword)))
-                                            .minimumShouldMatch("1")
-                                            .filter(f -> f.term(t -> t.field("deleted").value(false)))
-                                    )
-                            ),
-                    StoreDocument.class
-            );
+            String transformed = SearchUtil.toBooleanFulltextQuery(keyword);
+            List<Store> stores = storeRepository.findStoresByKeyword(transformed);
 
-            return response.hits().hits().stream()
-                    .map(Hit::source)
-                    .filter(Objects::nonNull)
-                    .map(doc -> {
-                        List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, doc.getStoreId());
+            return stores.stream()
+                    .map(store -> {
+                        List<String> storeImages = storeImageHandler.getStoreImages(store.getStoreId());
                         String thumbnail = storeImages.isEmpty() ? null : storeImages.get(0);
 
                         return StoreSearchResponse.builder()
-                                .storeId(doc.getStoreId())
-                                .storeUuid(doc.getStoreUuid())
-                                .name(doc.getStoreName())
-                                .address(doc.getAddress())
+                                .storeId(store.getStoreId())
+                                .storeUuid(store.getStoreUuid())
+                                .name(store.getName())
+                                .address(store.getAddress())
                                 .thumbnail(thumbnail)
                                 .build();
                     })
                     .toList();
 
-        } catch (IOException e) {
-            log.error("Elasticsearch 검색 중 네트워크 오류 발생", e);
-            throw new ElasticsearchCommunicationException(
-                    "Elasticsearch 검색 중 IOException 발생", e
-            );
+        } catch (Exception e) {
+            log.error("가게 검색 중 오류 발생", e);
+            throw new StoreServiceException("가게 검색 처리 중 오류가 발생했습니다.");
         }
     }
+
+//    /**
+//     * 검색결과와 정확히 일치하는 전체 가게 조회 (match_phrase 사용)
+//     */
+//    public List<StoreSearchResponse> searchStores(String keyword) {
+//        try {
+//            SearchResponse<StoreDocument> response = client.search(s -> s
+//                            .index("stores")
+//                            .query(q -> q
+//                                    .bool(b -> b
+//                                            .should(sh -> sh.matchPhrase(m -> m.field("storeName").query(keyword)))
+//                                            .should(sh -> sh.matchPhrase(m -> m.field("address").query(keyword)))
+//                                            .should(sh -> sh.matchPhrase(m -> m.field("menuNames").query(keyword)))
+//                                            .should(sh -> sh.matchPhrase(m -> m.field("tagNames").query(keyword)))
+//                                            .minimumShouldMatch("1")
+//                                            .filter(f -> f.term(t -> t.field("deleted").value(false)))
+//                                    )
+//                            ),
+//                    StoreDocument.class
+//            );
+//
+//            return response.hits().hits().stream()
+//                    .map(Hit::source)
+//                    .filter(Objects::nonNull)
+//                    .map(doc -> {
+//                        List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, doc.getStoreId());
+//                        String thumbnail = storeImages.isEmpty() ? null : storeImages.get(0);
+//
+//                        return StoreSearchResponse.builder()
+//                                .storeId(doc.getStoreId())
+//                                .storeUuid(doc.getStoreUuid())
+//                                .name(doc.getStoreName())
+//                                .address(doc.getAddress())
+//                                .thumbnail(thumbnail)
+//                                .build();
+//                    })
+//                    .toList();
+//
+//        } catch (IOException e) {
+//            log.error("Elasticsearch 검색 중 네트워크 오류 발생", e);
+//            throw new ElasticsearchCommunicationException(
+//                    "Elasticsearch 검색 중 IOException 발생", e
+//            );
+//        }
+//    }
 
     /**
      * Store 엔티티를 StoreMapResponse DTO로 변환

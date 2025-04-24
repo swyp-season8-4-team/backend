@@ -63,6 +63,24 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
                                                @Param("radius") Double radius,
                                                @Param("searchKeyword") String searchKeyword);
 
+    /**
+     * 검색어에 맞는 가게 조회 메서드
+     */
+    @Query(value = """
+        SELECT DISTINCT s.*
+        FROM store s
+        LEFT JOIN store_tag_relation str ON s.store_id = str.store_id
+        LEFT JOIN store_tag st ON str.tag_id = st.id
+        LEFT JOIN menu m ON s.store_id = m.store_id
+        WHERE (
+            MATCH(s.name, s.address) AGAINST(:searchKeyword IN BOOLEAN MODE)
+            OR MATCH(st.name) AGAINST(:searchKeyword IN BOOLEAN MODE)
+            OR MATCH(m.name) AGAINST(:searchKeyword IN BOOLEAN MODE)
+        )
+        AND s.deleted_at IS NULL
+    """, nativeQuery = true)
+    List<Store> findStoresByKeyword(@Param("searchKeyword") String searchKeyword);
+
     Optional<Store> findByStoreIdAndDeletedAtIsNull(Long storeId);
 
     @Query("SELECT s.storeId FROM Store s WHERE s.storeUuid = :storeUuid")

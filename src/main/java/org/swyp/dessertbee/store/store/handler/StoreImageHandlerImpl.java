@@ -17,7 +17,7 @@ import java.util.List;
 @Transactional
 public class StoreImageHandlerImpl implements StoreImageHandler {
 
-    private ImageService imageService;
+    private final ImageService imageService;
 
     /**
      * 가게 대표 이미지 처리 메서드
