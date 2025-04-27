@@ -17,7 +17,6 @@ import java.util.List;
  * Spring Security의 사용자 조회를 담당하는 서비스
  * JWT 필터에서 인증할 때 DB 조회가 필요한 경우 사용
  */
-@Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 

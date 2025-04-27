@@ -88,7 +88,7 @@ public class StoreController {
         아래 3가지 방식 중 **하나만** 사용할 수 있습니다:
 
         1. 기본 요청 (전체 가게 조회)
-        2. preferenceTagIds로 필터링 (복수 개 가능, 예: preferenceTagIds=1&preferenceTagIds=2)
+        2. preferenceTagIds로 필터링 (복수 개 가능, 예: preferenceTagIds=1,2,3)
         3. 검색어(searchKeyword) 기반 조회 - WEB 전용 (예: 검색어를 URL 인코딩해서 전달)
         """
     )

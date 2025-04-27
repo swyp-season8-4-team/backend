@@ -1,6 +1,7 @@
 package org.swyp.dessertbee.store.saved.service;
 
 import org.swyp.dessertbee.store.saved.dto.*;
+import org.swyp.dessertbee.store.saved.dto.request.UpdateSavedStoreListsRequest;
 
 import java.util.List;
 import java.util.UUID;
@@ -29,6 +30,9 @@ public interface UserStoreService {
 
     /** 리스트별 저장된 가게 조회 */
     UserStoreListDetailResponse getStoresByList(Long listId);
+
+    /** 저장된 가게 수정 */
+    void updateSavedStoreLists(UUID storeUuid, List<UpdateSavedStoreListsRequest.StoreListUpdateRequest> selectedLists);
 
     /** 리스트에서 가게 삭제 */
     void removeStoreFromList(Long listId, UUID storeUuid);
