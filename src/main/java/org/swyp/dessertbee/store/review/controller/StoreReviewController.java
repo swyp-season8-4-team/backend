@@ -36,7 +36,9 @@ public class StoreReviewController {
     /** 리뷰 등록 */
     @Operation(summary = "한줄 리뷰 등록 (completed)", description = "한줄 리뷰를 등록합니다.")
     @ApiResponse( responseCode = "200", description = "한줄리뷰 등록 성공", content = @Content(schema = @Schema(implementation = StoreReviewResponse.class)))
-    @ApiErrorResponses({ErrorCode.INVALID_STORE_UUID, ErrorCode.STORE_REVIEW_SERVICE_ERROR, ErrorCode.INVALID_STORE_REVIEW_UUID, ErrorCode.USER_NOT_FOUND, ErrorCode.STORE_REVIEW_CREATION_FAILED})
+    @ApiErrorResponses({ErrorCode.INVALID_STORE_UUID, ErrorCode.STORE_REVIEW_SERVICE_ERROR,
+            ErrorCode.INVALID_STORE_REVIEW_UUID, ErrorCode.USER_NOT_FOUND,
+            ErrorCode.STORE_REVIEW_CREATION_FAILED, ErrorCode.STORE_REVIEW_ALREADY_EXISTS_TODAY})
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StoreReviewResponse> createReview(
