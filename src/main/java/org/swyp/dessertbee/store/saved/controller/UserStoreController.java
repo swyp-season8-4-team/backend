@@ -12,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
 import org.swyp.dessertbee.store.saved.dto.*;
+import org.swyp.dessertbee.store.saved.dto.request.UpdateSavedStoreListsRequest;
 import org.swyp.dessertbee.store.store.exception.StoreExceptions.*;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.store.saved.service.UserStoreService;
@@ -116,6 +117,23 @@ public class UserStoreController {
     @GetMapping("/lists/{listId}/stores")
     public ResponseEntity<UserStoreListDetailResponse> getStoresByList(@PathVariable Long listId) {
         return ResponseEntity.ok(userStoreService.getStoresByList(listId));
+    }
+
+    /** 저장된 가게 수정 */
+    @PutMapping("/stores/{storeUuid}")
+    @Operation(summary = "저장된 가게 수정 (completed)", description = "가게의 저장된 리스트를 수정합니다. 선택된 리스트와 userPreferences를 설정합니다.")
+    @ApiResponse(responseCode = "200", description = "저장된 가게 수정 성공")
+    @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
+    public ResponseEntity<Void> updateSavedStoreLists(
+            @PathVariable String storeUuid,
+            @RequestBody UpdateSavedStoreListsRequest request) {
+        try {
+            UUID uuid = UUID.fromString(storeUuid);
+            userStoreService.updateSavedStoreLists(uuid, request.getSelectedLists());
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            throw new InvalidStoreUuidException();
+        }
     }
 
     /** 리스트에서 가게 삭제 */

@@ -10,6 +10,7 @@ import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.statistics.store.entity.enums.SaveAction;
 import org.swyp.dessertbee.statistics.store.event.StoreSaveActionEvent;
 import org.swyp.dessertbee.store.saved.dto.*;
+import org.swyp.dessertbee.store.saved.dto.request.UpdateSavedStoreListsRequest;
 import org.swyp.dessertbee.store.store.exception.StoreExceptions.*;
 import org.swyp.dessertbee.store.saved.exception.UserStoreExceptions.*;
 import org.swyp.dessertbee.user.exception.UserExceptions.*;
@@ -285,6 +286,79 @@ public class UserStoreServiceImpl implements UserStoreService {
         } catch (Exception e) {
             log.error("리스트에 저장된 가게 조회 처리 중 오류 발생", e);
             throw new UserStoreServiceException("리스트에 저장된 가게 조회 처리 중 오류가 발생했습니다.");
+        }
+    }
+
+    /** 저장된 가게 수정 */
+    @Override
+    public void updateSavedStoreLists(UUID storeUuid, List<UpdateSavedStoreListsRequest.StoreListUpdateRequest> selectedLists) {
+        try {
+            UserEntity currentUser = userService.getCurrentUser();
+            Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
+
+            if (storeId == null) {
+                throw new InvalidStoreUuidException();
+            }
+
+            Store store = storeRepository.findById(storeId)
+                    .orElseThrow(StoreNotFoundException::new);
+
+            // 현재 저장되어 있는 리스트들 조회
+            List<SavedStore> currentSavedStores = savedStoreRepository.findByStoreAndUserId(store, currentUser.getId());
+            List<Long> currentListIds = currentSavedStores.stream()
+                    .map(savedStore -> savedStore.getUserStoreList().getId())
+                    .toList();
+
+            List<Long> selectedListIds = selectedLists.stream()
+                    .map(UpdateSavedStoreListsRequest.StoreListUpdateRequest::getListId)
+                    .toList();
+
+            // 추가해야 할 리스트
+            List<UpdateSavedStoreListsRequest.StoreListUpdateRequest> listsToAdd = selectedLists.stream()
+                    .filter(req -> !currentListIds.contains(req.getListId()))
+                    .toList();
+
+            // 삭제해야 할 리스트
+            List<Long> listsToRemove = currentListIds.stream()
+                    .filter(id -> !selectedListIds.contains(id))
+                    .toList();
+
+            // 1. 리스트 추가
+            for (UpdateSavedStoreListsRequest.StoreListUpdateRequest addRequest : listsToAdd) {
+                UserStoreList list = userStoreListRepository.findById(addRequest.getListId())
+                        .orElseThrow(StoreListNotFoundException::new);
+
+                savedStoreRepository.save(SavedStore.builder()
+                        .userStoreList(list)
+                        .store(store)
+                        .userPreferences(addRequest.getUserPreferences())
+                        .build());
+
+                eventPublisher.publishEvent(new StoreSaveActionEvent(store.getStoreId(), currentUser.getUserUuid(), SaveAction.SAVE));
+            }
+
+            // 2. 리스트 삭제
+            for (Long listId : listsToRemove) {
+                UserStoreList list = userStoreListRepository.findById(listId)
+                        .orElseThrow(StoreListNotFoundException::new);
+
+                savedStoreRepository.deleteByUserStoreListAndStore(list, store);
+
+                eventPublisher.publishEvent(new StoreSaveActionEvent(store.getStoreId(), currentUser.getUserUuid(), SaveAction.UNSAVE));
+            }
+
+            // 3. 리스트 수정 (userPreferences만 수정하는 경우도 고려하였음)
+            for (SavedStore savedStore : currentSavedStores) {
+                Long listId = savedStore.getUserStoreList().getId();
+                selectedLists.stream()
+                        .filter(req -> req.getListId().equals(listId))
+                        .findFirst()
+                        .ifPresent(req -> savedStore.updateUserPreferences(req.getUserPreferences()));
+            }
+
+        } catch (Exception e) {
+            log.error("저장된 가게 수정 처리 중 오류 발생", e);
+            throw new UserStoreServiceException("저장된 가게 수정 처리 중 오류가 발생했습니다.");
         }
     }
 
