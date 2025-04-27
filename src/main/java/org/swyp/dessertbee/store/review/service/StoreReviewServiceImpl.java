@@ -51,6 +51,12 @@ public class StoreReviewServiceImpl implements StoreReviewService {
                 throw new InvalidStoreUuidException();
             }
 
+            // 오늘 같은 가게에 이미 작성했는지 체크
+            int todayReviewCount = storeReviewRepository.countTodayReviewsByUserAndStore(request.getUserUuid(), storeId);
+            if (todayReviewCount > 0) {
+                throw new StoreReviewAlreadyExistsTodayException();
+            }
+
             StoreReview review = StoreReview.builder()
                     .storeId(storeId)
                     .userUuid(request.getUserUuid())

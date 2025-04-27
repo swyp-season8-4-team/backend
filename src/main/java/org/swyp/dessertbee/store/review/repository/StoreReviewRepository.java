@@ -29,4 +29,16 @@ public interface StoreReviewRepository extends JpaRepository<StoreReview, Long> 
 
     @Query("SELECT COUNT(r) FROM StoreReview r WHERE r.storeId = :storeId AND r.deletedAt IS NULL")
     int countByStoreIdAndDeletedAtIsNull(@Param("storeId") Long storeId);
+
+    /**
+     * 특정 유저가 특정 가게에 "오늘" 날짜로 작성한 리뷰가 있는지 체크
+     */
+    @Query("""
+        SELECT COUNT(r) FROM StoreReview r
+        WHERE r.storeId = :storeId
+          AND r.userUuid = :userUuid
+          AND r.deletedAt IS NULL
+          AND FUNCTION('DATE', r.createdAt) = CURRENT_DATE
+    """)
+    int countTodayReviewsByUserAndStore(@Param("userUuid") UUID userUuid, @Param("storeId") Long storeId);
 }
