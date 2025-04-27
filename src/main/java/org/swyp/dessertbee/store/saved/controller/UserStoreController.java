@@ -120,7 +120,7 @@ public class UserStoreController {
     }
 
     /** 저장된 가게 수정 */
-    @PutMapping("/stores/{storeUuid}")
+    @PatchMapping("/stores/{storeUuid}")
     @Operation(summary = "저장된 가게 수정 (completed)", description = "가게의 저장된 리스트를 수정합니다. 선택된 리스트와 userPreferences를 설정합니다.")
     @ApiResponse(responseCode = "200", description = "저장된 가게 수정 성공")
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
