@@ -6,11 +6,14 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import org.swyp.dessertbee.community.mate.entity.MateMember;
+import org.swyp.dessertbee.community.mate.entity.MateMemberGrade;
 import org.swyp.dessertbee.community.mate.entity.MateReply;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Data
@@ -49,6 +52,11 @@ public class MateAppReplyResponse {
     private UserEntity.Gender gender;
 
     @NotNull
+    @Schema(description = "댓글 작성자의 디저트메이트 등급 상태", example = "NORMAL")
+    private MateMemberGrade mateMemberGrade;
+
+
+    @NotNull
     @Schema(description = "댓글 생성 날짜", example = "2025-03-10 02:15")
     private LocalDateTime createdAt;
 
@@ -67,13 +75,15 @@ public class MateAppReplyResponse {
     public static MateAppReplyResponse fromEntity(MateReply reply,
                                                   UserEntity user,
                                                   String profileImage,
-                                                  List<MateAppReplyResponse> children
+                                                  List<MateAppReplyResponse> children,
+                                                  MateMemberGrade mateMemberGrade
     ) {
 
         return MateAppReplyResponse.builder()
                 .mateReplyId(reply.getMateReplyId())
                 .nickname(user.getNickname())
                 .parentMateReplyId(reply.getParentMateReplyId())
+                .mateMemberGrade(mateMemberGrade)
                 .gender(user.getGender())
                 .userUuid(user.getUserUuid())
                 .content(reply.getContent())

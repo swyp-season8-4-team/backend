@@ -25,7 +25,8 @@ public interface MateMemberRepository extends JpaRepository<MateMember, Long> {
     @Query("UPDATE MateMember m SET m.applyStatus = :applyStatus WHERE m.mateId = :mateId AND m.userId = :userId")
     void updateApplyStatus(MateApplyStatus applyStatus, Long mateId, Long userId);
 
-    Optional<MateMember> findGradeByMateIdAndUserIdAndDeletedAtIsNull(Long mateId, Long userId);
+    @Query("SELECT m.grade FROM MateMember m WHERE m.mateId = :mateId AND m.userId = :userId")
+    MateMemberGrade findGradeByMateIdAndUserIdAndDeletedAtIsNull(Long mateId, Long userId);
 
     Optional<MateMember> findByMateIdAndUserIdAndDeletedAtIsNull(Long mateId, Long userId);
 

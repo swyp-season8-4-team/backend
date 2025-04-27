@@ -288,7 +288,7 @@ public class MateMemberServiceImpl implements MateMemberService {
         Mate mate = mateRepository.findById(mateId).orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
         //mateMember 테이블에서 생성자 조회
-        MateMember creator = mateMemberRepository.findGradeByMateIdAndUserIdAndDeletedAtIsNull(mateId, creatorId)
+        MateMember creator = mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, creatorId)
                 .orElseThrow(() -> new MateMemberNotFoundExcption("디저트메이트 멤버가 아닙니다."));
         if (creator.getGrade().equals(MateMemberGrade.CREATOR)) {
 
@@ -333,7 +333,7 @@ public class MateMemberServiceImpl implements MateMemberService {
         Long creatorId = creatorIds.getUserId();
 
         //mateMember 테이블에서 생성자 조회
-        MateMember creator = mateMemberRepository.findGradeByMateIdAndUserIdAndDeletedAtIsNull(mateId, creatorId)
+        MateMember creator = mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, creatorId)
                 .orElseThrow(() -> new MateMemberNotFoundExcption("디저트메이트 멤버가 아닙니다."));
 
         if (creator.getGrade().equals(MateMemberGrade.CREATOR)) {
@@ -384,7 +384,7 @@ public class MateMemberServiceImpl implements MateMemberService {
 
 
         //mateMember 테이블에서 생성자 조회
-        MateMember creator = mateMemberRepository.findGradeByMateIdAndUserIdAndDeletedAtIsNull(mateId, creatorId)
+        MateMember creator = mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, creatorId)
                 .orElseThrow(() -> new MateMemberNotFoundExcption("디저트메이트 멤버가 아닙니다."));
 
         if (creator.getGrade().equals(MateMemberGrade.CREATOR)) {
