@@ -120,10 +120,11 @@ public class UserStoreController {
     }
 
     /** 저장된 가게 수정 */
-    @PatchMapping("/stores/{storeUuid}/lists")
     @Operation(summary = "저장된 가게 수정 (completed)", description = "가게의 저장된 리스트를 수정합니다. 선택된 리스트에 가게를 한꺼번에 저장하고 현재 사용자의 취향 태그를 반영합니다.")
     @ApiResponse(responseCode = "200", description = "저장된 가게 수정 성공")
+    @ApiErrorResponses({ErrorCode.USER_STORE_SERVICE_ERROR, ErrorCode.STORE_LIST_NOT_FOUND, ErrorCode.INVALID_STORE_UUID})
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
+    @PatchMapping("/stores/{storeUuid}/lists")
     public ResponseEntity<Void> updateSavedStoreLists(
             @PathVariable String storeUuid,
             @RequestBody UpdateSavedStoreListsRequest request) {
