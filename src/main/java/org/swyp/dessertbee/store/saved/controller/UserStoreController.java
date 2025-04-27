@@ -85,7 +85,17 @@ public class UserStoreController {
     }
 
     /** 리스트에 가게 추가 */
-    @Operation(summary = "리스트에 가게 저장 (completed)", description = "해당 리스트에 가게를 저장합니다.")
+    @Operation(
+            summary = "리스트에 가게 저장 (completed)",
+            description = "해당 리스트에 가게를 저장합니다.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "유저 취향 태그 ID 리스트",
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = List.class, example = "[1, 2, 3]")
+                    )
+            )
+    )
     @ApiResponse( responseCode = "200", description = "리스트에 가게 저장 성공", content = @Content(schema = @Schema(implementation = SavedStoreResponse.class)))
     @ApiErrorResponses({ErrorCode.USER_STORE_SERVICE_ERROR, ErrorCode.STORE_LIST_NOT_FOUND, ErrorCode.STORE_SAVE_FAILED, ErrorCode.STORE_NOT_FOUND, ErrorCode.INVALID_STORE_UUID})
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
@@ -120,7 +130,16 @@ public class UserStoreController {
     }
 
     /** 저장된 가게 수정 */
-    @Operation(summary = "저장된 가게 수정 (completed)", description = "가게의 저장된 리스트를 수정합니다. 선택된 리스트에 가게를 한꺼번에 저장하고 현재 사용자의 취향 태그를 반영합니다.")
+    @Operation(
+            summary = "저장된 가게 수정 (completed)",
+            description = """
+        가게가 저장될 리스트 목록을 수정합니다.
+        
+        - 리스트를 하나도 선택하지 않은 경우(selectedLists가 비어있거나 null), 기존 저장된 리스트에서 가게가 모두 삭제됩니다.
+        - 리스트를 선택하면 해당 리스트에 가게가 저장되며, 미리 설정해둔 유저의 취향 태그(userPreferences)도 함께 저장됩니다.
+        - 취향 태그(userPreferences)는 선택 사항입니다. 취향 태그가 없다면 빈 리스트로 저장됩니다.
+        """
+    )
     @ApiResponse(responseCode = "200", description = "저장된 가게 수정 성공")
     @ApiErrorResponses({ErrorCode.USER_STORE_SERVICE_ERROR, ErrorCode.STORE_LIST_NOT_FOUND, ErrorCode.INVALID_STORE_UUID})
     @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")

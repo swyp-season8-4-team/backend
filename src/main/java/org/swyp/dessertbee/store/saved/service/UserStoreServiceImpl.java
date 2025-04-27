@@ -7,6 +7,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.common.entity.ImageType;
+import org.swyp.dessertbee.preference.exception.PreferenceExceptions.*;
 import org.swyp.dessertbee.statistics.store.entity.enums.SaveAction;
 import org.swyp.dessertbee.statistics.store.event.StoreSaveActionEvent;
 import org.swyp.dessertbee.store.saved.dto.*;
@@ -309,6 +310,19 @@ public class UserStoreServiceImpl implements UserStoreService {
                     .map(savedStore -> savedStore.getUserStoreList().getId())
                     .toList();
 
+            // selectedLists가 null 또는 빈 리스트인 경우
+            if (selectedLists == null || selectedLists.isEmpty()) {
+                if (!currentSavedStores.isEmpty()) {
+                    for (SavedStore savedStore : currentSavedStores) {
+                        savedStoreRepository.delete(savedStore);
+                        eventPublisher.publishEvent(new StoreSaveActionEvent(store.getStoreId(), currentUser.getUserUuid(), SaveAction.UNSAVE));
+                    }
+                    log.info("selectedLists가 비어 있어 기존 저장 모두 삭제 완료. storeId={}, userId={}", store.getStoreId(), currentUser.getId());
+                }
+                return;
+            }
+
+            // selectedLists가 존재하는 경우
             List<Long> selectedListIds = selectedLists.stream()
                     .map(UpdateSavedStoreListsRequest.StoreListUpdateRequest::getListId)
                     .toList();
