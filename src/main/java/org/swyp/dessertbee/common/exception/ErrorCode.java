@@ -128,6 +128,7 @@ public enum ErrorCode {
     STORE_NOTICE_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S049", "가게 공지사항 서비스 처리 중 오류가 발생했습니다."),
     STORE_HOLIDAY_TERM_ERROR(HttpStatus.BAD_REQUEST, "S050", "휴무일의 종료일은 시작일 이후여야 합니다."),
     STORE_HOLIDAY_TYPE_ERROR(HttpStatus.BAD_REQUEST, "S051", "날짜 형식이 올바르지 않습니다. yyyy.MM.dd 또는 yyyy.MM.dd-yyyy.MM.dd 형식을 사용해주세요."),
+    STORE_REVIEW_ALREADY_EXISTS_TODAY(HttpStatus.BAD_REQUEST, "S052", "오늘 이미 작성한 리뷰가 존재합니다."),
 
 
     // 사장님 권한
