@@ -116,11 +116,12 @@ public interface SavedStoreRepository extends JpaRepository<SavedStore, Long> {
 
     /** 특정 가게를 유저가 저장한 SavedStore 모두 조회 */
     @Query("""
-        SELECT ss
-        FROM SavedStore ss
-        JOIN ss.userStoreList usl
-        WHERE ss.store = :store
-          AND usl.user.id = :userId
+        SELECT s
+        FROM SavedStore s
+        JOIN s.userStoreList usl
+        JOIN usl.user u
+        WHERE s.store = :store
+          AND u.id = :userId
     """)
     List<SavedStore> findByStoreAndUserId(@Param("store") Store store, @Param("userId") Long userId);
 
