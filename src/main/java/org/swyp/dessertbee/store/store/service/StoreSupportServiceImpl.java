@@ -64,9 +64,9 @@ public class StoreSupportServiceImpl implements StoreSupportService{
             return Pair.of(false, null);
         }
 
-        Optional<SavedStore> savedStoreOpt = savedStoreRepository.findFirstByStoreAndUserId(store, user.getId());
-        boolean saved = savedStoreOpt.isPresent();
-        Long savedListId = savedStoreOpt.map(s -> s.getUserStoreList().getId()).orElse(null);
+        List<SavedStore> savedStores = savedStoreRepository.findByStoreAndUserId(store, user.getId());
+        boolean saved = !savedStores.isEmpty();
+        Long savedListId = savedStores.isEmpty() ? null : savedStores.get(0).getUserStoreList().getId();
 
         log.info("사용자가 가게를 저장했는지 여부: {}, savedListId: {}", saved, savedListId);
         return Pair.of(saved, savedListId);
