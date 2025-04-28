@@ -9,6 +9,10 @@ import java.util.List;
 import java.util.UUID;
 
 public interface StoreReviewService {
+
+    /** 한 유저가 한 가게에 오늘 날짜로 등록한 리뷰의 존재 여부 확인 */
+    boolean hasTodayReview(UUID storeUuid, UUID userUuid);
+
     /** 리뷰 등록 */
     StoreReviewResponse createReview(UUID storeUuid, StoreReviewCreateRequest request, List<MultipartFile> images);
 

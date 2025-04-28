@@ -33,6 +33,25 @@ public class StoreReviewController {
 
     private final StoreReviewService storeReviewService;
 
+    /** 오늘 작성한 리뷰 여부 조회 */
+    @Operation(
+            summary = "오늘 작성한 리뷰 여부 조회",
+            description = "특정 유저가 특정 가게에 대해 오늘 작성한 리뷰가 있는지 여부를 반환합니다. (true/false)"
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "오늘 작성한 리뷰 여부 조회 성공",
+            content = @Content(schema = @Schema(implementation = Boolean.class))
+    )
+    @ApiErrorResponses({ErrorCode.INVALID_STORE_UUID, ErrorCode.STORE_REVIEW_SERVICE_ERROR})
+    @GetMapping("/today-exists")
+    public ResponseEntity<Boolean> checkTodayReview(
+            @PathVariable UUID storeUuid,
+            @RequestParam UUID userUuid) {
+        boolean exists = storeReviewService.hasTodayReview(storeUuid, userUuid);
+        return ResponseEntity.ok(exists);
+    }
+
     /** 리뷰 등록 */
     @Operation(summary = "한줄 리뷰 등록 (completed)", description = "한줄 리뷰를 등록합니다.")
     @ApiResponse( responseCode = "200", description = "한줄리뷰 등록 성공", content = @Content(schema = @Schema(implementation = StoreReviewResponse.class)))
