@@ -42,6 +42,23 @@ public class StoreReviewServiceImpl implements StoreReviewService {
     private final StoreStatisticsRepository storeStatisticsRepository;
     private final ApplicationEventPublisher eventPublisher;
 
+    /** 오늘 작성한 리뷰 여부 확인 */
+    public boolean hasTodayReview(UUID storeUuid, UUID userUuid) {
+        try{
+            Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
+
+            if (storeId == null) {
+                throw new InvalidStoreUuidException();
+            }
+
+            int todayReviewCount = storeReviewRepository.countTodayReviewsByUserAndStore(userUuid, storeId);
+            return todayReviewCount > 0;
+        } catch (Exception e) {
+            log.error("오늘 작성한 리뷰 여부 조회 처리 중 오류 발생", e);
+            throw new StoreReviewServiceException("오늘 작성한 리뷰 여부 조회 처리 중 오류가 발생했습니다.");
+        }
+    }
+
     /** 리뷰 등록 */
     @Override
     public StoreReviewResponse createReview(UUID storeUuid, StoreReviewCreateRequest request, List<MultipartFile> images) {
