@@ -18,9 +18,7 @@ import org.swyp.dessertbee.community.mate.dto.request.MateAppReplyCreateRequest;
 import org.swyp.dessertbee.community.mate.dto.request.MateReplyCreateRequest;
 import org.swyp.dessertbee.community.mate.dto.request.MateReportRequest;
 import org.swyp.dessertbee.community.mate.dto.response.*;
-import org.swyp.dessertbee.community.mate.entity.Mate;
-import org.swyp.dessertbee.community.mate.entity.MateReply;
-import org.swyp.dessertbee.community.mate.entity.MateReport;
+import org.swyp.dessertbee.community.mate.entity.*;
 import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.community.mate.repository.MateMemberRepository;
 import org.swyp.dessertbee.community.mate.repository.MateReplyRepository;
@@ -32,6 +30,7 @@ import org.swyp.dessertbee.user.service.UserService;
 import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -148,9 +147,11 @@ public class MateReplyServiceImpl implements MateReplyService {
 
         UserEntity user = userService.findById(reply.getUserId());
 
+
         // 사용자별 프로필 이미지 조회
         String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, user.getId());
 
+        MateMemberGrade mateMemberGrade = mateMemberRepository.findGradeByMateIdAndUserIdAndDeletedAtIsNull(reply.getMateId(), user.getId());
         // 자식 대댓글 조회
         List<MateReply> childReplies = mateReplyRepository.findByParentMateReplyId(reply.getMateReplyId());
 
@@ -158,7 +159,7 @@ public class MateReplyServiceImpl implements MateReplyService {
                 .map(child -> getAppReplyDetail(mateUuid, child.getMateReplyId()))
                 .collect(Collectors.toList());
 
-        return MateAppReplyResponse.fromEntity(reply, user, profileImage, children);
+        return MateAppReplyResponse.fromEntity(reply, user, profileImage, children, mateMemberGrade);
     }
 
 
@@ -338,12 +339,12 @@ public class MateReplyServiceImpl implements MateReplyService {
         // userUuid로 userId 조회
         Long userId = user.getId();
 
+        //디저트 메이트 멤버인지 확인
+        mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mate.getMateId(), userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_MEMBER_NOT_FOUND));
+
         try {
             userService.findById(userId);
-
-            //디저트 메이트 멤버인지 확인
-            mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mate.getMateId(), userId)
-                    .orElseThrow(() -> new BusinessException(ErrorCode.MATE_MEMBER_NOT_FOUND));
 
 
             return new MateUserIds(mate.getMateId(), userId);
