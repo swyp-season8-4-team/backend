@@ -378,36 +378,4 @@ public class MateServiceImpl implements MateService {
 
     }
 
-//    -------------- 관리자용 메이트 신고 관리 기능 ------------
-
-    /**
-     *   신고된 Mate 게시글 목록 조회
-     */
-    public List<MateReportResponse> getReportedMates() {
-        List<MateReport> reports = mateReportRepository.findAllByMateIdIsNotNull();
-        return reports.stream()
-                .map(MateReportResponse::new)
-                .collect(Collectors.toList());
-    }
-
-
-    /**
-     * 신고된 Mate 게시글 삭제
-     */
-    @Transactional
-    public void deleteMateByUuid(UUID mateUuid) {
-        Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
-
-        // mateUuid가 있는 신고 데이터 확인
-        boolean isReported = mateReportRepository.existsByMateId(mate.getMateId());
-        if (!isReported) {
-            throw new MateReportNotFoundException("신고되지 않은 디저트메이트입니다.");
-        }
-
-        // 게시글 삭제 (soft delete)
-        mate.softDelete();
-        mateRepository.save(mate);
-    }
-
 }
