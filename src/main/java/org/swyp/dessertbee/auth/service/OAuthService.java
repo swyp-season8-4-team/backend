@@ -17,7 +17,7 @@ import org.swyp.dessertbee.auth.exception.OAuthExceptions.*;
 public class OAuthService {
 
     private final KakaoOAuthService kakaoOAuthService;
-    // 추후 다른 OAuth 서비스 추가 (네이버, 구글 등)
+    private final AppleOAuthService appleOAuthService;
 
     /**
      * 인가 코드로 OAuth 로그인 처리
@@ -40,6 +40,7 @@ public class OAuthService {
             // enum을 사용하여 적절한 서비스 호출
             return switch (provider) {
                 case KAKAO -> kakaoOAuthService.processKakaoLogin(code, deviceId);
+                case APPLE -> appleOAuthService.processAppleLogin(code, deviceId);
                 // 추후 다른 OAuth 제공자 추가
                 default -> throw new InvalidProviderException("아직 구현되지 않은 OAuth 제공자입니다: " + provider.getProviderName());
             };

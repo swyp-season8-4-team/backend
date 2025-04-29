@@ -75,4 +75,25 @@ public class OAuthController {
 
         return ResponseEntity.ok(loginResponse);
     }
+
+    /**
+     * Apple 전용 OAuth 인가 코드 로그인 처리 (POST 요청)
+     */
+    @Operation(
+            summary = "Apple OAuth 회원가입, 로그인 (전용)",
+            description = "Apple OAuth 회원가입 및 로그인. Apple form_post 방식 대응."
+    )
+    @ApiResponse(responseCode = "200", description = "Apple 로그인 및 회원가입 성공", content = @Content(schema = @Schema(implementation = LoginResponse.class)))
+    @ApiErrorResponses({ErrorCode.INVALID_INPUT_VALUE, ErrorCode.AUTHENTICATION_FAILED})
+    @PostMapping("/apple/callback")
+    public ResponseEntity<LoginResponse> appleOauthCallback(
+            @RequestParam("code") String code,
+            @Parameter(hidden = true) @RequestHeader(value = "X-Device-ID", required = false) String deviceId
+    ) {
+        log.info("Apple OAuth 인가 코드 수신 - code: {}", code);
+        LoginResponse loginResponse = oAuthService.processOAuthLogin(code, "apple", deviceId);
+
+        return ResponseEntity.ok(loginResponse);
+    }
+
 }
