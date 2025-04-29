@@ -41,16 +41,16 @@ public interface StoreTopTagRepository extends JpaRepository<StoreTopTag, Long> 
     @Modifying
     @Transactional
     @Query(value = """
-        INSERT INTO store_top_tag (store_id, tag_id, tag_rank)
-        SELECT store_id, tag_id, tag_rank
-        FROM (
-            SELECT ss.store_id, sp.preference AS tag_id,
-                   ROW_NUMBER() OVER (PARTITION BY ss.store_id ORDER BY COUNT(*) DESC) AS tag_rank
-            FROM saved_store ss
-            JOIN saved_store_preferences sp ON ss.id = sp.saved_store_id
-            GROUP BY ss.store_id, sp.preference
-        ) ranked
-        WHERE tag_rank <= 11
-        """, nativeQuery = true)
+    INSERT INTO store_top_tag (store_id, tag_id, tag_rank, created_at)
+    SELECT store_id, tag_id, tag_rank, NOW()
+    FROM (
+        SELECT ss.store_id, sp.preference AS tag_id,
+                ROW_NUMBER() OVER (PARTITION BY ss.store_id ORDER BY COUNT(*) DESC) AS tag_rank
+        FROM saved_store ss
+        JOIN saved_store_preferences sp ON ss.id = sp.saved_store_id
+        GROUP BY ss.store_id, sp.preference
+    ) ranked
+    WHERE tag_rank <= 11
+    """, nativeQuery = true)
     void populateStoreTopTag();
 }
