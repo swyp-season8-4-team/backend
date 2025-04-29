@@ -14,9 +14,9 @@ import java.util.List;
 public interface StoreTopTagRepository extends JpaRepository<StoreTopTag, Long> {
 
     @Query(value = """
-    SELECT stt.tag_id AS tagId, st.name AS name, stt.tag_rank AS `rank`
+    SELECT stt.tag_id AS tagId, p.preference_name AS name, stt.tag_rank AS `rank`
     FROM store_top_tag stt
-    JOIN store_tag st ON stt.tag_id = st.id
+    JOIN preference p ON stt.tag_id = p.id
     WHERE stt.store_id = :storeId
       AND stt.tag_rank <= 3
     ORDER BY stt.tag_rank ASC
@@ -24,9 +24,9 @@ public interface StoreTopTagRepository extends JpaRepository<StoreTopTag, Long> 
     List<TopPreferenceTagResponse> findTop3TagsByStoreId(@Param("storeId") Long storeId);
 
     @Query(value = """
-    SELECT stt.tag_id AS tagId, st.name AS name, stt.tag_rank AS `rank`
+    SELECT stt.tag_id AS tagId, p.preference_name AS name, stt.tag_rank AS `rank`
     FROM store_top_tag stt
-    JOIN store_tag st ON stt.tag_id = st.id
+    JOIN preference p ON stt.tag_id = p.id
     WHERE stt.store_id = :storeId
       AND stt.tag_rank <= 11
     ORDER BY stt.tag_rank ASC
@@ -44,11 +44,19 @@ public interface StoreTopTagRepository extends JpaRepository<StoreTopTag, Long> 
     INSERT INTO store_top_tag (store_id, tag_id, tag_rank, created_at)
     SELECT store_id, tag_id, tag_rank, NOW()
     FROM (
-        SELECT ss.store_id, sp.preference AS tag_id,
-                ROW_NUMBER() OVER (PARTITION BY ss.store_id ORDER BY COUNT(*) DESC) AS tag_rank
-        FROM saved_store ss
-        JOIN saved_store_preferences sp ON ss.id = sp.saved_store_id
-        GROUP BY ss.store_id, sp.preference
+        SELECT
+            store_id,
+            preference AS tag_id,
+            ROW_NUMBER() OVER (PARTITION BY store_id ORDER BY preference_count DESC) AS tag_rank
+        FROM (
+            SELECT\s
+                ss.store_id,
+                sp.preference,
+                COUNT(*) AS preference_count
+            FROM saved_store_preferences sp
+            JOIN saved_store ss ON sp.saved_store_id = ss.id
+            GROUP BY ss.store_id, sp.preference
+        ) counted
     ) ranked
     WHERE tag_rank <= 11
     """, nativeQuery = true)
