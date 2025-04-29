@@ -19,6 +19,7 @@ import org.swyp.dessertbee.search.repository.UserSearchHistoryRepository;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 
@@ -308,7 +309,7 @@ public class SearchServiceImpl implements SearchService {
      * 매일 자정 MySQL로 데이터 이전 후 Redis 초기화
      */
     public void midnightSyncPopularSearchesToDB() {
-        log.info("자정 인기 검색어 백업 및 초기화 시작");
+        log.info("[스케줄러 시작] 인기 검색어 백업 at {}", LocalDateTime.now());
 
         // 락 설정
         if (!acquireLock(SYNC_LOCK_KEY, SYNC_LOCK_TIMEOUT)) {
@@ -349,10 +350,10 @@ public class SearchServiceImpl implements SearchService {
             // 동기화가 성공한 경우에만 Redis 초기화
             clearPopularSearchCache();
 
-            log.info("인기 검색어 백업 및 초기화 완료");
+            log.info("[스케줄러 종료] 인기 검색어 백업 at {}", LocalDateTime.now());
 
         } catch (PopularInitFailedException e) {
-            log.warn("인기 검색어 초기화 실패 - {}", e.getMessage());
+            log.warn("[스케줄러 실패] 인기 검색어 초기화 실패 - {}", e.getMessage());
             throw e;
         } catch (Exception e) {
             log.error("예상치 못한 오류 발생 - Redis 초기화 중단", e);
