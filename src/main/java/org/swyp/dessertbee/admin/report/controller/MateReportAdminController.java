@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.swyp.dessertbee.admin.report.dto.response.MateReplyReportCountResponse;
+import org.swyp.dessertbee.admin.report.dto.response.MateReportCountResponse;
 import org.swyp.dessertbee.admin.report.service.MateReportAdminService;
 import org.swyp.dessertbee.community.mate.dto.response.MateReportResponse;
 
@@ -29,14 +31,34 @@ public class MateReportAdminController {
         return ResponseEntity.ok(reports);
     }
 
-    // 게시글 삭제 API
+    //신고된 게시글의 신고 횟수 조회 API
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/{mateUuid}/report")
+    @GetMapping("/report/{mateUuid}/count")
+    public ResponseEntity<MateReportCountResponse> getMateReportCount(@PathVariable UUID mateUuid) {
+        MateReportCountResponse response = mateReportAdminService.getMateReportCount(mateUuid);
+        return ResponseEntity.ok(response);
+    }
+
+
+    // 신고된 게시글 삭제 API (1단계)
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/report/{mateUuid}")
     public ResponseEntity<Map<String, String>> deleteMate(@PathVariable UUID mateUuid) {
         mateReportAdminService.deleteMateByUuid(mateUuid);
         Map<String, String> response = new HashMap<>();
         response.put("message", "게시글이 삭제되었습니다.");
         return ResponseEntity.ok(response);
+    }
+
+    // 신고된 Mate 게시글 사용자 경고 (2단계)
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/report/{mateUuid}/warn")
+    public ResponseEntity<Void> warnMateAuthor(
+            @PathVariable UUID mateUuid,
+            @RequestParam Long reportCategoryId
+    ) {
+        mateReportAdminService.warnMateAuthor(mateUuid, reportCategoryId);
+        return ResponseEntity.ok().build();
     }
 
     // 신고된 게시글 댓글 조회 API
@@ -47,14 +69,32 @@ public class MateReportAdminController {
         return ResponseEntity.ok(reportedReplies);
     }
 
-    // 신고된 Mate 댓글 삭제
+    //신고된 댓글의 신고 횟수 조회 API
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/replies/{mateReplyId}/report")
+    @GetMapping("/replies/report/{mateReplyId}/count")
+    public ResponseEntity<MateReplyReportCountResponse> getMateReplyReportCount(@PathVariable Long mateReplyId) {
+        MateReplyReportCountResponse response = mateReportAdminService.getMateReplyReportCount(mateReplyId);
+        return ResponseEntity.ok(response);
+    }
+
+    // 신고된 Mate 댓글 삭제 (1단계)
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/replies/report/{mateReplyId}")
     public ResponseEntity<String> deleteReportedMateReply(@PathVariable Long mateReplyId) {
         mateReportAdminService.deleteReportedMateReply(mateReplyId);
         return ResponseEntity.ok("신고된 댓글이 삭제되었습니다.");
     }
 
+    //신고된 Mate 댓글 작성자 경고 (2단계)
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/replies/report/{mateReplyId}/warn")
+    public ResponseEntity<Void> warnMateReplyAuthor(
+            @PathVariable Long mateReplyId,
+            @RequestParam Long reportCategoryId
+    ) {
+        mateReportAdminService.warnMateReplyAuthor(mateReplyId, reportCategoryId);
+        return ResponseEntity.ok().build();
+    }
 
 
 }
