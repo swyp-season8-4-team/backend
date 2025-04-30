@@ -41,4 +41,11 @@ public interface StoreReviewRepository extends JpaRepository<StoreReview, Long> 
           AND FUNCTION('DATE', r.createdAt) = CURRENT_DATE
     """)
     int countTodayReviewsByUserAndStore(@Param("userUuid") UUID userUuid, @Param("storeId") Long storeId);
+
+    @Query("""
+        SELECT sr FROM StoreReview sr
+        WHERE sr.userUuid = :userUuid AND sr.deletedAt IS NULL
+        ORDER BY sr.createdAt DESC
+    """)
+    List<StoreReview> findByUserUuidOrderByCreatedAtDesc(@Param("userUuid") UUID userUuid);
 }
