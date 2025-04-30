@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.auth.dto.response.LoginResponse;
 import org.swyp.dessertbee.auth.dto.request.OAuthCodeRequest;
+import org.swyp.dessertbee.auth.dto.request.AppleLoginRequest;
 import org.swyp.dessertbee.auth.service.OAuthService;
 import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
 import org.swyp.dessertbee.common.exception.ErrorCode;
@@ -61,14 +62,13 @@ public class OAuthController {
                     )
             )
     )
-    @ApiResponse( responseCode = "200", description = "로그인 및 회원가입 성공", content = @Content(schema = @Schema(implementation = LoginResponse.class)))
+    @ApiResponse(responseCode = "200", description = "로그인 및 회원가입 성공", content = @Content(schema = @Schema(implementation = LoginResponse.class)))
     @ApiErrorResponses({ErrorCode.INVALID_INPUT_VALUE, ErrorCode.AUTHENTICATION_FAILED, ErrorCode.INVALID_PROVIDER, ErrorCode.DUPLICATE_NICKNAME})
     @PostMapping("/callback")
     public ResponseEntity<LoginResponse> oauthCallback(
             @RequestBody OAuthCodeRequest request,
             @Parameter(hidden = true) @RequestHeader(value = "X-Device-ID", required = false) String deviceId
-            ) {
-
+    ) {
         log.info("OAuth 인가 코드 수신 - 제공자: {}", request.getProvider());
         LoginResponse loginResponse = oAuthService.processOAuthLogin(
                 request.getCode(), request.getProvider(), deviceId);
@@ -77,23 +77,47 @@ public class OAuthController {
     }
 
     /**
-     * Apple 전용 OAuth 인가 코드 로그인 처리 (POST 요청)
+     * Apple 특화 OAuth 인증 처리 (POST 요청)
      */
     @Operation(
-            summary = "Apple OAuth 회원가입, 로그인 (전용)",
-            description = "Apple OAuth 회원가입 및 로그인. Apple form_post 방식 대응."
+            summary = "Apple 회원가입, 로그인 (completed)",
+            description = "Apple ID로 새로운 사용자 등록 및 로그인. id_token과 사용자 정보를 함께 처리합니다.",
+            parameters = {
+                    @Parameter(
+                            name = "X-Device-ID",
+                            description = "디바이스 식별자 (앱 환경에서 사용). 없을 경우 서버에서 생성됩니다.",
+                            in = ParameterIn.HEADER,
+                            schema = @Schema(type = "string"),
+                            required = false
+                    ),
+                    @Parameter(
+                            name = "deviceId",
+                            description = "디바이스 식별자 쿠키 (웹 환경에서 사용). Nginx에서 X-Device-ID 헤더로 변환됩니다.",
+                            in = ParameterIn.COOKIE,
+                            schema = @Schema(type = "string"),
+                            required = false
+                    )
+            },
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Apple 로그인 요청 정보",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = AppleLoginRequest.class)
+                    )
+            )
     )
-    @ApiResponse(responseCode = "200", description = "Apple 로그인 및 회원가입 성공", content = @Content(schema = @Schema(implementation = LoginResponse.class)))
-    @ApiErrorResponses({ErrorCode.INVALID_INPUT_VALUE, ErrorCode.AUTHENTICATION_FAILED})
+    @ApiResponse(responseCode = "200", description = "로그인 및 회원가입 성공", content = @Content(schema = @Schema(implementation = LoginResponse.class)))
+    @ApiErrorResponses({ErrorCode.INVALID_INPUT_VALUE, ErrorCode.AUTHENTICATION_FAILED, ErrorCode.INVALID_PROVIDER, ErrorCode.DUPLICATE_NICKNAME})
     @PostMapping("/apple/callback")
-    public ResponseEntity<LoginResponse> appleOauthCallback(
-            @RequestParam("code") String code,
+    public ResponseEntity<LoginResponse> appleCallback(
+            @RequestBody AppleLoginRequest request,
             @Parameter(hidden = true) @RequestHeader(value = "X-Device-ID", required = false) String deviceId
     ) {
-        log.info("Apple OAuth 인가 코드 수신 - code: {}", code);
-        LoginResponse loginResponse = oAuthService.processOAuthLogin(code, "apple", deviceId);
+        log.info("Apple OAuth 인가 코드 수신");
+        LoginResponse loginResponse = oAuthService.processAppleLogin(
+                request.getCode(), request.getIdToken(), request.getState(), request.getUserInfo(), deviceId);
 
         return ResponseEntity.ok(loginResponse);
     }
-
 }
