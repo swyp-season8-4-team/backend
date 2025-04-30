@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
 import org.swyp.dessertbee.common.exception.ErrorCode;
+import org.swyp.dessertbee.store.review.dto.response.UserReviewListResponse;
+import org.swyp.dessertbee.store.review.service.StoreReviewService;
 import org.swyp.dessertbee.user.dto.request.NicknameAvailabilityRequestDto;
 import org.swyp.dessertbee.user.dto.response.NicknameAvailabilityResponseDto;
 import org.swyp.dessertbee.user.dto.response.UserDetailResponseDto;
@@ -32,6 +34,7 @@ import org.swyp.dessertbee.user.service.UserService;
 public class UserController {
 
     private final UserService userService;
+    private final StoreReviewService storeReviewService;
 
     /**
      * 현재 인증된 사용자의 상세 정보를 조회
@@ -170,6 +173,22 @@ public class UserController {
             @RequestPart("image") MultipartFile image) {
         log.info("프로필 이미지 업데이트 요청 - 파일명: {}", image.getOriginalFilename());
         UserDetailResponseDto response = userService.updateProfileImage(image);
+        return ResponseEntity.ok(response);
+    }
+
+    /** 유저가 작성한 한줄 리뷰 리스트 (최신 등록순) 조회 */
+    @Operation(
+            summary = "내가 작성한 한줄 리뷰 리스트 조회 (completed)",
+            description = "인증된 사용자가 작성한 한줄 리뷰 목록을 최신순으로 반환합니다."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "리뷰 리스트 조회 성공",
+            content = @Content(schema = @Schema(implementation = UserReviewListResponse.class)))
+    @ApiErrorResponses({ErrorCode.STORE_REVIEW_SERVICE_ERROR, ErrorCode.STORE_NOT_FOUND})
+    @GetMapping("/me/reviews/short")
+    public ResponseEntity<UserReviewListResponse> getMyShortReviews() {
+        UserReviewListResponse response = storeReviewService.getUserReviewList();
         return ResponseEntity.ok(response);
     }
 }
