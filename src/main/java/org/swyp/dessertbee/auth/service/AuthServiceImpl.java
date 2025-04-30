@@ -205,6 +205,11 @@ public class AuthServiceImpl implements AuthService {
             // 사용자 조회
             UserEntity user = userService.findUserByEmail(request.getEmail(), ErrorCode.INVALID_EMAIL);
 
+            // 정지 여부 확인
+            if (user.isSuspended()) {
+                throw new AccountLockedException("계정이 정지되었습니다. 정지 해제 일시: " + user.getSuspendedUntil());
+            }
+
             // 비밀번호 검증 및 실패 처리
             // 비밀번호 검증
             if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {

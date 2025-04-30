@@ -119,7 +119,7 @@ public class MateReportAdminServiceImpl implements MateReportAdminService {
         warningMailService.sendWarningEmail(user.getEmail(), reason);
     }
 
-
+    //--------------------- Mate 댓글 ---------------------
     /**
      *  신고된 Mate 댓글 조회
      */

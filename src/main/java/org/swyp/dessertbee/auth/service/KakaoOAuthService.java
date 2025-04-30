@@ -156,6 +156,11 @@ public class KakaoOAuthService {
         UserEntity user = userRepository.findByEmail(oauth2Response.getEmail())
                 .orElseGet(() -> registerNewUser(oauth2Response));
 
+        // 정지 여부 확인
+        if (user.isSuspended()) {
+            throw new AccountLockedException("계정이 정지되었습니다. 정지 해제 일시: " + user.getSuspendedUntil());
+        }
+
         // 사용자 역할 조회
         List<String> roles = user.getUserRoles().stream()
                 .map(userRole -> userRole.getRole().getName().getRoleName())

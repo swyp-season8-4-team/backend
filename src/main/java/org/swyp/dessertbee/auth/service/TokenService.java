@@ -188,6 +188,11 @@ public class TokenService {
             UserEntity user = userService.findByUserUuid(userUuid);
             String email = user.getEmail();
 
+            // 정지 여부 확인
+            if (user.isSuspended()) {
+                throw new AccountLockedException("계정이 정지되었습니다. 정지 해제 일시: " + user.getSuspendedUntil());
+            }
+
             // 디바이스 ID 확인
             if (deviceId == null || deviceId.isEmpty()) {
                 log.warn("리프레시 토큰 검증 실패 - 디바이스 ID 없음: {}", email);
