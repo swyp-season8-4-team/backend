@@ -63,7 +63,7 @@ public class AppleOAuthService {
     @Value("${APPLE_KEY_ID}")
     private String keyId;
 
-    @Value("${APPLE_KEY_PATH}") // e.g. classpath:AuthKey_ABC123XYZ.p8
+    @Value("${APPLE_KEY_PATH}")
     private String privateKeyPath;
 
     @Value("${spring.security.oauth2.client.provider.apple.token-uri}")

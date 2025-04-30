@@ -22,6 +22,9 @@ spring:
         registration:
           kakao:
             redirect-uri: "http://localhost:8000/kakao-oauth-test.html"
+          apple:
+            redirect-uri: https://61c8-2001-2d8-2117-cf18-bc1c-5c7c-e9b8-c225.ngrok-free.app/apple-oauth-test.html
+
   graphql:
     cors:
       allowed-origins: "http://localhost:3000"
