@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.admin.report.dto.response.MateReplyReportCountResponse;
 import org.swyp.dessertbee.admin.report.dto.response.MateReportCountResponse;
+import org.swyp.dessertbee.admin.user.service.UserAdminService;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.community.mate.dto.response.MateReportResponse;
@@ -37,6 +38,7 @@ public class MateReportAdminServiceImpl implements MateReportAdminService {
     private final MateReplyRepository mateReplyRepository;
     private final UserRepository userRepository;
     private final WarningMailService warningMailService;
+    private final UserAdminService userAdminService;
 
     /**
      *   신고된 Mate 게시글 목록 조회
@@ -119,6 +121,26 @@ public class MateReportAdminServiceImpl implements MateReportAdminService {
         warningMailService.sendWarningEmail(user.getEmail(), reason);
     }
 
+    /**
+     * 신고된 Mate 게시글 작성자 정지 (3단계)
+     * 관리자가 직접 정지 버튼을 누르는 방식 (중대한 신고 여부는 관리자가 판단)
+     */
+    @Transactional
+    public void suspendMateAuthor(UUID mateUuid) {
+        // 게시글 조회
+        Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
+                .orElseThrow(() -> new MateExceptions.MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+
+        // 작성자 UUID 조회
+        UserEntity user = userRepository.findById(mate.getUserId())
+                .orElseThrow(() -> new MateExceptions.MateReportNotFoundException("작성자 정보를 찾을 수 없습니다."));
+
+        UUID userUuid = user.getUserUuid();
+
+        // UserAdminService를 통해 계정 정지 처리
+        userAdminService.suspendUserForOneMonthByUuid(userUuid);
+    }
+
     //--------------------- Mate 댓글 ---------------------
     /**
      *  신고된 Mate 댓글 조회
@@ -195,6 +217,26 @@ public class MateReportAdminServiceImpl implements MateReportAdminService {
         // 경고 메일 발송
         String reason = getReportCategoryName(reportCategoryId); // 신고 유형명 반환
         warningMailService.sendWarningEmail(user.getEmail(), reason);
+    }
+
+    /**
+     * 신고된 Mate 댓글 작성자 정지 (3단계)
+     * 관리자가 직접 정지 버튼을 누르는 방식 (중대한 신고 여부는 관리자가 판단)
+     */
+    @Transactional
+    public void suspendMateReplyAuthor(Long mateReplyId) {
+        // 댓글 조회
+        MateReply mateReply = mateReplyRepository.findByMateReplyIdAndDeletedAtIsNull(mateReplyId)
+                .orElseThrow(() -> new MateExceptions.MateReplyNotReportedException("존재하지 않는 댓글입니다."));
+
+        // 작성자 UUID 조회
+        UserEntity user = userRepository.findById(mateReply.getUserId())
+                .orElseThrow(() -> new MateExceptions.MateReportNotFoundException("작성자 정보를 찾을 수 없습니다."));
+
+        UUID userUuid = user.getUserUuid();
+
+        // UserAdminService를 통해 계정 정지 처리
+        userAdminService.suspendUserForOneMonthByUuid(userUuid);
     }
 
     // 신고 유형명을 반환하는 메서드
