@@ -69,6 +69,14 @@ public class MateReportAdminController {
         return ResponseEntity.ok().build();
     }
 
+    //신고된 게시글 작성자 작성제한 (3단계)
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/report/{mateUuid}/restrict-writing")
+    public ResponseEntity<Void> restrictMateAuthorWriting(@PathVariable UUID mateUuid) {
+        mateReportAdminService.restrictMateAuthorWriting(mateUuid);
+        return ResponseEntity.ok().build();
+    }
+
     //----------------- 댓글 ------------------
 
     // 신고된 게시글 댓글 조회 API
@@ -111,6 +119,14 @@ public class MateReportAdminController {
     @PostMapping("/replies/report/{mateReplyId}/suspend")
     public ResponseEntity<Void> suspendMateReplyAuthor(@PathVariable Long mateReplyId) {
         mateReportAdminService.suspendMateReplyAuthor(mateReplyId);
+        return ResponseEntity.ok().build();
+    }
+
+    // 신고된 댓글 작성자 작성제한 (3단계)
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/replies/report/{mateReplyId}/restrict-writing")
+    public ResponseEntity<Void> restrictMateReplyAuthorWriting(@PathVariable Long mateReplyId) {
+        mateReportAdminService.restrictMateReplyAuthorWriting(mateReplyId);
         return ResponseEntity.ok().build();
     }
 

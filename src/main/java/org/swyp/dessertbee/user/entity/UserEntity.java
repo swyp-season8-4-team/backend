@@ -74,6 +74,9 @@ public class UserEntity {
     @Column(name = "suspended_until")
     private LocalDateTime suspendedUntil; // 정지 만료일
 
+    @Column(name = "write_restricted_until")
+    private LocalDateTime writeRestrictedUntil; //작성제한 만료일
+
     @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserRoleEntity> userRoles = new HashSet<>();
@@ -181,4 +184,15 @@ public class UserEntity {
     public boolean isSuspended() {
         return suspendedUntil != null && LocalDateTime.now().isBefore(suspendedUntil);
     }
+
+    // 작성 제한 처리
+    public void restrictWritingFor7Days() {
+        this.writeRestrictedUntil = LocalDateTime.now().plusDays(7);
+    }
+
+    //작성 제한 여부
+    public boolean isWriteRestricted() {
+        return writeRestrictedUntil != null && LocalDateTime.now().isBefore(writeRestrictedUntil);
+    }
+
 }

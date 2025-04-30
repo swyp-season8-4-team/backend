@@ -21,6 +21,7 @@ import org.swyp.dessertbee.community.mate.service.MateReplyService;
 import org.swyp.dessertbee.community.mate.service.MateService;
 import org.swyp.dessertbee.email.service.WarningMailService;
 import org.swyp.dessertbee.user.entity.UserEntity;
+import org.swyp.dessertbee.user.exception.UserExceptions;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
 import java.util.HashMap;
@@ -141,6 +142,30 @@ public class MateReportAdminServiceImpl implements MateReportAdminService {
         userAdminService.suspendUserForOneMonthByUuid(userUuid);
     }
 
+    /**
+     * 신고된 Mate 게시글 작성자 작성 제한 (3단계)
+     */
+    @Transactional
+    public void restrictMateAuthorWriting(UUID mateUuid) {
+        // 게시글 조회
+        Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
+                .orElseThrow(() -> new MateExceptions.MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+
+        // 작성자 조회
+        UserEntity user = userRepository.findById(mate.getUserId())
+                .orElseThrow(() -> new MateExceptions.MateReportNotFoundException("작성자 정보를 찾을 수 없습니다."));
+
+        // 이미 작성제한 중인지 확인
+        if (user.isWriteRestricted()) {
+            throw new UserExceptions.InvalidUserStatusException( "이미 작성제한 중인 사용자입니다.");
+        }
+
+        // 작성제한 7일 적용
+        user.restrictWritingFor7Days();
+        userRepository.save(user);
+    }
+
+
     //--------------------- Mate 댓글 ---------------------
     /**
      *  신고된 Mate 댓글 조회
@@ -238,6 +263,30 @@ public class MateReportAdminServiceImpl implements MateReportAdminService {
         // UserAdminService를 통해 계정 정지 처리
         userAdminService.suspendUserForOneMonthByUuid(userUuid);
     }
+
+    /**
+     * 신고된 Mate 댓글 작성자 작성 제한 (3단계)
+     */
+    @Transactional
+    public void restrictMateReplyAuthorWriting(Long mateReplyId) {
+        //  댓글 조회
+        MateReply mateReply = mateReplyRepository.findByMateReplyIdAndDeletedAtIsNull(mateReplyId)
+                .orElseThrow(() -> new MateExceptions.MateReplyNotReportedException("존재하지 않는 댓글입니다."));
+
+        // 작성자 조회
+        UserEntity user = userRepository.findById(mateReply.getUserId())
+                .orElseThrow(() -> new MateExceptions.MateReportNotFoundException("작성자 정보를 찾을 수 없습니다."));
+
+        //  이미 작성제한 중인지 확인
+        if (user.isWriteRestricted()) {
+            throw new UserExceptions.InvalidUserStatusException( "이미 작성제한 중인 사용자입니다.");
+        }
+
+        // 작성제한 7일 적용
+        user.restrictWritingFor7Days();
+        userRepository.save(user);
+    }
+
 
     // 신고 유형명을 반환하는 메서드
     private String getReportCategoryName(Long reportCategoryId) {

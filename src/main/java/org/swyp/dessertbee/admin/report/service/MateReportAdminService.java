@@ -26,6 +26,9 @@ public interface MateReportAdminService {
     //Mate 작성자 정지
     void suspendMateAuthor(UUID mateUuid);
 
+    //Mate 작성자 작성제한
+    void restrictMateAuthorWriting(UUID mateUuid);
+
     //신고된 Mate 댓글 조회
     List<MateReportResponse> getReportedMateReplies();
 
@@ -40,4 +43,7 @@ public interface MateReportAdminService {
 
     //Mate 댓글 작성자 정지
     void suspendMateReplyAuthor(Long mateReplyId);
+
+    //Mate 댓글 작성자 작성제한
+    void restrictMateReplyAuthorWriting(Long mateReplyId);
 }

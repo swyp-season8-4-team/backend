@@ -59,6 +59,11 @@ public class MateServiceImpl implements MateService {
         // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
         UserEntity user = userService.getCurrentUser();
 
+        // 작성 제한 체크
+        if (user.isWriteRestricted()) {
+            throw new IllegalStateException("작성 제한 기간입니다. 제한 해제 일시: " + user.getWriteRestrictedUntil());
+        }
+
         if(request.getCapacity() > 5){
             throw new MateCapacityExceededException("최대 수용 인원 초과입니다.");
         }
@@ -117,6 +122,12 @@ public class MateServiceImpl implements MateService {
     public MateDetailResponse createAppMate(MateCreateRequest request, MultipartFile mateImage) {
         // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
         UserEntity user = userService.getCurrentUser();
+
+        // 작성 제한 체크
+        if (user.isWriteRestricted()) {
+            throw new IllegalStateException("작성 제한 기간입니다. 제한 해제 일시: " + user.getWriteRestrictedUntil());
+        }
+
 
         if(request.getCapacity() > 5){
             throw new MateCapacityExceededException("최대 수용 인원 초과입니다.");

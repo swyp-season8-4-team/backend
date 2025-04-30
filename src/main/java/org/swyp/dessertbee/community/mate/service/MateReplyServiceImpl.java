@@ -55,6 +55,12 @@ public class MateReplyServiceImpl implements MateReplyService {
     @Transactional
     public MateReplyResponse createReply(UUID mateUuid, MateReplyCreateRequest request) {
 
+        UserEntity user = userService.getCurrentUser();
+
+        // 작성 제한 체크
+        if (user.isWriteRestricted()) {
+            throw new IllegalStateException("작성 제한 기간입니다. 제한 해제 일시: " + user.getWriteRestrictedUntil());
+        }
 
         //디저트 메이트 유효성 검사
         MateUserIds mateUserIds = validateMateAndUser(mateUuid, request.getUserUuid());
@@ -82,6 +88,13 @@ public class MateReplyServiceImpl implements MateReplyService {
     @Override
     @Transactional
     public MateReplyResponse createAppReply(UUID mateUuid, MateAppReplyCreateRequest request){
+
+        UserEntity user = userService.getCurrentUser();
+
+        // 작성 제한 체크
+        if (user.isWriteRestricted()) {
+            throw new IllegalStateException("작성 제한 기간입니다. 제한 해제 일시: " + user.getWriteRestrictedUntil());
+        }
 
         //디저트 메이트 유효성 검사
         MateUserIds mateUserIds = validateMateAndUser(mateUuid, request.getUserUuid());
