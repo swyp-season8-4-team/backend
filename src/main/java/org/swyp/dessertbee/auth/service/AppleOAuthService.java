@@ -82,7 +82,7 @@ public class AppleOAuthService {
     @Transactional
     public LoginResponse processAppleLogin(String code, String idToken, String state, AppleUserInfo userInfo, String deviceId) {
         try {
-            log.info("애플 로그인 처리 시작 - 인가 코드: {}, ID 토큰 존재 여부: {}", code, idToken != null);
+            log.info("애플 로그인 처리 시작 ID 토큰 존재 여부: {}", idToken != null);
 
             // Apple의 인증 서버에서 토큰을 얻기 위한 client secret 생성
             String clientSecret = createClientSecret();
