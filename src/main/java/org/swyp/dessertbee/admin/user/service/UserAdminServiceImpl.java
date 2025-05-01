@@ -17,6 +17,9 @@ public class UserAdminServiceImpl implements UserAdminService {
 
     private final UserRepository userRepository;
 
+    /**
+     * 계정 정지(한달)
+     */
     @Transactional
     public void suspendUserForOneMonthByUuid(UUID userUuid) {
         UserEntity user = userRepository.findByUserUuid(userUuid)
