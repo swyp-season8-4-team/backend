@@ -33,6 +33,8 @@ import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.security.interfaces.ECPrivateKey;
 import java.security.KeyFactory;
@@ -142,20 +144,23 @@ public class AppleOAuthService {
      */
     private ECPrivateKey getPrivateKey() {
         try {
-            ClassPathResource resource = new ClassPathResource(privateKeyPath.replaceFirst("classpath:", ""));
+            File keyFile = new File(privateKeyPath); // ex) /app/resources/AuthKey_apple_login.p8
             StringBuilder privateKeyBuilder = new StringBuilder();
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
+
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(keyFile)))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     if (line.contains("PRIVATE KEY")) continue;
-                    privateKeyBuilder.append(line);
+                    privateKeyBuilder.append(line.trim());
                 }
             }
 
             byte[] keyBytes = Base64.getDecoder().decode(privateKeyBuilder.toString());
             PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
             KeyFactory keyFactory = KeyFactory.getInstance("EC");
+
             return (ECPrivateKey) keyFactory.generatePrivate(keySpec);
+
         } catch (Exception e) {
             throw new OAuthServiceException("Apple 개인 키 로딩 실패: " + e.getMessage());
         }
