@@ -168,6 +168,8 @@ public enum ErrorCode {
     MATE_REPLY_NOT_REPORTED(HttpStatus.NOT_FOUND, "M019" , "신고되지 않은 디저트메이트 댓글입니다." ),
     MATE_CAPACITY_EXCEEDED(HttpStatus.BAD_REQUEST, "M020", "최대 수용 인원 초과입니다." ),
     INVALID_REPLY_DEPTH( HttpStatus.BAD_REQUEST, "M021", "대댓글에는 댓글을 달 수 없습니다."),
+    NOT_ENOUGH_REPORT_COUNT(HttpStatus.BAD_REQUEST, "M022", "동일 유형 신고가 3회 미만입니다."),
+    REPORT_TARGET_NOT_SPECIFIED(HttpStatus.BAD_REQUEST, "M023", "신고 대상이 지정되지 않았습니다."),
 
     //커뮤니티 리뷰
     COMMUNITY_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "R001" , "존재하지 않는 리뷰입니다." ),

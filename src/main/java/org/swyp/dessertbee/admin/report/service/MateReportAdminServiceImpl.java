@@ -60,7 +60,7 @@ public class MateReportAdminServiceImpl implements MateReportAdminService {
     @Transactional(readOnly = true)
     public MateReportCountResponse getMateReportCount(UUID mateUuid) {
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new MateExceptions.MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
         Long mateId = mate.getMateId();
 
         // 전체 신고수
@@ -88,12 +88,12 @@ public class MateReportAdminServiceImpl implements MateReportAdminService {
     @Transactional
     public void deleteMateByUuid(UUID mateUuid) {
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new MateExceptions.MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
 
         // mateUuid가 있는 신고 데이터 확인
         boolean isReported = mateReportRepository.existsByMateId(mate.getMateId());
         if (!isReported) {
-            throw new MateExceptions.MateReportNotFoundException("신고되지 않은 디저트메이트입니다.");
+            throw new BusinessException(ErrorCode.MATE_NOT_REPORTED);
         }
 
         // 게시글 삭제 (soft delete)
@@ -144,11 +144,11 @@ public class MateReportAdminServiceImpl implements MateReportAdminService {
     public void deleteReportedMateReply(Long mateReplyId) {
         boolean isReported = mateReportRepository.existsByMateReplyId(mateReplyId);
         if (!isReported) {
-            throw new MateExceptions.MateReplyNotReportedException("신고되지 않은 디저트메이트 댓글입니다.");
+            throw new BusinessException(ErrorCode.MATE_REPLY_NOT_REPORTED);
         }
 
         MateReply mateReply = mateReplyRepository.findByMateReplyIdAndDeletedAtIsNull(mateReplyId)
-                .orElseThrow(() ->  new MateExceptions.MateReplyNotReportedException("신고되지 않은 디저트메이트 댓글입니다."));
+                .orElseThrow(() ->  new BusinessException(ErrorCode.MATE_REPLY_NOT_FOUND));;
 
         mateReply.softDelete();
         mateReplyRepository.save(mateReply);
@@ -162,12 +162,12 @@ public class MateReportAdminServiceImpl implements MateReportAdminService {
         long count = (mateUuid != null)
                 ? mateReportRepository.countByMateIdAndReportCategoryId(
                 mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                        .orElseThrow(() -> new MateExceptions.MateNotFoundException("존재하지 않는 디저트메이트입니다.")).getMateId(),
+                        .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND)).getMateId(),
                 reportCategoryId)
                 : mateReportRepository.countByMateReplyIdAndReportCategoryId(mateReplyId, reportCategoryId);
 
         if (count < 3) {
-            throw new MateExceptions.MateReportNotFoundException("동일 유형 신고가 3회 미만입니다.");
+            throw new BusinessException(ErrorCode.NOT_ENOUGH_REPORT_COUNT);
         }
 
         UserEntity user = userRepository.findByUserUuid(userUuid)
@@ -233,18 +233,18 @@ public class MateReportAdminServiceImpl implements MateReportAdminService {
     private UUID getAuthorUuidByTarget(UUID mateUuid, Long mateReplyId) {
         if (mateUuid != null) {
             Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                    .orElseThrow(() -> new MateExceptions.MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+                    .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
             UserEntity user = userRepository.findById(mate.getUserId())
-                    .orElseThrow(() -> new MateExceptions.MateReportNotFoundException("작성자 정보를 찾을 수 없습니다."));
+                    .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
             return user.getUserUuid();
         } else if (mateReplyId != null) {
             MateReply reply = mateReplyRepository.findByMateReplyIdAndDeletedAtIsNull(mateReplyId)
-                    .orElseThrow(() -> new MateExceptions.MateReplyNotReportedException("존재하지 않는 댓글입니다."));
+                    .orElseThrow(() -> new BusinessException(ErrorCode.MATE_REPLY_NOT_FOUND));
             UserEntity user = userRepository.findById(reply.getUserId())
-                    .orElseThrow(() -> new MateExceptions.MateReportNotFoundException("작성자 정보를 찾을 수 없습니다."));
+                    .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
             return user.getUserUuid();
         } else {
-//            throw new BusinessException(ErrorCode.INVALID_REQUEST, "신고 대상이 지정되지 않았습니다.");
+            throw new BusinessException(ErrorCode.REPORT_TARGET_NOT_SPECIFIED);
         }
     }
 }
