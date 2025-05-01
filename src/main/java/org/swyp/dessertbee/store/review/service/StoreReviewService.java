@@ -4,6 +4,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.store.review.dto.request.StoreReviewCreateRequest;
 import org.swyp.dessertbee.store.review.dto.request.StoreReviewUpdateRequest;
 import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
+import org.swyp.dessertbee.store.review.dto.response.UserReviewListResponse;
 
 import java.util.List;
 import java.util.UUID;
@@ -24,4 +25,7 @@ public interface StoreReviewService {
 
     /** 리뷰 삭제 */
     void deleteReview(UUID storeUuid, UUID reviewUuid);
+
+    /** 유저가 작성한 한줄 리뷰 리스트 (최신 등록순) 조회 */
+    UserReviewListResponse getUserReviewList();
 }

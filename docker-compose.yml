@@ -4,7 +4,13 @@ services:
   app:
     image: ${DOCKERHUB_USERNAME}/desserbee:latest
     container_name: desserbee-app
+    volumes:
+      - /home/ec2-user/secrets/AuthKey_apple_login.p8:/app/resources/AuthKey_apple_login.p8
     environment:
+      - APPLE_KEY_PATH=/app/resources/AuthKey_apple_login.p8
+      - APPLE_KEY_ID=${APPLE_KEY_ID}
+      - APPLE_TEAM_ID=${APPLE_TEAM_ID}
+      - APPLE_CLIENT_ID=${APPLE_CLIENT_ID}
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DessertBee - Apple 로그인 테스트</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        #appleLogin {
+            background-color: black;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin-bottom: 30px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        #appleLogin:hover {
+            background-color: #333;
+        }
+        #appleLogin svg {
+            margin-right: 10px;
+        }
+        .environment-selector {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .environment-selector label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        #response {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 100%;
+            min-height: 200px;
+            background-color: #f9f9f9;
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .response-container {
+            margin-top: 20px;
+        }
+        h3 {
+            color: #555;
+            margin-bottom: 10px;
+        }
+        .copy-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.2s;
+        }
+        .copy-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>DessertBee - Apple 로그인 테스트</h1>
+
+    <div class="environment-selector">
+        <label for="environment">테스트 환경 선택:</label>
+        <select id="environment">
+            <option value="local">로컬 테스트 (ngrok)</option>
+            <option value="test">테스트 서버</option>
+            <option value="prod">프로덕션 서버</option>
+        </select>
+    </div>
+
+    <button id="appleLogin">
+        <svg height="24" width="24" viewBox="0 0 24 24">
+            <path d="M16.74 13.13c0 2.92 2.4 3.87 2.4 3.87-.02.07-.57 2-1.89 3.96-1.14 1.67-2.32 3.34-4.17 3.34-1.82 0-2.4-1.08-4.5-1.08-2.1 0-2.76 1.04-4.5 1.04-1.75 0-3.08-1.81-4.25-3.5-2.3-3.35-4.06-9.44-1.7-13.58 1.17-2.06 3.27-3.37 5.54-3.37 1.73 0 3.35 1.16 4.4 1.16 1.05 0 3.03-1.44 5.1-1.23 2.8.21 4.8 2.32 5.36 4.54-5.76 2.45-4.8 8.84.73 10.85h-.02z" fill="white" />
+        </svg>
+        Apple로 로그인
+    </button>
+
+    <div class="response-container">
+        <h3>응답 결과:</h3>
+        <pre id="response">로그인 버튼을 클릭하여 Apple 로그인을 시도하세요.</pre>
+        <button id="copyResponse" class="copy-button">응답 복사</button>
+    </div>
+</div>
+
+<script>
+    // 설정값
+    const CLIENT_ID = 'com.desser.desserbee'; // Service ID (웹 client-id)
+    const REDIRECT_URI_LOCAL = 'https://f33f-218-146-57-68.ngrok-free.app/ko/oauth/callback/apple'; // ngrok URL로 수정
+    const REDIRECT_URI_TEST = 'https://test.desserbee.com/ko/oauth/callback/apple';
+    const REDIRECT_URI_PROD = 'https://desserbee.com/ko/oauth/callback/apple';
+
+    // 환경 선택에 따른 리다이렉트 URI 반환
+    function getRedirectUri() {
+        const environment = document.getElementById('environment').value;
+        if (environment === 'prod') return REDIRECT_URI_PROD;
+        if (environment === 'test') return REDIRECT_URI_TEST;
+        return REDIRECT_URI_LOCAL; // 기본값은 로컬 테스트 (ngrok)
+    }
+
+    // 임의의 상태값 생성 (CSRF 방지)
+    function generateRandomString(length) {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return result;
+    }
+
+    // Apple 로그인 버튼 이벤트 리스너
+    document.getElementById('appleLogin').addEventListener('click', () => {
+        // 상태값 생성 및 저장
+        const state = generateRandomString(16);
+        localStorage.setItem('appleLoginState', state);
+
+        // 리다이렉트 URI 결정
+        const redirectUri = getRedirectUri();
+
+        // 요청할 범위
+        const scope = 'name email';
+
+        // Apple 로그인 URL 생성
+        const authUrl = `https://appleid.apple.com/auth/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code id_token&state=${state}&scope=${scope}&response_mode=form_post`;
+
+        // 로그인 URL 표시
+        const responseElement = document.getElementById('response');
+        responseElement.textContent = `선택한 환경: ${document.getElementById('environment').value}\n\n`;
+        responseElement.textContent += `리다이렉트 URI: ${redirectUri}\n\n`;
+        responseElement.textContent += `Apple 로그인 URL:\n${authUrl}\n\n리다이렉트되는 중...`;
+
+        // 새 창에서 Apple 로그인 페이지 열기
+        window.location.href = authUrl;
+    });
+
+    // 복사 버튼 이벤트 리스너
+    document.getElementById('copyResponse').addEventListener('click', () => {
+        const responseElement = document.getElementById('response');
+
+        // 텍스트 선택 및 복사
+        const range = document.createRange();
+        range.selectNode(responseElement);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+        document.execCommand('copy');
+        window.getSelection().removeAllRanges();
+
+        // 알림
+        alert('응답이 클립보드에 복사되었습니다.');
+    });
+
+    // URL 파라미터 파싱 함수
+    function getUrlParams() {
+        const params = {};
+        const queryString = window.location.search.substring(1);
+        const pairs = queryString.split('&');
+
+        for (const pair of pairs) {
+            const [key, value] = pair.split('=');
+            if (key && value) {
+                params[decodeURIComponent(key)] = decodeURIComponent(value);
+            }
+        }
+
+        // form_post 방식으로 온 데이터도 처리
+        if (document.forms[0] && document.forms[0].elements) {
+            const form = document.forms[0];
+            for (let i = 0; i < form.elements.length; i++) {
+                const element = form.elements[i];
+                if (element.name) {
+                    params[element.name] = element.value;
+                }
+            }
+        }
+
+        return params;
+    }
+
+    // 페이지 로드 시 응답 확인
+    window.addEventListener('load', () => {
+        // URL 파라미터 확인
+        const params = getUrlParams();
+
+        // Apple 로그인 응답 처리
+        if (params.code) {
+            const responseElement = document.getElementById('response');
+
+            // 저장된 상태값 가져오기
+            const savedState = localStorage.getItem('appleLoginState');
+
+            // 상태값 검증
+            if (params.state && params.state !== savedState) {
+                responseElement.textContent = '오류: 상태값이 일치하지 않습니다 (CSRF 공격 가능성)';
+                return;
+            }
+
+            // 로그인 응답 객체 생성
+            const loginResponse = {
+                code: params.code,
+                id_token: params.id_token,
+                state: params.state,
+                user: params.user // 최초 로그인 시에만 전달됨
+            };
+
+            // 응답 표시
+            responseElement.textContent = '로그인 응답:\n' + JSON.stringify(loginResponse, null, 2);
+
+            // 백엔드 요청 준비
+            const apiUrl = '/api/auth/oauth2/apple/callback';
+            responseElement.textContent += `\n\n백엔드 요청 URL: ${apiUrl}`;
+            responseElement.textContent += '\n\n요청 본문:\n' + JSON.stringify({
+                code: params.code,
+                id_token: params.id_token,
+                state: params.state,
+                user: params.user ? JSON.parse(params.user) : null
+            }, null, 2);
+
+            // 백엔드로 데이터 전송
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    code: params.code,
+                    id_token: params.id_token,
+                    state: params.state,
+                    user: params.user ? JSON.parse(params.user) : null
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // 백엔드 응답 처리
+                    responseElement.textContent += '\n\n백엔드 응답:\n' + JSON.stringify(data, null, 2);
+                })
+                .catch(error => {
+                    responseElement.textContent += '\n\n오류:\n' + error.message;
+                });
+        }
+    });
+</script>
+</body>
+</html>

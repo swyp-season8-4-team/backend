@@ -56,8 +56,19 @@ public class TokenService {
                 log.debug("새 디바이스 ID 생성: {}", deviceId);
             }
 
-            // 디바이스 ID로 기존 인증 정보 조회
-            Optional<AuthEntity> authOpt = authRepository.findByUserAndProviderAndDeviceId(user, safeProvider, deviceId);
+            Optional<AuthEntity> authOpt = Optional.empty();
+
+            // 소셜 로그인의 경우: provider/providerId 조합으로 먼저 조회
+            if (providerId != null && !safeProvider.equals("local")) {
+                log.debug("소셜 로그인 인증 정보 조회 - 제공자: {}, 제공자 ID: {}", safeProvider, providerId);
+                authOpt = authRepository.findByProviderAndProviderId(safeProvider, providerId);
+            }
+
+            // 소셜 로그인으로 조회해도 없거나 일반 로그인인 경우: 사용자와 디바이스 ID로 조회
+            if (authOpt.isEmpty()) {
+                log.debug("사용자/디바이스 기반 인증 정보 조회 - 이메일: {}, 디바이스: {}", email, deviceId);
+                authOpt = authRepository.findByUserAndProviderAndDeviceId(user, safeProvider, deviceId);
+            }
 
             AuthEntity auth;
             if (authOpt.isPresent()) {
@@ -111,7 +122,7 @@ public class TokenService {
             }
 
             // 특정 디바이스의 인증 정보만 찾기
-            Optional<AuthEntity> authOpt = authRepository.findByUserAndProviderAndDeviceId(user, "local", deviceId);
+            Optional<AuthEntity> authOpt = authRepository.findByUserAndDeviceId(user, deviceId);
 
             if (authOpt.isEmpty()) {
                 log.warn("리프레시 토큰 무효화 실패 - 사용자({})의 디바이스({})에 대한 인증 정보 없음", email, deviceId);

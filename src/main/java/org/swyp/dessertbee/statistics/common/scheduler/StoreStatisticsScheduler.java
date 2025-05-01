@@ -28,7 +28,7 @@ public class StoreStatisticsScheduler {
     private final StoreStatisticsRepository statisticsRepository;
     private final StoreStatisticsSummaryRepository summaryRepository;
 
-    @Scheduled(cron = "0 0 0 * * *") // 매일 자정
+    @Scheduled(cron = "0 10 0 * * *", zone = "Asia/Seoul") // 매일 00:10 실행
     @Transactional
     public void summarizeStatistics() {
         log.info("[통계 요약] 주간/월간 집계 시작");

@@ -10,7 +10,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum AuthProvider {
     LOCAL("local"),
-    KAKAO("kakao");
+    KAKAO("kakao"),
+    APPLE("apple"); // 애플 소셜 로그인 제공자 추가
 
     private final String providerName;
 
@@ -21,7 +22,7 @@ public enum AuthProvider {
      */
     public static AuthProvider fromString(String providerName) {
         for (AuthProvider provider : AuthProvider.values()) {
-            if (provider.getProviderName().equals(providerName)) {
+            if (provider.getProviderName().equalsIgnoreCase(providerName)) {
                 return provider;
             }
         }

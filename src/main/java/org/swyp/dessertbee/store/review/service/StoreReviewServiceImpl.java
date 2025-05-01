@@ -10,6 +10,8 @@ import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.statistics.store.entity.enums.ReviewAction;
 import org.swyp.dessertbee.statistics.store.event.StoreReviewActionEvent;
 import org.swyp.dessertbee.statistics.store.repostiory.StoreStatisticsRepository;
+import org.swyp.dessertbee.store.review.dto.response.UserReviewListResponse;
+import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.exception.StoreExceptions.*;
 import org.swyp.dessertbee.store.review.exception.StoreReviewExceptions.*;
 import org.swyp.dessertbee.store.store.service.StoreService;
@@ -23,6 +25,7 @@ import org.swyp.dessertbee.store.review.repository.StoreReviewRepository;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
+import org.swyp.dessertbee.user.service.UserService;
 
 import java.util.List;
 import java.util.UUID;
@@ -41,6 +44,7 @@ public class StoreReviewServiceImpl implements StoreReviewService {
     private final StoreService storeService;
     private final StoreStatisticsRepository storeStatisticsRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final UserService userService;
 
     /** 오늘 작성한 리뷰 여부 확인 */
     public boolean hasTodayReview(UUID storeUuid, UUID userUuid) {
@@ -227,6 +231,50 @@ public class StoreReviewServiceImpl implements StoreReviewService {
         } catch (Exception e) {
             log.error("가게 한줄리뷰 삭제 처리 중 오류 발생", e);
             throw new StoreReviewServiceException("가게 한줄리뷰 삭제 처리 중 오류가 발생했습니다.");
+        }
+    }
+
+    /** 유저가 작성한 한줄 리뷰 리스트 (최신 등록순) 조회 */
+    public UserReviewListResponse getUserReviewList() {
+        try {
+            UserEntity user = userService.getCurrentUser();
+            List<StoreReview> reviews = storeReviewRepository.findByUserUuidOrderByCreatedAtDesc(user.getUserUuid());
+
+            List<UserReviewListResponse.UserReviewItem> items = reviews.stream().map(review -> {
+                Store store = storeRepository.findById(review.getStoreId())
+                        .orElseThrow(StoreNotFoundException::new);
+
+                // 썸네일은 대표 이미지 리스트 중 첫 번째
+                List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, store.getStoreId());
+                String thumbnail = storeImages.isEmpty() ? null : storeImages.get(0);
+
+                // 리뷰 이미지도 첫 번째만
+                List<String> reviewImages = imageService.getImagesByTypeAndId(ImageType.SHORT, review.getReviewId());
+                String reviewImage = reviewImages.isEmpty() ? null : reviewImages.get(0);
+
+                return UserReviewListResponse.UserReviewItem.builder()
+                        .reviewUuid(review.getReviewUuid())
+                        .reviewImage(reviewImage)
+                        .rating(review.getRating())
+                        .content(review.getContent())
+                        .createdAt(review.getCreatedAt())
+                        .store(UserReviewListResponse.UserReviewItem.StoreInfo.builder()
+                                .storeUuid(store.getStoreUuid())
+                                .name(store.getName())
+                                .address(store.getAddress())
+                                .thumbnail(thumbnail)
+                                .build())
+                        .build();
+            }).toList();
+
+            return UserReviewListResponse.builder()
+                    .reviewCount(items.size())
+                    .reviews(items)
+                    .build();
+
+        } catch (Exception e) {
+            log.error("유저 리뷰 리스트 조회 중 오류 발생", e);
+            throw new StoreReviewServiceException("유저 리뷰 리스트 조회 중 오류가 발생했습니다.");
         }
     }
 }
