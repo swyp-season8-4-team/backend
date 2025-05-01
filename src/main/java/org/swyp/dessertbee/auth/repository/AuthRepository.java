@@ -68,4 +68,12 @@ public interface AuthRepository extends JpaRepository<AuthEntity, Integer> {
      */
     @Query("SELECT COUNT(a) > 0 FROM AuthEntity a WHERE a.user.userUuid = :userUuid AND a.active = :active")
     boolean existsByUserUuidAndActive(@Param("userUuid") UUID userUuid, @Param("active") boolean active);
+
+    /**
+     * 인증 제공자와 제공자 ID로 인증 정보 찾기 (소셜 로그인 사용자 식별용)
+     * @param provider 인증 제공자 (예: apple, kakao 등)
+     * @param providerId 제공자가 발급한 고유 ID
+     * @return 해당 조건에 맞는 인증 정보
+     */
+    Optional<AuthEntity> findByProviderAndProviderId(String provider, String providerId);
 }
