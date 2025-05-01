@@ -32,6 +32,8 @@ spring:
         registration:
           kakao:
             redirect-uri: ${KAKAO_REDIRECT_URI_TEST}
+          apple:
+            redirect-uri: ${APPLE_REDIRECT_URI_TEST}
 #  elasticsearch:
 #    uris: http://desserbee-es:9200
 
