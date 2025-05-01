@@ -3,6 +3,7 @@ package org.swyp.dessertbee.admin.report.service;
 import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.admin.report.dto.response.MateReplyReportCountResponse;
 import org.swyp.dessertbee.admin.report.dto.response.MateReportCountResponse;
+import org.swyp.dessertbee.admin.report.dto.response.ReportActionResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MateReportResponse;
 
 import java.util.List;
@@ -20,15 +21,6 @@ public interface MateReportAdminService {
     //Mate 게시글 삭제
     void deleteMateByUuid(UUID mateUuid);
 
-    //Mate 작성자 경고
-    void warnMateAuthor(UUID mateUuid,Long reportCategoryId);
-
-    //Mate 작성자 정지
-    void suspendMateAuthor(UUID mateUuid);
-
-    //Mate 작성자 작성제한
-    void restrictMateAuthorWriting(UUID mateUuid);
-
     //신고된 Mate 댓글 조회
     List<MateReportResponse> getReportedMateReplies();
 
@@ -38,12 +30,14 @@ public interface MateReportAdminService {
     //Mate 댓글 삭제
     void deleteReportedMateReply(Long mateReplyId);
 
-    //Mate 댓글 작성자 경고
-    void warnMateReplyAuthor(Long mateReplyId, Long reportCategoryId);
+    //사용자 경고
+    ReportActionResponse warnAuthor(UUID mateUuid, Long mateReplyId, Long reportCategoryId);
 
-    //Mate 댓글 작성자 정지
-    void suspendMateReplyAuthor(Long mateReplyId);
+    //사용자 정지
+    ReportActionResponse suspendAuthor(UUID mateUuid, Long mateReplyId);
 
-    //Mate 댓글 작성자 작성제한
-    void restrictMateReplyAuthorWriting(Long mateReplyId);
+    //사용자 작성 제한
+    ReportActionResponse restrictAuthorWriting(UUID mateUuid, Long mateReplyId);
+
+
 }

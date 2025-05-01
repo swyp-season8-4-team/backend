@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.admin.report.dto.response.MateReplyReportCountResponse;
 import org.swyp.dessertbee.admin.report.dto.response.MateReportCountResponse;
+import org.swyp.dessertbee.admin.report.dto.response.ReportActionResponse;
 import org.swyp.dessertbee.admin.user.service.UserAdminService;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
@@ -24,6 +25,7 @@ import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.exception.UserExceptions;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,7 +83,7 @@ public class MateReportAdminServiceImpl implements MateReportAdminService {
     }
 
     /**
-     * 신고된 Mate 게시글 삭제 (1단계)
+     * 1단계 : 신고된 Mate 게시글 삭제
      */
     @Transactional
     public void deleteMateByUuid(UUID mateUuid) {
@@ -99,74 +101,6 @@ public class MateReportAdminServiceImpl implements MateReportAdminService {
         mateRepository.save(mate);
     }
 
-    /**
-     * 신고된 Mate 게시글 사용자 경고 (2단계)
-     */
-    @Transactional
-    public void warnMateAuthor(UUID mateUuid,Long reportCategoryId) {
-        Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new MateExceptions.MateNotFoundException("존재하지 않는 디저트메이트입니다."));
-
-        // 동일 신고 유형(카테고리) 3회 이상인지 확인
-        long count = mateReportRepository.countByMateIdAndReportCategoryId(mate.getMateId(), reportCategoryId);
-        if (count < 3) {
-            throw new MateExceptions.MateReportNotFoundException( "동일 유형 신고가 3회 미만입니다.");
-        }
-
-        //작성자 정보 조회
-        UserEntity user = userRepository.findById(mate.getUserId())
-                .orElseThrow(() -> new MateExceptions.MateReportNotFoundException("작성자 정보를 찾을 수 없습니다."));
-
-        // 경고 메일 발송
-        String reason = getReportCategoryName(reportCategoryId); // 신고 유형명 반환 메서드 구현 필요
-        warningMailService.sendWarningEmail(user.getEmail(), reason);
-    }
-
-    /**
-     * 신고된 Mate 게시글 작성자 정지 (3단계)
-     * 관리자가 직접 정지 버튼을 누르는 방식 (중대한 신고 여부는 관리자가 판단)
-     */
-    @Transactional
-    public void suspendMateAuthor(UUID mateUuid) {
-        // 게시글 조회
-        Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new MateExceptions.MateNotFoundException("존재하지 않는 디저트메이트입니다."));
-
-        // 작성자 UUID 조회
-        UserEntity user = userRepository.findById(mate.getUserId())
-                .orElseThrow(() -> new MateExceptions.MateReportNotFoundException("작성자 정보를 찾을 수 없습니다."));
-
-        UUID userUuid = user.getUserUuid();
-
-        // UserAdminService를 통해 계정 정지 처리
-        userAdminService.suspendUserForOneMonthByUuid(userUuid);
-    }
-
-    /**
-     * 신고된 Mate 게시글 작성자 작성 제한 (3단계)
-     */
-    @Transactional
-    public void restrictMateAuthorWriting(UUID mateUuid) {
-        // 게시글 조회
-        Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new MateExceptions.MateNotFoundException("존재하지 않는 디저트메이트입니다."));
-
-        // 작성자 조회
-        UserEntity user = userRepository.findById(mate.getUserId())
-                .orElseThrow(() -> new MateExceptions.MateReportNotFoundException("작성자 정보를 찾을 수 없습니다."));
-
-        // 이미 작성제한 중인지 확인
-        if (user.isWriteRestricted()) {
-            throw new UserExceptions.InvalidUserStatusException( "이미 작성제한 중인 사용자입니다.");
-        }
-
-        // 작성제한 7일 적용
-        user.restrictWritingFor7Days();
-        userRepository.save(user);
-    }
-
-
-    //--------------------- Mate 댓글 ---------------------
     /**
      *  신고된 Mate 댓글 조회
      */
@@ -204,7 +138,7 @@ public class MateReportAdminServiceImpl implements MateReportAdminService {
     }
 
     /**
-     * 신고된 Mate 댓글 삭제 (1단계)
+     * 1단계 : 신고된 Mate 댓글 삭제
      */
     @Transactional
     public void deleteReportedMateReply(Long mateReplyId) {
@@ -220,73 +154,66 @@ public class MateReportAdminServiceImpl implements MateReportAdminService {
         mateReplyRepository.save(mateReply);
     }
 
-    /**
-     * 신고된 Mate 댓글 작성자 경고 (2단계)
-     */
+    /** 2단계 : 경고(동일 유형 3회 이상) */
     @Transactional
-    public void warnMateReplyAuthor(Long mateReplyId, Long reportCategoryId) {
-        // 동일 유형 신고 3회 이상인지 확인
-        long count = mateReportRepository.countByMateReplyIdAndReportCategoryId(mateReplyId, reportCategoryId);
+    public ReportActionResponse warnAuthor(UUID mateUuid, Long mateReplyId, Long reportCategoryId) {
+        UUID userUuid = getAuthorUuidByTarget(mateUuid, mateReplyId);
+
+        long count = (mateUuid != null)
+                ? mateReportRepository.countByMateIdAndReportCategoryId(
+                mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
+                        .orElseThrow(() -> new MateExceptions.MateNotFoundException("존재하지 않는 디저트메이트입니다.")).getMateId(),
+                reportCategoryId)
+                : mateReportRepository.countByMateReplyIdAndReportCategoryId(mateReplyId, reportCategoryId);
+
         if (count < 3) {
             throw new MateExceptions.MateReportNotFoundException("동일 유형 신고가 3회 미만입니다.");
         }
 
-        // 댓글 정보 조회
-        MateReply mateReply = mateReplyRepository.findByMateReplyIdAndDeletedAtIsNull(mateReplyId)
-                .orElseThrow(() -> new MateExceptions.MateReplyNotReportedException("존재하지 않는 댓글입니다."));
+        UserEntity user = userRepository.findByUserUuid(userUuid)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        String reason = getReportCategoryName(reportCategoryId);
+        userAdminService.warnUserByUuid(userUuid, reason, warningMailService, user.getEmail());
 
-        // 작성자 정보 조회
-        UserEntity user = userRepository.findById(mateReply.getUserId())
-                .orElseThrow(() -> new MateExceptions.MateReportNotFoundException("작성자 정보를 찾을 수 없습니다."));
-
-        // 경고 메일 발송
-        String reason = getReportCategoryName(reportCategoryId); // 신고 유형명 반환
-        warningMailService.sendWarningEmail(user.getEmail(), reason);
+        return ReportActionResponse.builder()
+                .mateUuid(mateUuid)
+                .mateReplyId(mateReplyId)
+                .userUuid(userUuid)
+                .actionAt(LocalDateTime.now())
+                .build();
     }
 
-    /**
-     * 신고된 Mate 댓글 작성자 정지 (3단계)
-     * 관리자가 직접 정지 버튼을 누르는 방식 (중대한 신고 여부는 관리자가 판단)
-     */
+    /** 3단계 : 계정 정지(한달) */
     @Transactional
-    public void suspendMateReplyAuthor(Long mateReplyId) {
-        // 댓글 조회
-        MateReply mateReply = mateReplyRepository.findByMateReplyIdAndDeletedAtIsNull(mateReplyId)
-                .orElseThrow(() -> new MateExceptions.MateReplyNotReportedException("존재하지 않는 댓글입니다."));
-
-        // 작성자 UUID 조회
-        UserEntity user = userRepository.findById(mateReply.getUserId())
-                .orElseThrow(() -> new MateExceptions.MateReportNotFoundException("작성자 정보를 찾을 수 없습니다."));
-
-        UUID userUuid = user.getUserUuid();
-
-        // UserAdminService를 통해 계정 정지 처리
+    public ReportActionResponse suspendAuthor(UUID mateUuid, Long mateReplyId) {
+        UUID userUuid = getAuthorUuidByTarget(mateUuid, mateReplyId);
         userAdminService.suspendUserForOneMonthByUuid(userUuid);
+        UserEntity user = userRepository.findByUserUuid(userUuid)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        return ReportActionResponse.builder()
+                .mateUuid(mateUuid)
+                .mateReplyId(mateReplyId)
+                .userUuid(userUuid)
+                .actionAt(LocalDateTime.now())
+                .suspendedUntil(user.getSuspendedUntil())
+                .build();
     }
 
-    /**
-     * 신고된 Mate 댓글 작성자 작성 제한 (3단계)
-     */
+    /** 3단계 : 작성 제한(7일) */
     @Transactional
-    public void restrictMateReplyAuthorWriting(Long mateReplyId) {
-        //  댓글 조회
-        MateReply mateReply = mateReplyRepository.findByMateReplyIdAndDeletedAtIsNull(mateReplyId)
-                .orElseThrow(() -> new MateExceptions.MateReplyNotReportedException("존재하지 않는 댓글입니다."));
-
-        // 작성자 조회
-        UserEntity user = userRepository.findById(mateReply.getUserId())
-                .orElseThrow(() -> new MateExceptions.MateReportNotFoundException("작성자 정보를 찾을 수 없습니다."));
-
-        //  이미 작성제한 중인지 확인
-        if (user.isWriteRestricted()) {
-            throw new UserExceptions.InvalidUserStatusException( "이미 작성제한 중인 사용자입니다.");
-        }
-
-        // 작성제한 7일 적용
-        user.restrictWritingFor7Days();
-        userRepository.save(user);
+    public ReportActionResponse restrictAuthorWriting(UUID mateUuid, Long mateReplyId) {
+        UUID userUuid = getAuthorUuidByTarget(mateUuid, mateReplyId);
+        userAdminService.restrictUserWritingFor7DaysByUuid(userUuid);
+        UserEntity user = userRepository.findByUserUuid(userUuid)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        return ReportActionResponse.builder()
+                .mateUuid(mateUuid)
+                .mateReplyId(mateReplyId)
+                .userUuid(userUuid)
+                .actionAt(LocalDateTime.now())
+                .restrictionEndAt(user.getWriteRestrictedUntil())
+                .build();
     }
-
 
     // 신고 유형명을 반환하는 메서드
     private String getReportCategoryName(Long reportCategoryId) {
@@ -299,6 +226,25 @@ public class MateReportAdminServiceImpl implements MateReportAdminService {
             case 5: return "게시물 도배";
             case 6: return "기타";
             default: return "기타";
+        }
+    }
+
+    // 공통 작성자 추출 메서드
+    private UUID getAuthorUuidByTarget(UUID mateUuid, Long mateReplyId) {
+        if (mateUuid != null) {
+            Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
+                    .orElseThrow(() -> new MateExceptions.MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+            UserEntity user = userRepository.findById(mate.getUserId())
+                    .orElseThrow(() -> new MateExceptions.MateReportNotFoundException("작성자 정보를 찾을 수 없습니다."));
+            return user.getUserUuid();
+        } else if (mateReplyId != null) {
+            MateReply reply = mateReplyRepository.findByMateReplyIdAndDeletedAtIsNull(mateReplyId)
+                    .orElseThrow(() -> new MateExceptions.MateReplyNotReportedException("존재하지 않는 댓글입니다."));
+            UserEntity user = userRepository.findById(reply.getUserId())
+                    .orElseThrow(() -> new MateExceptions.MateReportNotFoundException("작성자 정보를 찾을 수 없습니다."));
+            return user.getUserUuid();
+        } else {
+//            throw new BusinessException(ErrorCode.INVALID_REQUEST, "신고 대상이 지정되지 않았습니다.");
         }
     }
 }

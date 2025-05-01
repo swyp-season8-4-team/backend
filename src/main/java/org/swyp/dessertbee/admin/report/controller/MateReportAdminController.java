@@ -7,6 +7,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.swyp.dessertbee.admin.report.dto.response.MateReplyReportCountResponse;
 import org.swyp.dessertbee.admin.report.dto.response.MateReportCountResponse;
+import org.swyp.dessertbee.admin.report.dto.response.ReportActionResponse;
 import org.swyp.dessertbee.admin.report.service.MateReportAdminService;
 import org.swyp.dessertbee.community.mate.dto.response.MateReportResponse;
 
@@ -50,34 +51,6 @@ public class MateReportAdminController {
         return ResponseEntity.ok(response);
     }
 
-    // 신고된 Mate 게시글 사용자 경고 (2단계)
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/report/{mateUuid}/warn")
-    public ResponseEntity<Void> warnMateAuthor(
-            @PathVariable UUID mateUuid,
-            @RequestParam Long reportCategoryId
-    ) {
-        mateReportAdminService.warnMateAuthor(mateUuid, reportCategoryId);
-        return ResponseEntity.ok().build();
-    }
-
-    //신고된 게시글 작성자 정지 (3단계)
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/report/{mateUuid}/suspend")
-    public ResponseEntity<Void> suspendMateAuthor(@PathVariable UUID mateUuid) {
-        mateReportAdminService.suspendMateAuthor(mateUuid);
-        return ResponseEntity.ok().build();
-    }
-
-    //신고된 게시글 작성자 작성제한 (3단계)
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/report/{mateUuid}/restrict-writing")
-    public ResponseEntity<Void> restrictMateAuthorWriting(@PathVariable UUID mateUuid) {
-        mateReportAdminService.restrictMateAuthorWriting(mateUuid);
-        return ResponseEntity.ok().build();
-    }
-
-    //----------------- 댓글 ------------------
 
     // 신고된 게시글 댓글 조회 API
     @PreAuthorize("hasRole('ADMIN')")
@@ -102,32 +75,40 @@ public class MateReportAdminController {
         mateReportAdminService.deleteReportedMateReply(mateReplyId);
         return ResponseEntity.ok("신고된 댓글이 삭제되었습니다.");
     }
+    // -------------------- 신고 조치(2, 3단계) 통합 API --------------------
 
-    //신고된 Mate 댓글 작성자 경고 (2단계)
+    // 2단계 경고 (동일 유형 3회 이상)
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/replies/report/{mateReplyId}/warn")
-    public ResponseEntity<Void> warnMateReplyAuthor(
-            @PathVariable Long mateReplyId,
+    @PostMapping("/report/action/warn")
+    public ResponseEntity<ReportActionResponse> warnAuthor(
+            @RequestParam(required = false) UUID mateUuid,
+            @RequestParam(required = false) Long mateReplyId,
             @RequestParam Long reportCategoryId
     ) {
-        mateReportAdminService.warnMateReplyAuthor(mateReplyId, reportCategoryId);
-        return ResponseEntity.ok().build();
+        ReportActionResponse response = mateReportAdminService.warnAuthor(mateUuid, mateReplyId, reportCategoryId);
+        return ResponseEntity.ok(response);
     }
 
-    // 신고된 댓글 작성자 정지 (3단계)
+    // 3단계 계정 정지 (한 달)
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/replies/report/{mateReplyId}/suspend")
-    public ResponseEntity<Void> suspendMateReplyAuthor(@PathVariable Long mateReplyId) {
-        mateReportAdminService.suspendMateReplyAuthor(mateReplyId);
-        return ResponseEntity.ok().build();
+    @PostMapping("/report/action/suspend")
+    public ResponseEntity<ReportActionResponse> suspendAuthor(
+            @RequestParam(required = false) UUID mateUuid,
+            @RequestParam(required = false) Long mateReplyId
+    ) {
+        ReportActionResponse response = mateReportAdminService.suspendAuthor(mateUuid, mateReplyId);
+        return ResponseEntity.ok(response);
     }
 
-    // 신고된 댓글 작성자 작성제한 (3단계)
+    // 3단계 작성 제한 (7일)
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/replies/report/{mateReplyId}/restrict-writing")
-    public ResponseEntity<Void> restrictMateReplyAuthorWriting(@PathVariable Long mateReplyId) {
-        mateReportAdminService.restrictMateReplyAuthorWriting(mateReplyId);
-        return ResponseEntity.ok().build();
+    @PostMapping("/report/action/restrict-writing")
+    public ResponseEntity<ReportActionResponse> restrictAuthorWriting(
+            @RequestParam(required = false) UUID mateUuid,
+            @RequestParam(required = false) Long mateReplyId
+    ) {
+        ReportActionResponse response = mateReportAdminService.restrictAuthorWriting(mateUuid, mateReplyId);
+        return ResponseEntity.ok(response);
     }
 
 }
