@@ -286,7 +286,7 @@ public class MateServiceImpl implements MateService {
                 .stream()
                 .map(mateMember -> {
                     Long mateId = mateMember.getMateId();
-                    Mate mate = mateRepository.findById(mateId)
+                    Mate mate = mateRepository.findByMateId(mateId)
                             .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
                     return mapToMateDetailResponse(mate, userId);
                 })
