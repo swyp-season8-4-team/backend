@@ -11,6 +11,7 @@ import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.repository.ImageRepository;
 import org.springframework.mock.web.MockMultipartFile;
+import org.swyp.dessertbee.store.store.dto.response.StoreImageResponse;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -114,6 +115,29 @@ public class ImageService {
             return images.stream()
                     .map(Image::getUrl)
                     .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("이미지 조회 중 오류 발생 - refType: {}, refId: {}", refType, refId, e);
+            throw new BusinessException(ErrorCode.IMAGE_FETCH_ERROR);
+        }
+    }
+
+    /**
+     * 특정 refType과 refId에 해당하는 이미지 조회 (ID + URL 반환)
+     */
+    public List<StoreImageResponse> getStoreImagesWithIdByTypeAndId(ImageType refType, Long refId) {
+        if (refType == null || refId == null) {
+            log.error("이미지 조회 실패 - 유효하지 않은 참조 정보: refType: {}, refId: {}", refType, refId);
+            throw new BusinessException(ErrorCode.IMAGE_REFERENCE_INVALID);
+        }
+
+        try {
+            List<Image> images = imageRepository.findByRefTypeAndRefId(refType, refId);
+            log.info("조회된 이미지 개수: {}, refType: {}, refId: {}", images.size(), refType, refId);
+
+            return images.stream()
+                    .map(image -> new StoreImageResponse(image.getId(), image.getUrl()))
+                    .collect(Collectors.toList());
+
         } catch (Exception e) {
             log.error("이미지 조회 중 오류 발생 - refType: {}, refId: {}", refType, refId, e);
             throw new BusinessException(ErrorCode.IMAGE_FETCH_ERROR);
