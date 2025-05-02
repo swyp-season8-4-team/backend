@@ -362,7 +362,7 @@ public class MateServiceImpl implements MateService {
 
 
        //작성자 UUID 조회
-        UserEntity creator = userService.findById(mate.getUserId());
+        UserEntity creator = userService.findByIdIncludingDeleted(mate.getUserId());
 
         //작성자 프로필 조회
         String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, mate.getUserId());
