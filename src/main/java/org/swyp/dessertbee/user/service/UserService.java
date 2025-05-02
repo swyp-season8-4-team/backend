@@ -67,4 +67,8 @@ public interface UserService {
     boolean isEmailExists(String email);
 
     UserEntity findById(Long userId);
+
+    UserEntity findByIdAndDeletedAtIsNull(Long userId);
+
+    UserEntity findByIdIncludingDeleted(Long userId);
 }
