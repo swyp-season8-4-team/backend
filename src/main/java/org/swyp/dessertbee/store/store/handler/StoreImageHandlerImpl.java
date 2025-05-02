@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.service.ImageService;
+import org.swyp.dessertbee.store.store.dto.response.StoreImageResponse;
 import org.swyp.dessertbee.store.store.entity.Store;
 
 import java.util.List;
@@ -57,15 +58,15 @@ public class StoreImageHandlerImpl implements StoreImageHandler {
      * 가게 대표 이미지 조회 메서드
      */
     @Override
-    public List<String> getStoreImages(Long storeId) {
-        return imageService.getImagesByTypeAndId(ImageType.STORE, storeId);
+    public List<StoreImageResponse> getStoreImages(Long storeId) {
+        return imageService.getStoreImagesWithIdByTypeAndId(ImageType.STORE, storeId);
     }
 
     /**
      * 사장님 픽 이미지 조회 메서드
      */
     @Override
-    public List<String> getOwnerPickImages(Long storeId) {
-        return imageService.getImagesByTypeAndId(ImageType.OWNERPICK, storeId);
+    public List<StoreImageResponse> getOwnerPickImages(Long storeId) {
+        return imageService.getStoreImagesWithIdByTypeAndId(ImageType.OWNERPICK, storeId);
     }
 }

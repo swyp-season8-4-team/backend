@@ -31,6 +31,7 @@ import org.swyp.dessertbee.store.store.dto.request.StoreCreateRequest;
 import org.swyp.dessertbee.store.store.dto.request.StoreUpdateRequest;
 import org.swyp.dessertbee.store.schedule.dto.HolidayResponse;
 import org.swyp.dessertbee.store.schedule.dto.OperatingHourResponse;
+import org.swyp.dessertbee.store.store.dto.response.StoreImageResponse;
 import org.swyp.dessertbee.store.store.dto.response.StoreInfoResponse;
 import org.swyp.dessertbee.store.store.handler.StoreImageHandler;
 import org.swyp.dessertbee.store.store.handler.StoreMenuHandler;
@@ -134,8 +135,7 @@ public class StoreManageServiceImpl implements StoreManageService{
             storeScheduleService.saveOrUpdateOperatingHours(store, request.getOperatingHours());
 
             // 휴무일 저장
-            List<StoreHoliday> holidays = storeScheduleService.saveHolidays(request.getHolidays(), store.getStoreId());
-            storeHolidayRepository.saveAll(holidays);
+            storeScheduleService.saveHolidays(request.getHolidays(), store.getStoreId());
 
             //storeSearchService.indexStore(store.getStoreId());
         } catch (StoreExceptions.StoreCreationFailedException e) {
@@ -222,8 +222,8 @@ public class StoreManageServiceImpl implements StoreManageService{
                     .orElseThrow(() -> new StoreExceptions.StoreNotFoundException());
 
             // 가게 이미지 조회
-            List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, storeId);
-            List<String> ownerPickImages = imageService.getImagesByTypeAndId(ImageType.OWNERPICK, storeId);
+            List<StoreImageResponse> storeImages = storeImageHandler.getStoreImages(storeId);
+            List<StoreImageResponse> ownerPickImages = storeImageHandler.getOwnerPickImages(storeId);
 
             // 태그 조회
             List<StoreTagResponse> tags = storeTagRelationRepository.findTagsByStoreId(storeId)

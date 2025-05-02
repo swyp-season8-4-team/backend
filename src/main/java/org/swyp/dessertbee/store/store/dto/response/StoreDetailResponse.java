@@ -97,10 +97,10 @@ public class StoreDetailResponse {
     private List<MenuResponse> menus;
 
     @Schema(description = "가게 대표 이미지 URL 리스트", nullable = true)
-    private List<String> storeImages;
+    private List<StoreImageResponse> storeImages;
 
     @Schema(description = "업주가 직접 고른 추가 이미지 URL 리스트", nullable = true)
-    private List<String> ownerPickImages;
+    private List<StoreImageResponse> ownerPickImages;
 
     @Schema(description = "가게 대표 링크", example = "https://instagram.com/dessertbee", nullable = true)
     private String primaryStoreLink;
@@ -169,8 +169,8 @@ public class StoreDetailResponse {
                                                  List<HolidayResponse> holidays,
                                                  List<StoreNoticeResponse> notices,
                                                  List<MenuResponse> menus,
-                                                 List<String> storeImages,
-                                                 List<String> ownerPickImages,
+                                                 List<StoreImageResponse> storeImages,
+                                                 List<StoreImageResponse> ownerPickImages,
                                                  List<TopPreferenceTagResponse> topPreferences,
                                                  List<StoreReviewResponse> storeReviews,
                                                  List<StoreTagResponse> tags,

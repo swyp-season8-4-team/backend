@@ -188,8 +188,8 @@ public class StoreServiceImpl implements StoreService {
 
             return stores.stream()
                     .map(store -> {
-                        List<String> storeImages = storeImageHandler.getStoreImages(store.getStoreId());
-                        String thumbnail = storeImages.isEmpty() ? null : storeImages.get(0);
+                        List<StoreImageResponse> storeImages = storeImageHandler.getStoreImages(store.getStoreId());
+                        String thumbnail = storeImages.isEmpty() ? null : storeImages.get(0).getUrl();
 
                         return StoreSearchResponse.builder()
                                 .storeId(store.getStoreId())
@@ -273,8 +273,8 @@ public class StoreServiceImpl implements StoreService {
             Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
                     .orElseThrow(() -> new StoreNotFoundException());
 
-            List<String> storeImages = storeImageHandler.getStoreImages(storeId);
-            List<String> ownerPickImages = storeImageHandler.getOwnerPickImages(storeId);
+            List<StoreImageResponse> storeImages = storeImageHandler.getStoreImages(storeId);
+            List<StoreImageResponse> ownerPickImages = storeImageHandler.getOwnerPickImages(storeId);
             List<String> tags = storeTagService.getTagNames(storeId);
 
             // 가게 링크 및 대표 링크 조회
@@ -328,8 +328,8 @@ public class StoreServiceImpl implements StoreService {
             Long savedListId = savedInfo.getRight();
 
             // 가게 이미지 조회
-            List<String> storeImages = storeImageHandler.getStoreImages(storeId);
-            List<String> ownerPickImages = storeImageHandler.getOwnerPickImages(storeId);
+            List<StoreImageResponse> storeImages = storeImageHandler.getStoreImages(storeId);
+            List<StoreImageResponse> ownerPickImages = storeImageHandler.getOwnerPickImages(storeId);
 
             // 태그 조회
             List<StoreTagResponse> tags = storeTagService.getTagResponses(storeId);
