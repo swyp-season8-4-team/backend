@@ -154,8 +154,8 @@ public abstract class BaseStoreRequest {
     public static class HolidayRequest {
 
         @Schema(
-                description = "휴무일 입력 (예: '2025.02.10-14' 또는 '2025.02.10')",
-                example = "2025.02.10-14"
+                description = "휴무일 입력 (예: '2025.02.10-2025.02.14 또는 2025.02.14')",
+                example = "2025.02.10-2025.02.14"
         )
         private String date; // 입력값을 파싱해서 LocalDate로 변환
 
