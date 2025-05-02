@@ -134,8 +134,7 @@ public class StoreManageServiceImpl implements StoreManageService{
             storeScheduleService.saveOrUpdateOperatingHours(store, request.getOperatingHours());
 
             // 휴무일 저장
-            List<StoreHoliday> holidays = storeScheduleService.saveHolidays(request.getHolidays(), store.getStoreId());
-            storeHolidayRepository.saveAll(holidays);
+            storeScheduleService.saveHolidays(request.getHolidays(), store.getStoreId());
 
             //storeSearchService.indexStore(store.getStoreId());
         } catch (StoreExceptions.StoreCreationFailedException e) {
