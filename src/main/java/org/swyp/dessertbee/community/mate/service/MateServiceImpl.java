@@ -279,15 +279,21 @@ public class MateServiceImpl implements MateService {
         UserEntity user = userService.getCurrentUser();
         Long userId = user.getId();
 
-        // 페이지 단위로 참여한 Mate 조회
-        Page<Mate> matesPage = mateRepository.findByDeletedAtIsNullAndUserId(pageable, userId);
+        // MateMember 기준으로 참여한 MateId들 조회 (SoftDelete 고려)
+        Page<MateMember> mateMembersPage = mateMemberRepository.findByUserIdAndDeletedAtIsNull(userId, pageable);
 
         // 각 Mate 엔티티를 DTO로 변환
-        List<MateDetailResponse> matesResponses = matesPage.stream()
-                .map(mate -> mapToMateDetailResponse(mate, userId))
+        List<MateDetailResponse> matesResponses = mateMembersPage
+                .stream()
+                .map(mateMember -> {
+                    Long mateId = mateMember.getMateId();
+                    Mate mate = mateRepository.findById(mateId)
+                            .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+                    return mapToMateDetailResponse(mate, userId);
+                })
                 .collect(Collectors.toList());
 
-        return new MatesPageResponse(matesResponses, matesPage.isLast());
+        return new MatesPageResponse(matesResponses, mateMembersPage.isLast());
     }
 
 
@@ -355,7 +361,8 @@ public class MateServiceImpl implements MateService {
         //mateCategoryId로 name 조회
         String mateCategory = String.valueOf(mateCategoryRepository.findCategoryNameById( mate.getMateCategoryId()));
         //작성자 UUID 조회
-        UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
+        UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId())
+                .orElseThrow(() -> new MateMemberNotFoundExcption("작성자 정보를 찾을 수 없습니다."));
 
         //작성자 프로필 조회
         String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, mate.getUserId());
