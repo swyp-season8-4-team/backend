@@ -1,5 +1,7 @@
 package org.swyp.dessertbee.community.mate.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -19,7 +21,7 @@ public interface MateMemberRepository extends JpaRepository<MateMember, Long> {
     @Query("SELECT u FROM UserEntity u " +
             "JOIN MateMember m ON u.id = m.userId " +
             "WHERE m.mateId = :mateId AND m.grade = 'CREATOR'")
-    UserEntity findByMateId(@Param("mateId") Long mateId);
+    Optional<UserEntity> findByMateId(@Param("mateId") Long mateId);
 
     @Modifying
     @Query("UPDATE MateMember m SET m.applyStatus = :applyStatus WHERE m.mateId = :mateId AND m.userId = :userId")
@@ -45,4 +47,6 @@ public interface MateMemberRepository extends JpaRepository<MateMember, Long> {
 
     @Query("SELECT COUNT(m) FROM MateMember  m WHERE m.mateId = :mateId AND m.deletedAt IS NULL")
     Long countByMateId(Long mateId);
+
+    Page<MateMember> findByUserIdAndDeletedAtIsNull(Long userId, Pageable pageable);
 }
