@@ -1,6 +1,5 @@
 package org.swyp.dessertbee.community.mate.service;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -28,7 +27,7 @@ import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.exception.UserExceptions.*;
-import org.swyp.dessertbee.user.service.UserServiceImpl;
+import org.swyp.dessertbee.user.service.UserService;
 
 import java.util.List;
 import java.util.UUID;
@@ -48,7 +47,7 @@ public class MateServiceImpl implements MateService {
     private final ReportRepository reportRepository;
     private final StoreRepository storeRepository;
     private final ImageService imageService;
-    private final UserServiceImpl userService;
+    private final UserService userService;
     private final ApplicationEventPublisher eventPublisher;
 
 
@@ -360,9 +359,10 @@ public class MateServiceImpl implements MateService {
 
         //mateCategoryId로 name 조회
         String mateCategory = String.valueOf(mateCategoryRepository.findCategoryNameById( mate.getMateCategoryId()));
-        //작성자 UUID 조회
-        UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId())
-                .orElseThrow(() -> new MateMemberNotFoundExcption("작성자 정보를 찾을 수 없습니다."));
+
+
+       //작성자 UUID 조회
+        UserEntity creator = userService.findById(mate.getUserId());
 
         //작성자 프로필 조회
         String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, mate.getUserId());

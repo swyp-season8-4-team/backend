@@ -140,9 +140,11 @@ public class SavedMateServiceImpl implements SavedMateService {
                 .stream()
                 .map(mate -> {
                     String mateImage = imageService.getImageByTypeAndId(ImageType.MATE, mate.getMateId());
+
                     String mateCategory = mateCategoryRepository.findCategoryNameById(mate.getMateCategoryId());
-                    UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId())
-                            .orElseThrow(() -> new MateMemberNotFoundExcption("작성자 정보를 찾을 수 없습니다."));
+
+                    UserEntity creator = userService.findById(mate.getUserId());
+
                     String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, mate.getUserId());
 
 
