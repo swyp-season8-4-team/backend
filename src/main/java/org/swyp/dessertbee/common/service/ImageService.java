@@ -279,6 +279,11 @@ public class ImageService {
      */
     @Transactional
     public void deleteImagesByIds(List<Long> imageIds) {
+        if (imageIds == null || imageIds.isEmpty()) {
+            log.info("삭제할 이미지 ID가 없어서 삭제를 건너뜁니다.");
+            return;
+        }
+
         List<Image> images = imageRepository.findAllById(imageIds);
         deleteImages(images);
     }
@@ -287,11 +292,21 @@ public class ImageService {
      * S3 및 DB에서 이미지 삭제
      */
     private void deleteImages(List<Image> images) {
-        if (images.isEmpty()) return;
+        if (images == null || images.isEmpty()) {
+            log.info("삭제할 이미지가 없어서 삭제를 건너뜁니다.");
+            return;
+        }
 
-        images.forEach(image -> s3Service.deleteFile(image.getUrl()));
+        images.forEach(image -> {
+            try {
+                s3Service.deleteFile(image.getUrl());
+            } catch (Exception e) {
+                log.warn("S3 이미지 삭제 실패 - url: {}, 에러: {}", image.getUrl(), e.getMessage());
+            }
+        });
 
         imageRepository.deleteAll(images);
+        log.info("DB 이미지 삭제 완료 - 삭제 개수: {}", images.size());
     }
 
     /**
