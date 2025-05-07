@@ -87,9 +87,10 @@ public class MenuController {
             @PathVariable UUID storeUuid,
             @PathVariable UUID menuUuid,
             @RequestPart("request") MenuCreateRequest request,
-            @RequestPart(value = "file", required = false) MultipartFile file) {
+            @RequestPart(value = "file", required = false) MultipartFile file,
+            @RequestPart(value = "deleteImage", required = false) Boolean deleteImage) {
 
-        menuService.updateMenu(storeUuid, menuUuid, request, file);
+        menuService.updateMenu(storeUuid, menuUuid, request, file, deleteImage);
         return ResponseEntity.ok().build();
     }
 
