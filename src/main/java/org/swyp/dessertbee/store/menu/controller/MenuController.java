@@ -86,7 +86,7 @@ public class MenuController {
     public ResponseEntity<Void> updateMenu(
             @PathVariable UUID storeUuid,
             @PathVariable UUID menuUuid,
-            @RequestParam("request") MenuCreateRequest request,
+            @RequestPart("request") MenuCreateRequest request,
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         menuService.updateMenu(storeUuid, menuUuid, request, file);
