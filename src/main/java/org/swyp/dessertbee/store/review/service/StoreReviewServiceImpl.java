@@ -6,11 +6,16 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.swyp.dessertbee.common.dto.ReportRequest;
 import org.swyp.dessertbee.common.entity.ImageType;
+import org.swyp.dessertbee.common.entity.ReportCategory;
+import org.swyp.dessertbee.common.repository.ReportRepository;
 import org.swyp.dessertbee.statistics.store.entity.enums.ReviewAction;
 import org.swyp.dessertbee.statistics.store.event.StoreReviewActionEvent;
 import org.swyp.dessertbee.statistics.store.repostiory.StoreStatisticsRepository;
 import org.swyp.dessertbee.store.review.dto.response.UserReviewListResponse;
+import org.swyp.dessertbee.store.review.entity.StoreReviewReport;
+import org.swyp.dessertbee.store.review.repository.StoreReviewReportRepository;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.exception.StoreExceptions.*;
 import org.swyp.dessertbee.store.review.exception.StoreReviewExceptions.*;
@@ -45,6 +50,8 @@ public class StoreReviewServiceImpl implements StoreReviewService {
     private final StoreStatisticsRepository storeStatisticsRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final UserService userService;
+    private final StoreReviewReportRepository storeReviewReportRepository;
+    private final ReportRepository reportRepository;
 
     /** 오늘 작성한 리뷰 여부 확인 */
     public boolean hasTodayReview(UUID storeUuid, UUID userUuid) {
@@ -276,5 +283,51 @@ public class StoreReviewServiceImpl implements StoreReviewService {
             log.error("유저 리뷰 리스트 조회 중 오류 발생", e);
             throw new StoreReviewServiceException("유저 리뷰 리스트 조회 중 오류가 발생했습니다.");
         }
+    }
+
+    @Override
+    public void reportReview(UUID reviewUuid, ReportRequest request) {
+
+        UserEntity user = userService.getCurrentUser();
+
+        StoreReview review =  storeReviewRepository.findByReviewUuid(reviewUuid)
+                .orElseThrow(() -> new StoreReviewNotFoundException());
+
+        StoreReviewReport report = storeReviewReportRepository.findByReviewIdAndUserId(review.getReviewId(), user.getId());
+
+
+        if(report != null){
+            throw new DuplicationReportException();
+        }
+
+        // 6L로 타입 일치
+        // '기타' 신고인 경우 사용자가 입력한 코멘트를 그대로 저장
+        if (request.getReportCategoryId().equals(6L)){
+            storeReviewReportRepository.save(
+                    StoreReviewReport.builder()
+                            .reportCategoryId(request.getReportCategoryId())
+                            .reviewId(review.getReviewId())
+                            .userId(user.getId())
+                            .comment(request.getReportComment())
+                            .build()
+            );
+
+            return;
+        }
+
+        //신고 유형 코멘트 조회
+        ReportCategory reportCategory = reportRepository.findByReportCategoryId(request.getReportCategoryId());
+
+        // '기타'가 아닌 경우 미리 정의된 신고 유형 코멘트 조회 후 저장
+        storeReviewReportRepository.save(
+                StoreReviewReport.builder()
+                        .reportCategoryId(request.getReportCategoryId())
+                        .reviewId(review.getReviewId())
+                        .userId(user.getId())
+                        .comment(reportCategory.getReportComment())
+                        .build()
+        );
+
+
     }
 }

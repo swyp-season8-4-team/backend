@@ -129,7 +129,7 @@ public enum ErrorCode {
     STORE_HOLIDAY_TERM_ERROR(HttpStatus.BAD_REQUEST, "S050", "휴무일의 종료일은 시작일 이후여야 합니다."),
     STORE_HOLIDAY_TYPE_ERROR(HttpStatus.BAD_REQUEST, "S051", "날짜 형식이 올바르지 않습니다. yyyy.MM.dd 또는 yyyy.MM.dd-yyyy.MM.dd 형식을 사용해주세요."),
     STORE_REVIEW_ALREADY_EXISTS_TODAY(HttpStatus.BAD_REQUEST, "S052", "오늘 이미 작성한 리뷰가 존재합니다."),
-
+    STORE_DUPLICATION_REPORT(HttpStatus.CONFLICT, "S053", "이미 신고된 게시물입니다."),
 
     // 사장님 권한
     /**
@@ -161,7 +161,7 @@ public enum ErrorCode {
     DUPLICATION_SAVED_STORE(HttpStatus.CONFLICT, "M012", "이미 저장된 디저트메이트입니다."),
     SAVED_MATE_NOT_FOUND(HttpStatus.NOT_FOUND,"M013" , "저장하지 않은 디저트메이트입니다."),
     MATE_RECRUIT_DONE(HttpStatus.FORBIDDEN,"M014" , "해당 디저트메이트 모집 마감입니다."),
-    DUPLICATION_REPORT(HttpStatus.CONFLICT, "M015", "이미 신고된 게시물입니다."),
+    MATE_DUPLICATION_REPORT(HttpStatus.CONFLICT, "M015", "이미 신고된 게시물입니다."),
     MATE_NOT_PENDING_MEMBER(HttpStatus.NOT_FOUND, "M016",  "디저트메이트 신청하신 분이 아닙니다."),
     DUPLICATION_SAVED_MATE(HttpStatus.CONFLICT, "M017", "이미 저장된 디저트메이트입니다."),
     MATE_NOT_REPORTED(HttpStatus.NOT_FOUND, "M018" , "신고되지 않은 디저트메이트입니다." ),
