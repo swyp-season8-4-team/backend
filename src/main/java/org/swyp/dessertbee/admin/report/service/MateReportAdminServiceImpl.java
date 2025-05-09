@@ -157,6 +157,9 @@ public class MateReportAdminServiceImpl implements MateReportAdminService {
     /** 2단계 : 경고(동일 유형 3회 이상) */
     @Transactional
     public ReportActionResponse warnAuthor(UUID mateUuid, Long mateReplyId, Long reportCategoryId) {
+        // 신고 여부 확인
+        validateReportedTarget(mateUuid, mateReplyId);
+
         UUID userUuid = getAuthorUuidByTarget(mateUuid, mateReplyId);
 
         long count = (mateUuid != null)
@@ -186,6 +189,9 @@ public class MateReportAdminServiceImpl implements MateReportAdminService {
     /** 3단계 : 계정 정지(한달) */
     @Transactional
     public ReportActionResponse suspendAuthor(UUID mateUuid, Long mateReplyId) {
+        // 신고 여부 확인
+        validateReportedTarget(mateUuid, mateReplyId);
+
         UUID userUuid = getAuthorUuidByTarget(mateUuid, mateReplyId);
         userAdminService.suspendUserForOneMonthByUuid(userUuid);
         UserEntity user = userRepository.findByUserUuid(userUuid)
@@ -202,6 +208,9 @@ public class MateReportAdminServiceImpl implements MateReportAdminService {
     /** 3단계 : 작성 제한(7일) */
     @Transactional
     public ReportActionResponse restrictAuthorWriting(UUID mateUuid, Long mateReplyId) {
+        // 신고 여부 확인
+        validateReportedTarget(mateUuid, mateReplyId);
+
         UUID userUuid = getAuthorUuidByTarget(mateUuid, mateReplyId);
         userAdminService.restrictUserWritingFor7DaysByUuid(userUuid);
         UserEntity user = userRepository.findByUserUuid(userUuid)
@@ -247,5 +256,27 @@ public class MateReportAdminServiceImpl implements MateReportAdminService {
             throw new BusinessException(ErrorCode.REPORT_TARGET_NOT_SPECIFIED);
         }
     }
+
+    //신고된 Mate(게시글) 또는 MateReply(댓글)인지 확인
+    private void validateReportedTarget(UUID mateUuid, Long mateReplyId) {
+        if (mateUuid != null) {
+            Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
+            boolean isReported = mateReportRepository.existsByMateId(mate.getMateId());
+            if (!isReported) {
+                throw new BusinessException(ErrorCode.MATE_NOT_REPORTED);
+            }
+        } else if (mateReplyId != null) {
+            MateReply reply = mateReplyRepository.findByMateReplyIdAndDeletedAtIsNull(mateReplyId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.MATE_REPLY_NOT_FOUND));
+            boolean isReported = mateReportRepository.existsByMateReplyId(mateReplyId);
+            if (!isReported) {
+                throw new BusinessException(ErrorCode.MATE_REPLY_NOT_REPORTED);
+            }
+        } else {
+            throw new BusinessException(ErrorCode.REPORT_TARGET_NOT_SPECIFIED);
+        }
+    }
+
 }
 
