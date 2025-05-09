@@ -160,7 +160,7 @@ public class MenuServiceImpl implements MenuService {
 
     /** 메뉴 수정 */
     @Override
-    public void updateMenu(UUID storeUuid, UUID menuUuid, MenuCreateRequest request, MultipartFile file) {
+    public void updateMenu(UUID storeUuid, UUID menuUuid, MenuCreateRequest request, MultipartFile file, Boolean deleteImage) {
         try{
             Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
             Long menuId = menuRepository.findMenuIdByMenuUuid(menuUuid);
@@ -169,9 +169,11 @@ public class MenuServiceImpl implements MenuService {
 
             menu.update(request.getName(), request.getPrice(), request.getIsPopular(), request.getDescription());
 
-            //storeSearchService.indexStore(storeId);
-
-            if (file != null) {
+            if (Boolean.TRUE.equals(deleteImage)) {
+                // 삭제만 하는 경우
+                imageService.deleteImagesByRefId(ImageType.MENU, menuId);
+            } else if (file != null) {
+                // 이미지 교체 (기존 삭제 후 업로드)
                 MultipartFile renamedFile = renameFile(file, menu.getName());
                 imageService.updateImage(ImageType.MENU, menuId, renamedFile, "menu/" + menuId);
             }

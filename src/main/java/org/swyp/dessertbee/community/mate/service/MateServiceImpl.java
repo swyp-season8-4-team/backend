@@ -1,6 +1,5 @@
 package org.swyp.dessertbee.community.mate.service;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -28,7 +27,7 @@ import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.exception.UserExceptions.*;
-import org.swyp.dessertbee.user.service.UserServiceImpl;
+import org.swyp.dessertbee.user.service.UserService;
 
 import java.util.List;
 import java.util.UUID;
@@ -48,7 +47,7 @@ public class MateServiceImpl implements MateService {
     private final ReportRepository reportRepository;
     private final StoreRepository storeRepository;
     private final ImageService imageService;
-    private final UserServiceImpl userService;
+    private final UserService userService;
     private final ApplicationEventPublisher eventPublisher;
 
 
@@ -290,15 +289,21 @@ public class MateServiceImpl implements MateService {
         UserEntity user = userService.getCurrentUser();
         Long userId = user.getId();
 
-        // 페이지 단위로 참여한 Mate 조회
-        Page<Mate> matesPage = mateRepository.findByDeletedAtIsNullAndUserId(pageable, userId);
+        // MateMember 기준으로 참여한 MateId들 조회 (SoftDelete 고려)
+        Page<MateMember> mateMembersPage = mateMemberRepository.findByUserIdAndDeletedAtIsNull(userId, pageable);
 
         // 각 Mate 엔티티를 DTO로 변환
-        List<MateDetailResponse> matesResponses = matesPage.stream()
-                .map(mate -> mapToMateDetailResponse(mate, userId))
+        List<MateDetailResponse> matesResponses = mateMembersPage
+                .stream()
+                .map(mateMember -> {
+                    Long mateId = mateMember.getMateId();
+                    Mate mate = mateRepository.findByMateId(mateId)
+                            .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+                    return mapToMateDetailResponse(mate, userId);
+                })
                 .collect(Collectors.toList());
 
-        return new MatesPageResponse(matesResponses, matesPage.isLast());
+        return new MatesPageResponse(matesResponses, mateMembersPage.isLast());
     }
 
 
@@ -365,8 +370,10 @@ public class MateServiceImpl implements MateService {
 
         //mateCategoryId로 name 조회
         String mateCategory = String.valueOf(mateCategoryRepository.findCategoryNameById( mate.getMateCategoryId()));
-        //작성자 UUID 조회
-        UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
+
+
+       //작성자 UUID 조회
+        UserEntity creator = userService.findByIdIncludingDeleted(mate.getUserId());
 
         //작성자 프로필 조회
         String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, mate.getUserId());

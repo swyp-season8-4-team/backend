@@ -148,6 +148,10 @@ public class StoreScheduleServiceImpl implements StoreScheduleService {
      */
     @Override
     public List<StoreHoliday> saveHolidays(List<BaseStoreRequest.HolidayRequest> requests, Long storeId) {
+        // 기존 휴무일 모두 삭제
+        storeHolidayRepository.deleteByStoreId(storeId);
+
+        // 새로 저장할 휴무일이 없으면 빈 리스트 반환
         if (requests == null || requests.isEmpty()) {
             return Collections.emptyList();
         }
@@ -185,6 +189,6 @@ public class StoreScheduleServiceImpl implements StoreScheduleService {
             }
         }
 
-        return holidays;
+        return storeHolidayRepository.saveAll(holidays);
     }
 }

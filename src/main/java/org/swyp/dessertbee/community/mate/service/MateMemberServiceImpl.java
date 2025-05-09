@@ -103,9 +103,8 @@ public class MateMemberServiceImpl implements MateMemberService {
 
         //userId로 userUuid 조회
         List<UserEntity> users = mateMembers.stream()
-                .map(mateMember -> userService.findById(mateMember.getUserId()))
+                .map(mateMember -> userService.findByIdAndDeletedAtIsNull(mateMember.getUserId()))
                 .toList();
-
 
 
         // MateMember와 UserEntity를 매칭하여 MateMemberResponse 생성
@@ -244,7 +243,7 @@ public class MateMemberServiceImpl implements MateMemberService {
 
         //userId로 userUuid 조회
         List<UserEntity> users = mateMembers.stream()
-                .map(mateMember -> userService.findById(mateMember.getUserId()))
+                .map(mateMember -> userService.findByIdAndDeletedAtIsNull(mateMember.getUserId()))
                 .toList();
 
 
@@ -479,26 +478,6 @@ public class MateMemberServiceImpl implements MateMemberService {
 
 
         return new MateUserIds(mateId, null);
-    }
-
-
-    /**
-     * User만 유효성 검사
-     * */
-    public MateUserIds validateUser (UUID userUuid){
-
-
-        try {
-            // userUuid로 userId 조회
-            UserEntity user = userService.findByUserUuid(userUuid);
-            Long userId = user.getId();
-
-            return new MateUserIds(null, userId);
-
-        } catch (BusinessException e) {
-            throw new UserNotFoundException("사용자를 찾을 수 없습니다.");
-        }
-
     }
 
 

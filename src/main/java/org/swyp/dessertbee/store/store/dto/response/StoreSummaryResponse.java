@@ -38,10 +38,10 @@ public class StoreSummaryResponse {
     private BigDecimal averageRating;
 
     @Schema(description = "매장 대표 이미지 URL 리스트", nullable = true)
-    private List<String> storeImages;
+    private List<StoreImageResponse> storeImages;
 
     @Schema(description = "업주가 직접 고른 추가 이미지 URL 리스트", nullable = true)
-    private List<String> ownerPickImages;
+    private List<StoreImageResponse> ownerPickImages;
 
     @NotNull
     @Schema(description = "태그 리스트", example = "[\"케이크\", \"구움과자\"]")
@@ -88,8 +88,8 @@ public class StoreSummaryResponse {
                                                   String primaryStoreLink,
                                                   List<OperatingHourResponse> operatingHours,
                                                   List<HolidayResponse> holidays,
-                                                  List<String> storeImages,
-                                                  List<String> ownerPickImages,
+                                                  List<StoreImageResponse> storeImages,
+                                                  List<StoreImageResponse> ownerPickImages,
                                                   List<TopPreferenceTagResponse> topPreferences) {
         return StoreSummaryResponse.builder()
                 .storeId(store.getStoreId())

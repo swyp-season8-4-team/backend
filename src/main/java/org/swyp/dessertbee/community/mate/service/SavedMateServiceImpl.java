@@ -140,8 +140,11 @@ public class SavedMateServiceImpl implements SavedMateService {
                 .stream()
                 .map(mate -> {
                     String mateImage = imageService.getImageByTypeAndId(ImageType.MATE, mate.getMateId());
+
                     String mateCategory = mateCategoryRepository.findCategoryNameById(mate.getMateCategoryId());
-                    UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
+
+                    UserEntity creator = userService.findById(mate.getUserId());
+
                     String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, mate.getUserId());
 
 

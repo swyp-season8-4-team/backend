@@ -11,6 +11,7 @@ import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.repository.ImageRepository;
 import org.springframework.mock.web.MockMultipartFile;
+import org.swyp.dessertbee.store.store.dto.response.StoreImageResponse;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -114,6 +115,29 @@ public class ImageService {
             return images.stream()
                     .map(Image::getUrl)
                     .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("이미지 조회 중 오류 발생 - refType: {}, refId: {}", refType, refId, e);
+            throw new BusinessException(ErrorCode.IMAGE_FETCH_ERROR);
+        }
+    }
+
+    /**
+     * 특정 refType과 refId에 해당하는 이미지 조회 (ID + URL 반환)
+     */
+    public List<StoreImageResponse> getStoreImagesWithIdByTypeAndId(ImageType refType, Long refId) {
+        if (refType == null || refId == null) {
+            log.error("이미지 조회 실패 - 유효하지 않은 참조 정보: refType: {}, refId: {}", refType, refId);
+            throw new BusinessException(ErrorCode.IMAGE_REFERENCE_INVALID);
+        }
+
+        try {
+            List<Image> images = imageRepository.findByRefTypeAndRefId(refType, refId);
+            log.info("조회된 이미지 개수: {}, refType: {}, refId: {}", images.size(), refType, refId);
+
+            return images.stream()
+                    .map(image -> new StoreImageResponse(image.getId(), image.getUrl()))
+                    .collect(Collectors.toList());
+
         } catch (Exception e) {
             log.error("이미지 조회 중 오류 발생 - refType: {}, refId: {}", refType, refId, e);
             throw new BusinessException(ErrorCode.IMAGE_FETCH_ERROR);
@@ -255,6 +279,11 @@ public class ImageService {
      */
     @Transactional
     public void deleteImagesByIds(List<Long> imageIds) {
+        if (imageIds == null || imageIds.isEmpty()) {
+            log.info("삭제할 이미지 ID가 없어서 삭제를 건너뜁니다.");
+            return;
+        }
+
         List<Image> images = imageRepository.findAllById(imageIds);
         deleteImages(images);
     }
@@ -263,11 +292,21 @@ public class ImageService {
      * S3 및 DB에서 이미지 삭제
      */
     private void deleteImages(List<Image> images) {
-        if (images.isEmpty()) return;
+        if (images == null || images.isEmpty()) {
+            log.info("삭제할 이미지가 없어서 삭제를 건너뜁니다.");
+            return;
+        }
 
-        images.forEach(image -> s3Service.deleteFile(image.getUrl()));
+        images.forEach(image -> {
+            try {
+                s3Service.deleteFile(image.getUrl());
+            } catch (Exception e) {
+                log.warn("S3 이미지 삭제 실패 - url: {}, 에러: {}", image.getUrl(), e.getMessage());
+            }
+        });
 
         imageRepository.deleteAll(images);
+        log.info("DB 이미지 삭제 완료 - 삭제 개수: {}", images.size());
     }
 
     /**

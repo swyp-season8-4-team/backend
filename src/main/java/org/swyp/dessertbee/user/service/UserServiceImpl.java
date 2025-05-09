@@ -363,5 +363,17 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 
+    @Override
+    public UserEntity findByIdAndDeletedAtIsNull(Long userId) {
+        return userRepository.findByIdAndDeletedAtIsNull(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    @Override
+    public UserEntity findByIdIncludingDeleted(Long userId) {
+        return userRepository.findByIdIncludingDeleted(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    }
+
 
 }
