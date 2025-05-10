@@ -14,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
+import org.swyp.dessertbee.common.dto.ReportRequest;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.store.review.dto.request.StoreReviewCreateRequest;
 import org.swyp.dessertbee.store.review.dto.request.StoreReviewUpdateRequest;
@@ -107,4 +108,19 @@ public class StoreReviewController {
         storeReviewService.deleteReview(storeUuid, reviewUuid);
         return ResponseEntity.noContent().build();
     }
+
+
+    /** 리뷰 신고 */
+    @Operation(summary = "한줄 리뷰 신고(completed) ", description = "한줄 리뷰를 신고합니다.")
+    @ApiResponse( responseCode = "200", description = "한줄리뷰 신고 성공")
+    @ApiErrorResponses({ ErrorCode.STORE_REVIEW_SERVICE_ERROR, ErrorCode.STORE_REVIEW_NOT_FOUND, ErrorCode.INVALID_STORE_REVIEW})
+    @PreAuthorize("isAuthenticated() and hasRole('ROLE_USER')")
+    @PostMapping("/{reviewUuid}/report")
+    public ResponseEntity<Void> reportReview(@PathVariable UUID reviewUuid, @RequestBody ReportRequest request) {
+
+        storeReviewService.reportReview(reviewUuid,request);
+        return ResponseEntity.ok().build();
+    }
+
+
 }

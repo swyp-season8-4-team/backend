@@ -1,6 +1,7 @@
 package org.swyp.dessertbee.store.review.service;
 
 import org.springframework.web.multipart.MultipartFile;
+import org.swyp.dessertbee.common.dto.ReportRequest;
 import org.swyp.dessertbee.store.review.dto.request.StoreReviewCreateRequest;
 import org.swyp.dessertbee.store.review.dto.request.StoreReviewUpdateRequest;
 import org.swyp.dessertbee.store.review.dto.response.StoreReviewResponse;
@@ -28,4 +29,7 @@ public interface StoreReviewService {
 
     /** 유저가 작성한 한줄 리뷰 리스트 (최신 등록순) 조회 */
     UserReviewListResponse getUserReviewList();
+
+    /** 리뷰 신고 */
+    void reportReview(UUID reviewUuid, ReportRequest request);
 }

@@ -1,11 +1,9 @@
 package org.swyp.dessertbee.community.mate.service;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.data.domain.Pageable;
 import org.swyp.dessertbee.community.mate.dto.request.MateAppReplyCreateRequest;
 import org.swyp.dessertbee.community.mate.dto.request.MateReplyCreateRequest;
-import org.swyp.dessertbee.community.mate.dto.request.MateReportRequest;
+import org.swyp.dessertbee.common.dto.ReportRequest;
 import org.swyp.dessertbee.community.mate.dto.response.*;
 
 import java.util.List;
@@ -35,7 +33,7 @@ public interface MateReplyService {
     void deleteReply(UUID mateUuid, Long replyId);
 
     /** 디저트메이트 댓글 신고 */
-    void reportMateReply(UUID mateUuid, Long replyId, MateReportRequest request);
+    void reportMateReply(UUID mateUuid, Long replyId, ReportRequest request);
 
 
     //     -------------- 관리자용 메이트 댓글 신고 관리 기능 ------------
