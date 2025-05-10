@@ -111,4 +111,15 @@ public class StoreReviewExceptions {
             super(ErrorCode.STORE_REVIEW_NOT_FOUND, message);
         }
     }
+
+    /**
+     *
+     * */
+    public static class DuplicationReportException extends BusinessException {
+        public DuplicationReportException(){super(ErrorCode.STORE_DUPLICATION_REPORT);}
+
+        public DuplicationReportException(String message) {
+            super(ErrorCode.STORE_DUPLICATION_REPORT, message);
+        }
+    }
 }

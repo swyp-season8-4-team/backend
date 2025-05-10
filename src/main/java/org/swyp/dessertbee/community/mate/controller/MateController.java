@@ -15,7 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.community.mate.dto.request.MateCreateRequest;
-import org.swyp.dessertbee.community.mate.dto.request.MateReportRequest;
+import org.swyp.dessertbee.common.dto.ReportRequest;
 import org.swyp.dessertbee.community.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MatesPageResponse;
 import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
@@ -178,10 +178,10 @@ public class MateController{
      * */
     @Operation(summary = "디저트메이트 신고 기능(completed)", description = "디저트메이트 신고합니다.")
     @ApiResponses(@ApiResponse(responseCode = "204", description = "디저트메이트 신고 기능"))
-    @ApiErrorResponses({ErrorCode.DUPLICATION_REPORT})
+    @ApiErrorResponses({ErrorCode.MATE_DUPLICATION_REPORT})
     @PostMapping("/api/mates/{mateUuid}/report")
     public ResponseEntity<Map<String, String>> reportMate(@PathVariable UUID mateUuid,
-                                             @RequestBody  MateReportRequest request) {
+                                             @RequestBody ReportRequest request) {
 
         mateService.reportMate(mateUuid, request);
 
