@@ -275,6 +275,8 @@ public class MateReplyServiceImpl implements MateReplyService {
     /**
      * 디저트메이트 댓글 신고
      * */
+    @Override
+    @Transactional
     public void reportMateReply(UUID mateUuid, Long replyId, ReportRequest request) {
         MateUserIds mateUserIds = validateMateAndUser(mateUuid, request.getUserUuid());
         Long mateId = mateUserIds.getMateId();

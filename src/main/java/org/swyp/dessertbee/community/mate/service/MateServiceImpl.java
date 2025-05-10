@@ -300,6 +300,7 @@ public class MateServiceImpl implements MateService {
      * 디저트메이트 신고
      * */
     @Override
+    @Transactional
     public void reportMate(UUID mateUuid, ReportRequest request) {
 
         UserEntity user = userService.getCurrentUser();

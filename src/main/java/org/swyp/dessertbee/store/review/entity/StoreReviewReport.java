@@ -1,9 +1,6 @@
 package org.swyp.dessertbee.store.review.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,6 +20,7 @@ import java.util.UUID;
 public class StoreReviewReport {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "store_reivew_report_id")
     private long storeReviewReportId;
 

@@ -286,6 +286,7 @@ public class StoreReviewServiceImpl implements StoreReviewService {
     }
 
     @Override
+    @Transactional
     public void reportReview(UUID reviewUuid, ReportRequest request) {
 
         UserEntity user = userService.getCurrentUser();
