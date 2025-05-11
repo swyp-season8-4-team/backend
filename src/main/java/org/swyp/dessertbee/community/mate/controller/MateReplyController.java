@@ -14,7 +14,7 @@ import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.community.mate.dto.request.MateAppReplyCreateRequest;
 import org.swyp.dessertbee.community.mate.dto.request.MateReplyCreateRequest;
-import org.swyp.dessertbee.community.mate.dto.request.MateReportRequest;
+import org.swyp.dessertbee.common.dto.ReportRequest;
 import org.swyp.dessertbee.community.mate.dto.response.MateAppReplyPageResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MateReplyPageResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MateReplyResponse;
@@ -162,11 +162,11 @@ public class MateReplyController {
      * */
     @Operation(summary = "메이트 댓글 신고(completed)", description = "디저트메이트 댓글 신고합니다.")
     @ApiResponses(@ApiResponse(responseCode = "204", description = "디저트메이트 댓글 신고 성공"))
-    @ApiErrorResponses({ErrorCode.MATE_REPLY_NOT_FOUND, ErrorCode.DUPLICATION_REPORT})
+    @ApiErrorResponses({ErrorCode.MATE_REPLY_NOT_FOUND, ErrorCode.MATE_DUPLICATION_REPORT})
     @PostMapping("/api/mates/{mateUuid}/reply/{replyId}/report")
     public ResponseEntity<Map<String, String>>  reportMateReply(@PathVariable UUID mateUuid,
                                                   @PathVariable Long replyId,
-                                                  @RequestBody  MateReportRequest request) {
+                                                  @RequestBody ReportRequest request) {
 
         mateReplyService.reportMateReply(mateUuid, replyId, request);
 

@@ -146,10 +146,10 @@ public class MateExceptions {
      * 디저트메이트 신고 예외
      * */
     public static class DuplicationReportException extends BusinessException {
-        public DuplicationReportException(){super(ErrorCode.DUPLICATION_REPORT);}
+        public DuplicationReportException(){super(ErrorCode.MATE_DUPLICATION_REPORT);}
 
         public DuplicationReportException(String message) {
-            super(ErrorCode.DUPLICATION_REPORT, message);
+            super(ErrorCode.MATE_DUPLICATION_REPORT, message);
         }
     }
 

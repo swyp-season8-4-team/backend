@@ -48,4 +48,7 @@ public interface StoreReviewRepository extends JpaRepository<StoreReview, Long> 
         ORDER BY sr.createdAt DESC
     """)
     List<StoreReview> findByUserUuidOrderByCreatedAtDesc(@Param("userUuid") UUID userUuid);
+
+
+    Optional<StoreReview> findByReviewUuid(UUID reviewUuid);
 }

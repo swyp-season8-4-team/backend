@@ -1,6 +1,5 @@
 package org.swyp.dessertbee.community.mate.service;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -16,7 +15,7 @@ import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.community.mate.dto.MateUserIds;
 import org.swyp.dessertbee.community.mate.dto.request.MateAppReplyCreateRequest;
 import org.swyp.dessertbee.community.mate.dto.request.MateReplyCreateRequest;
-import org.swyp.dessertbee.community.mate.dto.request.MateReportRequest;
+import org.swyp.dessertbee.common.dto.ReportRequest;
 import org.swyp.dessertbee.community.mate.dto.response.*;
 import org.swyp.dessertbee.community.mate.entity.*;
 import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
@@ -27,10 +26,8 @@ import org.swyp.dessertbee.community.mate.repository.MateRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.exception.UserExceptions.*;
 import org.swyp.dessertbee.user.service.UserService;
-import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -291,12 +288,14 @@ public class MateReplyServiceImpl implements MateReplyService {
     /**
      * 디저트메이트 댓글 신고
      * */
-    public void reportMateReply(UUID mateUuid, Long replyId, MateReportRequest request) {
+    @Override
+    @Transactional
+    public void reportMateReply(UUID mateUuid, Long replyId, ReportRequest request) {
         MateUserIds mateUserIds = validateMateAndUser(mateUuid, request.getUserUuid());
         Long mateId = mateUserIds.getMateId();
         Long userId = mateUserIds.getUserId();
 
-        MateReply mateReply = mateReplyRepository.findByMateIdAndMateReplyIdAndDeletedAtIsNull(mateId, replyId)
+        mateReplyRepository.findByMateIdAndMateReplyIdAndDeletedAtIsNull(mateId, replyId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MATE_REPLY_NOT_FOUND));
 
 

@@ -14,7 +14,7 @@ import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.repository.ReportRepository;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.community.mate.dto.request.MateCreateRequest;
-import org.swyp.dessertbee.community.mate.dto.request.MateReportRequest;
+import org.swyp.dessertbee.common.dto.ReportRequest;
 import org.swyp.dessertbee.community.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MateReportResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MatesPageResponse;
@@ -311,7 +311,8 @@ public class MateServiceImpl implements MateService {
      * 디저트메이트 신고
      * */
     @Override
-    public void reportMate(UUID mateUuid, MateReportRequest request) {
+    @Transactional
+    public void reportMate(UUID mateUuid, ReportRequest request) {
 
         UserEntity user = userService.getCurrentUser();
 
