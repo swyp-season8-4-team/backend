@@ -29,6 +29,8 @@ public class MateReply {
     @Column
     private String content;
 
+    @Column(name = "parent_mate_reply_id")
+    private Long parentMateReplyId;
 
     @CreationTimestamp
     @Column(name = "created_at")

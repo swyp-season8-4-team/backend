@@ -1,9 +1,9 @@
 package org.swyp.dessertbee.store.menu.service;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.store.menu.exception.MenuExceptions.*;
@@ -30,6 +30,7 @@ public class MenuServiceImpl implements MenuService {
     private final MenuRepository menuRepository;
     private final ImageService imageService;
     private final StoreRepository storeRepository;
+    //private final StoreSearchService storeSearchService;
 
     /** 파일명 재정의 */
     private MultipartFile renameFile(MultipartFile file, String menuName) {
@@ -97,6 +98,8 @@ public class MenuServiceImpl implements MenuService {
                     .build();
             menuRepository.save(menu);
 
+            //storeSearchService.indexStore(storeId);
+
             // 이미지 파일이 있는 경우 재정의된 파일명으로 업로드
             if (file != null) {
                 MultipartFile renamedFile = renameFile(file, menu.getName());
@@ -157,7 +160,7 @@ public class MenuServiceImpl implements MenuService {
 
     /** 메뉴 수정 */
     @Override
-    public void updateMenu(UUID storeUuid, UUID menuUuid, MenuCreateRequest request, MultipartFile file) {
+    public void updateMenu(UUID storeUuid, UUID menuUuid, MenuCreateRequest request, MultipartFile file, Boolean deleteImage) {
         try{
             Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
             Long menuId = menuRepository.findMenuIdByMenuUuid(menuUuid);
@@ -166,7 +169,11 @@ public class MenuServiceImpl implements MenuService {
 
             menu.update(request.getName(), request.getPrice(), request.getIsPopular(), request.getDescription());
 
-            if (file != null) {
+            if (Boolean.TRUE.equals(deleteImage)) {
+                // 삭제만 하는 경우
+                imageService.deleteImagesByRefId(ImageType.MENU, menuId);
+            } else if (file != null) {
+                // 이미지 교체 (기존 삭제 후 업로드)
                 MultipartFile renamedFile = renameFile(file, menu.getName());
                 imageService.updateImage(ImageType.MENU, menuId, renamedFile, "menu/" + menuId);
             }
@@ -190,6 +197,7 @@ public class MenuServiceImpl implements MenuService {
 
             menu.softDelete();
             menuRepository.save(menu);
+            //storeSearchService.indexStore(storeId);
             imageService.deleteImagesByRefId(ImageType.MENU, menuId);
         } catch (MenuDeleteFailedException e){
             log.warn("단일 메뉴 삭제 실패 - 가게 Uuid: {}, 메뉴 Uuid: {}, 사유: {}", storeUuid, menuUuid, e.getMessage());

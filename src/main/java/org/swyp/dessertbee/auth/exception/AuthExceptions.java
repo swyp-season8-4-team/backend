@@ -48,19 +48,6 @@ public class AuthExceptions {
     }
 
     /**
-     * 인증 토큰 만료 예외
-     */
-    public static class ExpiredVerificationTokenException extends BusinessException {
-        public ExpiredVerificationTokenException() {
-            super(ErrorCode.EXPIRED_VERIFICATION_TOKEN);
-        }
-
-        public ExpiredVerificationTokenException(String message) {
-            super(ErrorCode.EXPIRED_VERIFICATION_TOKEN, message);
-        }
-    }
-
-    /**
      * 비밀번호 불일치 예외
      */
     public static class PasswordMismatchException extends BusinessException {
@@ -72,6 +59,20 @@ public class AuthExceptions {
             super(ErrorCode.PASSWORD_MISMATCH, message);
         }
     }
+
+    /**
+     * 비밀번호 불일치 예외
+     */
+    public static class InvalidPasswordException extends BusinessException {
+        public InvalidPasswordException() {
+            super(ErrorCode.INVALID_PASSWORD);
+        }
+
+        public InvalidPasswordException(String message) {
+            super(ErrorCode.INVALID_PASSWORD, message);
+        }
+    }
+
 
     /**
      * 잘못된 인증 정보 예외
@@ -114,11 +115,6 @@ public class AuthExceptions {
     }
 
     /**
-     * OAuth 인증 서비스 오류 예외
-     */
-
-
-    /**
      * JWT 토큰 오류 예외
      */
     public static class JwtTokenException extends BusinessException {
@@ -128,6 +124,30 @@ public class AuthExceptions {
 
         public JwtTokenException(ErrorCode errorCode, String message) {
             super(errorCode, message);
+        }
+    }
+
+    /**
+     * 디바이스 ID 누락 예외
+     */
+    public static class DeviceIdMissingException extends BusinessException {
+        public DeviceIdMissingException() {
+            super(ErrorCode.DEVICE_ID_MISSING);
+        }
+
+        public DeviceIdMissingException(String message) {
+            super(ErrorCode.DEVICE_ID_MISSING, message);
+        }
+    }
+
+    /**
+     * 로그인 실패 누적으로 계정 잠김 예외
+     */
+    public static class AccountLockedException extends BusinessException {
+        public AccountLockedException() { super(ErrorCode.ACCOUNT_LOCKED); }
+
+        public AccountLockedException(String message) {
+            super(ErrorCode.ACCOUNT_LOCKED, message);
         }
     }
 

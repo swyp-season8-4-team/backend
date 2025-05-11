@@ -122,7 +122,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
             // 만료 여부 확인
             if (verification.isExpired()) {
                 log.warn("이메일 인증 실패 - 만료된 인증 코드, 이메일: {}", request.getEmail());
-                throw new BusinessException(ErrorCode.EXPIRED_VERIFICATION_TOKEN, "만료된 인증 코드입니다.");
+                throw new BusinessException(ErrorCode.EXPIRED_EMAIL_VERIFICATION_CODE, "만료된 인증 코드입니다.");
             }
 
             // 이미 검증된 코드인지 확인

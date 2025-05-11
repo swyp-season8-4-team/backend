@@ -2,6 +2,7 @@ package org.swyp.dessertbee.user.service;
 
 import org.apache.catalina.User;
 import org.springframework.web.multipart.MultipartFile;
+import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.user.dto.response.UserDetailResponseDto;
 import org.swyp.dessertbee.user.dto.response.UserResponseDto;
 import org.swyp.dessertbee.user.dto.request.UserUpdateRequestDto;
@@ -59,10 +60,15 @@ public interface UserService {
     UserEntity validateUser(String email);
 
     UserEntity findUserByEmail(String email);
+    UserEntity findUserByEmail(String email, ErrorCode errorCode);
 
     UserEntity findByUserUuid(UUID userUuid);
 
     boolean isEmailExists(String email);
 
     UserEntity findById(Long userId);
+
+    UserEntity findByIdAndDeletedAtIsNull(Long userId);
+
+    UserEntity findByIdIncludingDeleted(Long userId);
 }

@@ -10,10 +10,10 @@ import org.swyp.dessertbee.auth.entity.AuthEntity;
 import org.swyp.dessertbee.preference.entity.UserPreferenceEntity;
 import org.swyp.dessertbee.role.entity.RoleEntity;
 import org.swyp.dessertbee.role.entity.UserRoleEntity;
+import org.swyp.dessertbee.user.coupon.entity.UserCoupon;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Stream;
 
 @Entity
 @Table(
@@ -83,11 +83,16 @@ public class UserEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserPreferenceEntity> userPreferences = new HashSet<>();
 
+    @Builder.Default
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserCoupon> userCoupons = new ArrayList<>();
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mbti_id", nullable = true)
     private MbtiEntity mbti;
 
     // 의도적으로 선호도 설정을 안하겠다는 의미로 사용
+    @Builder.Default
     @Column(name = "preference_set_flag", nullable = false)
     private boolean preferenceSetFlag = false;
 

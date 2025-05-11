@@ -38,8 +38,15 @@ out/
 
 ### env ###
 src/main/resources/.env*
+.env*
 
 ### application-test.yml ###
 src/test/resources/application-test.yml
 **/.DS_Store
 .DS_Store
+
+# Apple OAuth p8 Key
+*.p8
+apple/*.p8
+src/main/resources/apple/*.p8
+src/main/resources/*.p8

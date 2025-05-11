@@ -2,9 +2,15 @@ version: '3.8'
 
 services:
   app:
-    image: ${DOCKERHUB_USERNAME}/dessertbee:latest
-    container_name: dessertbee-app
+    image: ${DOCKERHUB_USERNAME}/desserbee:latest
+    container_name: desserbee-app
+    volumes:
+      - /home/ec2-user/secrets/AuthKey_apple_login.p8:/app/resources/AuthKey_apple_login.p8
     environment:
+      - APPLE_KEY_PATH=/app/resources/AuthKey_apple_login.p8
+      - APPLE_KEY_ID=${APPLE_KEY_ID}
+      - APPLE_TEAM_ID=${APPLE_TEAM_ID}
+      - APPLE_CLIENT_ID=${APPLE_CLIENT_ID}
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
@@ -18,7 +24,7 @@ services:
 
   nginx:
     image: nginx:latest
-    container_name: dessertbee-nginx
+    container_name: desserbee-nginx
     ports:
       - "80:80"
       - "443:443"
@@ -35,7 +41,7 @@ services:
 
   redis:
     image: redis:7.0
-    container_name: dessertbee-redis
+    container_name: desserbee-redis
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -48,9 +54,25 @@ services:
       - redis-data:/data
     command: ["redis-server", "--appendonly", "yes"]
 
+#  elasticsearch:
+#    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.2
+#    container_name: desserbee-es
+#    environment:
+#      - discovery.type=single-node
+#      - xpack.security.enabled=false
+#      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+#    ports:
+#      - "9200:9200"
+#    volumes:
+#      - es-data:/usr/share/elasticsearch/data
+#    networks:
+#      - app-network
+#    restart: always
+
 networks:
   app-network:
     driver: bridge
 
 volumes:
   redis-data:
+  es-data:

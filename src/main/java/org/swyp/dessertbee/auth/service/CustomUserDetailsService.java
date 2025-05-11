@@ -5,7 +5,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.swyp.dessertbee.auth.dto.userdetails.CustomUserDetails;
+import org.swyp.dessertbee.auth.security.CustomUserDetails;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.user.entity.UserEntity;
@@ -17,7 +17,6 @@ import java.util.List;
  * Spring Security의 사용자 조회를 담당하는 서비스
  * JWT 필터에서 인증할 때 DB 조회가 필요한 경우 사용
  */
-@Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 

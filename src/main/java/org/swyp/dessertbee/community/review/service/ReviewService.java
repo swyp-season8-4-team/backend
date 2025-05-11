@@ -1,13 +1,12 @@
 package org.swyp.dessertbee.community.review.service;
 
-import ch.qos.logback.classic.model.LevelModel;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.antlr.v4.runtime.misc.MurmurHash;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.Image;
 import org.swyp.dessertbee.common.entity.ImageType;
@@ -16,7 +15,6 @@ import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.repository.ImageRepository;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.community.review.dto.ReviewContentDto;
-import org.swyp.dessertbee.community.review.dto.ReviewImage;
 import org.swyp.dessertbee.community.review.dto.request.ReviewCreateRequest;
 import org.swyp.dessertbee.community.review.dto.request.ReviewUpdateRequest;
 import org.swyp.dessertbee.community.review.dto.response.ReviewPageResponse;
@@ -29,6 +27,9 @@ import org.swyp.dessertbee.community.review.repository.ReviewContentRepository;
 import org.swyp.dessertbee.community.review.repository.ReviewRepository;
 import org.swyp.dessertbee.community.review.repository.ReviewStatisticsRepository;
 import org.swyp.dessertbee.community.review.repository.SavedReviewRepository;
+import org.swyp.dessertbee.statistics.store.entity.enums.ReviewAction;
+import org.swyp.dessertbee.statistics.store.event.CommunityReviewActionEvent;
+import org.swyp.dessertbee.statistics.store.repostiory.StoreStatisticsRepository;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
@@ -52,6 +53,8 @@ public class ReviewService {
     private final ImageRepository imageRepository;
     private final ReviewContentRepository reviewContentRepository;
     private final ReviewStatisticsRepository reviewStatisticsRepository;
+    private final StoreStatisticsRepository storeStatisticsRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
 
     /**
@@ -118,6 +121,7 @@ public class ReviewService {
         }
 
         // 4. 리뷰 통계 초기화
+        // todo: 이제 불필요한것 같은데 이거 삭제해도되나요 현경님
         reviewStatisticsRepository.save(
                 ReviewStatistics.builder()
                         .reviewId(review.getReviewId())
@@ -126,6 +130,12 @@ public class ReviewService {
                         .reviews(0)
                         .build()
         );
+
+        UserEntity user = userService.getCurrentUser();
+
+        eventPublisher.publishEvent(new CommunityReviewActionEvent(review.getStoreId(), review.getReviewId(), user.getUserUuid(), ReviewAction.CREATE));
+
+        storeStatisticsRepository.increaseCommunityReviewCount(storeId);
 
         return getReviewDetail(review.getReviewUuid());
     }
@@ -220,7 +230,7 @@ public class ReviewService {
                         // 기존 imageUuid가 있으나 DB에 없다면 신규 업로드 처리
                         if (reviewImages == null) {
 
-                            if(imageCounter > reviewImages.size()){
+                            if (imageCounter > reviewImages.size()) {
                                 throw new BusinessException(ErrorCode.IMAGE_COUNT_MISMATCH);
 
                             }
@@ -275,19 +285,9 @@ public class ReviewService {
                     reviewContentRepository.save(newTextContent);
                 }
                 textCounter++; // 순서에 따른 인덱스 증가
-                }
             }
-
-
-
-}
-
-
-
-
-
-
-
+        }
+    }
 
     /**
      * 커뮤니티 리뷰 삭제
@@ -309,6 +309,11 @@ public class ReviewService {
             }
 
             imageService.deleteImagesByRefId(ImageType.REVIEW, review.getReviewId());
+
+            UserEntity user = userService.getCurrentUser();
+            eventPublisher.publishEvent(new CommunityReviewActionEvent(review.getStoreId(), review.getReviewId(), user.getUserUuid(), ReviewAction.DELETE));
+
+            storeStatisticsRepository.decreaseCommunityReviewCount(review.getStoreId());
         } catch (Exception e)
         {
             log.error("❌ S3 이미지 삭제 중 오류 발생: " + e.getMessage());
@@ -316,7 +321,6 @@ public class ReviewService {
         }
 
     }
-
 
     /**
      * 커뮤니티 리뷰 정보 조회 중복 코드

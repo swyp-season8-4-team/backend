@@ -2,6 +2,7 @@ package org.swyp.dessertbee.community.mate.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -10,20 +11,23 @@ import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.entity.ReportCategory;
 import org.swyp.dessertbee.common.exception.BusinessException;
-import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.repository.ReportRepository;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.community.mate.dto.request.MateCreateRequest;
-import org.swyp.dessertbee.community.mate.dto.request.MateReportRequest;
+import org.swyp.dessertbee.common.dto.ReportRequest;
 import org.swyp.dessertbee.community.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MateReportResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MatesPageResponse;
 import org.swyp.dessertbee.community.mate.entity.*;
+import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.community.mate.repository.*;
+import org.swyp.dessertbee.statistics.store.entity.enums.DessertMateAction;
+import org.swyp.dessertbee.statistics.store.event.MateActionEvent;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
-import org.swyp.dessertbee.user.service.UserServiceImpl;
+import org.swyp.dessertbee.user.exception.UserExceptions.*;
+import org.swyp.dessertbee.user.service.UserService;
 
 import java.util.List;
 import java.util.UUID;
@@ -43,7 +47,8 @@ public class MateServiceImpl implements MateService {
     private final ReportRepository reportRepository;
     private final StoreRepository storeRepository;
     private final ImageService imageService;
-    private final UserServiceImpl userService;
+    private final UserService userService;
+    private final ApplicationEventPublisher eventPublisher;
 
 
     /** 메이트 등록 */
@@ -53,34 +58,39 @@ public class MateServiceImpl implements MateService {
         // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
         UserEntity user = userService.getCurrentUser();
 
+        if(request.getCapacity() > 5){
+            throw new MateCapacityExceededException("최대 수용 인원 초과입니다.");
+        }
 
         try {
             userService.findById(user.getId());
 
 
-            //위도,경도로 storeId 조회
-            // 위도, 경도로 store 조회
+
+                //위도,경도로 storeId 조회
+                // 위도, 경도로 store 조회
             Store store = storeRepository.findByName(request.getPlace().getPlaceName());
 
 
-            // store가 null이면 storeId는 null, 아니면 store.getStoreId() 할당
+                // store가 null이면 storeId는 null, 아니면 store.getStoreId() 할당
             Long storeId = (store != null) ? store.getStoreId() : null;
 
             Mate mate = mateRepository.save(
-                    Mate.builder()
-                            .userId(user.getId())
-                            .storeId(storeId)
-                            .mateCategoryId(request.getMateCategoryId())
-                            .title(request.getTitle())
-                            .content(request.getContent())
-                            .recruitYn(Boolean.TRUE.equals(request.getRecruitYn()))
-                            .placeName(request.getPlace().getPlaceName())
-                            .latitude(request.getPlace().getLatitude())
-                            .longitude(request.getPlace().getLongitude())
-                            .updatedAt(null)
-                            .build()
-            );
-
+                        Mate.builder()
+                                .userId(user.getId())
+                                .storeId(storeId)
+                                .mateCategoryId(request.getMateCategoryId())
+                                .title(request.getTitle())
+                                .content(request.getContent())
+                                .capacity(request.getCapacity())
+                                .currentMemberCount(1L)
+                                .recruitYn(Boolean.TRUE.equals(request.getRecruitYn()))
+                                .placeName(request.getPlace().getPlaceName())
+                                .latitude(request.getPlace().getLatitude())
+                                .longitude(request.getPlace().getLongitude())
+                                .updatedAt(null)
+                                .build()
+                );
 
 
             //기존 이미지 삭제 후 새 이미지 업로드
@@ -92,12 +102,62 @@ public class MateServiceImpl implements MateService {
             //디저트 메이트 mateId를 가진 member 데이터 생성
             mateMemberService.addCreatorAsMember(mate.getMateUuid(), user.getId());
 
+            eventPublisher.publishEvent(new MateActionEvent(storeId, mate.getMateId(), user.getUserUuid(), DessertMateAction.CREATE));
+
             return getMateDetail(mate.getMateUuid());
 
         }catch (BusinessException e) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+            throw new UserNotFoundException("사용자를 찾을 수 없습니다.");
         }
 
+    }
+
+    @Override
+    public MateDetailResponse createAppMate(MateCreateRequest request, MultipartFile mateImage) {
+        // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
+        UserEntity user = userService.getCurrentUser();
+
+        if(request.getCapacity() > 5){
+            throw new MateCapacityExceededException("최대 수용 인원 초과입니다.");
+        }
+
+        try {
+            userService.findById(user.getId());
+
+
+            Long storeId = (request.getStoreId() != null) ? request.getStoreId() : null;
+
+            Mate  mate = mateRepository.save(
+                        Mate.builder()
+                                .userId(user.getId())
+                                .storeId(storeId)
+                                .mateCategoryId(request.getMateCategoryId())
+                                .title(request.getTitle())
+                                .content(request.getContent())
+                                .capacity(request.getCapacity())
+                                .currentMemberCount(1L)
+                                .recruitYn(Boolean.TRUE.equals(request.getRecruitYn()))
+                                .updatedAt(null)
+                                .build()
+                );
+
+
+            //기존 이미지 삭제 후 새 이미지 업로드
+            if (mateImage != null && !mateImage.isEmpty()) {
+                String folder = "mate/" + mate.getMateId();
+                imageService.uploadAndSaveImage(mateImage, ImageType.MATE, mate.getMateId(), folder);
+            }
+
+            //디저트 메이트 mateId를 가진 member 데이터 생성
+            mateMemberService.addCreatorAsMember(mate.getMateUuid(), user.getId());
+
+            eventPublisher.publishEvent(new MateActionEvent(storeId, mate.getMateId(), user.getUserUuid(), DessertMateAction.CREATE));
+
+            return getMateDetail(mate.getMateUuid());
+
+        }catch (BusinessException e) {
+            throw new UserNotFoundException("사용자를 찾을 수 없습니다.");
+        }
     }
 
 
@@ -108,7 +168,7 @@ public class MateServiceImpl implements MateService {
         UserEntity user = userService.getCurrentUser();
         //mateId로 디저트메이트 여부 확인
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
+                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
         // 현재 접속해 있는 사용자의 user 정보 (user가 null일 수 있으므로 null 체크)
         Long currentUserId = (user != null) ? user.getId() : null;
@@ -125,7 +185,7 @@ public class MateServiceImpl implements MateService {
 
         //mateId로 디저트메이트 여부 확인
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
+                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
         try {
             mate.softDelete();
@@ -138,6 +198,17 @@ public class MateServiceImpl implements MateService {
             savedMateRepository.deleteByMate_MateId(mate.getMateId());
 
             imageService.deleteImagesByRefId(ImageType.MATE, mate.getMateId());
+
+            UserEntity user = userService.getCurrentUser();
+
+            eventPublisher.publishEvent(
+                    new MateActionEvent(
+                            mate.getStoreId(),
+                            mate.getMateId(),
+                            user.getUserUuid(),
+                            DessertMateAction.DELETE
+                    )
+            );
 
         } catch (Exception e) {
             log.error("❌ S3 이미지 삭제 중 오류 발생: " + e.getMessage());
@@ -154,7 +225,7 @@ public class MateServiceImpl implements MateService {
 
         //mateId 존재 여부 확인
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
+                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
         //위도,경도로 storeId 조회
         Store store = storeRepository.findByName(request.getPlace().getPlaceName());
@@ -175,15 +246,16 @@ public class MateServiceImpl implements MateService {
      * */
     @Override
     @Transactional
-    public MatesPageResponse getMates(Pageable pageable, String keyword, Long mateCategoryId) {
+    public MatesPageResponse getMates(Pageable pageable, String keyword, Long mateCategoryId, Boolean recruitYn) {
 
         // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
         UserEntity user = userService.getCurrentUser();
 
         Long currentUserId = (user != null) ? user.getId() : null;
 
+
         // 페이지 단위로 메이트 조회 (한 번의 호출로 처리)
-        Page<Mate> matesPage = mateRepository.findByDeletedAtIsNullAndMateCategoryId(mateCategoryId, keyword, pageable);
+        Page<Mate> matesPage = mateRepository.findByDeletedAtIsNullAndMateCategoryIdAndRecruitYn(mateCategoryId, keyword, recruitYn, pageable);
 
         // 각 메이트 엔티티를 DTO로 변환
         List<MateDetailResponse> mates = matesPage.stream()
@@ -206,15 +278,21 @@ public class MateServiceImpl implements MateService {
         UserEntity user = userService.getCurrentUser();
         Long userId = user.getId();
 
-        // 페이지 단위로 참여한 Mate 조회
-        Page<Mate> matesPage = mateRepository.findByDeletedAtIsNullAndUserId(pageable, userId);
+        // MateMember 기준으로 참여한 MateId들 조회 (SoftDelete 고려)
+        Page<MateMember> mateMembersPage = mateMemberRepository.findByUserIdAndDeletedAtIsNull(userId, pageable);
 
         // 각 Mate 엔티티를 DTO로 변환
-        List<MateDetailResponse> matesResponses = matesPage.stream()
-                .map(mate -> mapToMateDetailResponse(mate, userId))
+        List<MateDetailResponse> matesResponses = mateMembersPage
+                .stream()
+                .map(mateMember -> {
+                    Long mateId = mateMember.getMateId();
+                    Mate mate = mateRepository.findByMateId(mateId)
+                            .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
+                    return mapToMateDetailResponse(mate, userId);
+                })
                 .collect(Collectors.toList());
 
-        return new MatesPageResponse(matesResponses, matesPage.isLast());
+        return new MatesPageResponse(matesResponses, mateMembersPage.isLast());
     }
 
 
@@ -222,13 +300,14 @@ public class MateServiceImpl implements MateService {
      * 디저트메이트 신고
      * */
     @Override
-    public void reportMate(UUID mateUuid, MateReportRequest request) {
+    @Transactional
+    public void reportMate(UUID mateUuid, ReportRequest request) {
 
         UserEntity user = userService.getCurrentUser();
 
         //mateId 존재 여부 확인
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
+                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
         Long userId = user.getId();
 
@@ -236,7 +315,7 @@ public class MateServiceImpl implements MateService {
         MateReport report = mateReportRepository.findByMateIdAndUserId(mate.getMateId(), userId);
 
         if(report != null){
-            throw new BusinessException(ErrorCode.DUPLICATION_REPORT);
+            throw new DuplicationReportException("이미 신고된 게시물입니다.");
         }
 
 
@@ -281,8 +360,10 @@ public class MateServiceImpl implements MateService {
 
         //mateCategoryId로 name 조회
         String mateCategory = String.valueOf(mateCategoryRepository.findCategoryNameById( mate.getMateCategoryId()));
-        //작성자 UUID 조회
-        UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
+
+
+       //작성자 UUID 조회
+        UserEntity creator = userService.findByIdIncludingDeleted(mate.getUserId());
 
         //작성자 프로필 조회
         String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, mate.getUserId());
@@ -324,12 +405,12 @@ public class MateServiceImpl implements MateService {
     @Transactional
     public void deleteMateByUuid(UUID mateUuid) {
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
+                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
         // mateUuid가 있는 신고 데이터 확인
         boolean isReported = mateReportRepository.existsByMateId(mate.getMateId());
         if (!isReported) {
-            throw new BusinessException(ErrorCode.MATE_NOT_REPORTED);
+            throw new MateReportNotFoundException("신고되지 않은 디저트메이트입니다.");
         }
 
         // 게시글 삭제 (soft delete)

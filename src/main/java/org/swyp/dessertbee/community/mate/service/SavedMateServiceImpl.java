@@ -1,13 +1,12 @@
 package org.swyp.dessertbee.community.mate.service;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
-import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.community.mate.dto.response.MateDetailResponse;
 import org.swyp.dessertbee.community.mate.dto.response.MatesPageResponse;
@@ -15,6 +14,7 @@ import org.swyp.dessertbee.community.mate.entity.Mate;
 import org.swyp.dessertbee.community.mate.entity.MateApplyStatus;
 import org.swyp.dessertbee.community.mate.entity.MateMember;
 import org.swyp.dessertbee.community.mate.entity.SavedMate;
+import org.swyp.dessertbee.community.mate.exception.MateExceptions.*;
 import org.swyp.dessertbee.community.mate.repository.MateCategoryRepository;
 import org.swyp.dessertbee.community.mate.repository.MateMemberRepository;
 import org.swyp.dessertbee.community.mate.repository.MateRepository;
@@ -22,6 +22,7 @@ import org.swyp.dessertbee.community.mate.repository.SavedMateRepository;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
+import org.swyp.dessertbee.user.exception.UserExceptions.*;
 import org.swyp.dessertbee.user.service.UserService;
 
 import java.util.Collections;
@@ -52,7 +53,7 @@ public class SavedMateServiceImpl implements SavedMateService {
         UserEntity user = userService.getCurrentUser();
 
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
+                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
 
         Long userId = user.getId();
@@ -61,7 +62,7 @@ public class SavedMateServiceImpl implements SavedMateService {
 
             SavedMate savedMate = savedMateRepository.findByMate_MateIdAndUserId(mate.getMateId(), userId);
             if(savedMate != null) {
-                throw new BusinessException(ErrorCode.DUPLICATION_SAVED_MATE);
+                throw new DuplicationSavedMateException("이미 저장된 디저트메이트입니다.");
             }
 
             savedMateRepository.save(
@@ -72,7 +73,7 @@ public class SavedMateServiceImpl implements SavedMateService {
             );
 
         } catch (BusinessException e) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+            throw new UserNotFoundException("사용자를 찾을 수 없습니다.");
         }
 
 
@@ -89,7 +90,7 @@ public class SavedMateServiceImpl implements SavedMateService {
         UserEntity user = userService.getCurrentUser();
 
         Long mateId = mateRepository.findMateIdByMateUuid(mateUuid)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MATE_NOT_FOUND));
+                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
         Long userId = user.getId();
 
@@ -100,12 +101,12 @@ public class SavedMateServiceImpl implements SavedMateService {
 
             SavedMate savedMate = savedMateRepository.findByMate_MateIdAndUserId(mateId, userId);
             if(savedMate == null) {
-                throw new BusinessException(ErrorCode.SAVED_MATE_NOT_FOUND);
+                throw new SavedMateNotFoundException("이미 저장된 디저트메이트입니다.");
             }
 
             savedMateRepository.delete(savedMate);
         } catch (BusinessException e) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+            throw new UserNotFoundException("사용자를 찾을 수 없습니다.");
         }
 
     }
@@ -139,8 +140,11 @@ public class SavedMateServiceImpl implements SavedMateService {
                 .stream()
                 .map(mate -> {
                     String mateImage = imageService.getImageByTypeAndId(ImageType.MATE, mate.getMateId());
+
                     String mateCategory = mateCategoryRepository.findCategoryNameById(mate.getMateCategoryId());
-                    UserEntity creator = mateMemberRepository.findByMateId(mate.getMateId());
+
+                    UserEntity creator = userService.findById(mate.getUserId());
+
                     String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, mate.getUserId());
 
 

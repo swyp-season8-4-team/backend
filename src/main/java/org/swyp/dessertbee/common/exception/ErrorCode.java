@@ -14,19 +14,24 @@ public enum ErrorCode {
     // Common
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "C001", "잘못된 입력값입니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "C002", "서버 에러가 발생했습니다."),
+    INVALID_PLATFORM_VALUE(HttpStatus.BAD_REQUEST, "C003", "잘못된 플랫폼 헤더 입력값입니다."),
 
     // Auth
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "A001", "이미 등록된 이메일입니다."),
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "A002", "이미 사용중인 닉네임입니다."),
     INVALID_VERIFICATION_TOKEN(HttpStatus.UNAUTHORIZED, "A003", "유효하지 않은 인증 토큰입니다."),
-    EXPIRED_VERIFICATION_TOKEN(HttpStatus.UNAUTHORIZED, "A004", "만료된 인증 토큰입니다."),
+    FORBIDDEN_OPERATION(HttpStatus.FORBIDDEN, "A004", "이 작업은 허용되지 않습니다."),
     PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "A005", "비밀번호가 일치하지 않습니다."),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "A006", "잘못된 인증 정보입니다."),
     AUTHENTICATION_FAILED(HttpStatus.UNAUTHORIZED, "A007", "인증에 실패했습니다."),
-    SIGNUP_RESTRICTED_DELETED_ACCOUNT(HttpStatus.FORBIDDEN, "A007", "탈퇴한 계정은 30일 이후에 재가입이 가능합니다."),
-    ROLE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "U010", "해당 권한으로는 접근이 불가합니다."),
-    AUTH_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "A008", "인증 서비스 처리 중 오류가 발생했습니다."),
-    OAUTH_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "A008", "소셜 인증 서비스 처리 중 오류가 발생했습니다."),
+    SIGNUP_RESTRICTED_DELETED_ACCOUNT(HttpStatus.FORBIDDEN, "A008", "탈퇴한 계정은 30일 이후에 재가입이 가능합니다."),
+    ROLE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "A009", "해당 권한으로는 접근이 불가합니다."),
+    AUTH_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "A010", "인증 서비스 처리 중 오류가 발생했습니다."),
+    OAUTH_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "A011", "소셜 인증 서비스 처리 중 오류가 발생했습니다."),
+    DEVICE_ID_MISSING(HttpStatus.BAD_REQUEST, "A012", "디바이스 ID가 제공되지 않았습니다."),
+    INVALID_EMAIL(HttpStatus.UNAUTHORIZED, "A013", "이메일을 다시 확인해주세요."),
+    INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "A014", "비밀번호를 다시 입력해주세요."),
+    ACCOUNT_LOCKED(HttpStatus.UNAUTHORIZED, "A015", "계정이 잠겼습니다."),
 
     // OAuth
     INVALID_PROVIDER(HttpStatus.BAD_REQUEST, "O001", "지원되지 않는 OAuth 제공자입니다."),
@@ -42,12 +47,14 @@ public enum ErrorCode {
     // Email
     EMAIL_SENDING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "E005", "이메일 발송에 실패했습니다."),
     TOO_MANY_VERIFICATION_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "E001", "너무 많은 인증 요청이 있었습니다. 잠시 후 다시 시도해주세요."),
+    EXPIRED_EMAIL_VERIFICATION_CODE(HttpStatus.UNAUTHORIZED, "E002", "만료된 인증 코드입니다."),
 
     // User
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "사용자를 찾을 수 없습니다."),
     INVALID_USER_STATUS(HttpStatus.BAD_REQUEST, "U003", "유효하지 않은 사용자 상태입니다."),
     UNAUTHORIZED_ACCESS(HttpStatus.FORBIDDEN, "U004", "해당 정보에 대한 접근 권한이 없습니다."),
     INVALID_USER_UUID(HttpStatus.BAD_REQUEST, "U005", "유효하지 않은 사용자 식별자입니다."),
+    OWNER_ROLE_MISSING_INFO(HttpStatus.BAD_REQUEST, "U006", "사장 권한을 부여하려면 이름과 전화번호 정보가 필요합니다."),
 
     // Preference
     PREFERENCES_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "존재하지 않는 취향 태그입니다."),
@@ -62,6 +69,15 @@ public enum ErrorCode {
     POPULAR_KEYWORD_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "K006", "인기 검색 기록 생성에 실패했습니다."),
     POPULAR_KEYWORD_SYNC_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "K007", "인기 검색 기록 동기화에 실패했습니다."),
     POPULAR_KEYWORD_INIT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "K008", "인기 검색 기록 초기화에 실패했습니다."),
+    ELASTICSEARCH_COMMUNICATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "K009", "Elasticsearch 통신 중 오류가 발생했습니다."),
+
+    // Log
+    MATE_LOG_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "L001", "디저트 메이트 로그 저장에 실패했습니다."),
+    COUPON_USE_LOG_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "L002", "쿠폰 사용 후 로그 저장에 실패했습니다."),
+    STORE_REVIEW_LOG_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "L003", "가게 한줄리뷰 로그 저장에 실패했습니다."),
+    COMMUNITY_REVIEW_LOG_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "L004", "커뮤니티 리뷰 로그 저장에 실패했습니다."),
+    STORE_SAVE_LOG_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "L005", "가게 저장 관련 로그 저장에 실패했습니다."),
+    STORE_VIEW_LOG_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "L006", "가게 조회 후 로그 저장에 실패했습니다."),
 
     // Store
     STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "존재하지 않는 가게입니다."),
@@ -104,6 +120,16 @@ public enum ErrorCode {
     MENU_UPDATE_FAILED(HttpStatus.BAD_REQUEST, "S041", "단일 메뉴 수정에 실패했습니다."),
     MENU_DELETE_FAILED(HttpStatus.BAD_REQUEST, "S042", "단일 메뉴 삭제에 실패했습니다."),
     MENU_CREATION_FAILED(HttpStatus.BAD_REQUEST, "S043", "메뉴 등록에 실패했습니다."),
+    STORE_DUPLICATE_PRIMARY_LINK(HttpStatus.CONFLICT, "S044", "대표 링크는 하나만 설정할 수 있습니다."),
+    STORE_NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "S045", "존재하지 않는 공지사항입니다."),
+    STORE_NOTICE_CREATION_FAILED(HttpStatus.BAD_REQUEST, "S046", "공지사항 등록에 실패했습니다."),
+    STORE_NOTICE_UPDATE_FAILED(HttpStatus.BAD_REQUEST, "S047", "공지사항 수정에 실패했습니다."),
+    STORE_NOTICE_DELETE_FAILED(HttpStatus.BAD_REQUEST, "S048", "공지사항 삭제에 실패했습니다."),
+    STORE_NOTICE_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S049", "가게 공지사항 서비스 처리 중 오류가 발생했습니다."),
+    STORE_HOLIDAY_TERM_ERROR(HttpStatus.BAD_REQUEST, "S050", "휴무일의 종료일은 시작일 이후여야 합니다."),
+    STORE_HOLIDAY_TYPE_ERROR(HttpStatus.BAD_REQUEST, "S051", "날짜 형식이 올바르지 않습니다. yyyy.MM.dd 또는 yyyy.MM.dd-yyyy.MM.dd 형식을 사용해주세요."),
+    STORE_REVIEW_ALREADY_EXISTS_TODAY(HttpStatus.BAD_REQUEST, "S052", "오늘 이미 작성한 리뷰가 존재합니다."),
+    STORE_DUPLICATION_REPORT(HttpStatus.CONFLICT, "S053", "이미 신고된 게시물입니다."),
 
     // 사장님 권한
     /**
@@ -135,11 +161,13 @@ public enum ErrorCode {
     DUPLICATION_SAVED_STORE(HttpStatus.CONFLICT, "M012", "이미 저장된 디저트메이트입니다."),
     SAVED_MATE_NOT_FOUND(HttpStatus.NOT_FOUND,"M013" , "저장하지 않은 디저트메이트입니다."),
     MATE_RECRUIT_DONE(HttpStatus.FORBIDDEN,"M014" , "해당 디저트메이트 모집 마감입니다."),
-    DUPLICATION_REPORT(HttpStatus.CONFLICT, "M015", "이미 신고된 게시물입니다."),
+    MATE_DUPLICATION_REPORT(HttpStatus.CONFLICT, "M015", "이미 신고된 게시물입니다."),
     MATE_NOT_PENDING_MEMBER(HttpStatus.NOT_FOUND, "M016",  "디저트메이트 신청하신 분이 아닙니다."),
     DUPLICATION_SAVED_MATE(HttpStatus.CONFLICT, "M017", "이미 저장된 디저트메이트입니다."),
     MATE_NOT_REPORTED(HttpStatus.NOT_FOUND, "M018" , "신고되지 않은 디저트메이트입니다." ),
     MATE_REPLY_NOT_REPORTED(HttpStatus.NOT_FOUND, "M019" , "신고되지 않은 디저트메이트 댓글입니다." ),
+    MATE_CAPACITY_EXCEEDED(HttpStatus.BAD_REQUEST, "M020", "최대 수용 인원 초과입니다." ),
+    INVALID_REPLY_DEPTH( HttpStatus.BAD_REQUEST, "M021", "대댓글에는 댓글을 달 수 없습니다."),
 
     //커뮤니티 리뷰
     COMMUNITY_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "R001" , "존재하지 않는 리뷰입니다." ),
@@ -149,7 +177,47 @@ public enum ErrorCode {
     IMAGE_UUID_NOT_FOUND(HttpStatus.NOT_FOUND, "R005", "존재하지 않는 이미지 UUID 입니다."),
     IMAGE_UPLOAD_FAILED(HttpStatus.CONFLICT, "R006", "이미지 업로드 시 문제가 생겼습니다."),
     DUPLICATION_SAVED_REVIEW(HttpStatus.CONFLICT, "R007", "이미 저장된 커뮤니티 리뷰입니다."),
-    SAVED_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "R008", "저장된 커뮤니티 리뷰가 없습니다.");
+    SAVED_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "R008", "저장된 커뮤니티 리뷰가 없습니다."),
+
+    //관리자 페이지
+    INVALID_YEAR(HttpStatus.BAD_REQUEST,"ADMIN_001","잘못된 연도입니다."),
+    INVALID_MONTH(HttpStatus.BAD_REQUEST,"ADMIN_002","잘못된 월입니다."),
+
+    //Coupon
+    // 쿠폰 유효성 검사 관련 에러코드
+    COUPON_NOT_FOUND(HttpStatus.NOT_FOUND,"C001","존재하지 않는 쿠폰입니다."),
+    INVALID_COUPON_NAME(HttpStatus.BAD_REQUEST, "C002", "쿠폰 이름은 필수입니다."),
+    QUANTITY_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "C003", "수량 제한이 없을 경우 수량 필드는 비워야 합니다."),
+    EXPIRY_DATE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "C004", "유효기간 설정이 없을 경우 유효기간은 비워야 합니다."),
+    EXPOSURE_DATE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "C005", "노출기간 설정이 없을 경우 노출 시작일과 종료일은 비워야 합니다."),
+
+    INVALID_COUPON_DETAIL(HttpStatus.BAD_REQUEST, "C006", "쿠폰 상세 정보가 유효하지 않습니다."),
+    INVALID_DISCOUNT_DETAIL(HttpStatus.BAD_REQUEST, "C007", "할인 쿠폰의 상세 정보가 유효하지 않습니다."),
+    INVALID_DISCOUNT_FOR_GIFT(HttpStatus.BAD_REQUEST, "C008", "증정 쿠폰에 할인 정보가 포함될 수 없습니다."),
+    INVALID_GIFT_DETAIL(HttpStatus.BAD_REQUEST, "C009", "증정 쿠폰의 상세 정보가 유효하지 않습니다."),
+    ALREADY_ISSUED_COUPON(HttpStatus.CONFLICT, "C010", "이미 해당 쿠폰을 발급받은 사용자입니다."),
+    QR_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "C011", "QR 코드 생성 중 오류가 발생했습니다."),
+    COUPON_OUT_OF_STOCK(HttpStatus.BAD_REQUEST, "C012", "제공된 쿠폰 수량이 소진되었습니다."),
+
+    // 사용조건 관련 에러코드
+    INVALID_CONDITION_TYPE(HttpStatus.BAD_REQUEST, "CC001", "올바르지 않은 사용조건 타입입니다."),
+
+    MIN_PURCHASE_AMOUNT_REQUIRED(HttpStatus.BAD_REQUEST, "CC002", "최소 구매 금액은 필수입니다."),
+    EXTRA_FIELDS_NOT_ALLOWED_FOR_AMOUNT(HttpStatus.BAD_REQUEST, "CC003", "최소 구매 금액 조건 외의 필드는 입력할 수 없습니다."),
+
+    TIME_DAY_FIELDS_REQUIRED(HttpStatus.BAD_REQUEST, "CC004", "요일 및 시간 조건에는 시작 시간, 종료 시간, 요일이 필수입니다."),
+    EXTRA_FIELDS_NOT_ALLOWED_FOR_TIME_DAY(HttpStatus.BAD_REQUEST, "CC005", "요일 및 시간 조건 외의 필드는 입력할 수 없습니다."),
+
+    CUSTOM_CONDITION_TEXT_REQUIRED(HttpStatus.BAD_REQUEST, "CC006", "커스텀 조건 텍스트는 필수입니다."),
+    EXTRA_FIELDS_NOT_ALLOWED_FOR_CUSTOM(HttpStatus.BAD_REQUEST, "CC007", "커스텀 조건 외의 필드는 입력할 수 없습니다."),
+
+    EXCLUSIVE_FIELD_REQUIRED(HttpStatus.BAD_REQUEST, "CC008", "단독 사용 조건은 false로 설정되어야 합니다."),
+    EXTRA_FIELDS_NOT_ALLOWED_FOR_EXCLUSIVE(HttpStatus.BAD_REQUEST, "CC009", "단독 사용 조건 외의 필드는 입력할 수 없습니다."),
+
+    //사용자-쿠폰
+    USER_COUPON_NOT_FOUND(HttpStatus.NOT_FOUND, "UC001", "해당 쿠폰이 존재하지 않습니다."),
+    USER_COUPON_FORBIDDEN(HttpStatus.FORBIDDEN, "UC002", "본인의 쿠폰만 조회할 수 있습니다."),
+    ALREADY_USED_COUPON(HttpStatus.CONFLICT, "UC003", "이미 사용된 쿠폰입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

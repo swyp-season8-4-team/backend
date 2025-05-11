@@ -98,4 +98,28 @@ public class StoreReviewExceptions {
             super(ErrorCode.STORE_REVIEW_NOT_FOUND, message);
         }
     }
+
+    /**
+     * 유효하지 않은 한줄리뷰 예외
+     */
+    public static class StoreReviewAlreadyExistsTodayException extends BusinessException {
+        public StoreReviewAlreadyExistsTodayException() {
+            super(ErrorCode.STORE_REVIEW_ALREADY_EXISTS_TODAY);
+        }
+
+        public StoreReviewAlreadyExistsTodayException(String message) {
+            super(ErrorCode.STORE_REVIEW_NOT_FOUND, message);
+        }
+    }
+
+    /**
+     *
+     * */
+    public static class DuplicationReportException extends BusinessException {
+        public DuplicationReportException(){super(ErrorCode.STORE_DUPLICATION_REPORT);}
+
+        public DuplicationReportException(String message) {
+            super(ErrorCode.STORE_DUPLICATION_REPORT, message);
+        }
+    }
 }

@@ -1,86 +1,56 @@
 package org.swyp.dessertbee.store.store.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.store.menu.dto.request.MenuCreateRequest;
 import org.swyp.dessertbee.store.store.entity.StoreStatus;
 
 import java.math.BigDecimal;
-import java.time.DayOfWeek;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-@Builder
+/**
+ * 가게 생성 요청 DTO
+ */
 @Data
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class StoreCreateRequest {
+public class StoreCreateRequest extends BaseStoreRequest {
 
-    @NotNull
-    private UUID userUuid;
-
-    @NotBlank
-    private String name;
-
-    private String phone;
-    private String address;
-    private String storeLink;
-    private BigDecimal latitude;
-    private BigDecimal longitude;
-    private String description;
-    private Boolean animalYn;
-    private Boolean tumblerYn;
-    private Boolean parkingYn;
-    private List<Long> tagIds;
-
-    @Builder.Default
-    private StoreStatus status = StoreStatus.APPROVED;
-
-    private List<String> notice; // 공지사항 리스트 추가
-
-    private List<MenuCreateRequest> menus; // 메뉴 리스트
-
-    private List<MultipartFile> storeImageFiles;  // 가게 대표 이미지
-    private List<MultipartFile> ownerPickImageFiles; // 사장님 픽 이미지
-
-    private Map<String, MultipartFile> menuImageFiles;
-
-    private List<OperatingHourRequest> operatingHours; // 영업 시간
-    private List<HolidayRequest> holidays; // 휴무 정보
+    @Schema(description = "등록할 메뉴 정보 목록")
+    private List<MenuCreateRequest> menus;
 
     @Data
-    @Builder
-    @AllArgsConstructor
     @NoArgsConstructor
-    public static class OperatingHourRequest {
-        private DayOfWeek dayOfWeek;
+    @AllArgsConstructor
+    public static class MenuRequest {
+        @Schema(description = "메뉴 UUID", example = "4e8e1e28-c94e-40d7-8e93-6789abc45678")
+        private UUID menuUuid;
 
-        @JsonFormat(pattern = "HH:mm")
-        private LocalTime openingTime;
+        @Schema(description = "메뉴 이름", example = "수건 케이크")
+        @NotBlank(message = "메뉴 이름은 필수입니다.")
+        private String name;
 
-        @JsonFormat(pattern = "HH:mm")
-        private LocalTime closingTime;
+        @Schema(description = "메뉴 가격 (원 단위)", example = "5800")
+        @NotNull(message = "가격은 필수입니다.")
+        private BigDecimal price;
 
-        @JsonFormat(pattern = "HH:mm")
-        private LocalTime lastOrderTime;
+        @Schema(description = "인기 메뉴 여부", example = "true")
+        private Boolean isPopular;
 
-        private Boolean isClosed;
+        @Schema(description = "메뉴 설명", example = "부드럽고 달콤한 수건 모양 케이크입니다.")
+        private String description;
+
+        @Schema(description = "이미지 파일명", example = "image123.png")
+        private String imageFileKey;
     }
 
-    @Data
-    @Builder
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class HolidayRequest {
-        private String date;
-        private String reason;
-    }
+    // StoreLinkRequest 클래스 재정의 없이 상속받아 사용
 }

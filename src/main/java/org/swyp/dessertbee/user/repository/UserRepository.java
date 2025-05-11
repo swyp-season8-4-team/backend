@@ -3,6 +3,7 @@ package org.swyp.dessertbee.user.repository;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
@@ -15,13 +16,16 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     /**
      * 이메일로 사용자 조회 (삭제되지 않은 계정만)
+     *
      * @param email 사용자 이메일
      * @return UserEntity
      */
     @Query("SELECT u FROM UserEntity u WHERE u.email = :email AND u.deletedAt IS NULL")
     Optional<UserEntity> findByEmail(String email);
+
     /**
      * 이메일 존재 여부 확인 (삭제된 계정 포함.)
+     *
      * @param email 사용자 이메일
      * @return boolean
      */
@@ -30,15 +34,16 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     /**
      * 닉네임 존재 여부 확인 (삭제되지 않은 계정만)
+     *
      * @param nickname 사용자 닉네임
      * @return boolean
      */
-    @Query("SELECT COUNT(u) > 0 FROM UserEntity u WHERE u.nickname = :nickname AND u.deletedAt IS NULL")
+    @Query("SELECT COUNT(u) > 0 FROM UserEntity u WHERE u.nickname = :nickname")
     boolean existsByNickname(String nickname);
 
     /**
      * Uuid로 userId 조회 (삭제되지 않은 계정만)
-     * */
+     */
     @Query("SELECT u.id FROM UserEntity u WHERE u.userUuid = :userUuid AND u.deletedAt IS NULL")
     Long findIdByUserUuid(UUID userUuid);
 
@@ -51,13 +56,13 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     /**
      * userId로 userUuid 조회 (삭제되지 않은 계정만)
-     * */
+     */
     @Query("SELECT u.userUuid FROM UserEntity u WHERE u.id = :userId AND u.deletedAt IS NULL")
     UUID findUserUuidById(Long userId);
 
     /**
      * userId로 userUuid와 nickname 전체 조회
-     * */
+     */
     List<UserEntity> findAllUserUuidAndNicknameById(Long userId);
 
 
@@ -70,4 +75,9 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     @Query("SELECT u FROM UserEntity u WHERE u.userUuid = :userUuid AND u.deletedAt IS NULL")
     Optional<UserEntity> findByUserUuid(@NotNull UUID userUuid);
+
+    Optional<UserEntity> findByIdAndDeletedAtIsNull(Long userId);
+
+    @Query("SELECT u FROM UserEntity u WHERE u.id = :userId") // deletedAt 조건 없음
+    Optional<UserEntity> findByIdIncludingDeleted(@Param("userId") Long userId);
 }

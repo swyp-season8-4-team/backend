@@ -1,5 +1,6 @@
 package org.swyp.dessertbee.store.menu.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -9,20 +10,27 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+/**
+ * 메뉴 생성 요청 DTO
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class    MenuCreateRequest {
+public class MenuCreateRequest {
+    @Schema(description = "메뉴 이름", example = "수건 케이크")
+    @NotBlank(message = "메뉴 이름은 필수입니다.")
+    private String name;
 
-    private UUID menuUuid;
+    @Schema(description = "메뉴 가격 (원 단위)", example = "5800")
+    @NotNull(message = "가격은 필수입니다.")
+    private BigDecimal price;
 
-    @NotBlank
-    private String name; // 메뉴 이름
+    @Schema(description = "인기 메뉴 여부", example = "true", nullable = true)
+    private Boolean isPopular;
 
-    @NotNull
-    private BigDecimal price; // 가격
+    @Schema(description = "메뉴 설명", example = "부드럽고 달콤한 수건 모양 케이크입니다.", nullable = true)
+    private String description;
 
-    private Boolean isPopular = false; // 인기 메뉴 여부 (기본값: false)
-    private String description; // 메뉴 설명
+    @Schema(description = "이미지 파일명", example = "image123.png", nullable = true)
     private String imageFileKey;
 }

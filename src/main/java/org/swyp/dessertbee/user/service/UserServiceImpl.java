@@ -9,11 +9,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.auth.entity.AuthEntity;
+import org.swyp.dessertbee.auth.repository.AuthRepository;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.preference.service.PreferenceService;
+import org.swyp.dessertbee.role.service.UserRoleService;
 import org.swyp.dessertbee.user.dto.response.UserDetailResponseDto;
 import org.swyp.dessertbee.user.dto.response.UserResponseDto;
 import org.swyp.dessertbee.user.dto.request.UserUpdateRequestDto;
@@ -39,7 +41,7 @@ public class UserServiceImpl implements UserService {
     private final MbtiRepository mbtiRepository;
     private final ImageService imageService;
     private final PreferenceService preferenceService;
-
+    private final UserRoleService userRoleService;
 
 
 
@@ -142,6 +144,7 @@ public class UserServiceImpl implements UserService {
         // 프로필 이미지 URL 조회
         List<String> profileImages = imageService.getImagesByTypeAndId(ImageType.PROFILE, user.getId());
         String profileImageUrl = profileImages.isEmpty() ? null : profileImages.get(0);
+        List<String> roles = userRoleService.getUserRoles(user);
 
         return UserDetailResponseDto.detailBuilder()
                 .userUuid(user.getUserUuid().toString())
@@ -151,10 +154,11 @@ public class UserServiceImpl implements UserService {
                 .phoneNumber(user.getPhoneNumber())
                 .address(user.getAddress())
                 .gender(user.getGender())
-                .profileImage(profileImageUrl)  // imageId 대신 imageUrl 사용
+                .profileImage(profileImageUrl)
                 .preferences(preferenceService.convertToPreferenceIds(user.getUserPreferences()))
                 .mbti(user.getMbti() != null ? user.getMbti().getMbtiType() : null)
                 .isPreferencesSet(user.isPreferenceSetFlag())  // preferenceSetFlag 값을 사용
+                .roles(roles)
                 .build();
     }
 
@@ -219,6 +223,10 @@ public class UserServiceImpl implements UserService {
             updateMbti(user, updateRequest.getMbti());
         }
 
+        if (updateRequest.getRoles() != null) {
+            userRoleService.updateUserRoles(user, updateRequest.getRoles());
+        }
+
         userRepository.save(user);
 
         return convertToDetailResponse(user);
@@ -270,7 +278,18 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void deleteMyAccount() {
+
         UserEntity user = getCurrentUser();
+
+        // 특정 이메일인 경우 완전히 삭제 (캐스케이드 적용) // TODO : 기능 개발 마무리 후 삭제해야함
+        if ("kjkksu2@naver.com".equals(user.getEmail())) {
+            log.info("테스트 계정 감지: {} - 완전 삭제 수행", user.getEmail());
+            // CascadeType.ALL과 orphanRemoval=true로 인해 관련된 모든 데이터가 삭제됨
+            userRepository.delete(user);
+            log.info("테스트 계정 완전 삭제 완료: {}", user.getEmail());
+            return;
+        }
+
         user.softDelete();
         userRepository.save(user);
 
@@ -317,6 +336,15 @@ public class UserServiceImpl implements UserService {
                 });
     }
 
+    public UserEntity findUserByEmail(String email, ErrorCode errorCode) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    log.warn("로그인 실패 - 존재하지 않는 이메일: {}", email);
+                    return new BusinessException(errorCode);
+                });
+    }
+
+
     @Override
     public UserEntity findByUserUuid(UUID userUuid) {
         return userRepository.findByUserUuid(userUuid)
@@ -332,6 +360,18 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserEntity findById(Long userId){
         return userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    @Override
+    public UserEntity findByIdAndDeletedAtIsNull(Long userId) {
+        return userRepository.findByIdAndDeletedAtIsNull(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    @Override
+    public UserEntity findByIdIncludingDeleted(Long userId) {
+        return userRepository.findByIdIncludingDeleted(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 

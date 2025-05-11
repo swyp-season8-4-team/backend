@@ -22,6 +22,19 @@ public class StoreExceptions {
     }
 
     /**
+     * 가게 대표링크 중복 예외
+     */
+    public static class DuplicatePrimaryLinkException extends BusinessException {
+        public DuplicatePrimaryLinkException() {
+            super(ErrorCode.STORE_DUPLICATE_PRIMARY_LINK);
+        }
+
+        public DuplicatePrimaryLinkException(String message) {
+            super(ErrorCode.STORE_DUPLICATE_PRIMARY_LINK, message);
+        }
+    }
+
+    /**
      * 가게 서비스 오류 예외
      */
     public static class StoreServiceException extends BusinessException {
@@ -148,6 +161,32 @@ public class StoreExceptions {
 
         public StoreRateUpdateException(String message) {
             super(ErrorCode.STORE_RATE_UPDATE_FAILED, message);
+        }
+    }
+
+    /**
+     * 가게 휴무일 기간설정 오류 예외
+     */
+    public static class StoreHolidayTermException extends BusinessException {
+        public StoreHolidayTermException() {
+            super(ErrorCode.STORE_HOLIDAY_TERM_ERROR);
+        }
+
+        public StoreHolidayTermException(String message) {
+            super(ErrorCode.STORE_HOLIDAY_TERM_ERROR, message);
+        }
+    }
+
+    /**
+     * 가게 휴무일 형식 오류 예외
+     */
+    public static class StoreHolidayTypeException extends BusinessException {
+        public StoreHolidayTypeException() {
+            super(ErrorCode.STORE_HOLIDAY_TYPE_ERROR);
+        }
+
+        public StoreHolidayTypeException(String message) {
+            super(ErrorCode.STORE_HOLIDAY_TYPE_ERROR, message);
         }
     }
 

@@ -1,12 +1,12 @@
 package org.swyp.dessertbee.community.mate.repository;
 
-import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.community.mate.entity.Mate;
 
 import java.util.List;
@@ -38,9 +38,11 @@ public interface MateRepository extends JpaRepository<Mate, Long> {
             "AND (:keyword IS NULL OR (m.title LIKE CONCAT('%', :keyword, '%') " +
             "     OR m.content LIKE CONCAT('%', :keyword, '%') " +
             "     OR m.placeName LIKE CONCAT('%', :keyword, '%'))) " +
+            "AND (:recruitYn IS NULL OR m.recruitYn = :recruitYn) " +
             "ORDER BY m.createdAt DESC")
-    Page<Mate> findByDeletedAtIsNullAndMateCategoryId(@Param("mateCategoryId") Long mateCategoryId,
+    Page<Mate> findByDeletedAtIsNullAndMateCategoryIdAndRecruitYn(@Param("mateCategoryId") Long mateCategoryId,
                                                       @Param("keyword") String keyword,
+                                                      @Param("recruitYn") Boolean recruitYn,
                                                       Pageable pageable);
 
 
@@ -50,4 +52,7 @@ public interface MateRepository extends JpaRepository<Mate, Long> {
     @Query("SELECT m FROM Mate m WHERE m.deletedAt IS NULL " +
             "AND m.userId = :userId")
     Page<Mate> findByDeletedAtIsNullAndUserId(Pageable pageable, Long userId);
+
+    @Query("SELECT m FROM Mate m WHERE m.mateId = :mateId")
+    Optional<Mate> findByMateId(@Param("mateId") Long mateId);
 }

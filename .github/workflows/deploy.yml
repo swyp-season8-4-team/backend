@@ -46,8 +46,8 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/dessertbee:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/dessertbee:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/desserbee:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/desserbee:${{ github.sha }}
 
       # 배포 환경 결정
       - name: Set deployment variables
@@ -77,6 +77,7 @@ jobs:
           source: "docker-compose.yml,nginx/"
           target: "/home/ec2-user/app"
           strip_components: 0
+          overwrite: true
 
 
         # EC2에 SSH 접속 후 Docker 환경 구성 및 애플리케이션 실행
@@ -122,7 +123,7 @@ jobs:
 
             # Docker 이미지 pull 및 Compose 실행
             echo "Pulling latest Docker image..."
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/dessertbee:latest
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/desserbee:latest
 
             echo "Stopping existing containers..."
             docker-compose down || true

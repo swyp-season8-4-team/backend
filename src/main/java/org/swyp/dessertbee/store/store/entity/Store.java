@@ -6,9 +6,11 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 import org.swyp.dessertbee.common.util.StringListConverter;
+import org.swyp.dessertbee.store.coupon.entity.Coupon;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -88,6 +90,10 @@ public class Store {
     @Convert(converter = StringListConverter.class)
     private List<String> notice;
 
+    @Builder.Default
+    @OneToMany(mappedBy = "store")
+    private List<Coupon> coupons = new ArrayList<>();
+
     @PrePersist
     public void prePersist() {
         if (this.status == null) {
@@ -95,21 +101,18 @@ public class Store {
         }
     }
 
-    public void updateInfo(String name, String phone, String address, String storeLink,
+    public void updateInfo(String name, String phone, String address,
                            BigDecimal latitude, BigDecimal longitude, String description,
-                           Boolean animalYn, Boolean tumblerYn, Boolean parkingYn,
-                           List<String> notice) {
+                           Boolean animalYn, Boolean tumblerYn, Boolean parkingYn) {
         this.name = name;
         this.phone = phone;
         this.address = address;
-        this.storeLink = storeLink;
         this.latitude = latitude;
         this.longitude = longitude;
         this.description = description;
         this.animalYn = animalYn;
         this.tumblerYn = tumblerYn;
         this.parkingYn = parkingYn;
-        this.notice = notice;
     }
 
     public void softDelete(){

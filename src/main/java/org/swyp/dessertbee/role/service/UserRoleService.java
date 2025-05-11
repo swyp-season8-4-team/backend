@@ -162,4 +162,58 @@ public class UserRoleService {
 
         return getUserRoles(user);
     }
+
+    /**
+     * 사용자의 역할(권한) 정보를 업데이트합니다.
+     * ROLE_ADMIN 권한은 부여할 수 없습니다.
+     */
+    @Transactional
+    public void updateUserRoles(UserEntity user, List<String> roleNames) {
+        // 역할이 null이거나 비어있으면 업데이트하지 않음
+        if (roleNames == null || roleNames.isEmpty()) {
+            return;
+        }
+
+        // ADMIN 권한 부여 시도 여부 확인
+        boolean attemptToGrantAdmin = roleNames.stream()
+                .anyMatch(role -> role.equals("ROLE_ADMIN"));
+
+        if (attemptToGrantAdmin) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_OPERATION,
+                    "ADMIN 권한은 부여할 수 없습니다.");
+        }
+
+        // 사장 권한 부여 시도 여부 확인
+        boolean attemptToGrantOwner = roleNames.stream()
+                .anyMatch(role -> role.equals("ROLE_OWNER"));
+
+        // 사장 권한 부여 시 이름과 전화번호 유효성 검증
+        if (attemptToGrantOwner) {
+            if (user.getName() == null || user.getName().trim().isEmpty() ||
+                    user.getPhoneNumber() == null || user.getPhoneNumber().trim().isEmpty()) {
+                throw new BusinessException(ErrorCode.OWNER_ROLE_MISSING_INFO);
+            }
+        }
+
+        // 현재 사용자가 이미 ADMIN 권한을 가지고 있는지 확인
+        boolean hasAdminRole = hasUserRole(user, RoleType.ROLE_ADMIN);
+
+        // 요청된 역할 타입으로 변환
+        List<RoleType> requestedRoleTypes = roleNames.stream()
+                .map(RoleType::fromString)
+                .collect(Collectors.toList());
+
+        // ADMIN 권한이 있었다면 유지하기 위해 목록에 추가
+        if (hasAdminRole && !requestedRoleTypes.contains(RoleType.ROLE_ADMIN)) {
+            requestedRoleTypes.add(RoleType.ROLE_ADMIN);
+        }
+
+        // UserRoleService를 사용하여 역할 설정
+        setUserRoles(user, requestedRoleTypes);
+
+        log.info("사용자 역할 업데이트 완료 - 이메일: {}, 역할: {}",
+                user.getEmail(),
+                getUserRoles(user));
+    }
+
 }

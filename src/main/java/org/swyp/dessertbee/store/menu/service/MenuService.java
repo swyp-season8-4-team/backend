@@ -22,7 +22,7 @@ public interface MenuService {
     void addMenus(UUID storeUuid, List<MenuCreateRequest> menuRequests, Map<String, MultipartFile> menuImageFiles);
 
     /** 메뉴 수정 */
-    void updateMenu(UUID storeUuid, UUID menuUuid, MenuCreateRequest request, MultipartFile file);
+    void updateMenu(UUID storeUuid, UUID menuUuid, MenuCreateRequest request, MultipartFile file, Boolean deleteImage);
 
     /** 메뉴 삭제 */
     void deleteMenu(UUID storeUuid, UUID menuUuid);
