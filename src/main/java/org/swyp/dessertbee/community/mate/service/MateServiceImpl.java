@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.swyp.dessertbee.common.aop.CheckWriteRestriction;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.entity.ReportCategory;
 import org.swyp.dessertbee.common.exception.BusinessException;
@@ -54,14 +55,11 @@ public class MateServiceImpl implements MateService {
     /** 메이트 등록 */
     @Override
     @Transactional
+    @CheckWriteRestriction
     public MateDetailResponse createMate(MateCreateRequest request, MultipartFile mateImage){
         // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
         UserEntity user = userService.getCurrentUser();
 
-        // 작성 제한 체크
-        if (user.isWriteRestricted()) {
-            throw new IllegalStateException("작성 제한 기간입니다. 제한 해제 일시: " + user.getWriteRestrictedUntil());
-        }
 
         if(request.getCapacity() > 5){
             throw new MateCapacityExceededException("최대 수용 인원 초과입니다.");
@@ -118,14 +116,10 @@ public class MateServiceImpl implements MateService {
     }
 
     @Override
+    @CheckWriteRestriction
     public MateDetailResponse createAppMate(MateCreateRequest request, MultipartFile mateImage) {
         // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
         UserEntity user = userService.getCurrentUser();
-
-        // 작성 제한 체크
-        if (user.isWriteRestricted()) {
-            throw new IllegalStateException("작성 제한 기간입니다. 제한 해제 일시: " + user.getWriteRestrictedUntil());
-        }
 
 
         if(request.getCapacity() > 5){

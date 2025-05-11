@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.swyp.dessertbee.common.aop.CheckWriteRestriction;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.entity.ReportCategory;
 import org.swyp.dessertbee.common.exception.BusinessException;
@@ -50,14 +51,9 @@ public class MateReplyServiceImpl implements MateReplyService {
      * */
     @Override
     @Transactional
+    @CheckWriteRestriction
     public MateReplyResponse createReply(UUID mateUuid, MateReplyCreateRequest request) {
 
-        UserEntity user = userService.getCurrentUser();
-
-        // 작성 제한 체크
-        if (user.isWriteRestricted()) {
-            throw new IllegalStateException("작성 제한 기간입니다. 제한 해제 일시: " + user.getWriteRestrictedUntil());
-        }
 
         //디저트 메이트 유효성 검사
         MateUserIds mateUserIds = validateMateAndUser(mateUuid, request.getUserUuid());
@@ -84,14 +80,9 @@ public class MateReplyServiceImpl implements MateReplyService {
      * */
     @Override
     @Transactional
+    @CheckWriteRestriction
     public MateReplyResponse createAppReply(UUID mateUuid, MateAppReplyCreateRequest request){
 
-        UserEntity user = userService.getCurrentUser();
-
-        // 작성 제한 체크
-        if (user.isWriteRestricted()) {
-            throw new IllegalStateException("작성 제한 기간입니다. 제한 해제 일시: " + user.getWriteRestrictedUntil());
-        }
 
         //디저트 메이트 유효성 검사
         MateUserIds mateUserIds = validateMateAndUser(mateUuid, request.getUserUuid());
