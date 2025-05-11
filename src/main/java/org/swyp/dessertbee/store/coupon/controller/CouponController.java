@@ -15,10 +15,12 @@ import org.swyp.dessertbee.common.annotation.ApiErrorResponses;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.store.coupon.dto.request.CouponRequest;
+import org.swyp.dessertbee.store.coupon.service.CouponService;
 import org.swyp.dessertbee.user.coupon.dto.request.UseCouponRequest;
 import org.swyp.dessertbee.store.coupon.dto.response.CouponResponse;
 import org.swyp.dessertbee.user.coupon.dto.response.UsedCouponResponse;
 import org.swyp.dessertbee.store.coupon.service.CouponServiceImpl;
+import org.swyp.dessertbee.user.coupon.service.UserCouponService;
 import org.swyp.dessertbee.user.coupon.service.UserCouponServiceImpl;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
@@ -32,8 +34,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CouponController {
 
-    private final CouponServiceImpl couponServiceImpl;
-    private final UserCouponServiceImpl userCouponServiceImpl;
+    private final CouponService couponService;
+    private final UserCouponService userCouponService;
     private final StoreRepository storeRepository;
 
     /**
@@ -59,11 +61,9 @@ public class CouponController {
             ErrorCode.EXTRA_FIELDS_NOT_ALLOWED_FOR_EXCLUSIVE
     })
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
-    @PostMapping("/create")
-    public ResponseEntity<CouponResponse> createCoupon(@RequestBody CouponRequest request) {
-        Store store = storeRepository.findByStoreUuid(request.getStoreUuid())
-                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
-        return ResponseEntity.ok(couponServiceImpl.createCoupon(request, store));
+    @PostMapping("/create/{storeUuid}")
+    public ResponseEntity<CouponResponse> createCoupon(@PathVariable UUID storeUuid,@RequestBody CouponRequest request) {
+        return ResponseEntity.ok(couponService.createCoupon(request, storeUuid));
     }
     /**
      * 쿠폰 수정
@@ -89,14 +89,13 @@ public class CouponController {
             ErrorCode.EXTRA_FIELDS_NOT_ALLOWED_FOR_EXCLUSIVE
     })
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
-    @PutMapping("/{couponId}")
+    @PutMapping("/{storeUuid}/{couponId}")
     public ResponseEntity<CouponResponse> updateCoupon(
+            @PathVariable UUID storeUuid,
             @PathVariable Long couponId,
             @RequestBody @Valid CouponRequest request
     ) {
-        Store store = storeRepository.findByStoreUuid(request.getStoreUuid())
-                .orElseThrow(() ->new BusinessException(ErrorCode.STORE_NOT_FOUND));
-        CouponResponse updated = couponServiceImpl.updateCoupon(couponId, request, store);
+        CouponResponse updated = couponService.updateCoupon(couponId, request, storeUuid);
         return ResponseEntity.ok(updated);
     }
 
@@ -109,11 +108,12 @@ public class CouponController {
             ErrorCode.COUPON_NOT_FOUND
     })
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
-    @DeleteMapping("/{couponId}")
+    @DeleteMapping("/{storeUuid}/{couponId}")
     public ResponseEntity<Void> deleteCoupon(
+            @PathVariable UUID storeUuid,
             @PathVariable Long couponId
             ) {
-        couponServiceImpl.deleteCoupon(couponId);
+        couponService.deleteCoupon(couponId, storeUuid);
 
         return ResponseEntity.noContent().build(); // 삭제 성공 시, 204 No Content 응답
     }
@@ -127,7 +127,7 @@ public class CouponController {
     public ResponseEntity<List<CouponResponse>> getCouponsByStore(
             @PathVariable UUID storeUuid
     ) {
-        List<CouponResponse> coupons = couponServiceImpl.getCouponsByStore(storeUuid);
+        List<CouponResponse> coupons = couponService.getCouponsByStore(storeUuid);
         return ResponseEntity.ok(coupons);
     }
 
@@ -144,7 +144,7 @@ public class CouponController {
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @PostMapping("/use")
     public ResponseEntity<UsedCouponResponse> useCoupon(@RequestBody UseCouponRequest request) {
-        UsedCouponResponse response = userCouponServiceImpl.useCouponByCode(request);
+        UsedCouponResponse response = userCouponService.useCouponByCode(request);
         return ResponseEntity.ok(response);
     }
 

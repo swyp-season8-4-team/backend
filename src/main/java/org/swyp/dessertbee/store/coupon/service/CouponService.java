@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.UUID;
 
 public interface CouponService {
-    CouponResponse createCoupon(CouponRequest request, Store store);
-    CouponResponse updateCoupon(Long couponId, CouponRequest request, Store store);
-    void deleteCoupon(Long couponId);
+    CouponResponse createCoupon(CouponRequest request, UUID storeUuid);
+    CouponResponse updateCoupon(Long couponId, CouponRequest request, UUID storeUuid);
+    void deleteCoupon(Long couponId,UUID storeUuid);
     List<CouponResponse> getCouponsByStore(UUID storeUuid);
 }
