@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.swyp.dessertbee.common.aop.CheckWriteRestriction;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.entity.ReportCategory;
 import org.swyp.dessertbee.common.exception.BusinessException;
@@ -54,9 +55,11 @@ public class MateServiceImpl implements MateService {
     /** 메이트 등록 */
     @Override
     @Transactional
+    @CheckWriteRestriction
     public MateDetailResponse createMate(MateCreateRequest request, MultipartFile mateImage){
         // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
         UserEntity user = userService.getCurrentUser();
+
 
         if(request.getCapacity() > 5){
             throw new MateCapacityExceededException("최대 수용 인원 초과입니다.");
@@ -113,9 +116,11 @@ public class MateServiceImpl implements MateService {
     }
 
     @Override
+    @CheckWriteRestriction
     public MateDetailResponse createAppMate(MateCreateRequest request, MultipartFile mateImage) {
         // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
         UserEntity user = userService.getCurrentUser();
+
 
         if(request.getCapacity() > 5){
             throw new MateCapacityExceededException("최대 수용 인원 초과입니다.");
@@ -384,38 +389,6 @@ public class MateServiceImpl implements MateService {
 
         return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, creator, profileImage, saved, applyStatus, store);
 
-    }
-
-//    -------------- 관리자용 메이트 신고 관리 기능 ------------
-
-    /**
-     *   신고된 Mate 게시글 목록 조회
-     */
-    public List<MateReportResponse> getReportedMates() {
-        List<MateReport> reports = mateReportRepository.findAllByMateIdIsNotNull();
-        return reports.stream()
-                .map(MateReportResponse::new)
-                .collect(Collectors.toList());
-    }
-
-
-    /**
-     * 신고된 Mate 게시글 삭제
-     */
-    @Transactional
-    public void deleteMateByUuid(UUID mateUuid) {
-        Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
-                .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
-
-        // mateUuid가 있는 신고 데이터 확인
-        boolean isReported = mateReportRepository.existsByMateId(mate.getMateId());
-        if (!isReported) {
-            throw new MateReportNotFoundException("신고되지 않은 디저트메이트입니다.");
-        }
-
-        // 게시글 삭제 (soft delete)
-        mate.softDelete();
-        mateRepository.save(mate);
     }
 
 }
