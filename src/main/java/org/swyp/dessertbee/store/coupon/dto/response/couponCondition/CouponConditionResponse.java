@@ -25,7 +25,7 @@ public interface CouponConditionResponse {
                     coupon.getConditionEndTime(),
                     coupon.getConditionDays()
             );
-        } else if (Boolean.TRUE.equals(coupon.getExclusiveOnly())) {
+        } else if (Boolean.FALSE.equals(coupon.getExclusiveOnly())) {
             return new ExclusiveConditionResponse(CouponConditionType.EXCLUSIVE);
         } else if (coupon.getCustomConditionText() != null) {
             return new CustomConditionResponse(CouponConditionType.CUSTOM, coupon.getCustomConditionText());
