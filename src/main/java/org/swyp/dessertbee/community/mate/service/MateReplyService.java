@@ -35,12 +35,4 @@ public interface MateReplyService {
     /** 디저트메이트 댓글 신고 */
     void reportMateReply(UUID mateUuid, Long replyId, ReportRequest request);
 
-
-    //     -------------- 관리자용 메이트 댓글 신고 관리 기능 ------------
-
-    /**  신고된 Mate 댓글 조회*/
-    List<MateReportResponse> getReportedMateReplies();
-
-    /** 신고된 Mate 댓글 삭제*/
-    void deleteReportedMateReply(Long mateReplyId);
 }
