@@ -71,6 +71,12 @@ public class UserEntity {
     @Column(name = "gender", length = 6)
     private Gender gender;
 
+    @Column(name = "suspended_until")
+    private LocalDateTime suspendedUntil; // 정지 만료일
+
+    @Column(name = "write_restricted_until")
+    private LocalDateTime writeRestrictedUntil; //작성제한 만료일
+
     @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserRoleEntity> userRoles = new HashSet<>();
@@ -164,4 +170,29 @@ public class UserEntity {
         this.userRoles.remove(userRole);
         userRole.clearUser();
     }
+
+    // 정지 처리
+    public void suspendForOneMonth() {
+        this.suspendedUntil = LocalDateTime.now().plusMonths(1);
+    }
+
+    public void unsuspend() {
+        this.suspendedUntil = null;
+    }
+
+    // 정지 여부
+    public boolean isSuspended() {
+        return suspendedUntil != null && LocalDateTime.now().isBefore(suspendedUntil);
+    }
+
+    // 작성 제한 처리
+    public void restrictWritingFor7Days() {
+        this.writeRestrictedUntil = LocalDateTime.now().plusDays(7);
+    }
+
+    //작성 제한 여부
+    public boolean isWriteRestricted() {
+        return writeRestrictedUntil != null && LocalDateTime.now().isBefore(writeRestrictedUntil);
+    }
+
 }
