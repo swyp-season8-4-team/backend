@@ -43,7 +43,7 @@ public class OAuthService {
             // enum을 사용하여 적절한 서비스 호출
             return switch (provider) {
                 case KAKAO -> kakaoOAuthService.processKakaoLogin(code, deviceId);
-                case APPLE -> appleOAuthService.processAppleLogin(code, null, null, null, deviceId);
+                case APPLE -> appleOAuthService.processAppleLogin(code, null, null, null, deviceId, false); // false = WEB
                 // 추후 다른 OAuth 제공자 추가
                 default -> throw new InvalidProviderException("아직 구현되지 않은 OAuth 제공자입니다: " + provider.getProviderName());
             };
@@ -67,13 +67,13 @@ public class OAuthService {
      * @return 로그인 응답 (JWT 토큰 포함)
      */
     @Transactional
-    public LoginResponse processAppleLogin(String code, String idToken, String state, AppleUserInfo userInfo, String deviceId) {
+    public LoginResponse processAppleLogin(String code, String idToken, String state, AppleUserInfo userInfo, String deviceId, boolean isApp) {
         try {
-            return appleOAuthService.processAppleLogin(code, idToken, state, userInfo, deviceId);
+            return appleOAuthService.processAppleLogin(code, idToken, state, userInfo, deviceId, isApp);
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Apple 로그인 처리 중 오류 발생", e);
+            log.error("Apple 로그인 처리 중 오류 발생 - 플랫폼: {}", isApp ? "APP" : "WEB", e);
             throw new OAuthAuthenticationException("Apple 로그인 처리 중 오류가 발생했습니다.");
         }
     }
