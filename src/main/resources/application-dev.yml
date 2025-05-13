@@ -22,10 +22,10 @@ spring:
         registration:
           kakao:
             redirect-uri: "http://localhost:8000/kakao-oauth-test.html"
-          apple:
-            redirect-uri: https://61c8-2001-2d8-2117-cf18-bc1c-5c7c-e9b8-c225.ngrok-free.app/apple-oauth-test.html
+          apple: # ngrok 새로킬 때마다 변경되는 값임.
+            redirect-uri: https://e05c-210-107-70-217.ngrok-free.app/ko/oauth/callback/apple
           apple-app:
-            redirect-uri: https://61c8-2001-2d8-2117-cf18-bc1c-5c7c-e9b8-c225.ngrok-free.app/apple-oauth-test.html
+            redirect-uri: https://e05c-210-107-70-217.ngrok-free.app/apple-oauth-test.html
 
   graphql:
     cors:
