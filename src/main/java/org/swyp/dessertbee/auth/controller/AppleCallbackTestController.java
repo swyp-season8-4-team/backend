@@ -2,6 +2,7 @@ package org.swyp.dessertbee.auth.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,11 +15,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Apple 로그인 콜백을 긴급 처리하기 위한 임시 컨트롤러
+ * Apple 로그인 콜백을 처리하기 위한 임시 컨트롤러
  * 테스트 용도로만 사용
  */
 @Controller
 @RequestMapping("/ko/oauth/callback")
+@Profile("dev")
 @Slf4j
 public class AppleCallbackTestController {
 
@@ -55,7 +57,6 @@ public class AppleCallbackTestController {
 
     /**
      * Apple 로그인 콜백 처리 - JSON API 버전
-     * 이 엔드포인트는 프론트엔드에서 직접 호출할 수 있음
      */
     @PostMapping(value = "/apple/api")
     @ResponseBody
