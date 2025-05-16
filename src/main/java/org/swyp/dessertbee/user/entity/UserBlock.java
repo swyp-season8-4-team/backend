@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Table(
         name = "user_block",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_user_block", columnNames = {"blocker_id", "blocked_id"})
+                @UniqueConstraint(name = "uk_user_block", columnNames = {"blocker_user_id", "blocked_user_id"})
         }
 )
 @Getter
@@ -29,16 +29,30 @@ public class UserBlock {
     private Long id;
 
     /**
-     * 차단한 사용자 ID
+     * 차단한 사용자 ID (FK)
      */
-    @Column(name = "blocker_id", nullable = false)
-    private Long blockerId;
+    @Column(name = "blocker_user_id", nullable = false)
+    private Long blockerUserId;
 
     /**
-     * 차단된 사용자 ID
+     * 차단된 사용자 ID (FK)
      */
-    @Column(name = "blocked_id", nullable = false)
-    private Long blockedId;
+    @Column(name = "blocked_user_id", nullable = false)
+    private Long blockedUserId;
+
+    /**
+     * 차단한 사용자 (관계 매핑)
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "blocker_user_id", insertable = false, updatable = false)
+    private UserEntity blockerUser;
+
+    /**
+     * 차단된 사용자 (관계 매핑)
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "blocked_user_id", insertable = false, updatable = false)
+    private UserEntity blockedUser;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)

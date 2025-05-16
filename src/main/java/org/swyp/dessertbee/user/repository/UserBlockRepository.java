@@ -16,51 +16,51 @@ public interface UserBlockRepository extends JpaRepository<UserBlock, Long> {
     /**
      * UUID 기반: 특정 사용자가 차단한 사용자 목록 조회
      */
-    @Query("SELECT ub FROM UserBlock ub JOIN UserEntity blocker ON ub.blockerId = blocker.id WHERE blocker.userUuid = :blockerUuid")
+    @Query("SELECT ub FROM UserBlock ub JOIN UserEntity blocker ON ub.blockerUserId = blocker.id WHERE blocker.userUuid = :blockerUuid")
     List<UserBlock> findByBlockerUuid(@Param("blockerUuid") UUID blockerUuid);
 
     /**
      * UUID 기반: 특정 사용자가 차단한 사용자 ID 목록 조회
      */
-    @Query("SELECT ub.blockedId FROM UserBlock ub JOIN UserEntity blocker ON ub.blockerId = blocker.id WHERE blocker.userUuid = :blockerUuid")
+    @Query("SELECT ub.blockedUserId FROM UserBlock ub JOIN UserEntity blocker ON ub.blockerUserId = blocker.id WHERE blocker.userUuid = :blockerUuid")
     List<Long> findBlockedUserIdsByBlockerUuid(@Param("blockerUuid") UUID blockerUuid);
 
     /**
      * UUID 기반: 특정 사용자가 차단한 사용자 UUID 목록 조회
      */
-    @Query("SELECT blocked.userUuid FROM UserBlock ub JOIN UserEntity blocker ON ub.blockerId = blocker.id JOIN UserEntity blocked ON ub.blockedId = blocked.id WHERE blocker.userUuid = :blockerUuid")
+    @Query("SELECT blocked.userUuid FROM UserBlock ub JOIN UserEntity blocker ON ub.blockerUserId = blocker.id JOIN UserEntity blocked ON ub.blockedUserId = blocked.id WHERE blocker.userUuid = :blockerUuid")
     List<UUID> findBlockedUserUuidsByBlockerUuid(@Param("blockerUuid") UUID blockerUuid);
 
     /**
      * UUID 기반: 특정 사용자의 차단 여부 확인 (blockerUuid가 blockedUuid를 차단했는지)
      */
-    @Query("SELECT COUNT(ub) > 0 FROM UserBlock ub JOIN UserEntity blocker ON ub.blockerId = blocker.id JOIN UserEntity blocked ON ub.blockedId = blocked.id WHERE blocker.userUuid = :blockerUuid AND blocked.userUuid = :blockedUuid")
+    @Query("SELECT COUNT(ub) > 0 FROM UserBlock ub JOIN UserEntity blocker ON ub.blockerUserId = blocker.id JOIN UserEntity blocked ON ub.blockedUserId = blocked.id WHERE blocker.userUuid = :blockerUuid AND blocked.userUuid = :blockedUuid")
     boolean existsByBlockerUuidAndBlockedUuid(@Param("blockerUuid") UUID blockerUuid, @Param("blockedUuid") UUID blockedUuid);
 
     /**
      * UUID 기반: 특정 사용자가 특정 사용자를 차단한 내역 조회
      */
-    @Query("SELECT ub FROM UserBlock ub JOIN UserEntity blocker ON ub.blockerId = blocker.id JOIN UserEntity blocked ON ub.blockedId = blocked.id WHERE blocker.userUuid = :blockerUuid AND blocked.userUuid = :blockedUuid")
+    @Query("SELECT ub FROM UserBlock ub JOIN UserEntity blocker ON ub.blockerUserId = blocker.id JOIN UserEntity blocked ON ub.blockedUserId = blocked.id WHERE blocker.userUuid = :blockerUuid AND blocked.userUuid = :blockedUuid")
     Optional<UserBlock> findByBlockerUuidAndBlockedUuid(@Param("blockerUuid") UUID blockerUuid, @Param("blockedUuid") UUID blockedUuid);
 
     /**
      * ID 기반: 특정 사용자가 차단한 사용자 목록 조회
      */
-    List<UserBlock> findByBlockerId(Long blockerId);
+    List<UserBlock> findByBlockerUserId(Long blockerUserId);
 
     /**
      * ID 기반: 특정 사용자가 차단한 사용자 ID 목록 조회
      */
-    @Query("SELECT ub.blockedId FROM UserBlock ub WHERE ub.blockerId = :blockerId")
-    List<Long> findBlockedUserIdsByBlockerId(@Param("blockerId") Long blockerId);
+    @Query("SELECT ub.blockedUserId FROM UserBlock ub WHERE ub.blockerUserId = :blockerUserId")
+    List<Long> findBlockedUserIdsByBlockerUserId(@Param("blockerUserId") Long blockerUserId);
 
     /**
-     * ID 기반: 특정 사용자의 차단 여부 확인 (blockerId가 blockedId를 차단했는지)
+     * ID 기반: 특정 사용자의 차단 여부 확인 (blockerUserId가 blockedUserId를 차단했는지)
      */
-    boolean existsByBlockerIdAndBlockedId(Long blockerId, Long blockedId);
+    boolean existsByBlockerUserIdAndBlockedUserId(Long blockerUserId, Long blockedUserId);
 
     /**
      * ID 기반: 특정 사용자가 특정 사용자를 차단한 내역 조회
      */
-    Optional<UserBlock> findByBlockerIdAndBlockedId(Long blockerId, Long blockedId);
+    Optional<UserBlock> findByBlockerUserIdAndBlockedUserId(Long blockerUserId, Long blockedUserId);
 }

@@ -9,8 +9,8 @@ import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.user.dto.request.UserBlockRequest;
 import org.swyp.dessertbee.user.dto.response.UserBlockCheckResponse;
 import org.swyp.dessertbee.user.dto.response.UserBlockResponse;
-import org.swyp.dessertbee.user.repository.UserBlockRepository;
 import org.swyp.dessertbee.user.entity.UserBlock;
+import org.swyp.dessertbee.user.repository.UserBlockRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
@@ -45,17 +45,18 @@ public class UserBlockServiceImpl implements UserBlockService {
         }
 
         // 이미 차단한 사용자인지 확인
-        if (userBlockRepository.existsByBlockerIdAndBlockedId(blocker.getId(), blocked.getId())) {
+        if (userBlockRepository.existsByBlockerUserIdAndBlockedUserId(blocker.getId(), blocked.getId())) {
             throw new BusinessException(ErrorCode.ALREADY_BLOCKED_USER);
         }
 
         // 차단 정보 저장
         UserBlock userBlock = UserBlock.builder()
-                .blockerId(blocker.getId())
-                .blockedId(blocked.getId())
+                .blockerUserId(blocker.getId())
+                .blockedUserId(blocked.getId())
                 .build();
 
         UserBlock savedUserBlock = userBlockRepository.save(userBlock);
+        log.info("사용자 차단 처리 완료: blocker={}, blocked={}", blocker.getNickname(), blocked.getNickname());
 
         return UserBlockResponse.builder()
                 .id(savedUserBlock.getId())
@@ -78,11 +79,12 @@ public class UserBlockServiceImpl implements UserBlockService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_BLOCK_NOT_FOUND));
 
         // 차단을 해제하려는 사용자가 차단을 등록한 사용자인지 확인
-        if (!userBlock.getBlockerId().equals(blocker.getId())) {
+        if (!userBlock.getBlockerUserId().equals(blocker.getId())) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS, "차단 해제 권한이 없습니다.");
         }
 
         userBlockRepository.delete(userBlock);
+        log.info("사용자 차단 해제 완료: blockerId={}, blockId={}", blocker.getId(), blockId);
     }
 
     @Override
@@ -91,12 +93,20 @@ public class UserBlockServiceImpl implements UserBlockService {
         UserEntity blocker = userRepository.findByUserUuid(blockerUuid)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        List<UserBlock> userBlocks = userBlockRepository.findByBlockerId(blocker.getId());
+        List<UserBlock> userBlocks = userBlockRepository.findByBlockerUserId(blocker.getId());
+        log.debug("사용자가 차단한 사용자 수: {}", userBlocks.size());
 
         List<UserBlockResponse> responses = userBlocks.stream().map(block -> {
             // 차단된 사용자 정보 조회
-            UserEntity blocked = userRepository.findById(block.getBlockedId())
-                    .orElse(null);
+            UserEntity blocked = null;
+
+            // 관계 매핑이 있는 경우 해당 관계를 활용
+            if (block.getBlockedUser() != null) {
+                blocked = block.getBlockedUser();
+            } else {
+                // 관계 매핑이 없는 경우 ID로 조회
+                blocked = userRepository.findById(block.getBlockedUserId()).orElse(null);
+            }
 
             String nickname = blocked != null ? blocked.getNickname() : "알 수 없음";
             UUID blockedUuid = blocked != null ? blocked.getUserUuid() : null;
@@ -124,8 +134,15 @@ public class UserBlockServiceImpl implements UserBlockService {
             UserBlock userBlock = userBlockOpt.get();
 
             // 차단된 사용자 정보 조회
-            UserEntity blocked = userRepository.findById(userBlock.getBlockedId())
-                    .orElse(null);
+            UserEntity blocked = null;
+
+            // 관계 매핑이 있는 경우 해당 관계를 활용
+            if (userBlock.getBlockedUser() != null) {
+                blocked = userBlock.getBlockedUser();
+            } else {
+                // 관계 매핑이 없는 경우 ID로 조회
+                blocked = userRepository.findById(userBlock.getBlockedUserId()).orElse(null);
+            }
 
             String nickname = blocked != null ? blocked.getNickname() : "알 수 없음";
 
@@ -148,16 +165,16 @@ public class UserBlockServiceImpl implements UserBlockService {
 
     @Override
     public List<Long> getBlockedUserIds(UUID blockerUuid) {
-        // 사용자 조회
-        UserEntity blocker = userRepository.findByUserUuid(blockerUuid)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        return userBlockRepository.findBlockedUserIdsByBlockerId(blocker.getId());
+        List<Long> blockedUserIds = userBlockRepository.findBlockedUserIdsByBlockerUuid(blockerUuid);
+        log.debug("차단된 사용자 ID 목록 조회: count={}", blockedUserIds.size());
+        return blockedUserIds;
     }
 
     @Override
     public List<UUID> getBlockedUserUuids(UUID blockerUuid) {
-        return userBlockRepository.findBlockedUserUuidsByBlockerUuid(blockerUuid);
+        List<UUID> blockedUserUuids = userBlockRepository.findBlockedUserUuidsByBlockerUuid(blockerUuid);
+        log.debug("차단된 사용자 UUID 목록 조회: count={}", blockedUserUuids.size());
+        return blockedUserUuids;
     }
 
     @Override
@@ -167,32 +184,33 @@ public class UserBlockServiceImpl implements UserBlockService {
 
     @Override
     @Transactional
-    public UserBlockResponse blockUserById(Long blockerId, Long blockedId) {
+    public UserBlockResponse blockUserById(Long blockerUserId, Long blockedUserId) {
         // 차단하는 사용자 조회
-        UserEntity blocker = userRepository.findById(blockerId)
+        UserEntity blocker = userRepository.findById(blockerUserId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 차단될 사용자 조회
-        UserEntity blocked = userRepository.findById(blockedId)
+        UserEntity blocked = userRepository.findById(blockedUserId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 자기 자신을 차단하려는 경우
-        if (blockerId.equals(blockedId)) {
+        if (blockerUserId.equals(blockedUserId)) {
             throw new BusinessException(ErrorCode.SELF_BLOCK_NOT_ALLOWED);
         }
 
         // 이미 차단한 사용자인지 확인
-        if (userBlockRepository.existsByBlockerIdAndBlockedId(blockerId, blockedId)) {
+        if (userBlockRepository.existsByBlockerUserIdAndBlockedUserId(blockerUserId, blockedUserId)) {
             throw new BusinessException(ErrorCode.ALREADY_BLOCKED_USER);
         }
 
         // 차단 정보 저장
         UserBlock userBlock = UserBlock.builder()
-                .blockerId(blockerId)
-                .blockedId(blockedId)
+                .blockerUserId(blockerUserId)
+                .blockedUserId(blockedUserId)
                 .build();
 
         UserBlock savedUserBlock = userBlockRepository.save(userBlock);
+        log.info("사용자 차단 처리 완료 (ID 기반): blocker={}, blocked={}", blockerUserId, blockedUserId);
 
         return UserBlockResponse.builder()
                 .id(savedUserBlock.getId())
@@ -204,12 +222,12 @@ public class UserBlockServiceImpl implements UserBlockService {
     }
 
     @Override
-    public List<Long> getBlockedUserIdsByBlockerId(Long blockerId) {
-        return userBlockRepository.findBlockedUserIdsByBlockerId(blockerId);
+    public List<Long> getBlockedUserIdsByBlockerId(Long blockerUserId) {
+        return userBlockRepository.findBlockedUserIdsByBlockerUserId(blockerUserId);
     }
 
     @Override
-    public boolean isBlockedById(Long blockerId, Long blockedId) {
-        return userBlockRepository.existsByBlockerIdAndBlockedId(blockerId, blockedId);
+    public boolean isBlockedById(Long blockerUserId, Long blockedUserId) {
+        return userBlockRepository.existsByBlockerUserIdAndBlockedUserId(blockerUserId, blockedUserId);
     }
 }
