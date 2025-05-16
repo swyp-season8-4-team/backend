@@ -27,7 +27,7 @@ public interface CouponConditionResponse {
             );
         } else if (coupon.getCustomConditionText() != null) {
             return new CustomConditionResponse(CouponConditionType.CUSTOM, coupon.getCustomConditionText());
-        } else if (Boolean.FALSE.equals(coupon.getExclusiveOnly())) {
+        } else if (CouponConditionType.EXCLUSIVE.equals(coupon.getConditionType())) {
             return new ExclusiveConditionResponse(CouponConditionType.EXCLUSIVE);
         }
         else {
