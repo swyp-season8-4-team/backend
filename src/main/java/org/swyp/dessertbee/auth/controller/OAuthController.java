@@ -81,7 +81,7 @@ public class OAuthController {
      */
     @Operation(
             summary = "Apple 회원가입, 로그인 (completed)",
-            description = "Apple ID로 새로운 사용자 등록 및 로그인. id_token과 사용자 정보를 함께 처리합니다.",
+            description = "Apple ID로 새로운 사용자 등록 및 로그인. id_token과 사용자 정보를 함께 처리합니다. 웹과 앱의 처리가 다릅니다.",
             parameters = {
                     @Parameter(
                             name = "X-Device-ID",
@@ -95,6 +95,13 @@ public class OAuthController {
                             description = "디바이스 식별자 쿠키 (웹 환경에서 사용). Nginx에서 X-Device-ID 헤더로 변환됩니다.",
                             in = ParameterIn.COOKIE,
                             schema = @Schema(type = "string"),
+                            required = false
+                    ),
+                    @Parameter(
+                            name = "X-Platform",
+                            description = "클라이언트 플랫폼 정보 (APP 또는 WEB). 기본값은 WEB입니다.",
+                            in = ParameterIn.HEADER,
+                            schema = @Schema(type = "string", allowableValues = {"APP", "WEB"}),
                             required = false
                     )
             },
@@ -112,11 +119,14 @@ public class OAuthController {
     @PostMapping("/apple/callback")
     public ResponseEntity<LoginResponse> appleCallback(
             @RequestBody AppleLoginRequest request,
-            @Parameter(hidden = true) @RequestHeader(value = "X-Device-ID", required = false) String deviceId
+            @Parameter(hidden = true) @RequestHeader(value = "X-Device-ID", required = false) String deviceId,
+            @Parameter(hidden = true) @RequestHeader(value = "X-Platform", defaultValue = "WEB") String platform
     ) {
+        boolean isApp = "APP".equalsIgnoreCase(platform);
         log.info("Apple OAuth 인가 코드 수신");
         LoginResponse loginResponse = oAuthService.processAppleLogin(
-                request.getCode(), request.getIdToken(), request.getState(), request.getUserInfo(), deviceId);
+                request.getCode(), request.getIdToken(), request.getState(),
+                request.getUserInfo(), deviceId, isApp);
 
         return ResponseEntity.ok(loginResponse);
     }

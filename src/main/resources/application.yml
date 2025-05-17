@@ -45,10 +45,17 @@ spring:
               - account_email
             client-authentication-method: client_secret_post
           apple:
-            client-id: ${APPLE_CLIENT_ID}            # Service ID (웹 client-id)
+            client-id: ${APPLE_WEB_CLIENT_ID}            # Service ID (웹 client-id)
             authorization-grant-type: authorization_code
             scope:
               - email
+          apple-app:
+            client-id: ${APPLE_APP_CLIENT_ID}            # App Bundle ID (앱 client-id)
+            client-name: Apple App
+            authorization-grant-type: authorization_code
+            scope:
+              - email
+            provider: apple
 
         provider:
           kakao:

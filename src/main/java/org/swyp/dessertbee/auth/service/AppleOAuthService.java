@@ -6,12 +6,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import org.swyp.dessertbee.auth.dto.request.AppleLoginRequest.AppleUserInfo;
 import org.swyp.dessertbee.auth.dto.response.LoginResponse;
@@ -42,6 +42,10 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Apple OAuth 인증 서비스
+ * 웹과 앱 환경에서 Apple ID 로그인을 처리
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -56,9 +60,6 @@ public class AppleOAuthService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${spring.security.oauth2.client.registration.apple.client-id}")
-    private String clientId;
-
     @Value("${APPLE_TEAM_ID}")
     private String teamId;
 
@@ -71,42 +72,116 @@ public class AppleOAuthService {
     @Value("${spring.security.oauth2.client.provider.apple.token-uri}")
     private String tokenUri;
 
+    // 웹용 Client ID
+    @Value("${spring.security.oauth2.client.registration.apple.client-id}")
+    private String webClientId;
+
+    // 앱용 Client ID
+    @Value("${spring.security.oauth2.client.registration.apple-app.client-id:${spring.security.oauth2.client.registration.apple.client-id}}")
+    private String appClientId;
+
     /**
-     * Apple 로그인 처리 - 코드, ID 토큰, 상태값, 사용자 정보, 디바이스 ID를 함께 처리
+     * Apple 로그인 처리 - 기존 웹 로그인 또는 확장된 앱 로그인을 구분하여 처리
      *
      * @param code Apple에서 제공한 인가 코드
      * @param idToken Apple에서 제공한 ID 토큰
      * @param state CSRF 방지를 위한 상태값
      * @param userInfo 최초 로그인 시 Apple에서 제공하는 사용자 정보 (선택적)
      * @param deviceId 디바이스 식별자
+     * @param isApp 앱에서의 로그인 여부
      * @return 로그인 응답 객체
      */
     @Transactional
-    public LoginResponse processAppleLogin(String code, String idToken, String state, AppleUserInfo userInfo, String deviceId) {
+    public LoginResponse processAppleLogin(String code, String idToken, String state, AppleUserInfo userInfo,
+                                           String deviceId, boolean isApp) {
         try {
-            log.info("애플 로그인 처리 시작 ID 토큰 존재 여부: {}", idToken != null);
+            log.info("애플 로그인 처리 시작 - 앱: {}, ID 토큰 존재 여부: {}, 코드 존재 여부: {}",
+                    isApp, idToken != null, code != null);
 
-            // Apple의 인증 서버에서 토큰을 얻기 위한 client secret 생성
-            String clientSecret = createClientSecret();
-
-            // 프론트에서 ID 토큰을 직접 전달받은 경우, 별도로 요청하지 않음
-            String appleIdToken = (idToken != null && !idToken.isEmpty())
-                    ? idToken
-                    : getAppleIdToken(code, clientSecret);
-
-            log.info("애플 ID 토큰 획득 성공");
-
-            // ID 토큰에서 사용자 정보 추출 (추가 사용자 정보가 있으면 보강)
-            OAuth2Response oAuth2Response = getAppleUserInfo(appleIdToken, userInfo);
-            log.info("애플 사용자 정보 획득 성공 - 이메일: {}", oAuth2Response.getEmail());
-
-            // 사용자 로그인 또는 회원가입 처리
-            return processUserLogin(oAuth2Response, deviceId);
-
+            // 앱 로그인과 웹 로그인을 분리하여 처리
+            if (isApp) {
+                return processAppAppleLogin(idToken, userInfo, deviceId);
+            } else {
+                return processWebAppleLogin(code, idToken, state, userInfo, deviceId);
+            }
         } catch (Exception e) {
-            log.error("애플 로그인 처리 중 오류 발생", e);
+            log.error("애플 로그인 처리 중 오류 발생 - 앱: {}", isApp, e);
             throw new OAuthServiceException("애플 로그인 처리 중 오류가 발생했습니다: " + e.getMessage());
         }
+    }
+
+    /**
+     * 웹 환경에서 Apple 로그인 처리
+     * 인증 코드로 Apple 서버에 토큰 요청 후 사용자 인증
+     *
+     * @param code Apple에서 제공한 인가 코드
+     * @param idToken Apple에서 제공한 ID 토큰 (선택적)
+     * @param state CSRF 방지를 위한 상태값
+     * @param userInfo 최초 로그인 시 Apple에서 제공하는 사용자 정보 (선택적)
+     * @param deviceId 디바이스 식별자
+     * @return 로그인 응답 객체
+     */
+    @Transactional
+    protected LoginResponse processWebAppleLogin(String code, String idToken, String state, AppleUserInfo userInfo, String deviceId) {
+        log.info("웹 애플 로그인 처리 시작 - 코드: {}, ID 토큰 존재 여부: {}",
+                code != null ? "제공됨" : "없음", idToken != null);
+
+        // 코드와 ID 토큰 중 하나는 필수
+        if ((code == null || code.isEmpty()) && (idToken == null || idToken.isEmpty())) {
+            throw new OAuthAuthenticationException("인증 코드 또는 ID 토큰이 필요합니다.");
+        }
+
+        String appleIdToken = idToken;
+
+        // 코드만 제공된 경우 ID 토큰 요청
+        if ((idToken == null || idToken.isEmpty()) && StringUtils.hasText(code)) {
+            String clientSecret = createClientSecret();
+            appleIdToken = getAppleIdToken(code, clientSecret);
+            log.info("애플 인증 코드로 ID 토큰 획득 성공");
+        }
+
+        // ID 토큰 검증
+        if (!verifyAppleIdToken(appleIdToken, false)) { // 웹 환경 검증 (isApp = false)
+            throw new OAuthAuthenticationException("유효하지 않은 애플 ID 토큰입니다.");
+        }
+
+        // ID 토큰에서 사용자 정보 추출 (추가 사용자 정보가 있으면 보강)
+        OAuth2Response oAuth2Response = getAppleUserInfo(appleIdToken, userInfo);
+        log.info("애플 사용자 정보 획득 성공 - 이메일: {}", oAuth2Response.getEmail());
+
+        // 사용자 로그인 또는 회원가입 처리 (웹 로그인)
+        return processUserLogin(oAuth2Response, deviceId, false);
+    }
+
+    /**
+     * 앱 환경에서 Apple 로그인 처리
+     * 앱에서 받은 ID 토큰을 검증하고 사용자 인증
+     *
+     * @param idToken Apple에서 제공한 ID 토큰 (필수)
+     * @param userInfo 최초 로그인 시 Apple에서 제공하는 사용자 정보 (선택적)
+     * @param deviceId 디바이스 식별자
+     * @return 로그인 응답 객체
+     */
+    @Transactional
+    protected LoginResponse processAppAppleLogin(String idToken, AppleUserInfo userInfo, String deviceId) {
+        log.info("앱 애플 로그인 처리 시작 - ID 토큰 존재 여부: {}", idToken != null);
+
+        // 앱 로그인에서는 ID 토큰 필수
+        if (idToken == null || idToken.isEmpty()) {
+            throw new OAuthAuthenticationException("앱 로그인 시 ID 토큰은 필수입니다.");
+        }
+
+        // ID 토큰 검증 (앱 토큰은 별도 검증 로직 적용)
+        if (!verifyAppleIdToken(idToken, true)) {
+            throw new OAuthAuthenticationException("유효하지 않은 애플 ID 토큰입니다.");
+        }
+
+        // ID 토큰에서 사용자 정보 추출 (추가 사용자 정보가 있으면 보강)
+        OAuth2Response oAuth2Response = getAppleUserInfo(idToken, userInfo);
+        log.info("앱 애플 사용자 정보 획득 성공 - 이메일: {}", oAuth2Response.getEmail());
+
+        // 사용자 로그인 또는 회원가입 처리 (앱 로그인)
+        return processUserLogin(oAuth2Response, deviceId, true);
     }
 
     /**
@@ -127,7 +202,7 @@ public class AppleOAuthService {
                     .withIssuedAt(new Date(now))
                     .withExpiresAt(new Date(now + 86400 * 1000L)) // 24시간 유효
                     .withAudience("https://appleid.apple.com")
-                    .withSubject(clientId)
+                    .withSubject(webClientId) // 웹용 클라이언트 ID 사용
                     .withKeyId(keyId)
                     .sign(algorithm);
 
@@ -137,6 +212,7 @@ public class AppleOAuthService {
         }
     }
 
+
     /**
      * Apple 비공개 키 로드
      *
@@ -144,7 +220,7 @@ public class AppleOAuthService {
      */
     private ECPrivateKey getPrivateKey() {
         try {
-            File keyFile = new File(privateKeyPath); // ex) /app/resources/AuthKey_apple_login.p8
+            File keyFile = new File(privateKeyPath);
             StringBuilder privateKeyBuilder = new StringBuilder();
 
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(keyFile)))) {
@@ -180,7 +256,7 @@ public class AppleOAuthService {
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type", "authorization_code");
         body.add("code", code);
-        body.add("client_id", clientId);
+        body.add("client_id", webClientId);
         body.add("client_secret", clientSecret);
 
         HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(body, headers);
@@ -198,6 +274,77 @@ public class AppleOAuthService {
         }
 
         return (String) responseBody.get("id_token");
+    }
+
+    /**
+     * ID 토큰 검증
+     * 앱/웹 환경에 따라 다른 Client ID로 검증
+     *
+     * @param idToken 검증할 ID 토큰
+     * @param isApp 앱 환경 여부
+     * @return 검증 결과 (true: 유효, false: 유효하지 않음)
+     */
+    private boolean verifyAppleIdToken(String idToken, boolean isApp) {
+        try {
+            // 토큰 형식 기본 검증
+            String[] parts = idToken.split("\\.");
+            if (parts.length != 3) {
+                log.warn("ID 토큰 형식이 잘못되었습니다.");
+                return false;
+            }
+
+            // 페이로드 디코딩
+            String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
+            Map<String, Object> claims = objectMapper.readValue(payload, Map.class);
+
+            // 필수 필드 존재 확인
+            if (!claims.containsKey("sub") || !claims.containsKey("iss") || !claims.containsKey("aud")) {
+                log.warn("ID 토큰에 필수 필드가 누락되었습니다.");
+                return false;
+            }
+
+            // 발행자 확인
+            String issuer = (String) claims.get("iss");
+            if (!"https://appleid.apple.com".equals(issuer)) {
+                log.warn("ID 토큰의 발행자가 올바르지 않습니다: {}", issuer);
+                return false;
+            }
+
+            // 만료 시간 확인 (현재 시간이 만료 시간보다 이전이어야 함)
+            if (claims.containsKey("exp")) {
+                long expTime = ((Number) claims.get("exp")).longValue();
+                long currentTime = System.currentTimeMillis() / 1000;
+                if (currentTime > expTime) {
+                    log.warn("ID 토큰이 만료되었습니다. 만료 시간: {}, 현재 시간: {}", expTime, currentTime);
+                    return false;
+                }
+            }
+
+            // 대상 확인 (앱/웹에 따라 다른 Client ID 사용)
+            String audience = (String) claims.get("aud");
+            String expectedClientId = isApp ? appClientId : webClientId;
+
+            // 환경에 맞는 Client ID 확인
+            if (expectedClientId.equals(audience)) {
+                return true; // 일치하면 유효
+            }
+
+            // 호환성을 위한 추가 검증: 다른 환경의 Client ID와도 비교
+            if (isApp && webClientId.equals(audience)) {
+                log.info("앱 요청이지만 웹용 Client ID로 검증됨: {}", audience);
+                return true;
+            } else if (!isApp && appClientId.equals(audience)) {
+                log.info("웹 요청이지만 앱용 Client ID로 검증됨: {}", audience);
+                return true;
+            }
+
+            log.warn("ID 토큰의 대상이 올바르지 않습니다. 예상: {}, 실제: {}", expectedClientId, audience);
+            return false;
+
+        } catch (Exception e) {
+            log.error("ID 토큰 검증 중 오류 발생", e);
+            return false;
+        }
     }
 
     /**
@@ -236,24 +383,35 @@ public class AppleOAuthService {
      *
      * @param oauth2Response 표준화된 OAuth2Response 객체
      * @param deviceId 디바이스 식별자
+     * @param isApp 앱에서의 로그인 여부
      * @return 로그인 응답 객체
      */
-    private LoginResponse processUserLogin(OAuth2Response oauth2Response, String deviceId) {
+    private LoginResponse processUserLogin(OAuth2Response oauth2Response, String deviceId, boolean isApp) {
+        // 디바이스 ID가 없는 경우 생성
+        String effectiveDeviceId = deviceId;
+        if (effectiveDeviceId == null || effectiveDeviceId.isEmpty()) {
+            effectiveDeviceId = tokenService.generateDeviceId();
+            log.debug("새 디바이스 ID 생성: {}, 앱: {}", effectiveDeviceId, isApp);
+        }
+
         UserEntity user = userRepository.findByEmail(oauth2Response.getEmail())
-                .orElseGet(() -> registerNewUser(oauth2Response));
+                .orElseGet(() -> registerNewUser(oauth2Response, isApp));
 
         List<String> roles = user.getUserRoles().stream()
                 .map(userRole -> userRole.getRole().getName().getRoleName())
                 .collect(Collectors.toList());
 
-        boolean keepLoggedIn = false;
+        // 앱에서 로그인한 경우 "keep logged in" 설정
+        boolean keepLoggedIn = isApp; // 앱에서는 기본적으로 로그인 유지
         String accessToken = jwtUtil.createAccessToken(user.getUserUuid(), roles);
         String refreshToken = jwtUtil.createRefreshToken(user.getUserUuid(), keepLoggedIn);
         long expiresIn = jwtUtil.getACCESS_TOKEN_EXPIRE();
 
+        // 토큰 저장
         String usedDeviceId = tokenService.saveRefreshToken(
                 user.getUserUuid(), refreshToken,
-                oauth2Response.getProvider(), oauth2Response.getProviderId(), deviceId
+                oauth2Response.getProvider(), oauth2Response.getProviderId(),
+                effectiveDeviceId
         );
 
         List<String> profileImages = imageService.getImagesByTypeAndId(
@@ -262,17 +420,28 @@ public class AppleOAuthService {
 
         boolean isPreferenceSet = preferenceService.isUserPreferenceSet(user);
 
-        return LoginResponse.success(accessToken, refreshToken, expiresIn, user, profileImageUrl, usedDeviceId, isPreferenceSet);
+        // 로그인 응답 생성
+        LoginResponse response = LoginResponse.success(
+                accessToken, refreshToken, expiresIn, user,
+                profileImageUrl, usedDeviceId, isPreferenceSet);
+
+        // 앱 로그인 여부 로그만 남김
+        if (isApp) {
+            log.info("앱 로그인 완료 - 사용자: {}", user.getEmail());
+        }
+
+        return response;
     }
 
     /**
      * 새 사용자 등록
      *
      * @param oauth2Response 표준화된 OAuth2Response 객체
+     * @param isApp 앱에서의 등록 여부
      * @return 생성된 사용자 엔티티
      */
-    private UserEntity registerNewUser(OAuth2Response oauth2Response) {
-        log.info("새 사용자 등록 - 이메일: {}", oauth2Response.getEmail());
+    private UserEntity registerNewUser(OAuth2Response oauth2Response, boolean isApp) {
+        log.info("새 사용자 등록 - 이메일: {}, 앱: {}", oauth2Response.getEmail(), isApp);
 
         String uniqueNickname = generateUniqueNickname(oauth2Response.getNickname());
 
@@ -281,6 +450,11 @@ public class AppleOAuthService {
                 .nickname(uniqueNickname)
                 .build();
 
+        // 앱에서 등록 여부 로그만 남기고 필드 설정 시도는 제거
+        if (isApp) {
+            log.info("앱에서 등록된 사용자: {}", oauth2Response.getEmail());
+        }
+
         RoleEntity role = roleRepository.findByName(RoleType.ROLE_USER)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT_VALUE,
                         "기본 사용자 역할을 찾을 수 없습니다."));
@@ -288,7 +462,6 @@ public class AppleOAuthService {
 
         return userRepository.save(user);
     }
-
     /**
      * 중복되지 않는 고유한 닉네임 생성
      *
