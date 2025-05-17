@@ -91,6 +91,11 @@ public class MateDetailResponse {
     @Schema(description = "디저트메이트 카테고리명", example = "빵지순례")
     private String mateCategory;
 
+
+    @NotNull
+    @Schema(description = "디저트메이트 작성하는 사람 닉네임", example = "디저비1")
+    private boolean blockedByAuthorYn;
+
     public static MateDetailResponse fromEntity(Mate mate,
                                                 String mateImage,
                                                 String category,
@@ -98,7 +103,8 @@ public class MateDetailResponse {
                                                 String profileImage,
                                                 boolean saved,
                                                 MateApplyStatus applyStatus,
-                                                Store store) {
+                                                Store store,
+                                                boolean blockedByAuthorYn) {
 
         return MateDetailResponse.builder()
                 .mateUuid(mate.getMateUuid())
@@ -124,6 +130,7 @@ public class MateDetailResponse {
                 .updatedAt(mate.getUpdatedAt())
                 .saved(saved)
                 .applyStatus(applyStatus)
+                .blockedByAuthorYn(blockedByAuthorYn)
                 .build();
     }
 

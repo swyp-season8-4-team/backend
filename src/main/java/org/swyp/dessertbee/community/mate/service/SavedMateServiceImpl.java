@@ -23,6 +23,7 @@ import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.exception.UserExceptions.*;
+import org.swyp.dessertbee.user.service.UserBlockService;
 import org.swyp.dessertbee.user.service.UserService;
 
 import java.util.Collections;
@@ -41,6 +42,7 @@ public class SavedMateServiceImpl implements SavedMateService {
     private final ImageService imageService;
     private final UserService userService;
     private final StoreRepository storeRepository;
+    private final UserBlockService userBlockService;
 
     /**
      * 디저트메이트 저장
@@ -147,6 +149,7 @@ public class SavedMateServiceImpl implements SavedMateService {
 
                     String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, mate.getUserId());
 
+                    boolean blockedByAuthorYn = userBlockService.isBlocked(user.getUserUuid(), creator.getUserUuid());
 
                     Store store = storeRepository.findByName(mate.getPlaceName());
 
@@ -157,7 +160,7 @@ public class SavedMateServiceImpl implements SavedMateService {
                     MateMember applyMember = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndUserId(mate.getMateId(), userId);
                     MateApplyStatus applyStatus = (applyMember == null) ? null : applyMember.getApplyStatus();
 
-                    return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, creator, profileImage, saved,applyStatus , store);
+                    return MateDetailResponse.fromEntity(mate, mateImage, mateCategory, creator, profileImage, saved,applyStatus, store, blockedByAuthorYn);
                 })
                 .collect(Collectors.toList());
 
