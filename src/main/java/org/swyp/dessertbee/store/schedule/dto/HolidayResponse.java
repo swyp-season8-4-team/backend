@@ -11,8 +11,12 @@ import lombok.Data;
 @AllArgsConstructor
 public class HolidayResponse {
     @NotNull
-    @Schema(description = "휴무 일자 (yyyy.MM.dd)", example = "2025.01.01")
-    private String date;
+    @Schema(description = "휴무 시작일 (yyyy.MM.dd)", example = "2025.01.01")
+    private String startDate;
+
+    @NotNull
+    @Schema(description = "휴무 종료일 (yyyy.MM.dd)", example = "2025.01.03")
+    private String endDate;
 
     @Schema(description = "휴무 사유", example = "신정", nullable = true)
     private String reason;

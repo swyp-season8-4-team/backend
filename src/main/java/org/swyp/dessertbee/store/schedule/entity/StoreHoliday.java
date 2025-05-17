@@ -23,7 +23,10 @@ public class StoreHoliday {
     private Long storeId;
 
     @Column(nullable = false)
-    private LocalDate holidayDate; // 특정 휴무일
+    private LocalDate startDate; // 휴무기간 시작 일자
+
+    @Column(nullable = false)
+    private LocalDate endDate; // 휴무기간 종료 일자
 
     private String reason; // 휴무 사유
 

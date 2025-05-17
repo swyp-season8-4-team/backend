@@ -15,6 +15,7 @@ import org.swyp.dessertbee.store.schedule.entity.RegularClosureType;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
@@ -152,12 +153,15 @@ public abstract class BaseStoreRequest {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class HolidayRequest {
+        @NotNull
+        @JsonFormat(pattern = "yyyy.MM.dd")
+        @Schema(description = "휴무 시작일", example = "2025.02.10")
+        private LocalDate startDate;
 
-        @Schema(
-                description = "휴무일 입력 (예: '2025.02.10-2025.02.14 또는 2025.02.14')",
-                example = "2025.02.10-2025.02.14"
-        )
-        private String date; // 입력값을 파싱해서 LocalDate로 변환
+        @NotNull
+        @JsonFormat(pattern = "yyyy.MM.dd")
+        @Schema(description = "휴무 종료일", example = "2025.02.14")
+        private LocalDate endDate;
 
         @Schema(description = "휴무 사유", example = "내부 공사")
         private String reason;
