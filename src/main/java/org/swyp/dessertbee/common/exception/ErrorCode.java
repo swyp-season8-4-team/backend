@@ -56,6 +56,11 @@ public enum ErrorCode {
     INVALID_USER_UUID(HttpStatus.BAD_REQUEST, "U005", "유효하지 않은 사용자 식별자입니다."),
     OWNER_ROLE_MISSING_INFO(HttpStatus.BAD_REQUEST, "U006", "사장 권한을 부여하려면 이름과 전화번호 정보가 필요합니다."),
 
+    // Block
+    SELF_BLOCK_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "B001", "자신을 차단할 수 없습니다."),
+    ALREADY_BLOCKED_USER(HttpStatus.BAD_REQUEST, "B002", "이미 차단한 사용자입니다."),
+    USER_BLOCK_NOT_FOUND(HttpStatus.NOT_FOUND, "B003", "차단 정보를 찾을 수 없습니다."),
+
     // Preference
     PREFERENCES_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "존재하지 않는 취향 태그입니다."),
     USER_PREFERENCES_NOT_FOUND(HttpStatus.NOT_FOUND, "P002", "취향을 등록하지 않은 사용자입니다."),
