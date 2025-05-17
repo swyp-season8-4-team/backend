@@ -78,9 +78,10 @@ public class StoreScheduleServiceImpl implements StoreScheduleService {
         if (holidays.isEmpty()) return Collections.emptyList();
 
         return holidays.stream()
-                .sorted(Comparator.comparing(StoreHoliday::getHolidayDate)) // 날짜 오름차순 정렬
+                .sorted(Comparator.comparing(StoreHoliday::getStartDate))
                 .map(h -> HolidayResponse.builder()
-                        .date(h.getHolidayDate().format(formatter))
+                        .startDate(h.getStartDate().format(formatter))
+                        .endDate(h.getEndDate().format(formatter))
                         .reason(h.getReason())
                         .build())
                 .toList();
@@ -157,36 +158,25 @@ public class StoreScheduleServiceImpl implements StoreScheduleService {
         }
 
         List<StoreHoliday> holidays = new ArrayList<>();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
 
         for (BaseStoreRequest.HolidayRequest req : requests) {
-            String dateStr = req.getDate(); // 예: 2025.02.10-2025.02.14 또는 2025.02.14
-            String reason = req.getReason();
+            LocalDate startDate = req.getStartDate();
+            LocalDate endDate = (req.getEndDate() != null) ? req.getEndDate() : startDate;
 
-            LocalDate startDate;
-            LocalDate endDate;
-
-            try {
-                String[] parts = dateStr.split("-");
-                startDate = LocalDate.parse(parts[0], formatter);
-                endDate = (parts.length == 2)
-                        ? LocalDate.parse(parts[1], formatter)
-                        : startDate;
-            } catch (DateTimeParseException e) {
-                throw new StoreExceptions.StoreHolidayTypeException(); // 잘못된 날짜 형식
+            if (startDate == null) {
+                throw new StoreExceptions.StoreHolidayTypeException(); // 시작일 누락
             }
 
             if (endDate.isBefore(startDate)) {
-                throw new StoreExceptions.StoreHolidayTermException(); // 종료일이 시작일보다 빠름
+                throw new StoreExceptions.StoreHolidayTermException(); // 종료일이 더 이전인 경우
             }
 
-            for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
-                holidays.add(StoreHoliday.builder()
-                        .storeId(storeId)
-                        .holidayDate(date)
-                        .reason(reason)
-                        .build());
-            }
+            holidays.add(StoreHoliday.builder()
+                    .storeId(storeId)
+                    .startDate(startDate)
+                    .endDate(endDate)
+                    .reason(req.getReason())
+                    .build());
         }
 
         return storeHolidayRepository.saveAll(holidays);
