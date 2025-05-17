@@ -56,6 +56,11 @@ public enum ErrorCode {
     INVALID_USER_UUID(HttpStatus.BAD_REQUEST, "U005", "유효하지 않은 사용자 식별자입니다."),
     OWNER_ROLE_MISSING_INFO(HttpStatus.BAD_REQUEST, "U006", "사장 권한을 부여하려면 이름과 전화번호 정보가 필요합니다."),
 
+    // Block
+    SELF_BLOCK_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "B001", "자신을 차단할 수 없습니다."),
+    ALREADY_BLOCKED_USER(HttpStatus.BAD_REQUEST, "B002", "이미 차단한 사용자입니다."),
+    USER_BLOCK_NOT_FOUND(HttpStatus.NOT_FOUND, "B003", "차단 정보를 찾을 수 없습니다."),
+
     // Preference
     PREFERENCES_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "존재하지 않는 취향 태그입니다."),
     USER_PREFERENCES_NOT_FOUND(HttpStatus.NOT_FOUND, "P002", "취향을 등록하지 않은 사용자입니다."),
@@ -168,6 +173,8 @@ public enum ErrorCode {
     MATE_REPLY_NOT_REPORTED(HttpStatus.NOT_FOUND, "M019" , "신고되지 않은 디저트메이트 댓글입니다." ),
     MATE_CAPACITY_EXCEEDED(HttpStatus.BAD_REQUEST, "M020", "최대 수용 인원 초과입니다." ),
     INVALID_REPLY_DEPTH( HttpStatus.BAD_REQUEST, "M021", "대댓글에는 댓글을 달 수 없습니다."),
+    NOT_ENOUGH_REPORT_COUNT(HttpStatus.BAD_REQUEST, "M022", "동일 유형 신고가 3회 미만입니다."),
+    REPORT_TARGET_NOT_SPECIFIED(HttpStatus.BAD_REQUEST, "M023", "신고 대상이 지정되지 않았습니다."),
 
     //커뮤니티 리뷰
     COMMUNITY_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "R001" , "존재하지 않는 리뷰입니다." ),

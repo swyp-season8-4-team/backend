@@ -19,6 +19,8 @@ import org.swyp.dessertbee.store.coupon.entity.enums.CouponType;
 import org.swyp.dessertbee.store.coupon.repository.CouponRepository;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
+import org.swyp.dessertbee.user.entity.UserEntity;
+import org.swyp.dessertbee.user.service.UserService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,7 +39,10 @@ public class CouponServiceImpl implements CouponService {
     /**
      * 쿠폰 생성
      */
-    public CouponResponse createCoupon(CouponRequest request, Store store) {
+    public CouponResponse createCoupon(CouponRequest request, UUID storeUuid) {
+        Store store = storeRepository.findByStoreUuid(storeUuid)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
+
         validateCouponRequest(request);
 
         Coupon.CouponBuilder builder = Coupon.builder()
@@ -92,7 +97,10 @@ public class CouponServiceImpl implements CouponService {
      * 쿠폰 수정
      */
     @Transactional
-    public CouponResponse updateCoupon(Long couponId, CouponRequest request, Store store) {
+    public CouponResponse updateCoupon(Long couponId, CouponRequest request, UUID storeUuid) {
+        Store store = storeRepository.findByStoreUuid(storeUuid)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
+
         Coupon coupon = couponRepository.findById(couponId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.COUPON_NOT_FOUND));
 
@@ -127,12 +135,14 @@ public class CouponServiceImpl implements CouponService {
      * 쿠폰 삭제
      */
     @Transactional
-    public void deleteCoupon(Long couponId) {
+    public void deleteCoupon(Long couponId,UUID storeUuid) {
+        Store store = storeRepository.findByStoreUuid(storeUuid)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
+
         Coupon coupon = couponRepository.findById(couponId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.COUPON_NOT_FOUND));
 
         //소속 가게 체크
-        Store store = coupon.getStore();
         if (!coupon.getStore().getStoreId().equals(store.getStoreId())) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
         }

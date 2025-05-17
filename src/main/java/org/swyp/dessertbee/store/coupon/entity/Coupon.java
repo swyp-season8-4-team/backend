@@ -172,7 +172,7 @@ public class Coupon {
             this.conditionEndTime = t.getConditionEndTime();
             this.conditionDays = t.getConditionDays();
         } else if (condition instanceof ExclusiveConditionRequest) {
-            this.exclusiveOnly = true;
+            this.exclusiveOnly = false;
         } else if (condition instanceof CustomConditionRequest c) {
             this.customConditionText = c.getCustomConditionText();
         }

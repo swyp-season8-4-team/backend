@@ -25,11 +25,12 @@ public interface CouponConditionResponse {
                     coupon.getConditionEndTime(),
                     coupon.getConditionDays()
             );
-        } else if (Boolean.TRUE.equals(coupon.getExclusiveOnly())) {
-            return new ExclusiveConditionResponse(CouponConditionType.EXCLUSIVE);
         } else if (coupon.getCustomConditionText() != null) {
             return new CustomConditionResponse(CouponConditionType.CUSTOM, coupon.getCustomConditionText());
-        } else {
+        } else if (CouponConditionType.EXCLUSIVE.equals(coupon.getConditionType())) {
+            return new ExclusiveConditionResponse(CouponConditionType.EXCLUSIVE);
+        }
+        else {
             throw new IllegalStateException("쿠폰 조건이 명확하지 않습니다.");
         }
     }

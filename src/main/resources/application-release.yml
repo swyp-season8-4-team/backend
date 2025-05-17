@@ -33,7 +33,9 @@ spring:
           kakao:
             redirect-uri: ${KAKAO_REDIRECT_URI_TEST}
           apple:
-            redirect-uri: ${APPLE_REDIRECT_URI_TEST}
+            redirect-uri: ${APPLE_WEB_REDIRECT_URI_TEST}
+          apple-app : # TODO : 추후 앱 전용 리다이렉트 주소 사용해야함.
+            redirect-uri: ${APPLE_APP_REDIRECT_URI_TEST}
 #  elasticsearch:
 #    uris: http://desserbee-es:9200
 

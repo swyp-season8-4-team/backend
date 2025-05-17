@@ -81,6 +81,15 @@ public class LoginResponse {
     private String deviceId;        // 디바이스 식별자
 
     @Schema(
+            description = "앱에서 로그인한 요청인지 여부",
+            example = "false",
+            defaultValue = "false",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    )
+    @Builder.Default
+    private Boolean fromApp = false; // 앱에서 로그인 여부
+
+    @Schema(
             description = "이미지 관련 오류 메시지 (이미지 업로드 실패 시에만 존재)",
             implementation = ErrorResponse.class,
             nullable = true,
@@ -119,6 +128,7 @@ public class LoginResponse {
                 .profileImageUrl(profileImageUrl)
                 .deviceId(deviceId)
                 .isPreferenceSet(isPreferenceSet)
+                .fromApp(false) // 기본값은 false (웹 로그인)
                 .build();
     }
 

@@ -72,7 +72,4 @@ public class CouponRequest {
     @NotNull
     private CouponTarget couponTarget;
 
-    @NotNull
-    @Schema(description = "가게 UUID", example = "f47ac10b-58cc-4372-a567-0e02b2c3d479")
-    private UUID storeUuid;
 }
