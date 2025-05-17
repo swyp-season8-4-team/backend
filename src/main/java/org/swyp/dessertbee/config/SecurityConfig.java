@@ -79,6 +79,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/mates/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/search/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        // apple OAuth login testing 용도
+                        .requestMatchers("/apple-oauth-test.html/**").permitAll()
+                        .requestMatchers("/ko/oauth/callback/**").permitAll()
 
                         // 나머지 요청은 인증 필요
                         .anyRequest().authenticated()
