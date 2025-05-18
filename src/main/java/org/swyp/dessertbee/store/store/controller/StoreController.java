@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -58,7 +59,7 @@ public class StoreController {
     @PreAuthorize("isAuthenticated() and hasAnyRole('ROLE_OWNER', 'ROLE_ADMIN')")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> createStore(
-            @RequestPart("request") StoreCreateRequest request,
+            @Valid @RequestPart("request") StoreCreateRequest request,
             @RequestPart(value = "storeImageFiles", required = false) List<MultipartFile> storeImageFiles,
             @RequestPart(value = "ownerPickImageFiles", required = false) List<MultipartFile> ownerPickImageFiles,
             @RequestPart(value = "menuImageFiles", required = false) List<MultipartFile> menuImageFiles) {
@@ -252,7 +253,7 @@ public class StoreController {
     @PatchMapping(value = "/{storeUuid}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StoreInfoResponse> updateStore(
             @PathVariable UUID storeUuid,
-            @RequestPart("request") StoreUpdateRequest request,
+            @Valid @RequestPart("request") StoreUpdateRequest request,
             @RequestPart(value = "storeImageFiles", required = false) List<MultipartFile> storeImageFiles,
             @RequestPart(value = "ownerPickImageFiles", required = false) List<MultipartFile> ownerPickImageFiles) {
 
