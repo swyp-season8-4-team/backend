@@ -26,6 +26,7 @@ import org.swyp.dessertbee.community.mate.repository.MateReportRepository;
 import org.swyp.dessertbee.community.mate.repository.MateRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.exception.UserExceptions.*;
+import org.swyp.dessertbee.user.service.UserBlockService;
 import org.swyp.dessertbee.user.service.UserService;
 
 import java.util.List;
@@ -45,6 +46,7 @@ public class MateReplyServiceImpl implements MateReplyService {
     private final MateRepository mateRepository;
     private final ImageService imageService;
     private final UserService userService;
+    private final UserBlockService userBlockService;
 
     /**
      * 디저트메이트 댓글 생성
@@ -117,6 +119,9 @@ public class MateReplyServiceImpl implements MateReplyService {
      * */
     @Override
     public MateReplyResponse getReplyDetail(UUID mateUuid, Long replyId) {
+        UserEntity currentUser = userService.getCurrentUser();
+
+
 
         //디저트 메이트 유효성 검사
         validateMate(mateUuid);
@@ -125,12 +130,14 @@ public class MateReplyServiceImpl implements MateReplyService {
                 .orElseThrow(() -> new MateReplyNotFoundException("존재하지 않는 댓글입니다."));
 
         try {
-            UserEntity user = userService.findById(mateReply.getUserId());
+            UserEntity replyUser = userService.findById(mateReply.getUserId());
+
+            boolean blockedByAuthorYn = userBlockService.isBlocked(currentUser.getUserUuid(), replyUser.getUserUuid());
 
             // 사용자별 프로필 이미지 조회
-            String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, user.getId());
+            String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, replyUser.getId());
 
-            return MateReplyResponse.fromEntity(mateReply, mateUuid, user, profileImage);
+            return MateReplyResponse.fromEntity(mateReply, mateUuid, replyUser, profileImage, blockedByAuthorYn);
         }catch (BusinessException e) {
             throw new UserNotFoundException("사용자를 찾을 수 없습니다.");
         }
@@ -143,16 +150,19 @@ public class MateReplyServiceImpl implements MateReplyService {
      * */
     @Override
     public MateAppReplyResponse getAppReplyDetail(UUID mateUuid, Long mateReplyId) {
+        UserEntity currentUser = userService.getCurrentUser();
+
         MateReply reply = mateReplyRepository.findByMateReplyId(mateReplyId)
                 .orElseThrow(() -> new MateReplyNotFoundException("댓글이 존재하지 않습니다."));
 
-        UserEntity user = userService.findById(reply.getUserId());
+        UserEntity replyUser = userService.findById(reply.getUserId());
 
 
         // 사용자별 프로필 이미지 조회
-        String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, user.getId());
+        String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, replyUser.getId());
+        boolean blockedByAuthorYn = userBlockService.isBlocked(currentUser.getUserUuid(), replyUser.getUserUuid());
 
-        MateMemberGrade mateMemberGrade = mateMemberRepository.findGradeByMateIdAndUserIdAndDeletedAtIsNull(reply.getMateId(), user.getId());
+        MateMemberGrade mateMemberGrade = mateMemberRepository.findGradeByMateIdAndUserIdAndDeletedAtIsNull(reply.getMateId(), replyUser.getId());
         // 자식 대댓글 조회
         List<MateReply> childReplies = mateReplyRepository.findByParentMateReplyId(reply.getMateReplyId());
 
@@ -160,7 +170,7 @@ public class MateReplyServiceImpl implements MateReplyService {
                 .map(child -> getAppReplyDetail(mateUuid, child.getMateReplyId()))
                 .collect(Collectors.toList());
 
-        return MateAppReplyResponse.fromEntity(reply, user, profileImage, children, mateMemberGrade);
+        return MateAppReplyResponse.fromEntity(reply, replyUser, profileImage, children, mateMemberGrade, blockedByAuthorYn);
     }
 
 
@@ -363,7 +373,6 @@ public class MateReplyServiceImpl implements MateReplyService {
      * Mate만 유효성 검사
      * */
     public MateUserIds validateMate (UUID mateUuid){
-
 
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
                 .orElseThrow(() -> new MateReplyNotFoundException("존재하지 않는 댓글입니다."));

@@ -59,11 +59,16 @@ public class MateReplyResponse {
     @Schema(description = "댓글 수정 날짜", example = "2025-03-10 02:44")
     private LocalDateTime updatedAt;
 
+    @NotNull
+    @Schema(description = "디저트메이트 작성자가 차단한 사람인지 유무", example = "디저비1")
+    private boolean blockedByAuthorYn;
+
 
     public static MateReplyResponse fromEntity(MateReply reply,
                                                UUID mateUuid,
                                                UserEntity user,
-                                               String profileImage
+                                               String profileImage,
+                                               boolean blockedByAuthorYn
                                                ) {
 
         return MateReplyResponse.builder()
@@ -77,6 +82,7 @@ public class MateReplyResponse {
                 .profileImage(profileImage)
                 .createdAt(reply.getCreatedAt())
                 .updatedAt(reply.getUpdatedAt())
+                .blockedByAuthorYn(blockedByAuthorYn)
                 .build();
 
     }
