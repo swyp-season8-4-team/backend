@@ -53,15 +53,16 @@ public class MateReplyResponse {
     private UserEntity.Gender gender;
 
     @NotNull
+    @Schema(description = "디저트메이트 작성자가 차단한 사람인지 유무", example = "디저비1")
+    private boolean blockedByAuthorYn;
+
+    @NotNull
     @Schema(description = "댓글 생성 날짜", example = "2025-03-10 02:15")
     private LocalDateTime createdAt;
 
     @Schema(description = "댓글 수정 날짜", example = "2025-03-10 02:44")
     private LocalDateTime updatedAt;
 
-    @NotNull
-    @Schema(description = "디저트메이트 작성자가 차단한 사람인지 유무", example = "디저비1")
-    private boolean blockedByAuthorYn;
 
 
     public static MateReplyResponse fromEntity(MateReply reply,

@@ -52,6 +52,11 @@ public class MateAppReplyResponse {
     private UserEntity.Gender gender;
 
     @NotNull
+    @Schema(description = "디저트메이트 작성자가 차단한 사람인지 유무", example = "디저비1")
+    private boolean blockedByAuthorYn;
+
+
+    @NotNull
     @Schema(description = "댓글 작성자의 디저트메이트 등급 상태", example = "NORMAL")
     private MateMemberGrade mateMemberGrade;
 
@@ -70,11 +75,6 @@ public class MateAppReplyResponse {
 
     @Schema(description = "대댓글 리스트 (자식 댓글)", implementation = MateAppReplyResponse.class)
     private List<MateAppReplyResponse> children;
-
-    @NotNull
-    @Schema(description = "디저트메이트 작성자가 차단한 사람인지 유무", example = "디저비1")
-    private boolean blockedByAuthorYn;
-
 
     public static MateAppReplyResponse fromEntity(MateReply reply,
                                                   UserEntity user,
