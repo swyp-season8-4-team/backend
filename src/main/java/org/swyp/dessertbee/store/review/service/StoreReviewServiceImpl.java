@@ -146,8 +146,9 @@ public class StoreReviewServiceImpl implements StoreReviewService {
             }
 
             UserEntity currentUser = userService.getCurrentUser();
-            List<UUID> blockedUserUuids = userBlockService.getBlockedUserUuids(currentUser.getUserUuid());
-
+            final List<UUID> blockedUserUuids = currentUser != null
+                    ? userBlockService.getBlockedUserUuids(currentUser.getUserUuid())
+                    : Collections.emptyList();
             List<StoreReview> reviews = storeReviewRepository.findByStoreIdAndDeletedAtIsNull(storeId);
 
             return reviews.stream()
