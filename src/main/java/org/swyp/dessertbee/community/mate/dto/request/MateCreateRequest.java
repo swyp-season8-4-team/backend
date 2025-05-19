@@ -23,11 +23,11 @@ public class MateCreateRequest {
     @Schema(description = "작성하는 사람 uuid")
     private UUID userUuid;
 
-    @NotBlank(message = "디저트메이트 카테고리 선택해주세요.")
+    @NotNull(message = "디저트메이트 카테고리 선택해주세요.")
     @Schema(description = "디저트메이트 카테고리", example = "1")
     private Long mateCategoryId;
 
-    @NotBlank(message = "디저트메이트 수용 인원을 선택해주세요.")
+//    @NotNull(message = "디저트메이트 수용 인원을 선택해주세요.")
     @Schema(description = "디저트메이트 수용 인원", example = "2")
     private Long capacity;
 
@@ -42,7 +42,7 @@ public class MateCreateRequest {
     @Schema(description = "디저트메이트 내용 작성", example = "홍대 빵지순례 리스트 200개 있습니다. 같이 맛있는거 먹으러 가요.")
     private String content;
 
-    @NotBlank(message = "디저트메이트 모집 여부를 선택해주세요.")
+    @NotNull(message = "디저트메이트 모집 여부를 선택해주세요.")
     @Schema(description = "디저트메이트 모집 여부", example = "true")
     private Boolean recruitYn;
 
