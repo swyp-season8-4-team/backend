@@ -15,7 +15,7 @@ import java.util.UUID;
 public class MateResponse {
 
 
-    @NotBlank
+    @NotNull
     @Schema(description = "디저트메이트 uuid", example = "3037ab04-195e-48d1-83e2-e005899fc74d")
     private UUID mateUuid;
 

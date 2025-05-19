@@ -29,6 +29,8 @@ import org.swyp.dessertbee.store.store.entity.*;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.exception.UserExceptions;
 import org.swyp.dessertbee.user.repository.UserRepository;
+import org.swyp.dessertbee.user.service.UserBlockService;
+import org.swyp.dessertbee.user.service.UserService;
 
 import java.util.*;
 
@@ -46,6 +48,8 @@ public class StoreSupportServiceImpl implements StoreSupportService{
     private final MateRepository mateRepository;
     private final MateCategoryRepository mateCategoryRepository;
     private final SavedMateRepository savedMateRepository;
+    private final UserService userService;
+    private final UserBlockService userBlockService;
 
     /**
      * 가게의 Top3 취향 태그 조회 메서드
@@ -78,19 +82,27 @@ public class StoreSupportServiceImpl implements StoreSupportService{
     @Override
     public List<StoreReviewResponse> getStoreReviewResponses(Long storeId) {
         List<StoreReview> reviews = storeReviewRepository.findByStoreIdAndDeletedAtIsNull(storeId);
+
+        UserEntity currentUser = userService.getCurrentUser();
+        final List<UUID> blockedUserUuids = currentUser != null
+                ? userBlockService.getBlockedUserUuids(currentUser.getUserUuid())
+                : Collections.emptyList();
+
         Map<Long, List<String>> reviewImagesMap = imageService.getImagesByTypeAndIds(ImageType.SHORT,
                 reviews.stream().map(StoreReview::getReviewId).toList());
 
-        return reviews.stream().map(review -> {
-            Long reviewerId = userRepository.findIdByUserUuid(review.getUserUuid());
-            UserEntity reviewer = userRepository.findById(reviewerId)
-                    .orElseThrow(() -> new UserExceptions.UserNotFoundException());
-            List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, reviewer.getId());
+        return reviews.stream()
+                .filter(review -> !blockedUserUuids.contains(review.getUserUuid())) // 차단한 사용자 필터링
+                .map(review -> {
+                    Long reviewerId = userRepository.findIdByUserUuid(review.getUserUuid());
+                    UserEntity reviewer = userRepository.findById(reviewerId)
+                            .orElseThrow(() -> new UserExceptions.UserNotFoundException());
+                    List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, reviewer.getId());
 
-            return StoreReviewResponse.fromEntity(review, reviewer,
-                    profileImage.isEmpty() ? null : profileImage.get(0),
-                    reviewImagesMap.getOrDefault(review.getReviewId(), Collections.emptyList()));
-        }).toList();
+                    return StoreReviewResponse.fromEntity(review, reviewer,
+                            profileImage.isEmpty() ? null : profileImage.get(0),
+                            reviewImagesMap.getOrDefault(review.getReviewId(), Collections.emptyList()));
+                }).toList();
     }
 
     /**
@@ -100,40 +112,51 @@ public class StoreSupportServiceImpl implements StoreSupportService{
     public List<ReviewSummaryResponse> getCommunityReviewResponses(Long storeId) {
         List<Review> communityReviews = communityReviewRepository.findByStoreIdAndDeletedAtIsNull(storeId);
 
-        return communityReviews.stream().map(review -> {
-            UserEntity reviewer = userRepository.findById(review.getUserId())
-                    .orElseThrow(() -> new UserExceptions.UserNotFoundException());
+        UserEntity currentUser = userService.getCurrentUser();
+        final List<UUID> blockedUserUuids = currentUser != null
+                ? userBlockService.getBlockedUserUuids(currentUser.getUserUuid())
+                : Collections.emptyList();
 
-            List<String> profileImageList = imageService.getImagesByTypeAndId(ImageType.PROFILE, reviewer.getId());
-            String profileImage = profileImageList.isEmpty() ? null : profileImageList.get(0);
+        return communityReviews.stream()
+                .filter(review -> {
+                    UserEntity reviewer = userRepository.findById(review.getUserId())
+                            .orElse(null);
+                    return reviewer != null && !blockedUserUuids.contains(reviewer.getUserUuid());
+                })
+                .map(review -> {
+                    UserEntity reviewer = userRepository.findById(review.getUserId())
+                            .orElseThrow(() -> new UserExceptions.UserNotFoundException());
 
-            String thumbnail = null;
-            String content = "";
+                    List<String> profileImageList = imageService.getImagesByTypeAndId(ImageType.PROFILE, reviewer.getId());
+                    String profileImage = profileImageList.isEmpty() ? null : profileImageList.get(0);
 
-            for (ReviewContent contentItem : review.getReviewContents()) {
-                if (thumbnail == null && "image".equals(contentItem.getType())) {
-                    thumbnail = contentItem.getValue();
-                } else if (content.isEmpty() && "text".equals(contentItem.getType())) {
-                    content = contentItem.getValue();
-                }
+                    String thumbnail = null;
+                    String content = "";
 
-                if (thumbnail != null && !content.isEmpty()) {
-                    break;
-                }
-            }
+                    for (ReviewContent contentItem : review.getReviewContents()) {
+                        if (thumbnail == null && "image".equals(contentItem.getType())) {
+                            thumbnail = contentItem.getValue();
+                        } else if (content.isEmpty() && "text".equals(contentItem.getType())) {
+                            content = contentItem.getValue();
+                        }
 
-            return ReviewSummaryResponse.builder()
-                    .reviewUuid(review.getReviewUuid())
-                    .userUuid(reviewer.getUserUuid())
-                    .nickname(reviewer.getNickname())
-                    .profileImage(profileImage)
-                    .thumbnail(thumbnail)
-                    .title(review.getTitle())
-                    .content(content)
-                    .createdAt(review.getCreatedAt())
-                    .updatedAt(review.getUpdatedAt())
-                    .build();
-        }).toList();
+                        if (thumbnail != null && !content.isEmpty()) {
+                            break;
+                        }
+                    }
+
+                    return ReviewSummaryResponse.builder()
+                            .reviewUuid(review.getReviewUuid())
+                            .userUuid(reviewer.getUserUuid())
+                            .nickname(reviewer.getNickname())
+                            .profileImage(profileImage)
+                            .thumbnail(thumbnail)
+                            .title(review.getTitle())
+                            .content(content)
+                            .createdAt(review.getCreatedAt())
+                            .updatedAt(review.getUpdatedAt())
+                            .build();
+                }).toList();
     }
 
     /**

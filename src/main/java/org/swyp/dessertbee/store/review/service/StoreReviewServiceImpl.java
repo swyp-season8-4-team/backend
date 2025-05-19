@@ -29,11 +29,12 @@ import org.swyp.dessertbee.store.review.entity.StoreReview;
 import org.swyp.dessertbee.store.review.repository.StoreReviewRepository;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
+import org.swyp.dessertbee.user.repository.UserBlockRepository;
 import org.swyp.dessertbee.user.repository.UserRepository;
+import org.swyp.dessertbee.user.service.UserBlockService;
 import org.swyp.dessertbee.user.service.UserService;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -52,6 +53,7 @@ public class StoreReviewServiceImpl implements StoreReviewService {
     private final UserService userService;
     private final StoreReviewReportRepository storeReviewReportRepository;
     private final ReportRepository reportRepository;
+    private final UserBlockService userBlockService;
 
     /** 오늘 작성한 리뷰 여부 확인 */
     public boolean hasTodayReview(UUID storeUuid, UUID userUuid) {
@@ -142,9 +144,15 @@ public class StoreReviewServiceImpl implements StoreReviewService {
             if (storeId == null) {
                 throw new InvalidStoreUuidException();
             }
+
+            UserEntity currentUser = userService.getCurrentUser();
+            final List<UUID> blockedUserUuids = currentUser != null
+                    ? userBlockService.getBlockedUserUuids(currentUser.getUserUuid())
+                    : Collections.emptyList();
             List<StoreReview> reviews = storeReviewRepository.findByStoreIdAndDeletedAtIsNull(storeId);
 
             return reviews.stream()
+                    .filter(review -> !blockedUserUuids.contains(review.getUserUuid())) // 내가 차단한 사용자 제외
                     .map(review -> {
                         List<String> images = imageService.getImagesByTypeAndId(ImageType.SHORT, review.getReviewId());
 
@@ -157,10 +165,13 @@ public class StoreReviewServiceImpl implements StoreReviewService {
                                 profileImage.isEmpty() ? null : profileImage.get(0), images);
                     })
                     .collect(Collectors.toList());
+        } catch (InvalidStoreUuidException | UserNotFoundException e) {
+            throw e;
         } catch (Exception e) {
-            log.error("가게 한줄리뷰 조회 처리 중 오류 발생", e);
+            log.error("가게 한줄리뷰 조회 중 알 수 없는 오류", e);
             throw new StoreReviewServiceException("가게 한줄리뷰 조회 처리 중 오류가 발생했습니다.");
         }
+
     }
 
     /** 리뷰 수정 */

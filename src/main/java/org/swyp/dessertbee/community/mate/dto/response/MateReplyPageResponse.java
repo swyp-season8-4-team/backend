@@ -22,7 +22,7 @@ public class MateReplyPageResponse{
     @Schema(description = "디저트메이트 내 댓글 무한 스크롤링 마지막 페이지 확인")
     private boolean isLast;
 
-    @NotBlank
+    @NotNull
     @Schema(description = "댓글 갯수", defaultValue = "0")
     private Long count;
 }

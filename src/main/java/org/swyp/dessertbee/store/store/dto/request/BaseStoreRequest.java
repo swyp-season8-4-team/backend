@@ -158,7 +158,6 @@ public abstract class BaseStoreRequest {
         @Schema(description = "휴무 시작일", example = "2025.02.10")
         private LocalDate startDate;
 
-        @NotNull
         @JsonFormat(pattern = "yyyy.MM.dd")
         @Schema(description = "휴무 종료일", example = "2025.02.14")
         private LocalDate endDate;
