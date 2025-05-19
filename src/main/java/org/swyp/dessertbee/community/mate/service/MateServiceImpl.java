@@ -369,6 +369,7 @@ public class MateServiceImpl implements MateService {
        //작성자 UUID 조회
         UserEntity creator = userService.findByIdIncludingDeleted(mate.getUserId());
 
+        //차단한 사람인지 유무 조회
         boolean blockedByAuthorYn = userBlockService.isBlocked(currentUserUuid, creator.getUserUuid());
         //작성자 프로필 조회
         String profileImage = imageService.getImageByTypeAndId(ImageType.PROFILE, mate.getUserId());

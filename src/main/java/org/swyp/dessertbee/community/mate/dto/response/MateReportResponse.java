@@ -17,11 +17,11 @@ import java.time.LocalDateTime;
 @Builder
 public class MateReportResponse {
 
-    @NotBlank
+    @NotNull
     @Schema(description = "디저트메이트 신고 id", example = "1")
     private Long mateReportId;
 
-    @NotBlank
+    @NotNull
     @Schema(description = "신고 카테고리 id", example = "1")
     private Long reportCategoryId;
 
@@ -32,7 +32,7 @@ public class MateReportResponse {
     @Schema(description = "신고하는 디저트메이트 id", example = "3")
     private Long mateId;
 
-    @NotBlank
+    @NotNull
     @Schema(description = "신고하는 사람 id", example = "22")
     private Long userId;
 

@@ -52,6 +52,11 @@ public class MateAppReplyResponse {
     private UserEntity.Gender gender;
 
     @NotNull
+    @Schema(description = "디저트메이트 작성자가 차단한 사람인지 유무", example = "true")
+    private boolean blockedByAuthorYn;
+
+
+    @NotNull
     @Schema(description = "댓글 작성자의 디저트메이트 등급 상태", example = "NORMAL")
     private MateMemberGrade mateMemberGrade;
 
@@ -71,12 +76,12 @@ public class MateAppReplyResponse {
     @Schema(description = "대댓글 리스트 (자식 댓글)", implementation = MateAppReplyResponse.class)
     private List<MateAppReplyResponse> children;
 
-
     public static MateAppReplyResponse fromEntity(MateReply reply,
                                                   UserEntity user,
                                                   String profileImage,
                                                   List<MateAppReplyResponse> children,
-                                                  MateMemberGrade mateMemberGrade
+                                                  MateMemberGrade mateMemberGrade,
+                                                  boolean blockedByAuthorYn
     ) {
 
         return MateAppReplyResponse.builder()
@@ -85,6 +90,7 @@ public class MateAppReplyResponse {
                 .parentMateReplyId(reply.getParentMateReplyId())
                 .mateMemberGrade(mateMemberGrade)
                 .gender(user.getGender())
+                .blockedByAuthorYn(blockedByAuthorYn)
                 .userUuid(user.getUserUuid())
                 .content(reply.getContent())
                 .profileImage(profileImage)

@@ -19,11 +19,11 @@ import java.util.UUID;
 @AllArgsConstructor
 public class MateMemberResponse {
 
-    @NotBlank
+    @NotNull
     @Schema(description = "디저트메이트 참여하는 멤버 id", example = "20")
     private Long userId;
 
-    @NotBlank
+    @NotNull
     @Schema(description = "디저트메이트 참여하는 사람 uuid",  example = "19a40ec1-ac92-419e-aa2b-0fcfcbd42447")
     private UUID userUuid;
 
