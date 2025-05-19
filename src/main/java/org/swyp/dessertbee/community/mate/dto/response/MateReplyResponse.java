@@ -20,11 +20,11 @@ import java.util.UUID;
 @AllArgsConstructor
 public class MateReplyResponse {
 
-    @NotBlank
+    @NotNull
     @Schema(description = "디저트메이트 댓글 id", example = "2")
     private Long mateReplyId;
 
-    @NotBlank
+    @NotNull
     @Schema(description = "디저트메이트 uuid", example = "3037ab04-195e-48d1-83e2-e005899fc74d")
     private UUID mateUuid;
 
@@ -32,7 +32,7 @@ public class MateReplyResponse {
     private Long parentMateReplyId;
 
 
-    @NotBlank
+    @NotNull
     @Schema(description = "댓글 작성하는 사람 uuid",  example = "19a40ec1-ac92-419e-aa2b-0fcfcbd42447")
     private UUID userUuid;
 
@@ -53,7 +53,7 @@ public class MateReplyResponse {
     private UserEntity.Gender gender;
 
     @NotNull
-    @Schema(description = "디저트메이트 작성자가 차단한 사람인지 유무", example = "디저비1")
+    @Schema(description = "디저트메이트 작성자가 차단한 사람인지 유무", example = "true")
     private boolean blockedByAuthorYn;
 
     @NotNull

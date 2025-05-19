@@ -20,23 +20,23 @@ import java.util.UUID;
 @AllArgsConstructor
 public class MateDetailResponse {
 
-    @NotBlank
+    @NotNull
     @Schema(description = "디저트메이트 uuid", example = "3037ab04-195e-48d1-83e2-e005899fc74d")
     private UUID mateUuid;
 
-    @NotBlank
+    @NotNull
     @Schema(description = "가게 ID", example = "12")
     private Long storeId;
 
-    @NotBlank
+    @NotNull
     @Schema(description = "디저트메이트 작성하는 사람 uuid", example = "19a40ec1-ac92-419e-aa2b-0fcfcbd42447")
     private UUID userUuid;
 
-    @NotBlank(message = "디저트메이트 수용 인원을 선택해주세요.")
+    @NotNull(message = "디저트메이트 수용 인원을 선택해주세요.")
     @Schema(description = "디저트메이트 수용 인원", example = "2")
     private Long capacity;
 
-    @NotBlank
+    @NotNull
     @Schema(description = "디저트메이트 현재 참여 인원", example = "1")
     private Long currentMemberCount;
 
@@ -93,7 +93,7 @@ public class MateDetailResponse {
 
 
     @NotNull
-    @Schema(description = "디저트메이트 작성자가 차단한 사람인지 유무", example = "디저비1")
+    @Schema(description = "디저트메이트 작성자가 차단한 사람인지 유무", example = "true")
     private boolean blockedByAuthorYn;
 
     public static MateDetailResponse fromEntity(Mate mate,

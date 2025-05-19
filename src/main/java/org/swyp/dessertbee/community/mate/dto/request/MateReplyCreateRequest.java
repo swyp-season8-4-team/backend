@@ -17,7 +17,7 @@ import java.util.UUID;
 public class MateReplyCreateRequest {
 
 
-    @NotBlank(message = "댓글 작성하는 사람의 uuid를 넘겨주세요.")
+    @NotNull(message = "댓글 작성하는 사람의 uuid를 넘겨주세요.")
     @Schema(description = "댓글 작성하는 사람 uuid", example = "19a40ec1-ac92-419e-aa2b-0fcfcbd42447")
     private UUID userUuid;
 

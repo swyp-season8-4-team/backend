@@ -52,7 +52,7 @@ public class MateAppReplyResponse {
     private UserEntity.Gender gender;
 
     @NotNull
-    @Schema(description = "디저트메이트 작성자가 차단한 사람인지 유무", example = "디저비1")
+    @Schema(description = "디저트메이트 작성자가 차단한 사람인지 유무", example = "true")
     private boolean blockedByAuthorYn;
 
 
