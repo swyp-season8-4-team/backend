@@ -31,6 +31,7 @@ import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserBlockRepository;
 import org.swyp.dessertbee.user.repository.UserRepository;
+import org.swyp.dessertbee.user.service.UserBlockService;
 import org.swyp.dessertbee.user.service.UserService;
 
 import java.util.*;
@@ -52,7 +53,7 @@ public class StoreReviewServiceImpl implements StoreReviewService {
     private final UserService userService;
     private final StoreReviewReportRepository storeReviewReportRepository;
     private final ReportRepository reportRepository;
-    private final UserBlockRepository userBlockRepository;
+    private final UserBlockService userBlockService;
 
     /** 오늘 작성한 리뷰 여부 확인 */
     public boolean hasTodayReview(UUID storeUuid, UUID userUuid) {
@@ -145,9 +146,7 @@ public class StoreReviewServiceImpl implements StoreReviewService {
             }
 
             UserEntity currentUser = userService.getCurrentUser();
-            final Set<UUID> blockedUserUuids = currentUser != null
-                    ? new HashSet<>(userBlockRepository.findBlockedUserUuidsByBlockerUuid(currentUser.getUserUuid()))
-                    : Collections.emptySet();
+            List<UUID> blockedUserUuids = userBlockService.getBlockedUserUuids(currentUser.getUserUuid());
 
             List<StoreReview> reviews = storeReviewRepository.findByStoreIdAndDeletedAtIsNull(storeId);
 
