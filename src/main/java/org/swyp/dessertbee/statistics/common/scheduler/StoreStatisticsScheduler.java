@@ -2,76 +2,91 @@ package org.swyp.dessertbee.statistics.common.scheduler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.swyp.dessertbee.statistics.store.entity.StoreStatistics;
-import org.swyp.dessertbee.statistics.store.entity.enums.PeriodType;
-import org.swyp.dessertbee.statistics.store.repostiory.StoreStatisticsRepository;
-import org.swyp.dessertbee.statistics.store.repostiory.StoreStatisticsSummaryRepository;
+import org.springframework.stereotype.Component;
+import org.swyp.dessertbee.statistics.store.entity.StoreStatisticsHourly;
+import org.swyp.dessertbee.statistics.store.repostiory.StoreStatisticsHourlyRepository;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Objects;
+import java.util.Set;
 
-/**
- * 매일 자정에 실행되어 가게별 주간/월간 통계를 요약 저장
- * 기준일: 오늘 - 1일 (어제까지의 통계 데이터 집계)
- */
-@Service
-@RequiredArgsConstructor
 @Slf4j
+@Component
+@RequiredArgsConstructor
 public class StoreStatisticsScheduler {
 
-    private final StoreStatisticsRepository statisticsRepository;
-    private final StoreStatisticsSummaryRepository summaryRepository;
+    private final StringRedisTemplate redisTemplate;
+    private final StoreStatisticsHourlyRepository repository;
 
-    @Scheduled(cron = "0 10 0 * * *", zone = "Asia/Seoul") // 매일 00:10 실행
-    @Transactional
-    public void summarizeStatistics() {
-        log.info("[통계 요약] 주간/월간 집계 시작");
+    // 매일 새벽 5시 실행
+    @Scheduled(cron = "0 0 5 * * *")
+    public void aggregateHourlyStatistics() {
+        log.info("[통계 스케줄러] Redis → MySQL 시간별 통계 집계 시작");
 
-        List<Long> storeIds = statisticsRepository.findAllStoreIds();
-
-        for (Long storeId : storeIds) {
-            LocalDate today = LocalDate.now();
-
-            // 자정 스케줄러 실행 시 오늘 데이터는 없을 것이기 때문에 어제까지를 기준으로 데이터 집계
-            LocalDate targetDate = today.minusDays(1);
-
-            // 주간
-            summarizePeriod(storeId, targetDate.minusDays(6), targetDate, PeriodType.WEEK);
-            // 월간
-            summarizePeriod(storeId, targetDate.minusDays(29), targetDate, PeriodType.MONTH);
+        // 1. Redis key 패턴 조회 (전날 포함, 예: stat:view:store:2025-05-24:100:13)
+        Set<String> keys = redisTemplate.keys("stat:*:*:*:*:*");
+        if (keys == null | keys.isEmpty()) {
+            log.info("[통계 스케줄러] 수집할 키 없음");
+            return;
         }
 
-        log.info("[통계 요약] 집계 완료");
-    }
+        for (String key : keys) {
+            try {
+                // 2. 키 파싱
+                String[] parts = key.split(":");
+                if (parts.length != 6) {
+                    log.warn("[통계 스케줄러] 잘못된 키 형식: {}", key);
+                    continue;
+                }
 
-    private void summarizePeriod(Long storeId, LocalDate startDate, LocalDate endDate, PeriodType periodType) {
-        List<StoreStatistics> stats = statisticsRepository
-                .findByStoreIdAndDeletedAtIsNullAndStatDateBetweenOrderByStatDateAsc(storeId, startDate, endDate);
+                String action = parts[1];     // e.g. view
+                String category = parts[2];   // e.g. store
+                LocalDate date = LocalDate.parse(parts[3]);
+                Long storeId = Long.valueOf(parts[4]);
+                int hour = Integer.parseInt(parts[5]);
 
-        if (stats.isEmpty()) return;
+                // 3. Redis 값 조회
+                String raw = redisTemplate.opsForValue().get(key);
+                if (raw == null || raw.isBlank()) {
+                    continue;
+                }
+                int delta = Integer.parseInt(raw);
 
-        summaryRepository.upsertSummary(
-                storeId,
-                periodType.name(),
-                startDate,
-                endDate,
-                stats.stream().mapToInt(StoreStatistics::getViews).sum(),
-                stats.stream().mapToInt(StoreStatistics::getSaves).sum(),
-                stats.stream().mapToInt(StoreStatistics::getStoreReviewCount).sum(),
-                stats.stream().mapToInt(StoreStatistics::getCommunityReviewCount).sum(),
-                stats.stream().mapToInt(StoreStatistics::getDessertMateCount).sum(),
-                stats.stream().mapToInt(StoreStatistics::getCouponUseCount).sum(),
-                stats.stream()
-                        .map(StoreStatistics::getAverageRating)
-                        .filter(Objects::nonNull)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add)
-                        .divide(new BigDecimal(stats.size()), 1, RoundingMode.HALF_UP)
-        );
+                // 4. 기존 데이터 조회 또는 생성
+                StoreStatisticsHourly stat = repository
+                        .findByStoreIdAndDateAndHour(storeId, date, hour)
+                        .orElseGet(() -> StoreStatisticsHourly.builder()
+                                .storeId(storeId)
+                                .date(date)
+                                .hour(hour)
+                                .build());
+
+                // 5. 액션/카테고리별 필드 증가
+                switch (action + ":" + category) {
+                    case "view:store" -> stat.addViewCount(delta);
+                    case "save:store" -> stat.addSaveCount(delta);
+                    case "review:store" -> stat.addReviewStoreCount(delta);
+                    case "review:comm" -> stat.addReviewCommCount(delta);
+                    case "mate:comm" -> stat.addMateCount(delta);
+                    case "coupon:used" -> stat.addCouponUsedCount(delta);
+                    default -> {
+                        log.warn("[통계 스케줄러] 알 수 없는 키 조합: {}", key);
+                        continue;
+                    }
+                }
+
+                // 6. 저장
+                repository.save(stat);
+
+                // 7. Redis 키 삭제 or TTL에 맡김 (여기선 삭제)
+                redisTemplate.delete(key);
+
+            } catch (Exception e) {
+                log.error("[통계 스케줄러] 처리 실패 - key: {}", key, e);
+            }
+        }
+
+        log.info("[통계 스케줄러] 통계 집계 완료. 총 처리 키 수: {}", keys.size());
     }
 }

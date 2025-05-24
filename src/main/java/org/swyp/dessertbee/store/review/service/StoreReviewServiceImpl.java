@@ -12,7 +12,6 @@ import org.swyp.dessertbee.common.entity.ReportCategory;
 import org.swyp.dessertbee.common.repository.ReportRepository;
 import org.swyp.dessertbee.statistics.store.entity.enums.ReviewAction;
 import org.swyp.dessertbee.statistics.store.event.StoreReviewActionEvent;
-import org.swyp.dessertbee.statistics.store.repostiory.StoreStatisticsRepository;
 import org.swyp.dessertbee.store.review.dto.response.UserReviewListResponse;
 import org.swyp.dessertbee.store.review.entity.StoreReviewReport;
 import org.swyp.dessertbee.store.review.repository.StoreReviewReportRepository;
@@ -48,7 +47,6 @@ public class StoreReviewServiceImpl implements StoreReviewService {
     private final UserRepository userRepository;
     private final ImageService imageService;
     private final StoreService storeService;
-    private final StoreStatisticsRepository storeStatisticsRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final UserService userService;
     private final StoreReviewReportRepository storeReviewReportRepository;
@@ -123,7 +121,7 @@ public class StoreReviewServiceImpl implements StoreReviewService {
                     )
             );
 
-            storeStatisticsRepository.increaseStoreReviewCount(storeId);
+            //storeStatisticsRepository.increaseStoreReviewCount(storeId);
 
             return StoreReviewResponse.fromEntity(review, reviewer,
                     profileImage.isEmpty() ? null : profileImage.get(0), imageUrls);
@@ -242,7 +240,7 @@ public class StoreReviewServiceImpl implements StoreReviewService {
                     )
             );
 
-            storeStatisticsRepository.decreaseStoreReviewCount(storeId);
+            //storeStatisticsRepository.decreaseStoreReviewCount(storeId);
         } catch (StoreReviewDeleteFailedException e){
             log.warn("가게 한줄리뷰 삭제 실패 - 사유: {}", e.getMessage());
             throw e;

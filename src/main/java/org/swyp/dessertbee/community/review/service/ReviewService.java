@@ -29,7 +29,6 @@ import org.swyp.dessertbee.community.review.repository.ReviewStatisticsRepositor
 import org.swyp.dessertbee.community.review.repository.SavedReviewRepository;
 import org.swyp.dessertbee.statistics.store.entity.enums.ReviewAction;
 import org.swyp.dessertbee.statistics.store.event.CommunityReviewActionEvent;
-import org.swyp.dessertbee.statistics.store.repostiory.StoreStatisticsRepository;
 import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.store.repository.StoreRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
@@ -53,7 +52,6 @@ public class ReviewService {
     private final ImageRepository imageRepository;
     private final ReviewContentRepository reviewContentRepository;
     private final ReviewStatisticsRepository reviewStatisticsRepository;
-    private final StoreStatisticsRepository storeStatisticsRepository;
     private final ApplicationEventPublisher eventPublisher;
 
 
@@ -135,7 +133,7 @@ public class ReviewService {
 
         eventPublisher.publishEvent(new CommunityReviewActionEvent(review.getStoreId(), review.getReviewId(), user.getUserUuid(), ReviewAction.CREATE));
 
-        storeStatisticsRepository.increaseCommunityReviewCount(storeId);
+        //storeStatisticsRepository.increaseCommunityReviewCount(storeId);
 
         return getReviewDetail(review.getReviewUuid());
     }
@@ -313,7 +311,7 @@ public class ReviewService {
             UserEntity user = userService.getCurrentUser();
             eventPublisher.publishEvent(new CommunityReviewActionEvent(review.getStoreId(), review.getReviewId(), user.getUserUuid(), ReviewAction.DELETE));
 
-            storeStatisticsRepository.decreaseCommunityReviewCount(review.getStoreId());
+            //storeStatisticsRepository.decreaseCommunityReviewCount(review.getStoreId());
         } catch (Exception e)
         {
             log.error("❌ S3 이미지 삭제 중 오류 발생: " + e.getMessage());
