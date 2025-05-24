@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.swyp.dessertbee.statistics.common.RedisStatKeyBuilder;
 import org.swyp.dessertbee.statistics.store.event.CouponUseEvent;
-import org.swyp.dessertbee.statistics.common.exception.StoreLogExceptions.*;
+import org.swyp.dessertbee.statistics.common.exception.StoreStatisticsLogExceptions.*;
 
 import java.time.Duration;
 
