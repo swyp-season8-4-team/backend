@@ -2,45 +2,41 @@ package org.swyp.dessertbee.statistics.store.event.handler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-import org.swyp.dessertbee.statistics.store.entity.CouponUseLog;
+import org.swyp.dessertbee.statistics.common.RedisStatKeyBuilder;
 import org.swyp.dessertbee.statistics.store.event.CouponUseEvent;
-import org.swyp.dessertbee.statistics.store.repostiory.CouponUseLogRepository;
 import org.swyp.dessertbee.statistics.common.exception.StoreLogExceptions.*;
 
-import java.time.LocalDateTime;
+import java.time.Duration;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class CouponUseLogEventHandler {
 
-    private final CouponUseLogRepository couponUseLogRepository;
+    private final StringRedisTemplate redisTemplate;
 
     @Async
-    @Transactional
-    public void handlCouponUseLogAction(CouponUseEvent event) {
+    @EventListener
+    public void handleCouponUseLogAction(CouponUseEvent event) {
         try {
-            boolean isDuplicate = couponUseLogRepository.existsByCouponUuidAndUserUuid(
-                    event.getCouponUuid(),
-                    event.getUserUuid()
-            );
+            String redisKey = String.format("stat:coupon:used:%s", event.getCouponUuid());
+            Long added = redisTemplate.opsForSet().add(redisKey, event.getUserUuid().toString());
 
-            if (isDuplicate) {
-                log.info("[쿠폰 로그] 중복 사용 감지 - 저장 생략 (couponUuid={}, userUuid={})", event.getCouponUuid(), event.getUserUuid());
+            if (added == 0L) {
+                log.info("[쿠폰 로그] 중복 감지 - Redis 기준 생략 (couponUuid={}, userUuid={})", event.getCouponUuid(), event.getUserUuid());
                 return;
             }
 
-            couponUseLogRepository.save(
-                    CouponUseLog.builder()
-                            .storeId(event.getStoreId())
-                            .userUuid(event.getUserUuid())
-                            .usedAt(LocalDateTime.now())
-                            .couponUuid(event.getCouponUuid())
-                            .build()
-            );
+            redisTemplate.expire(redisKey, Duration.ofDays(3));
+
+            // 시간별 통계 로그 저장
+            String statKey = RedisStatKeyBuilder.build("coupon","used", event.getStoreId());
+            redisTemplate.opsForValue().increment(statKey);
+            redisTemplate.expire(statKey, Duration.ofDays(3));
         } catch (Exception e) {
             log.warn("[쿠폰 사용 로그] 저장 실패: storeId={}, userUuid={}, couponUuid={}", event.getStoreId(), event.getUserUuid(), event.getCouponUuid(), e);
             throw new CouponUseLogCreateFailedException();
