@@ -14,4 +14,6 @@ public interface StoreStatisticsHourlyRepository extends JpaRepository<StoreStat
 
     List<StoreStatisticsHourly> findByStoreIdAndDateBetween(Long storeId, LocalDate start, LocalDate end);
 
+    boolean existsByStoreIdAndDateAndHour(Long storeId, LocalDate date, int hour);
+
 }
