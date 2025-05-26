@@ -107,28 +107,6 @@ jobs:
 
             cd /home/ec2-user/app
 
-            # .env 파일 작성
-            printf "%b\n" "${{ env.ENV_VALUE }}" > .env
-            echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> .env
-            echo "SERVER_NAME=${{ env.SERVER_NAME }}" >> .env
-            
-            # Nginx 설정 파일 생성 (템플릿에서 서버 이름 변수 치환)
-            mkdir -p nginx/conf
-            cat nginx/conf/default.conf.template | sed "s/\${SERVER_NAME}/${{ env.SERVER_NAME }}/g" > nginx/conf/default.conf
-            
-            # SSL 설정 실행 권한 부여
-            chmod +x ssl/setup-ssl.sh ssl/renew-ssl.sh
-            
-            # Docker Hub 로그인
-            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-
-            # Docker 이미지 pull 및 Compose 실행
-            echo "Pulling latest Docker image..."
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/desserbee:latest
-
-            echo "Stopping existing containers..."
-            docker-compose down || true
-
             # certbot 설치 (Amazon Linux 2023)
             if ! command -v certbot &> /dev/null; then
               echo "Installing certbot..."
@@ -141,16 +119,67 @@ jobs:
             sudo chmod 755 /var/www/certbot
             sudo chown -R ec2-user:ec2-user /var/www/certbot
 
-            # SSL 인증서 초기 설정 (인증서가 없는 경우에만)
+            # .env 파일 작성
+            printf "%b\n" "${{ env.ENV_VALUE }}" > .env
+            echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> .env
+            echo "SERVER_NAME=${{ env.SERVER_NAME }}" >> .env
+            
+            # SSL 설정 실행 권한 부여
+            chmod +x ssl/setup-ssl.sh ssl/renew-ssl.sh ssl/ssl-health-check.sh
+            
+            # Docker Hub 로그인
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+            # Docker 이미지 pull
+            echo "Pulling latest Docker image..."
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/desserbee:latest
+
+            echo "Stopping existing containers..."
+            docker-compose down || true
+
+            # SSL 인증서 존재 여부에 따른 분기 처리
             if [ ! -d "/etc/letsencrypt/live/${{ env.SERVER_NAME }}" ]; then
-              echo "Setting up SSL certificate for the first time..."
+              echo "=== 첫 번째 배포: SSL 인증서 초기 설정 ==="
+            
+              # HTTP 전용 임시 nginx 설정 생성
+              echo "HTTP 전용 nginx 임시 시작..."
+              cat nginx/conf/default-http-only.conf.template | sed "s/\${SERVER_NAME}/${{ env.SERVER_NAME }}/g" > nginx/conf/default-http-only.conf
+            
+              # 임시 nginx 설정으로 시작
+              docker run -d --name temp-nginx \
+                -p 80:80 \
+                -v $(pwd)/nginx/conf/default-http-only.conf:/etc/nginx/conf.d/default.conf \
+                -v /var/www/certbot:/var/www/certbot:ro \
+                nginx:latest
+
+              # nginx 시작 대기
+              echo "nginx 시작 대기 중..."
+              sleep 5
+
+              echo "SSL 인증서 발급 중..."
               ./ssl/setup-ssl.sh ${{ env.SERVER_NAME }}
+            
+              # 임시 nginx 컨테이너 정리
+              docker stop temp-nginx || true
+              docker rm temp-nginx || true
+            
+              echo "정식 nginx 설정으로 전환..."
+            else
+              echo "=== 기존 SSL 인증서 발견: 정상 배포 진행 ==="
             fi
+
+            # Nginx 설정 파일 생성 (템플릿에서 서버 이름 변수 치환)
+            mkdir -p nginx/conf
+            cat nginx/conf/default.conf.template | sed "s/\${SERVER_NAME}/${{ env.SERVER_NAME }}/g" > nginx/conf/default.conf
 
             echo "Starting containers with Docker Compose..."
             docker-compose up -d
 
             # SSL 자동 갱신 cron job 설정
             ./ssl/renew-ssl.sh setup-cron
+
+            # 배포 완료 후 SSL 상태 확인
+            echo "SSL 상태 확인 중..."
+            ./ssl/ssl-health-check.sh ${{ env.SERVER_NAME }}
 
             echo "Deployment completed at $(date) for branch ${{ github.ref_name }}"
