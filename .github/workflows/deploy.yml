@@ -74,11 +74,10 @@ jobs:
           host: ${{ env.EC2_HOST_VALUE }}
           username: ec2-user
           key: ${{ secrets.EC2_PRIVATE_KEY }}
-          source: "docker-compose.yml,nginx/"
+          source: "docker-compose.yml,nginx/,ssl/"
           target: "/home/ec2-user/app"
           strip_components: 0
           overwrite: true
-
 
         # EC2에 SSH 접속 후 Docker 환경 구성 및 애플리케이션 실행
       - name: Deploy to EC2 and run Docker Compose
@@ -99,7 +98,6 @@ jobs:
               newgrp docker || true
             fi
 
-
             # Docker Compose 설치
             if ! command -v docker-compose &> /dev/null; then
               sudo curl -L "https://github.com/docker/compose/releases/download/v2.18.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
@@ -118,6 +116,9 @@ jobs:
             mkdir -p nginx/conf
             cat nginx/conf/default.conf.template | sed "s/\${SERVER_NAME}/${{ env.SERVER_NAME }}/g" > nginx/conf/default.conf
             
+            # SSL 설정 실행 권한 부여
+            chmod +x ssl/setup-ssl.sh ssl/renew-ssl.sh
+            
             # Docker Hub 로그인
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
@@ -128,7 +129,16 @@ jobs:
             echo "Stopping existing containers..."
             docker-compose down || true
 
+            # SSL 인증서 초기 설정 (인증서가 없는 경우에만)
+            if [ ! -d "/etc/letsencrypt/live/${{ env.SERVER_NAME }}" ]; then
+              echo "Setting up SSL certificate for the first time..."
+              ./ssl/setup-ssl.sh ${{ env.SERVER_NAME }}
+            fi
+
             echo "Starting containers with Docker Compose..."
             docker-compose up -d
+
+            # SSL 자동 갱신 cron job 설정
+            ./ssl/renew-ssl.sh setup-cron
 
             echo "Deployment completed at $(date) for branch ${{ github.ref_name }}"
