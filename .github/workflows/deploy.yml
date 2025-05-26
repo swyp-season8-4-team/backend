@@ -129,6 +129,18 @@ jobs:
             echo "Stopping existing containers..."
             docker-compose down || true
 
+            # certbot 설치 (Amazon Linux 2023)
+            if ! command -v certbot &> /dev/null; then
+              echo "Installing certbot..."
+              sudo dnf install -y python3-pip
+              sudo pip3 install certbot
+            fi
+
+            # SSL 디렉토리 생성 및 권한 설정
+            sudo mkdir -p /var/www/certbot
+            sudo chmod 755 /var/www/certbot
+            sudo chown -R ec2-user:ec2-user /var/www/certbot
+
             # SSL 인증서 초기 설정 (인증서가 없는 경우에만)
             if [ ! -d "/etc/letsencrypt/live/${{ env.SERVER_NAME }}" ]; then
               echo "Setting up SSL certificate for the first time..."
