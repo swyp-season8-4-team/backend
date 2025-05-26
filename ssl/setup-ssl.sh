@@ -10,7 +10,7 @@ DOMAIN=$1
 echo "=== SSL 인증서 초기 설정 시작 ==="
 echo "도메인: $DOMAIN"
 
-# 도메인 유효성 간단 확인 (선택적)
+# 도메인 유효성 확인
 if [ -z "$DOMAIN" ] || [[ ! "$DOMAIN" =~ ^[a-zA-Z0-9.-]+$ ]]; then
     echo "유효하지 않은 도메인: $DOMAIN"
     exit 1
