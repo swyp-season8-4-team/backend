@@ -31,13 +31,13 @@ services:
     volumes:
       - ./nginx/conf:/etc/nginx/conf.d
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - /etc/letsencrypt:/etc/letsencrypt # 호스트의 인증서를 컨테이너에 마운트
+      - /etc/letsencrypt:/etc/letsencrypt:ro # 호스트의 인증서를 읽기 전용으로 마운트
+      - /var/www/certbot:/var/www/certbot:ro # certbot webroot 마운트
     depends_on:
       - app
     restart: always
     networks:
       - app-network
-
 
   redis:
     image: redis:7.0
@@ -53,21 +53,6 @@ services:
     volumes:
       - redis-data:/data
     command: ["redis-server", "--appendonly", "yes"]
-
-#  elasticsearch:
-#    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.2
-#    container_name: desserbee-es
-#    environment:
-#      - discovery.type=single-node
-#      - xpack.security.enabled=false
-#      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-#    ports:
-#      - "9200:9200"
-#    volumes:
-#      - es-data:/usr/share/elasticsearch/data
-#    networks:
-#      - app-network
-#    restart: always
 
 networks:
   app-network:
