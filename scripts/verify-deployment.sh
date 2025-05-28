@@ -71,9 +71,16 @@ echo "========================================"
 deployment_success=true
 
 # 필수 컨테이너 상태 확인
-if ! docker-compose ps | grep -q "Up"; then
-    echo "일부 컨테이너가 실행되지 않았습니다."
-    deployment_success=false
+if [ -f "./scripts/health-check.sh" ]; then
+    if ! ./scripts/health-check.sh all 10 >/dev/null 2>&1; then
+        echo "일부 서비스가 정상 작동하지 않습니다."
+        deployment_success=false
+    fi
+else
+    if ! docker-compose ps | grep -q "Up"; then
+        echo "일부 컨테이너가 실행되지 않았습니다."
+        deployment_success=false
+    fi
 fi
 
 # SSL 인증서 확인

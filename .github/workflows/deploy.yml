@@ -82,9 +82,8 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: |
             cd /home/ec2-user/app
-            chmod +x scripts/setup-system.sh
+            chmod +x scripts/*.sh ssl/*.sh
             ./scripts/setup-system.sh
-
       # 6. SSL 인증서 설정
       - name: Setup SSL Certificate
         uses: appleboy/ssh-action@master
