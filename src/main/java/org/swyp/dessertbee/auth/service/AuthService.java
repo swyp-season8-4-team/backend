@@ -23,7 +23,7 @@ public interface AuthService {
      * @param provider 인증 제공자 (local, kakao 등)
      * @param providerId 제공자별 식별자 (소셜 로그인의 경우)
      */
-    String saveRefreshToken(UUID userUuid, String refreshToken, String provider, String providerId, String deviceId);
+    String saveRefreshToken(UUID userUuid, String refreshToken, String provider, String providerId, String deviceId, boolean keepLoggedIn);
 
     /**
      * 리프레시 토큰을 통해 새로운 액세스 토큰 발급

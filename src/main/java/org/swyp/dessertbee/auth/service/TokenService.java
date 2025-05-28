@@ -42,7 +42,7 @@ public class TokenService {
      * 리프레시 토큰을 저장하거나 업데이트
      */
     @Transactional
-    public String saveRefreshToken(UUID userUuid, String refreshToken, String provider, String providerId, String deviceId) {
+    public String saveRefreshToken(UUID userUuid, String refreshToken, String provider, String providerId, String deviceId, boolean keepLoggedIn) {
         UserEntity user = userService.findByUserUuid(userUuid);
         String email = user.getEmail();
 
@@ -83,8 +83,13 @@ public class TokenService {
                         .build();
             }
 
+            long expireTimeMillis = keepLoggedIn ?
+                    jwtUtil.getLONG_REFRESH_TOKEN_EXPIRE() :
+                    jwtUtil.getSHORT_REFRESH_TOKEN_EXPIRE();
+
             LocalDateTime expirationTime = LocalDateTime.now(KST)
-                    .plus(Duration.ofMillis(jwtUtil.getSHORT_REFRESH_TOKEN_EXPIRE()));
+                    .plus(Duration.ofMillis(expireTimeMillis));
+
             auth.updateRefreshToken(refreshToken, expirationTime);
 
             // providerId가 null이 아닌 경우에만 설정
