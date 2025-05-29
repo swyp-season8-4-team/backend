@@ -38,8 +38,8 @@ init_default_config() {
 # 헬스체크 설정 파일
 # 형식: SERVICE_NAME:CONTAINER_NAME:CHECK_TYPE:CHECK_COMMAND:PORT
 
-# 핵심 서비스
-app:desserbee-app:http:/actuator/health:8080
+# 핵심 서비스 - /api/health API 사용
+app:desserbee-app:http:/api/health:8080
 nginx:desserbee-nginx:container::
 redis:desserbee-redis:redis:ping:6379
 EOF
@@ -61,27 +61,31 @@ load_config() {
 check_container_status() {
     local service_name=$1
 
+    # docker-compose ps 출력 가져오기
     local ps_output=$(docker-compose ps "$service_name" 2>/dev/null)
 
     # 서비스가 없으면 실패
-    if [ -z "$ps_output" ] || ! echo "$ps_output" | grep -q "$service_name"; then
+    if [ -z "$ps_output" ]; then
         return 1
     fi
 
-    # STATUS 컬럼(6번째)에서 상태 추출
-    # "Up 5 minutes" 또는 "Up 46 hours (healthy)" 형태
-    local status_info=$(echo "$ps_output" | grep "$service_name" | awk '{print $6, $7, $8, $9}' | head -1)
+    # 헤더를 제외하고 실제 컨테이너 정보만 추출
+    local container_line=$(echo "$ps_output" | grep -v "^NAME\|^----" | grep "$service_name" | head -1)
 
-    # State가 "Up"으로 시작하고 "unhealthy"가 포함되지 않은 경우만 정상
-    if [[ "$status_info" =~ ^Up ]]; then
-        # "unhealthy"가 포함되어 있는지 확인
-        if [[ "$status_info" =~ unhealthy ]]; then
-            return 1  # unhealthy
+    if [ -z "$container_line" ]; then
+        return 1
+    fi
+
+    # "Up"이 포함되어 있으면 정상으로 판단
+    if echo "$container_line" | grep -qi "up"; then
+        # "unhealthy", "exited", "dead" 등이 포함되어 있으면 비정상
+        if echo "$container_line" | grep -qi "unhealthy\|exited\|dead\|restarting"; then
+            return 1
         else
-            return 0  # 정상
+            return 0
         fi
     else
-        return 1  # Up이 아님
+        return 1
     fi
 }
 
@@ -104,13 +108,14 @@ check_service() {
                 print_status "INFO" "[$service_name] 컨테이너 시작 대기 중..."
             fi
             if [ $i -eq $timeout ]; then
-                # 텍스트 파싱으로 상태 정보 추출
+                # 상세한 상태 정보 출력
                 local ps_output=$(docker-compose ps "$service_name" 2>/dev/null)
-                if [ -z "$ps_output" ] || ! echo "$ps_output" | grep -q "$service_name"; then
+                if [ -z "$ps_output" ]; then
                     print_status "FAIL" "[$service_name] 컨테이너를 찾을 수 없습니다"
                 else
-                    local status_info=$(echo "$ps_output" | grep "$service_name" | awk '{print $6, $7, $8, $9}' | head -1)
-                    print_status "FAIL" "[$service_name] 컨테이너 상태 비정상: $status_info"
+                    local status_line=$(echo "$ps_output" | grep -v "^NAME\|^----" | grep "$service_name" | head -1)
+                    print_status "FAIL" "[$service_name] 컨테이너 상태 비정상"
+                    print_status "INFO" "상세 정보: $status_line"
                 fi
                 return 1
             fi
@@ -121,17 +126,29 @@ check_service() {
         # 2. 서비스별 헬스체크
         case "$check_type" in
             "http")
-                # HTTP 헬스체크
-                if docker-compose exec -T "$service_name" curl -f "http://localhost:${port}${check_command}" >/dev/null 2>&1; then
+                # HTTP 헬스체크 - /health API 사용
+                local http_code
+                http_code=$(timeout 10 docker-compose exec -T "$service_name" curl -s -o /dev/null -w "%{http_code}" --connect-timeout 5 "http://localhost:${port}${check_command}" 2>/dev/null || echo "000")
+
+                if [ "$http_code" = "200" ]; then
                     service_healthy=true
                 elif [ $i -eq $timeout ]; then
-                    print_status "FAIL" "[$service_name] HTTP 헬스체크 실패: http://localhost:${port}${check_command}"
+                    print_status "FAIL" "[$service_name] HTTP 헬스체크 실패 (HTTP $http_code): http://localhost:${port}${check_command}"
+
+                    # 디버깅 정보
+                    print_status "INFO" "컨테이너 로그 (마지막 5줄):"
+                    docker-compose logs --tail=5 "$service_name" 2>/dev/null | sed 's/^/    /' || echo "    로그 가져오기 실패"
+
+                    # 포트 리스닝 확인
+                    print_status "INFO" "포트 리스닝 상태:"
+                    docker-compose exec -T "$service_name" netstat -tln 2>/dev/null | grep ":${port}" | sed 's/^/    /' || echo "    포트 $port 리스닝 없음"
+
                     return 1
                 fi
                 ;;
             "redis")
-                # Redis 헬스체크
-                if docker-compose exec -T "$service_name" redis-cli ping | grep -q "PONG" >/dev/null 2>&1; then
+                # Redis 헬스체크 - docker exec 사용
+                if docker exec desserbee-redis redis-cli ping 2>/dev/null | grep -q "PONG"; then
                     service_healthy=true
                 elif [ $i -eq $timeout ]; then
                     print_status "FAIL" "[$service_name] Redis ping 실패"
@@ -144,7 +161,7 @@ check_service() {
                 ;;
             "custom")
                 # 커스텀 명령어 실행
-                if eval "$check_command" >/dev/null 2>&1; then
+                if timeout 10 eval "$check_command" >/dev/null 2>&1; then
                     service_healthy=true
                 elif [ $i -eq $timeout ]; then
                     print_status "FAIL" "[$service_name] 커스텀 헬스체크 실패: $check_command"
@@ -178,6 +195,11 @@ check_all_services() {
     local total_services=0
 
     print_status "INFO" "=== 전체 서비스 헬스체크 시작 ==="
+
+    # 디버깅을 위한 현재 컨테이너 상태 출력
+    print_status "INFO" "현재 컨테이너 상태:"
+    docker-compose ps || true
+    echo ""
 
     for service_config in "${SERVICES[@]}"; do
         total_services=$((total_services + 1))
@@ -240,7 +262,7 @@ show_usage() {
     echo ""
     echo "지원하는 체크 타입:"
     echo "  container  - 컨테이너 상태만 확인"
-    echo "  http       - HTTP 헬스체크"
+    echo "  http       - HTTP 헬스체크 (/api/health API)"
     echo "  redis      - Redis ping"
     echo "  custom     - 커스텀 명령어 실행"
 }
