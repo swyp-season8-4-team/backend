@@ -18,16 +18,16 @@ print_status() {
     local message=$2
     case $status in
         "OK")
-            echo -e "\033[32m $message\033[0m"
+            echo -e "\033[32m✓ $message\033[0m"
             ;;
         "FAIL")
-            echo -e "\033[31m $message\033[0m"
+            echo -e "\033[31m✗ $message\033[0m"
             ;;
         "WARN")
-            echo -e "\033[33m $message\033[0m"
+            echo -e "\033[33m⚠ $message\033[0m"
             ;;
         "INFO")
-            echo -e "\033[36m $message\033[0m"
+            echo -e "\033[36m• $message\033[0m"
             ;;
     esac
 }
@@ -61,19 +61,27 @@ load_config() {
 check_container_status() {
     local service_name=$1
 
-    # docker-compose ps 출력에서 해당 서비스의 State 컬럼 추출
-    local container_state=$(docker-compose ps "$service_name" --format "table {{.State}}" | tail -n +2)
+    local ps_output=$(docker-compose ps "$service_name" 2>/dev/null)
 
-    # 상태가 비어있으면 컨테이너가 없음
-    if [ -z "$container_state" ]; then
+    # 서비스가 없으면 실패
+    if [ -z "$ps_output" ] || ! echo "$ps_output" | grep -q "$service_name"; then
         return 1
     fi
 
+    # STATUS 컬럼(6번째)에서 상태 추출
+    # "Up 5 minutes" 또는 "Up 46 hours (healthy)" 형태
+    local status_info=$(echo "$ps_output" | grep "$service_name" | awk '{print $6, $7, $8, $9}' | head -1)
+
     # State가 "Up"으로 시작하고 "unhealthy"가 포함되지 않은 경우만 정상
-    if [[ "$container_state" =~ ^Up ]] && [[ ! "$container_state" =~ unhealthy ]]; then
-        return 0
+    if [[ "$status_info" =~ ^Up ]]; then
+        # "unhealthy"가 포함되어 있는지 확인
+        if [[ "$status_info" =~ unhealthy ]]; then
+            return 1  # unhealthy
+        else
+            return 0  # 정상
+        fi
     else
-        return 1
+        return 1  # Up이 아님
     fi
 }
 
@@ -96,11 +104,13 @@ check_service() {
                 print_status "INFO" "[$service_name] 컨테이너 시작 대기 중..."
             fi
             if [ $i -eq $timeout ]; then
-                local container_state=$(docker-compose ps "$service_name" --format "table {{.State}}" | tail -n +2)
-                if [ -z "$container_state" ]; then
+                # 텍스트 파싱으로 상태 정보 추출
+                local ps_output=$(docker-compose ps "$service_name" 2>/dev/null)
+                if [ -z "$ps_output" ] || ! echo "$ps_output" | grep -q "$service_name"; then
                     print_status "FAIL" "[$service_name] 컨테이너를 찾을 수 없습니다"
                 else
-                    print_status "FAIL" "[$service_name] 컨테이너 상태 비정상: $container_state"
+                    local status_info=$(echo "$ps_output" | grep "$service_name" | awk '{print $6, $7, $8, $9}' | head -1)
+                    print_status "FAIL" "[$service_name] 컨테이너 상태 비정상: $status_info"
                 fi
                 return 1
             fi
@@ -129,7 +139,7 @@ check_service() {
                 fi
                 ;;
             "container")
-                # 컨테이너 상태만 확인 (이미 위에서 확인됐기에 여기서는 간ㄷ)
+                # 컨테이너 상태만 확인 (이미 위에서 확인됨)
                 service_healthy=true
                 ;;
             "custom")
