@@ -61,8 +61,8 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public String saveRefreshToken(UUID userUuid, String refreshToken, String provider, String providerId, String deviceId) {
-        return tokenService.saveRefreshToken(userUuid, refreshToken, provider, providerId, deviceId);
+    public String saveRefreshToken(UUID userUuid, String refreshToken, String provider, String providerId, String deviceId, boolean keepLoggedIn) {
+        return tokenService.saveRefreshToken(userUuid, refreshToken, provider, providerId, deviceId, keepLoggedIn);
     }
 
     @Override
@@ -121,9 +121,10 @@ public class AuthServiceImpl implements AuthService {
             String accessToken = jwtUtil.createAccessToken(user.getUserUuid(), roles);
             String refreshToken = jwtUtil.createRefreshToken(user.getUserUuid(), false);
             long expiresIn = jwtUtil.getACCESS_TOKEN_EXPIRE();
+            long refreshExpiresIn = jwtUtil.getSHORT_REFRESH_TOKEN_EXPIRE();
 
             // Refresh Token 저장 및 디바이스 ID 처리
-            String usedDeviceId = saveRefreshToken(user.getUserUuid(), refreshToken, "local", null, deviceId);
+            String usedDeviceId = saveRefreshToken(user.getUserUuid(), refreshToken, "local", null, deviceId, false);
 
             log.info("회원가입 완료 - 이메일: {}", request.getEmail());
 
@@ -132,7 +133,7 @@ public class AuthServiceImpl implements AuthService {
                     .findFirst()
                     .orElse(null);
 
-            return LoginResponse.success(accessToken, refreshToken, expiresIn, user, profileImageUrl, usedDeviceId);
+            return LoginResponse.success(accessToken, refreshToken, expiresIn, refreshExpiresIn, user, profileImageUrl, usedDeviceId);
 
         } catch (BusinessException e) {
             log.warn("회원가입 실패 - 이메일: {}, 사유: {}", request.getEmail(), e.getMessage());
@@ -236,12 +237,14 @@ public class AuthServiceImpl implements AuthService {
             String accessToken;
             String refreshToken;
             long expiresIn;
+            long refreshExpiresIn;
 
             if (isDev) {
                 // 개발용 짧은 유효기간 토큰
                 accessToken = jwtUtil.createDevAccessToken(user.getUserUuid(), roles);
                 refreshToken = jwtUtil.createDevRefreshToken(user.getUserUuid());
                 expiresIn = 180; // 3분 = 180초
+                refreshExpiresIn = jwtUtil.getDEV_REFRESH_TOKEN_EXPIRE();
                 log.info("개발 로그인 성공 - 이메일: {}, 토큰 만료시간: {}초", request.getEmail(), expiresIn);
             } else {
                 // 일반 토큰
@@ -249,11 +252,12 @@ public class AuthServiceImpl implements AuthService {
                 TokenPair tokenPair = createTokenPair(user, roles, keepLoggedIn);
                 accessToken = tokenPair.accessToken();
                 refreshToken = tokenPair.refreshToken();
-                expiresIn = tokenPair.expiresIn();
+                expiresIn = tokenPair.accessTokenExpiresIn();
+                refreshExpiresIn = tokenPair.refreshTokenExpiresIn();
             }
 
             // 리프레시 토큰 저장
-            String usedDeviceId = saveRefreshToken(user, refreshToken, deviceId);
+            String usedDeviceId = saveRefreshToken(user, refreshToken, deviceId, request.isKeepLoggedIn());
 
             // 프로필 이미지 조회
             String profileImageUrl = getProfileImage(user);
@@ -266,6 +270,7 @@ public class AuthServiceImpl implements AuthService {
                     accessToken,
                     refreshToken,
                     expiresIn,
+                    refreshExpiresIn,
                     user,
                     profileImageUrl,
                     usedDeviceId,
@@ -375,15 +380,17 @@ public class AuthServiceImpl implements AuthService {
     private TokenPair createTokenPair(UserEntity user, List<String> roles, boolean keepLoggedIn) {
         String accessToken = jwtUtil.createAccessToken(user.getUserUuid(), roles);
         String refreshToken = jwtUtil.createRefreshToken(user.getUserUuid(), keepLoggedIn);
-        long expiresIn = jwtUtil.getACCESS_TOKEN_EXPIRE();
-        return new TokenPair(accessToken, refreshToken, expiresIn);
+        long accessTokenExpiresIn = jwtUtil.getACCESS_TOKEN_EXPIRE();
+        long refreshTokenExpiresIn = keepLoggedIn ? jwtUtil.getLONG_REFRESH_TOKEN_EXPIRE() : jwtUtil.getSHORT_REFRESH_TOKEN_EXPIRE();
+
+        return new TokenPair(accessToken, refreshToken, accessTokenExpiresIn, refreshTokenExpiresIn);
     }
 
     /**
      * 리프레시 토큰 저장 및 디바이스 ID 처리
      */
-    private String saveRefreshToken(UserEntity user, String refreshToken, String deviceId) {
-        return tokenService.saveRefreshToken(user.getUserUuid(), refreshToken, "local", null, deviceId);
+    private String saveRefreshToken(UserEntity user, String refreshToken, String deviceId, boolean keepLoggedIn) {
+        return tokenService.saveRefreshToken(user.getUserUuid(), refreshToken, "local", null, deviceId, keepLoggedIn);
     }
 
     /**
@@ -397,9 +404,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
-         * 토큰 생성 결과를 담는 도메인 객체
-         */
-        private record TokenPair(String accessToken, String refreshToken, long expiresIn) {
-
-    }
+     * 토큰 생성 결과를 담는 도메인 객체
+    */
+    private record TokenPair(String accessToken, String refreshToken, long accessTokenExpiresIn, long refreshTokenExpiresIn) {}
 }

@@ -35,8 +35,12 @@ public class LoginResponse {
             requiredMode = Schema.RequiredMode.REQUIRED
     )
     private String tokenType;       // 토큰 타입
+
+    @Schema(description = "리프레시 토큰 만료 시간 (밀리초)", example = "864000000", requiredMode = Schema.RequiredMode.REQUIRED)
+    private long refreshExpiresIn;
+
     @Schema(
-            description = "토큰 만료 시간 (밀리초)",
+            description = "액세스 토큰 만료 시간 (밀리초)",
             example = "259200000",
             requiredMode = Schema.RequiredMode.REQUIRED
     )
@@ -116,40 +120,45 @@ public class LoginResponse {
      * @param isPreferenceSet 선호도 설정 여부
      * @return 로그인 응답 객체
      */
-    public static LoginResponse success(String accessToken, String refreshToken, long expiresIn, UserEntity user, String profileImageUrl, String deviceId, boolean isPreferenceSet) {
+    public static LoginResponse success(String accessToken, String refreshToken, long expiresIn, long refreshExpiresIn,
+                                        UserEntity user, String profileImageUrl, String deviceId, boolean isPreferenceSet) {
         return LoginResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .tokenType("Bearer")
                 .expiresIn(expiresIn)
+                .refreshExpiresIn(refreshExpiresIn)
                 .userUuid(user.getUserUuid())
                 .email(user.getEmail())
                 .nickname(user.getNickname())
                 .profileImageUrl(profileImageUrl)
                 .deviceId(deviceId)
                 .isPreferenceSet(isPreferenceSet)
-                .fromApp(false) // 기본값은 false (웹 로그인)
+                .fromApp(false)
                 .build();
     }
 
     /**
      * 선호도 설정 제외하고 디바이스 ID 포함 응답 생성
      */
-    public static LoginResponse success(String accessToken, String refreshToken, long expiresIn, UserEntity user, String profileImageUrl, String deviceId) {
-        return success(accessToken, refreshToken, expiresIn, user, profileImageUrl, deviceId, false);
+    public static LoginResponse success(String accessToken, String refreshToken, long expiresIn, long refreshExpiresIn,
+                                        UserEntity user, String profileImageUrl, String deviceId) {
+        return success(accessToken, refreshToken, expiresIn, refreshExpiresIn, user, profileImageUrl, deviceId, false);
     }
 
     /**
      * 디바이스 ID 없이 선호도 설정 포함
      */
-    public static LoginResponse success(String accessToken, String refreshToken, long expiresIn, UserEntity user, String profileImageUrl, boolean isPreferenceSet) {
-        return success(accessToken, refreshToken, expiresIn, user, profileImageUrl, null, isPreferenceSet);
+    public static LoginResponse success(String accessToken, String refreshToken, long expiresIn, long refreshExpiresIn,
+                                        UserEntity user, String profileImageUrl, boolean isPreferenceSet) {
+        return success(accessToken, refreshToken, expiresIn, refreshExpiresIn, user, profileImageUrl, null, isPreferenceSet);
     }
 
     /**
      * 디바이스 ID, 선호도 설정 모두 없음
      */
-    public static LoginResponse success(String accessToken, String refreshToken, long expiresIn, UserEntity user, String profileImageUrl) {
-        return success(accessToken, refreshToken, expiresIn, user, profileImageUrl, null, false);
+    public static LoginResponse success(String accessToken, String refreshToken, long expiresIn, long refreshExpiresIn,
+                                        UserEntity user, String profileImageUrl) {
+        return success(accessToken, refreshToken, expiresIn, refreshExpiresIn, user, profileImageUrl, null, false);
     }
 }

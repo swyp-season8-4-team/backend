@@ -406,12 +406,16 @@ public class AppleOAuthService {
         String accessToken = jwtUtil.createAccessToken(user.getUserUuid(), roles);
         String refreshToken = jwtUtil.createRefreshToken(user.getUserUuid(), keepLoggedIn);
         long expiresIn = jwtUtil.getACCESS_TOKEN_EXPIRE();
+        long refreshExpiresIn = keepLoggedIn ? jwtUtil.getLONG_REFRESH_TOKEN_EXPIRE() : jwtUtil.getSHORT_REFRESH_TOKEN_EXPIRE();
 
         // 토큰 저장
         String usedDeviceId = tokenService.saveRefreshToken(
-                user.getUserUuid(), refreshToken,
-                oauth2Response.getProvider(), oauth2Response.getProviderId(),
-                effectiveDeviceId
+                user.getUserUuid(),
+                refreshToken,
+                oauth2Response.getProvider(),
+                oauth2Response.getProviderId(),
+                deviceId,
+                keepLoggedIn  // 추가된 파라미터
         );
 
         List<String> profileImages = imageService.getImagesByTypeAndId(
@@ -420,17 +424,8 @@ public class AppleOAuthService {
 
         boolean isPreferenceSet = preferenceService.isUserPreferenceSet(user);
 
-        // 로그인 응답 생성
-        LoginResponse response = LoginResponse.success(
-                accessToken, refreshToken, expiresIn, user,
-                profileImageUrl, usedDeviceId, isPreferenceSet);
-
-        // 앱 로그인 여부 로그만 남김
-        if (isApp) {
-            log.info("앱 로그인 완료 - 사용자: {}", user.getEmail());
-        }
-
-        return response;
+        return LoginResponse.success(accessToken, refreshToken, expiresIn, refreshExpiresIn,
+                user, profileImageUrl, usedDeviceId, isPreferenceSet);
     }
 
     /**
