@@ -83,7 +83,7 @@ public class SecurityConfig {
                         // apple OAuth login testing 용도
                         .requestMatchers("/apple-oauth-test.html/**").permitAll()
                         .requestMatchers("/ko/oauth/callback/**").permitAll()
-
+                        .requestMatchers("/api/health").permitAll()
                         // 나머지 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
