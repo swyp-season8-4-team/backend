@@ -1,6 +1,9 @@
 package org.swyp.dessertbee.store.review.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -32,9 +35,13 @@ public class StoreReviewResponse {
     @NotNull(message = "사용자 UUID는 필수입니다.")
     private UUID userUuid;
 
-    @Schema(description = "사용자 이름", example = "이예림")
-    @NotBlank(message = "사용자 이름은 필수입니다.")
+    @Schema(description = "작성자 이름", example = "이예림")
+    @NotBlank(message = "작성자 이름은 필수입니다.")
     private String nickname;
+
+    @Schema(description = "작성자 성별", example = "FEMALE")
+    @NotBlank(message = "작성자 성별은 필수입니다.")
+    private UserEntity.Gender gender;
 
     @Schema(description = "사용자 프로필 사진 URL", nullable = true)
     private String profileImage;
@@ -66,6 +73,7 @@ public class StoreReviewResponse {
                 .storeId(review.getStoreId())
                 .userUuid(reviewer.getUserUuid())
                 .nickname(reviewer.getNickname())
+                .gender(reviewer.getGender())
                 .profileImage(profileImage)
                 .content(review.getContent())
                 .rating(review.getRating())
