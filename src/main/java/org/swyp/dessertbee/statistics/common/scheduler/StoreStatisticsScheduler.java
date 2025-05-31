@@ -7,8 +7,13 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.swyp.dessertbee.statistics.store.entity.StoreStatisticsHourly;
 import org.swyp.dessertbee.statistics.store.repostiory.StoreStatisticsHourlyRepository;
+import org.swyp.dessertbee.store.store.entity.Store;
+import org.swyp.dessertbee.store.store.exception.StoreExceptions.*;
+import org.swyp.dessertbee.store.store.repository.StoreRepository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Set;
 
 @Slf4j
@@ -18,7 +23,13 @@ public class StoreStatisticsScheduler {
 
     private final StringRedisTemplate redisTemplate;
     private final StoreStatisticsHourlyRepository repository;
+    private final StoreRepository storeRepository;
 
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    /**
+     * 시간별 Redis 로그를 MySQL로 집계하는 작업 (매일 새벽 5시)
+     */
     @Scheduled(cron = "0 0 5 * * *") // 매일 새벽 5시
     public void aggregateHourlyStatistics() {
         log.info("[통계 스케줄러] Redis → MySQL 시간별 통계 집계 시작");
@@ -81,12 +92,32 @@ public class StoreStatisticsScheduler {
                     continue;
                 }
 
+                // 평균 평점 조회
+                BigDecimal averageRating;
+                try {
+                    Store store = storeRepository.findById(storeId)
+                            .orElseThrow(() -> new StoreNotFoundException());
+                    averageRating = store.getAverageRating() != null ? store.getAverageRating() : BigDecimal.ZERO;
+                } catch (Exception e) {
+                    log.warn("[통계 스케줄러] 평균 평점 조회 실패 - storeId: {}", storeId, e);
+                    averageRating = BigDecimal.ZERO;
+                }
+
+                // 초기화된 통계 엔티티 생성
                 StoreStatisticsHourly stat = StoreStatisticsHourly.builder()
                         .storeId(storeId)
                         .date(date)
                         .hour(hour)
+                        .viewCount(0)
+                        .saveCount(0)
+                        .reviewStoreCount(0)
+                        .reviewCommCount(0)
+                        .couponUsedCount(0)
+                        .mateCount(0)
+                        .averageRating(averageRating)
                         .build();
 
+                // delta 값 누적
                 switch (action + ":" + category) {
                     case "view:store" -> stat.addViewCount(delta);
                     case "save:store" -> stat.addSaveCount(delta);

@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -49,6 +50,9 @@ public class StoreStatisticsHourly {
 
     @Schema(description = "디저트 메이트 모집글 수", example = "1")
     private int mateCount;
+
+    @Column(name = "가게 평균 평점", precision = 3, scale = 2)
+    private BigDecimal averageRating;
 
     public void addViewCount(int delta) {
         this.viewCount += delta;

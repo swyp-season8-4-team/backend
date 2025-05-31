@@ -2,6 +2,8 @@ package org.swyp.dessertbee.statistics.store.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.math.BigDecimal;
+
 @Schema(description = "기간별 통계 응답 DTO")
 public record StoreStatisticsPeriodResponse(
 
@@ -21,5 +23,8 @@ public record StoreStatisticsPeriodResponse(
         int totalCouponUsedCount,
 
         @Schema(description = "기간 내 디저트메이트 모집글 수", example = "8")
-        int totalMateCount
+        int totalMateCount,
+
+        @Schema(description = "기간 내 평균 평점", example = "4.32")
+        BigDecimal averageRating
 ) {}
