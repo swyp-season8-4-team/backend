@@ -300,6 +300,10 @@ public class AuthServiceImpl implements AuthService {
                     EmailVerificationPurpose.PASSWORD_RESET
             );
 
+            if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
+                throw new PasswordMismatchException();
+            }
+
             // 사용자 조회
             UserEntity user = userService.findUserByEmail(request.getEmail());
 

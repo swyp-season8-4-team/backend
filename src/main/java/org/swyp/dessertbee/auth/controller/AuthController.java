@@ -282,7 +282,7 @@ public class AuthController {
             }
     )
     @ApiResponse(responseCode = "200", description = "비밀번호 재설정 성공")
-    @ApiErrorResponses({ErrorCode.INVALID_VERIFICATION_TOKEN, ErrorCode.JWT_TOKEN_EXPIRED, ErrorCode.USER_NOT_FOUND})
+    @ApiErrorResponses({ErrorCode.INVALID_VERIFICATION_TOKEN, ErrorCode.JWT_TOKEN_EXPIRED, ErrorCode.USER_NOT_FOUND, ErrorCode.PASSWORD_MISMATCH})
     @PostMapping("/password/reset")
     public ResponseEntity<PasswordResetResponse> resetPassword(
             @Parameter(description = "이메일 인증 토큰", required = true)
