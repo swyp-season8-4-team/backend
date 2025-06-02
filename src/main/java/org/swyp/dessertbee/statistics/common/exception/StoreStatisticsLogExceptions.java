@@ -6,7 +6,7 @@ import org.swyp.dessertbee.common.exception.ErrorCode;
 /**
  * 가게 로그 저장 관련 예외 클래스들을 모아둔 클래스
  */
-public class StoreLogExceptions {
+public class StoreStatisticsLogExceptions {
 
     /**
      * 디저트 메이트 생성/삭제
@@ -83,6 +83,19 @@ public class StoreLogExceptions {
 
         public StoreViewLogFailedException(String message) {
             super(ErrorCode.STORE_VIEW_LOG_CREATION_FAILED, message);
+        }
+    }
+
+    /**
+     * 사용자 지정 기간별 통계 요청 오류
+     */
+    public static class CustomPeriodStatisticsException extends BusinessException {
+        public CustomPeriodStatisticsException() {
+            super(ErrorCode.CUSTOM_PERIOD_STATISTICS_FAILED);
+        }
+
+        public CustomPeriodStatisticsException(String message) {
+            super(ErrorCode.CUSTOM_PERIOD_STATISTICS_FAILED, message);
         }
     }
 }

@@ -8,8 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.service.ImageService;
-import org.swyp.dessertbee.statistics.store.entity.StoreStatistics;
-import org.swyp.dessertbee.statistics.store.repostiory.StoreStatisticsRepository;
 import org.swyp.dessertbee.store.link.repository.StoreLinkRepository;
 import org.swyp.dessertbee.store.link.service.StoreLinkService;
 import org.swyp.dessertbee.store.menu.dto.response.MenuResponse;
@@ -61,7 +59,6 @@ public class StoreManageServiceImpl implements StoreManageService{
     private final StoreRepository storeRepository;
     private final StoreTagRelationRepository storeTagRelationRepository;
     private final StoreReviewRepository storeReviewRepository;
-    private final StoreStatisticsRepository storeStatisticsRepository;
     private final StoreOperatingHourRepository storeOperatingHourRepository;
     private final StoreHolidayRepository storeHolidayRepository;
     private final SavedStoreRepository savedStoreRepository;
@@ -113,13 +110,13 @@ public class StoreManageServiceImpl implements StoreManageService{
             storeLinkService.validateAndSaveStoreLinks(store, request.getStoreLinks());
 
             // 새로운 가게 통계 저장
-            storeStatisticsRepository.save(
+/*            storeStatisticsRepository.save(
                     StoreStatistics.builder()
                             .storeId(store.getStoreId())
                             .statDate(LocalDate.now())
                             .averageRating(BigDecimal.ZERO)
                             .build()
-            );
+            );*/
 
             // 이미지 처리
             storeImageHandler.updateStoreImages(store, storeImageFiles, null);
@@ -321,11 +318,11 @@ public class StoreManageServiceImpl implements StoreManageService{
             storeNoticeRepository.saveAll(nos);
 
             // 5. StoreStatistics soft delete
-            List<StoreStatistics> stats = storeStatisticsRepository.findAllByStoreIdAndDeletedAtIsNull(storeId);
+/*            List<StoreStatistics> stats = storeStatisticsRepository.findAllByStoreIdAndDeletedAtIsNull(storeId);
             for (StoreStatistics stat : stats) {
                 stat.softDelete();
             }
-            storeStatisticsRepository.saveAll(stats);
+            storeStatisticsRepository.saveAll(stats);*/
 
             // 6. StoreTagRelation 삭제
             storeTagRelationRepository.deleteByStoreId(storeId);

@@ -171,6 +171,7 @@ public class KakaoOAuthService {
         String accessToken = jwtUtil.createAccessToken(user.getUserUuid(), roles);
         String refreshToken = jwtUtil.createRefreshToken(user.getUserUuid(), keepLoggedIn);
         long expiresIn = jwtUtil.getACCESS_TOKEN_EXPIRE();
+        long refreshExpiresIn = keepLoggedIn ? jwtUtil.getLONG_REFRESH_TOKEN_EXPIRE() : jwtUtil.getSHORT_REFRESH_TOKEN_EXPIRE();
 
         // 리프레시 토큰 저장 (디바이스 ID 관리 포함)
         String usedDeviceId = tokenService.saveRefreshToken(
@@ -178,7 +179,8 @@ public class KakaoOAuthService {
                 refreshToken,
                 oauth2Response.getProvider(),
                 oauth2Response.getProviderId(),
-                deviceId
+                deviceId,
+                keepLoggedIn  // 추가된 파라미터
         );
 
         // 프로필 이미지 조회
@@ -187,7 +189,8 @@ public class KakaoOAuthService {
         String profileImageUrl = profileImages.isEmpty() ? null : profileImages.get(0);
 
         boolean isPreferenceSet = preferenceService.isUserPreferenceSet(user);
-        return LoginResponse.success(accessToken, refreshToken, expiresIn, user, profileImageUrl, usedDeviceId, isPreferenceSet);
+        return LoginResponse.success(accessToken, refreshToken, expiresIn, refreshExpiresIn,
+                user, profileImageUrl, usedDeviceId, isPreferenceSet);
     }
 
     /**

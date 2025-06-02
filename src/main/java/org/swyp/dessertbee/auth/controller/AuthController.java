@@ -6,7 +6,9 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -155,7 +157,7 @@ public class AuthController {
     ) {
 
         LoginResponse loginResponse = authService.login(request, deviceId, false);
-      
+
        // ✅ 활성 사용자 기록
         userStatisticsAdminService.trackUserActivity(String.valueOf(loginResponse.getUserUuid()));
 
@@ -164,6 +166,7 @@ public class AuthController {
 
     @Operation(
             summary = "로그아웃 (completed)",
+            security = @SecurityRequirement(name = "bearerAuth"),
             description = "현재 로그인된 사용자를 로그아웃합니다. 앱에서는 X-Device-ID 헤더를, 웹에서는 deviceId 쿠키를 사용하여 해당 디바이스의 세션만 종료합니다. 하지만 X-Device-ID 헤더를 전달받지 못한 경우에는 해당 유저가 가지고 있는 모든 리프레시 토큰을 무효화합니다.",
             parameters = {
                     @Parameter(
@@ -185,32 +188,36 @@ public class AuthController {
     @ApiResponse( responseCode = "200", description = "로그아웃 성공" )
     @PostMapping("/logout")
     public ResponseEntity<LogoutResponse> logout(
-            @Parameter(description = "JWT 액세스 토큰", required = true)
-            @RequestHeader("Authorization") String authHeader,
-            @Parameter(hidden = true) @RequestHeader(value = "X-Device-ID", required = false) String deviceId
+            @Parameter(hidden = true) @RequestHeader(value = "X-Device-ID", required = false) String deviceId,
+            HttpServletRequest request
     ) {
-        String accessToken = authHeader.substring(7);
+        String authHeader = request.getHeader("Authorization");
+        String accessToken = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            accessToken = authHeader.substring(7);
+        }
         LogoutResponse logoutResponse = authService.logout(accessToken, deviceId);
         return ResponseEntity.ok(logoutResponse);
     }
 
     @Operation(
             summary = "토큰 재발급 (completed)",
+            security = @SecurityRequirement(name = "refreshTokenAuth"),
             description = "리프레시 토큰을 사용하여 새로운 액세스 토큰을 발급받습니다. 앱에서는 X-Device-ID 헤더를, 웹에서는 deviceId 쿠키를 사용하여 디바이스를 식별합니다.",
             parameters = {
                     @Parameter(
                             name = "X-Device-ID",
-                            description = "디바이스 식별자 (앱 환경에서 사용)",
+                            description = "디바이스 식별자[앱 필수] (앱 환경에서 사용)",
                             in = ParameterIn.HEADER,
                             schema = @Schema(type = "string"),
                             required = false
                     ),
                     @Parameter(
                             name = "deviceId",
-                            description = "디바이스 식별자 쿠키 (웹 환경에서 사용). Nginx에서 X-Device-ID 헤더로 변환됩니다.",
+                            description = "디바이스 식별자 쿠키[웹 필수] (웹 환경에서 사용). Nginx에서 X-Device-ID 헤더로 변환됩니다.",
                             in = ParameterIn.COOKIE,
                             schema = @Schema(type = "string"),
-                            required = true
+                            required = false
                     )
             }
     )
@@ -218,11 +225,17 @@ public class AuthController {
     @ApiErrorResponses({ErrorCode.INVALID_CREDENTIALS, ErrorCode.INVALID_VERIFICATION_TOKEN, ErrorCode.JWT_TOKEN_EXPIRED, ErrorCode.DEVICE_ID_MISSING})
     @PostMapping("/token/refresh")
     public ResponseEntity<TokenResponse> refreshToken(
-            @Parameter(description = "리프레시 토큰 (Bearer 형식)", required = true)
-            @RequestHeader("Authorization") String authHeader,
-            @Parameter(hidden = true) @RequestHeader(value = "X-Device-ID", required = false) String deviceId
+            @Parameter(hidden = true) @RequestHeader(value = "X-Device-ID", required = false) String deviceId,
+            HttpServletRequest request
     ) {
-        String refreshToken = authHeader.substring(7);
+        // Authorization 헤더를 HttpServletRequest에서 추출
+        String authHeader = request.getHeader("Authorization");
+        String refreshToken = null;
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            refreshToken = authHeader.substring(7);
+        }
+
         TokenResponse tokenResponse = authService.refreshAccessToken(refreshToken, deviceId);
         return ResponseEntity.ok(tokenResponse);
     }
@@ -281,8 +294,12 @@ public class AuthController {
                     )
             }
     )
-    @ApiResponse(responseCode = "200", description = "비밀번호 재설정 성공")
-    @ApiErrorResponses({ErrorCode.INVALID_VERIFICATION_TOKEN, ErrorCode.JWT_TOKEN_EXPIRED, ErrorCode.USER_NOT_FOUND})
+    @ApiResponse(
+            responseCode = "200",
+            description = "비밀번호 재설정 성공",
+            content = @Content(schema = @Schema(implementation = PasswordResetResponse.class))
+    )
+    @ApiErrorResponses({ErrorCode.INVALID_VERIFICATION_TOKEN, ErrorCode.JWT_TOKEN_EXPIRED, ErrorCode.USER_NOT_FOUND, ErrorCode.PASSWORD_MISMATCH})
     @PostMapping("/password/reset")
     public ResponseEntity<PasswordResetResponse> resetPassword(
             @Parameter(description = "이메일 인증 토큰", required = true)
@@ -294,8 +311,7 @@ public class AuthController {
             )
             @Valid @RequestBody PasswordResetRequest request
     ) {
-        authService.resetPassword(request, verificationToken);
-        return ResponseEntity.ok().build();
+        PasswordResetResponse response = authService.resetPassword(request, verificationToken);
+        return ResponseEntity.ok(response);
     }
-
 }

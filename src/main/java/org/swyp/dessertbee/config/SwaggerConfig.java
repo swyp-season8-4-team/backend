@@ -30,20 +30,33 @@ public class SwaggerConfig {
                 .version("v1.0")
                 .description("DessertBee 서비스의 API 문서");
 
-        SecurityScheme securityScheme = new SecurityScheme()
+        // Access Token용 Security Scheme
+        SecurityScheme accessTokenScheme = new SecurityScheme()
                 .type(SecurityScheme.Type.HTTP)
                 .scheme("bearer")
                 .bearerFormat("JWT")
                 .in(SecurityScheme.In.HEADER)
-                .name("Authorization");
+                .name("Authorization")
+                .description("Access Token (Bearer 형식)");
 
-        SecurityRequirement securityRequirement = new SecurityRequirement().addList("bearerAuth");
+        // Refresh Token용 Security Scheme
+        SecurityScheme refreshTokenScheme = new SecurityScheme()
+                .type(SecurityScheme.Type.HTTP)
+                .scheme("bearer")
+                .bearerFormat("JWT")
+                .in(SecurityScheme.In.HEADER)
+                .name("Authorization")
+                .description("Refresh Token (Bearer 형식) - 토큰 재발급 전용");
+
+        // 전역 설정
+        SecurityRequirement defaultSecurity = new SecurityRequirement().addList("bearerAuth");
 
         OpenAPI openAPI = new OpenAPI()
                 .info(info)
-                .addSecurityItem(securityRequirement)
+                .addSecurityItem(defaultSecurity)
                 .components(new Components()
-                        .addSecuritySchemes("bearerAuth", securityScheme));
+                        .addSecuritySchemes("bearerAuth", accessTokenScheme)
+                        .addSecuritySchemes("refreshTokenAuth", refreshTokenScheme));
 
         if ("release".equals(activeProfile)) {
             Server server = new Server();
@@ -55,7 +68,6 @@ public class SwaggerConfig {
         return openAPI;
     }
 
-    // ✅ 전역 Platform-Type 헤더 설정 추가
     @Bean
     public OpenApiCustomizer platformTypeHeaderCustomizer() {
         return openApi -> {

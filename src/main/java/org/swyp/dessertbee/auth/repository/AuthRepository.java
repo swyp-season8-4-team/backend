@@ -3,6 +3,7 @@ package org.swyp.dessertbee.auth.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 import org.swyp.dessertbee.auth.entity.AuthEntity;
 import org.swyp.dessertbee.user.entity.UserEntity;
 
@@ -10,6 +11,7 @@ import java.util.Optional;
 import java.util.List;
 import java.util.UUID;
 
+@Repository
 public interface AuthRepository extends JpaRepository<AuthEntity, Integer> {
     /**
      * 사용자와 인증 제공자로 인증 정보 조회
