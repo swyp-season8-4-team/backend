@@ -21,6 +21,7 @@ import org.swyp.dessertbee.community.mate.repository.MateMemberRepository;
 import org.swyp.dessertbee.community.mate.repository.MateRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.exception.UserExceptions.*;
+import org.swyp.dessertbee.user.service.UserBlockService;
 import org.swyp.dessertbee.user.service.UserService;
 
 import java.util.List;
@@ -36,6 +37,7 @@ public class MateMemberServiceImpl implements MateMemberService {
     private final MateRepository mateRepository;
     private final ImageService imageService;
     private final UserService userService;
+    private final UserBlockService userBlockService;
 
 
     /**
@@ -235,12 +237,27 @@ public class MateMemberServiceImpl implements MateMemberService {
      **/
     @Override
     public List<MateMemberResponse> pendingMate(UUID mateUuid) {
+        // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
+        UserEntity currentUser = userService.getCurrentUser();
 
         MateUserIds validateMate = validateMate(mateUuid);
-        Long mateId = validateMate.getMateId();
 
-        List<MateMember> mateMembers = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndApplyStatus(validateMate.getMateId(), MateApplyStatus.PENDING);
+        List<Long> blockedUserIds = userBlockService.getBlockedUserIds(currentUser.getUserUuid());
 
+        List<MateMember> mateMembers;
+        if (blockedUserIds.isEmpty()) {
+            mateMembers = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndApplyStatus(
+                    validateMate.getMateId(),
+                    MateApplyStatus.PENDING
+            );
+        } else {
+            mateMembers = mateMemberRepository
+                    .findByMateIdAndDeletedAtIsNullAndApplyStatusAndUserIdNotIn(
+                            validateMate.getMateId(),
+                            MateApplyStatus.PENDING,
+                            blockedUserIds
+                    );
+        }
         //userId로 userUuid 조회
         List<UserEntity> users = mateMembers.stream()
                 .map(mateMember -> userService.findByIdAndDeletedAtIsNull(mateMember.getUserId()))
@@ -446,17 +463,31 @@ public class MateMemberServiceImpl implements MateMemberService {
         Long mateId = validate.getMateId();
         Long userId = validate.getUserId();
 
-        //디저트 메이트 멤버인지 확인
-        mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, userId)
-                .orElseThrow(() -> new MateMemberNotFoundExcption("디저트메이트 멤버가 아닙니다."));
+        Mate mate = mateRepository.findById(mateId).orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
 
-        MateMember mateMember = mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, userId)
-                .orElseThrow(() -> new MateMemberNotFoundExcption("디저트메이트 멤버가 아닙니다."));
         try {
-            mateMember.softDelete();
 
-            mateMemberRepository.save(mateMember);
+            //디저트 메이트 멤버인지 확인
+            mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, userId)
+                    .orElseThrow(() -> new MateMemberNotFoundExcption("디저트메이트 멤버가 아닙니다."));
+
+
+            MateMember leaveMember = mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, userId)
+                    .orElseThrow(() -> new MateMemberNotFoundExcption("디저트메이트 멤버가 아닙니다."));
+
+            leaveMember.softDelete();
+
+            mateMemberRepository.save(leaveMember);
+
+            Long currentMemberCount = mate.getCurrentMemberCount() -1;
+            // 모집 인원 삭제 처리
+            mate.updateCurrentMemberCount(currentMemberCount);
+
+            // 현재 인원이 정원보다 작아지면 다시 모집 가능하게
+            if (currentMemberCount < mate.getCapacity()) {
+                mate.updateRecruitYn(true);
+            }
 
         } catch (Exception e) {
             log.error("❌ 디저트메이트 멤버 탈퇴 중 오류 발생: " + e.getMessage());
