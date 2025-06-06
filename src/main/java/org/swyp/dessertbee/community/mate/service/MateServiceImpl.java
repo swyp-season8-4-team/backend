@@ -227,18 +227,20 @@ public class MateServiceImpl implements MateService {
     @Transactional
     public void updateMate(UUID mateUuid, MateCreateRequest request, MultipartFile mateImage) {
 
-        //mateId 존재 여부 확인
+        // 1. mate 존재 여부 확인
         Mate mate = mateRepository.findByMateUuidAndDeletedAtIsNull(mateUuid)
                 .orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
-        //위도,경도로 storeId 조회
-        Store store = storeRepository.findByName(request.getPlace().getPlaceName());
+        // 2. place 및 storeName 안전하게 처리
+        Store store = null;
+        if (request.getPlace() != null && request.getPlace().getPlaceName() != null) {
+            store = storeRepository.findByName(request.getPlace().getPlaceName());
+        }
 
+        // 3. mate 업데이트 (store가 null이어도 동작하도록 내부 로직 설계 필요)
         mate.update(request, store);
 
-
-
-        //기존 이미지 삭제 후 새 이미지 업로드
+        // 4. 이미지 업로드 처리
         if (mateImage != null && !mateImage.isEmpty()) {
             imageService.updateImage(ImageType.MATE, mate.getMateId(), mateImage, "mate/" + mate.getMateId());
         }
