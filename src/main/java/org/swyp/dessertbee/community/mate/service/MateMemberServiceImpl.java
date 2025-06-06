@@ -463,17 +463,31 @@ public class MateMemberServiceImpl implements MateMemberService {
         Long mateId = validate.getMateId();
         Long userId = validate.getUserId();
 
-        //디저트 메이트 멤버인지 확인
-        mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, userId)
-                .orElseThrow(() -> new MateMemberNotFoundExcption("디저트메이트 멤버가 아닙니다."));
+        Mate mate = mateRepository.findById(mateId).orElseThrow(() -> new MateNotFoundException("존재하지 않는 디저트메이트입니다."));
 
 
-        MateMember mateMember = mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, userId)
-                .orElseThrow(() -> new MateMemberNotFoundExcption("디저트메이트 멤버가 아닙니다."));
         try {
-            mateMember.softDelete();
 
-            mateMemberRepository.save(mateMember);
+            //디저트 메이트 멤버인지 확인
+            mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, userId)
+                    .orElseThrow(() -> new MateMemberNotFoundExcption("디저트메이트 멤버가 아닙니다."));
+
+
+            MateMember leaveMember = mateMemberRepository.findByMateIdAndUserIdAndDeletedAtIsNull(mateId, userId)
+                    .orElseThrow(() -> new MateMemberNotFoundExcption("디저트메이트 멤버가 아닙니다."));
+
+            leaveMember.softDelete();
+
+            mateMemberRepository.save(leaveMember);
+
+            Long currentMemberCount = mate.getCurrentMemberCount() -1;
+            // 모집 인원 삭제 처리
+            mate.updateCurrentMemberCount(currentMemberCount);
+
+            // 현재 인원이 정원보다 작아지면 다시 모집 가능하게
+            if (currentMemberCount < mate.getCapacity()) {
+                mate.updateRecruitYn(true);
+            }
 
         } catch (Exception e) {
             log.error("❌ 디저트메이트 멤버 탈퇴 중 오류 발생: " + e.getMessage());
