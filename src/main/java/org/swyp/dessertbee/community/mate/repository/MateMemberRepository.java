@@ -49,4 +49,6 @@ public interface MateMemberRepository extends JpaRepository<MateMember, Long> {
     Long countByMateId(Long mateId);
 
     Page<MateMember> findByUserIdAndDeletedAtIsNull(Long userId, Pageable pageable);
+
+    List<MateMember> findByMateIdAndDeletedAtIsNullAndApplyStatusAndUserIdNotIn(Long mateId, MateApplyStatus mateApplyStatus, List<Long> blockedUserIds);
 }
