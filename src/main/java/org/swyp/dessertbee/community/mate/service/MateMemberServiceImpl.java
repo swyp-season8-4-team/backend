@@ -21,6 +21,7 @@ import org.swyp.dessertbee.community.mate.repository.MateMemberRepository;
 import org.swyp.dessertbee.community.mate.repository.MateRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.exception.UserExceptions.*;
+import org.swyp.dessertbee.user.service.UserBlockService;
 import org.swyp.dessertbee.user.service.UserService;
 
 import java.util.List;
@@ -36,6 +37,7 @@ public class MateMemberServiceImpl implements MateMemberService {
     private final MateRepository mateRepository;
     private final ImageService imageService;
     private final UserService userService;
+    private final UserBlockService userBlockService;
 
 
     /**
@@ -235,12 +237,27 @@ public class MateMemberServiceImpl implements MateMemberService {
      **/
     @Override
     public List<MateMemberResponse> pendingMate(UUID mateUuid) {
+        // getCurrentUser() 내부에서 SecurityContext를 통해 현재 사용자 정보를 가져옴
+        UserEntity currentUser = userService.getCurrentUser();
 
         MateUserIds validateMate = validateMate(mateUuid);
-        Long mateId = validateMate.getMateId();
 
-        List<MateMember> mateMembers = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndApplyStatus(validateMate.getMateId(), MateApplyStatus.PENDING);
+        List<Long> blockedUserIds = userBlockService.getBlockedUserIds(currentUser.getUserUuid());
 
+        List<MateMember> mateMembers;
+        if (blockedUserIds.isEmpty()) {
+            mateMembers = mateMemberRepository.findByMateIdAndDeletedAtIsNullAndApplyStatus(
+                    validateMate.getMateId(),
+                    MateApplyStatus.PENDING
+            );
+        } else {
+            mateMembers = mateMemberRepository
+                    .findByMateIdAndDeletedAtIsNullAndApplyStatusAndUserIdNotIn(
+                            validateMate.getMateId(),
+                            MateApplyStatus.PENDING,
+                            blockedUserIds
+                    );
+        }
         //userId로 userUuid 조회
         List<UserEntity> users = mateMembers.stream()
                 .map(mateMember -> userService.findByIdAndDeletedAtIsNull(mateMember.getUserId()))
