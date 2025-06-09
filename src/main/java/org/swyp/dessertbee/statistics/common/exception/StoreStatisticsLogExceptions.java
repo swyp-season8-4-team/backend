@@ -98,4 +98,17 @@ public class StoreStatisticsLogExceptions {
             super(ErrorCode.CUSTOM_PERIOD_STATISTICS_FAILED, message);
         }
     }
+
+    /**
+     * 통계 기간 형식 오류
+     */
+    public static class InvalidPeriodTypeException extends BusinessException {
+        public InvalidPeriodTypeException() {
+            super(ErrorCode.INVALID_PERIOD_TYPE);
+        }
+
+        public InvalidPeriodTypeException(String message) {
+            super(ErrorCode.INVALID_PERIOD_TYPE, message);
+        }
+    }
 }

@@ -95,4 +95,7 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
    Optional<Store> findByStoreUuid(UUID storeUuid);
 
     List<Store> findAllByOwnerUuidAndDeletedAtIsNull(UUID ownerUuid);
+
+    @Query("SELECT s.averageRating FROM Store s WHERE s.storeId = :storeId")
+    BigDecimal findAverageRatingByStoreId(@Param("storeId") Long storeId);
 }

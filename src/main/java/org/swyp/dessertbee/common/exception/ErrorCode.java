@@ -84,6 +84,7 @@ public enum ErrorCode {
     STORE_SAVE_LOG_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "L005", "가게 저장 관련 로그 저장에 실패했습니다."),
     STORE_VIEW_LOG_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "L006", "가게 조회 후 로그 저장에 실패했습니다."),
     CUSTOM_PERIOD_STATISTICS_FAILED(HttpStatus.BAD_REQUEST, "L007", "사용자 지정 기간별 통계 조회에 실패했습니다."),
+    INVALID_PERIOD_TYPE(HttpStatus.BAD_REQUEST, "L008", "유효하지 않은 통계 기간 타입입니다."),
 
     // Store
     STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "존재하지 않는 가게입니다."),
