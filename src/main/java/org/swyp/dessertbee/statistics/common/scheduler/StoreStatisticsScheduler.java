@@ -35,7 +35,7 @@ public class StoreStatisticsScheduler {
     /**
      * 매일 00:00 기준 전날 통계를 집계하여 DAILY / WEEKLY / MONTHLY 데이터로 저장
      */
-    @Scheduled(cron = "0 3 0 * * *")
+    @Scheduled(cron = "0 0 0 * * *")
     public void aggregatePeriodicStatistics() {
         aggregatePeriodicStatistics(LocalDate.now().minusDays(1), false);
     }

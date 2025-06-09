@@ -16,7 +16,7 @@ public class SearchScheduler {
         searchService.syncPopularSearchesToDB();
     }
 
-    @Scheduled(cron = "0 3 0 * * *", zone = "Asia/Seoul") // 매일 00:03 실행
+    @Scheduled(cron = "0 10 0 * * *", zone = "Asia/Seoul") // 매일 00:10 실행
     public void midnightSyncPopularSearchesToDB() {
         searchService.midnightSyncPopularSearchesToDB();
     }
