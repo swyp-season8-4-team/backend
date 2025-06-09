@@ -3,19 +3,21 @@ package org.swyp.dessertbee.statistics.store.entity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
+import org.swyp.dessertbee.statistics.store.entity.enums.PeriodType;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "store_statistics_hourly", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"storeId", "date", "hour"})
+@Table(name = "store_statistics_periodic", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"storeId", "date", "periodType"})
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-@Schema(description = "시간 단위 통계 정보")
-public class StoreStatisticsHourly {
+@Schema(description = "선택일 기준 일간/주간/월간 통계 정보")
+public class StoreStatisticsPeriodic {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,17 +27,17 @@ public class StoreStatisticsHourly {
     @Schema(description = "가게 ID", example = "101")
     private Long storeId;
 
-    @Schema(description = "통계 일자", example = "2025-05-24")
+    @Schema(description = "기준일", example = "2025-06-09")
     private LocalDate date;
 
-    @Schema(description = "해당 날짜의 시간대 (0~23)", example = "13")
-    private int hour;
+    @Enumerated(EnumType.STRING)
+    @Schema(description = "통계 타입", example = "DAILY")
+    private PeriodType periodType;
 
-    // 통계 필드
-    @Schema(description = "해당 시간대 가게 조회 수", example = "120")
+    @Schema(description = "가게 조회 수", example = "120")
     private int viewCount;
 
-    @Schema(description = "해당 시간대 가게 저장 수", example = "35")
+    @Schema(description = "가게 저장 수", example = "35")
     private int saveCount;
 
     @Schema(description = "한줄 리뷰 수", example = "5")
@@ -49,6 +51,9 @@ public class StoreStatisticsHourly {
 
     @Schema(description = "디저트 메이트 모집글 수", example = "1")
     private int mateCount;
+
+    @Schema(description = "평균 평점", example = "4.25")
+    private BigDecimal averageRating;
 
     public void addViewCount(int delta) {
         this.viewCount += delta;
@@ -72,5 +77,9 @@ public class StoreStatisticsHourly {
 
     public void addMateCount(int delta) {
         this.mateCount += delta;
+    }
+
+    public void updateAverageRating(BigDecimal averageRating) {
+        this.averageRating = averageRating;
     }
 }
