@@ -20,7 +20,7 @@ public class CouponScheduler {
     private final CouponRepository couponRepository;
 
     @Transactional
-    @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul") // 매일 자정 실행
+    @Scheduled(cron = "0 3 0 * * *", zone = "Asia/Seoul") // 매일 00:03 실행
     public void expireCoupons() {
         log.info("[스케줄러 시작] 쿠폰 만료 체크 at {}", LocalDateTime.now());
         List<Coupon> expiredCoupons = couponRepository.findAllByHasExpiryDateIsTrueAndStatusIs(CouponStatus.CREATED)
