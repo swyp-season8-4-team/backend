@@ -36,4 +36,7 @@ public interface UserStoreService {
 
     /** 리스트에서 가게 삭제 */
     void removeStoreFromList(Long listId, UUID storeUuid);
+
+    /** 특정 사용자의 모든 스토어 리스트 삭제 (Hard Delete용) */
+    int deleteAllUserStoreLists(Long userId);
 }

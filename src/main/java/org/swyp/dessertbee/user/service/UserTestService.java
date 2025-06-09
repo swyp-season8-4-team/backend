@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.store.saved.repository.UserStoreListRepository;
+import org.swyp.dessertbee.store.saved.service.UserStoreService;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.user.repository.UserBlockRepository;
@@ -26,6 +27,7 @@ public class UserTestService {
     private final UserBlockRepository userBlockRepository;
     private final UserService userService;
     private final UserStoreListRepository userStoreListRepository;
+    private final UserStoreService userStoreService;
 
     /**
      * 현재 로그인한 사용자와 관련된 모든 데이터를 완전히 삭제합니다.
@@ -85,7 +87,7 @@ public class UserTestService {
     private void cleanupUserData(Long userId) {
         try {
             int deletedCount = userBlockRepository.deleteByUserId(userId);
-            deletedCount = deletedCount + userStoreListRepository.deleteByUserId(userId);
+            deletedCount = deletedCount + userStoreService.deleteAllUserStoreLists(userId);
             log.info("사용자 차단 데이터 정리 완료 - userId: {}, 삭제된 레코드: {} 개", userId, deletedCount);
         } catch (Exception e) {
             log.error("사용자 차단 데이터 정리 실패 - userId: {}", userId, e);
