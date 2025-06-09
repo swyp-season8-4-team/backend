@@ -34,7 +34,7 @@ import java.util.*;
 
 @Tag(name = "Store", description = "가게 관련 API")
 @RestController
-@RequestMapping("api/stores/")
+@RequestMapping("/api/stores")
 @RequiredArgsConstructor
 public class StoreController {
 
