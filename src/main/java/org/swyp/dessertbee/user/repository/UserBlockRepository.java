@@ -1,6 +1,7 @@
 package org.swyp.dessertbee.user.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -63,4 +64,11 @@ public interface UserBlockRepository extends JpaRepository<UserBlock, Long> {
      * ID 기반: 특정 사용자가 특정 사용자를 차단한 내역 조회
      */
     Optional<UserBlock> findByBlockerUserIdAndBlockedUserId(Long blockerUserId, Long blockedUserId);
+
+    /**
+     * ID 기반: 특정 사용자와 관련된 모든 차단 레코드 삭제 (blocker든 blocked든 상관없이)
+     */
+    @Modifying
+    @Query("DELETE FROM UserBlock ub WHERE ub.blockerUserId = :userId OR ub.blockedUserId = :userId")
+    int deleteByUserId(@Param("userId") Long userId);
 }
