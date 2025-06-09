@@ -34,7 +34,6 @@ public class StoreStatisticsService {
         if (storeId == null) throw new InvalidStoreUuidException();
 
         LocalDate from, to;
-        PeriodType queryType = periodType;
 
         switch (periodType) {
             case DAILY -> {
@@ -53,7 +52,7 @@ public class StoreStatisticsService {
         }
 
         List<StoreStatisticsPeriodic> stats = storeStatisticsPeriodicRepository.findByStoreIdAndDateBetweenAndPeriodType(
-                storeId, from, to, queryType
+                storeId, from, to, periodType
         );
 
         int view = 0, save = 0, reviewStore = 0, reviewComm = 0, coupon = 0, mate = 0;
@@ -89,13 +88,11 @@ public class StoreStatisticsService {
         if (storeId == null) throw new InvalidStoreUuidException();
 
         List<StoreStatisticsTrend> trends = switch (periodType) {
-            case DAILY -> {
-                LocalDate baseDate = selectedDate;
-                yield trendRepository.findByStoreIdAndDateAndPeriodType(storeId, baseDate, PeriodType.DAILY)
-                        .stream()
-                        .sorted(Comparator.comparing(t -> Integer.parseInt(t.getDisplayKey())))
-                        .toList();
-            }
+            case DAILY -> trendRepository.findByStoreIdAndDateAndPeriodType(storeId, selectedDate, PeriodType.DAILY)
+                    .stream()
+                    .sorted(Comparator.comparing(t -> Integer.parseInt(t.getDisplayKey())))
+                    .toList();
+
             case WEEKLY -> {
                 LocalDate monday = selectedDate.with(DayOfWeek.MONDAY);
                 LocalDate sunday = monday.plusDays(6);
@@ -104,6 +101,7 @@ public class StoreStatisticsService {
                         .sorted(Comparator.comparing(t -> DayOfWeek.valueOf(t.getDisplayKey())))
                         .toList();
             }
+
             case MONTHLY -> {
                 LocalDate firstDay = selectedDate.withDayOfMonth(1);
                 LocalDate lastDay = selectedDate.withDayOfMonth(selectedDate.lengthOfMonth());
