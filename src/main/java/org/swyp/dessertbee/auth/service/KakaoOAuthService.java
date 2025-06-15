@@ -58,7 +58,7 @@ public class KakaoOAuthService {
      * 인가 코드로 카카오 로그인 처리
      */
     @Transactional
-    public LoginResponse processKakaoLogin(String code, String deviceId) {
+    public LoginResponse processKakaoLogin(String code, String deviceId, boolean isApp) {
         try {
             log.info("카카오 로그인 처리 시작 - 인가 코드: {}", code);
 
@@ -70,7 +70,7 @@ public class KakaoOAuthService {
             OAuth2Response userInfo = getKakaoUserInfo(accessToken);
             log.info("카카오 사용자 정보 획득 성공 - 이메일: {}", userInfo.getEmail());
             // 3. 사용자 정보로 회원가입/로그인 처리
-            return processUserLogin(userInfo, deviceId);
+            return processUserLogin(userInfo, deviceId, isApp);
 
         } catch (Exception e) {
             log.error("카카오 로그인 처리 중 오류 발생", e);
@@ -151,7 +151,7 @@ public class KakaoOAuthService {
     /**
      * OAuth 사용자 정보로 로그인 처리 (회원가입 또는 로그인)
      */
-    private LoginResponse processUserLogin(OAuth2Response oauth2Response, String deviceId) {
+    private LoginResponse processUserLogin(OAuth2Response oauth2Response, String deviceId, boolean isApp) {
         // 이메일로 사용자 조회
         UserEntity user = userRepository.findByEmail(oauth2Response.getEmail())
                 .orElseGet(() -> registerNewUser(oauth2Response));
@@ -167,7 +167,7 @@ public class KakaoOAuthService {
                 .collect(Collectors.toList());
 
         // 토큰 발급
-        boolean keepLoggedIn = false; // 기본값
+        boolean keepLoggedIn = isApp; // 기본값
         String accessToken = jwtUtil.createAccessToken(user.getUserUuid(), roles);
         String refreshToken = jwtUtil.createRefreshToken(user.getUserUuid(), keepLoggedIn);
         long expiresIn = jwtUtil.getACCESS_TOKEN_EXPIRE();
