@@ -31,7 +31,7 @@ public class OAuthService {
      * @return 로그인 응답 (JWT 토큰 포함)
      */
     @Transactional
-    public LoginResponse processOAuthLogin(String code, String providerName, String deviceId) {
+    public LoginResponse processOAuthLogin(String code, String providerName, String deviceId, boolean isApp) {
         try {
             // 문자열을 AuthProvider enum으로 변환
             AuthProvider provider = AuthProvider.fromString(providerName);
@@ -42,7 +42,7 @@ public class OAuthService {
 
             // enum을 사용하여 적절한 서비스 호출
             return switch (provider) {
-                case KAKAO -> kakaoOAuthService.processKakaoLogin(code, deviceId);
+                case KAKAO -> kakaoOAuthService.processKakaoLogin(code, deviceId, isApp);
                 case APPLE -> appleOAuthService.processAppleLogin(code, null, null, null, deviceId, false); // false = WEB
                 // 추후 다른 OAuth 제공자 추가
                 default -> throw new InvalidProviderException("아직 구현되지 않은 OAuth 제공자입니다: " + provider.getProviderName());

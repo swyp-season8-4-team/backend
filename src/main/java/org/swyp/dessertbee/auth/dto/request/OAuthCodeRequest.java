@@ -19,7 +19,7 @@ public class OAuthCodeRequest {
 
     @Schema(
             description = "OAuth 제공자 (예: GOOGLE, KAKAO, NAVER)",
-            example = "GOOGLE",
+            example = "KAKAO",
             requiredMode = Schema.RequiredMode.REQUIRED
     )
     private String provider;    // OAuth 제공자
