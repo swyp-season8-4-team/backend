@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class OAuthCodeRequest {
     @Schema(
-            description = "OAuth 제공자로부터 받은 인가 코드",
+            description = "웹: OAuth 제공자로부터 받은 인가 코드 / 앱: SDK에서 획득한 액세스 토큰",
             example = "4/0AfJohXn...hcGvDEgFKixQ",
             requiredMode = Schema.RequiredMode.REQUIRED
     )

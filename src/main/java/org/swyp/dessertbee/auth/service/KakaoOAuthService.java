@@ -253,4 +253,25 @@ public class KakaoOAuthService {
         return String.format("%04d", new Random().nextInt(10000));
     }
 
+    /**
+     * 카카오 액세스 토큰으로 직접 로그인 처리 (Flutter 앱용)
+     */
+    @Transactional
+    public LoginResponse processKakaoTokenLogin(String accessToken, String deviceId, boolean isApp) {
+        try {
+            log.info("카카오 액세스 토큰 직접 로그인 처리 시작");
+
+            // 1. 액세스 토큰으로 사용자 정보 요청
+            OAuth2Response userInfo = getKakaoUserInfo(accessToken);
+            log.info("카카오 사용자 정보 획득 성공 - 이메일: {}", userInfo.getEmail());
+
+            // 2. 사용자 정보로 회원가입/로그인 처리
+            return processUserLogin(userInfo, deviceId, isApp);
+
+        } catch (Exception e) {
+            log.error("카카오 액세스 토큰 로그인 처리 중 오류 발생", e);
+            throw new OAuthServiceException("카카오 액세스 토큰 로그인 처리 중 오류가 발생했습니다.");
+        }
+    }
+
 }

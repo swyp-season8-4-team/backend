@@ -32,11 +32,18 @@ public class OAuthController {
     private final OAuthService oAuthService;
 
     /**
-     * OAuth 인가 코드로 로그인 처리 (POST 요청)
+     * OAuth 로그인 처리 (웹: 인가 코드, 앱: 액세스 토큰)
      */
     @Operation(
             summary = "OAuth 회원가입, 로그인 (completed)",
-            description = "OAuth로 새로운 사용자 등록 및 로그인. 앱에서는 X-Device-ID 헤더를, 웹에서는 deviceId 쿠키를 사용하여 디바이스를 식별합니다. 앱에서는 Platform-Type 헤더를 'app'으로 설정해주세요.",
+            description = """
+                    OAuth로 새로운 사용자 등록 및 로그인.
+                    
+                    **웹 환경**: OAuth 인가 코드를 code 필드에 전송
+                    **앱 환경**: SDK에서 획득한 액세스 토큰을 code 필드에 전송하고 Platform-Type 헤더를 'app'으로 설정
+                    
+                    앱에서는 X-Device-ID 헤더를, 웹에서는 deviceId 쿠키를 사용하여 디바이스를 식별합니다.
+                    """,
             parameters = {
                     @Parameter(
                             name = "X-Device-ID",
@@ -54,7 +61,7 @@ public class OAuthController {
                     )
             },
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "OAuth 인가 코드 요청 정보",
+                    description = "OAuth 요청 정보 (웹: 인가 코드, 앱: 액세스 토큰)",
                     required = true,
                     content = @Content(
                             mediaType = "application/json",
