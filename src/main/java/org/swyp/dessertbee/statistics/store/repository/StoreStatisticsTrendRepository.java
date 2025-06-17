@@ -6,11 +6,16 @@ import org.swyp.dessertbee.statistics.store.entity.enums.PeriodType;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface StoreStatisticsTrendRepository extends JpaRepository<StoreStatisticsTrend, Long> {
 
     List<StoreStatisticsTrend> findByStoreIdAndDateAndPeriodType(Long storeId, LocalDate date, PeriodType periodType);
 
     List<StoreStatisticsTrend> findByStoreIdAndDateBetweenAndPeriodType(Long storeId, LocalDate start, LocalDate end, PeriodType periodType);
+
+    Optional<StoreStatisticsTrend> findByStoreIdAndDateAndPeriodTypeAndDisplayKey(
+            Long storeId, LocalDate date, PeriodType periodType, String displayKey
+    );
 
 }

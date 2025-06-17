@@ -84,4 +84,8 @@ public class StoreStatisticsTrend {
     public void addMateCount(int delta) {
         this.mateCount += delta;
     }
+
+    public void updateAverageRating(BigDecimal averageRating) {
+        this.averageRating = averageRating;
+    }
 }
