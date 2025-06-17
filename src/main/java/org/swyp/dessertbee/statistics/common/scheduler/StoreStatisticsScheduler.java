@@ -177,20 +177,40 @@ public class StoreStatisticsScheduler {
                 default -> throw new InvalidPeriodTypeException();
             };
 
-            // 필드 매핑
-            StoreStatisticsTrend trend = StoreStatisticsTrend.builder()
-                    .storeId(storeId)
-                    .date(date)
-                    .periodType(type)
-                    .displayKey(displayKey)
-                    .viewCount(action.equals("view") ? delta : 0)
-                    .saveCount(action.equals("save") ? delta : 0)
-                    .reviewStoreCount(action.equals("review") && category.equals("store") ? delta : 0)
-                    .reviewCommCount(action.equals("review") && category.equals("comm") ? delta : 0)
-                    .couponUsedCount(action.equals("coupon") && category.equals("used") ? delta : 0)
-                    .mateCount(action.equals("mate") && category.equals("comm") ? delta : 0)
-                    .averageRating(roundedRating)
-                    .build();
+            // 기존 데이터 조회
+            Optional<StoreStatisticsTrend> existing = trendRepository.findByStoreIdAndDateAndPeriodTypeAndDisplayKey(
+                    storeId, date, type, displayKey
+            );
+
+            StoreStatisticsTrend trend = existing.orElseGet(() ->
+                    StoreStatisticsTrend.builder()
+                            .storeId(storeId)
+                            .date(date)
+                            .periodType(type)
+                            .displayKey(displayKey)
+                            .viewCount(0)
+                            .saveCount(0)
+                            .reviewStoreCount(0)
+                            .reviewCommCount(0)
+                            .couponUsedCount(0)
+                            .mateCount(0)
+                            .averageRating(roundedRating)
+                            .build()
+            );
+
+            switch (action + ":" + category) {
+                case "view:store" -> trend.addViewCount(delta);
+                case "save:store" -> trend.addSaveCount(delta);
+                case "review:store" -> trend.addReviewStoreCount(delta);
+                case "review:comm" -> trend.addReviewCommCount(delta);
+                case "coupon:used" -> trend.addCouponUsedCount(delta);
+                case "mate:comm" -> trend.addMateCount(delta);
+            }
+
+            // 평균 평점이 없는 경우에만 세팅 (계속 덮지 않도록)
+            if (trend.getAverageRating() == null && roundedRating != null) {
+                trend.updateAverageRating(roundedRating);
+            }
 
             trendRepository.save(trend);
         }
