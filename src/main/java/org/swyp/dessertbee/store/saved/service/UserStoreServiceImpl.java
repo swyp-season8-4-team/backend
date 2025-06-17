@@ -397,4 +397,31 @@ public class UserStoreServiceImpl implements UserStoreService {
             throw new UserStoreServiceException("리스트에 가게 저장 취소 처리 중 오류가 발생했습니다.");
         }
     }
+
+    /** 특정 사용자의 모든 스토어 리스트 삭제 (Hard Delete용) */
+    @Override
+    public int deleteAllUserStoreLists(Long userId) {
+        try {
+            UserEntity user = userRepository.findById(userId)
+                    .orElseThrow(UserNotFoundException::new);
+
+            // 해당 사용자의 모든 저장 리스트 조회
+            List<UserStoreList> userStoreLists = userStoreListRepository.findByUser(user);
+
+            // 각 리스트의 저장된 가게들 먼저 삭제
+            for (UserStoreList list : userStoreLists) {
+                savedStoreRepository.deleteByUserStoreList(list);
+            }
+
+            // 스토어 리스트 삭제
+            int deletedCount = userStoreListRepository.deleteByUserId(userId);
+
+            log.info("사용자 ID {} 의 모든 스토어 리스트 삭제 완료 - {} 개 리스트", userId, deletedCount);
+            return deletedCount;
+
+        } catch (Exception e) {
+            log.error("사용자 스토어 리스트 삭제 처리 중 오류 발생 - userId: {}", userId, e);
+            throw new UserStoreServiceException("사용자 스토어 리스트 삭제 처리 중 오류가 발생했습니다.");
+        }
+    }
 }
