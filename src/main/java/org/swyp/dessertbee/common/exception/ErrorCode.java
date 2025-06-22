@@ -35,7 +35,7 @@ public enum ErrorCode {
 
     // OAuth
     INVALID_PROVIDER(HttpStatus.BAD_REQUEST, "O001", "지원되지 않는 OAuth 제공자입니다."),
-
+    OAUTH_ACCOUNT_LINKING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "O002", "OAuth 계정 연결에 실패했습니다."),
 
     // JWT
     JWT_SIGNATURE_INVALID(HttpStatus.UNAUTHORIZED, "J001", "유효하지 않은 JWT 서명입니다."),
