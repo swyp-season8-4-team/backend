@@ -285,7 +285,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
 
         // 연관된 인증 정보도 비활성화
-        user.getAuths().forEach(AuthEntity::deactivate);
+        user.getAuthEntities().forEach(AuthEntity::deactivate);
 
         log.info("해당 유저의 계정이 비활성화 처리 되었습니다 : {}", user.getEmail());
     }
