@@ -31,6 +31,7 @@ import org.swyp.dessertbee.role.entity.RoleType;
 import org.swyp.dessertbee.role.repository.RoleRepository;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
+import org.swyp.dessertbee.auth.service.OAuthAccountLinkingService;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -59,6 +60,7 @@ public class AppleOAuthService {
     private final PreferenceService preferenceService;
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final OAuthAccountLinkingService oAuthAccountLinkingService;
 
     @Value("${APPLE_TEAM_ID}")
     private String teamId;
@@ -379,7 +381,7 @@ public class AppleOAuthService {
     }
 
     /**
-     * 사용자 로그인 또는 회원가입 처리
+     * 사용자 로그인 또는 회원가입 처리 (자동 계정 연결 포함)
      *
      * @param oauth2Response 표준화된 OAuth2Response 객체
      * @param deviceId 디바이스 식별자
@@ -387,6 +389,8 @@ public class AppleOAuthService {
      * @return 로그인 응답 객체
      */
     private LoginResponse processUserLogin(OAuth2Response oauth2Response, String deviceId, boolean isApp) {
+        log.info("애플 OAuth 로그인 처리 시작 - 이메일: {}, 제공자: {}", oauth2Response.getEmail(), oauth2Response.getProvider());
+        
         // 디바이스 ID가 없는 경우 생성
         String effectiveDeviceId = deviceId;
         if (effectiveDeviceId == null || effectiveDeviceId.isEmpty()) {
@@ -394,8 +398,16 @@ public class AppleOAuthService {
             log.debug("새 디바이스 ID 생성: {}, 앱: {}", effectiveDeviceId, isApp);
         }
 
-        UserEntity user = userRepository.findByEmail(oauth2Response.getEmail())
-                .orElseGet(() -> registerNewUser(oauth2Response, isApp));
+        // OAuth 자동 계정 통합 서비스를 사용하여 사용자 조회 및 계정 연결
+        UserEntity user = oAuthAccountLinkingService.processOAuthUserLogin(oauth2Response, effectiveDeviceId, isApp);
+        
+        // 만약 새로운 사용자인 경우 회원가입 처리
+        if (user.getId() == null) {
+            log.info("새로운 애플 사용자 회원가입 - 이메일: {}", oauth2Response.getEmail());
+            user = registerNewUser(oauth2Response, isApp);
+        } else {
+            log.info("기존 사용자 애플 로그인 성공 (자동 계정 연결 포함) - 사용자 ID: {}, 이메일: {}", user.getId(), user.getEmail());
+        }
 
         List<String> roles = user.getUserRoles().stream()
                 .map(userRole -> userRole.getRole().getName().getRoleName())
@@ -424,8 +436,15 @@ public class AppleOAuthService {
 
         boolean isPreferenceSet = preferenceService.isUserPreferenceSet(user);
 
+        // 계정 연결 정보 확인
+        boolean accountLinkingOccurred = oAuthAccountLinkingService.isAccountLinkingOccurred();
+        java.util.List<String> linkedProviders = oAuthAccountLinkingService.getUserOAuthProviders(user.getEmail());
+        
+        // 계정 연결 상태 초기화
+        oAuthAccountLinkingService.resetAccountLinkingStatus();
+
         return LoginResponse.success(accessToken, refreshToken, expiresIn, refreshExpiresIn,
-                user, profileImageUrl, usedDeviceId, isPreferenceSet);
+                user, profileImageUrl, usedDeviceId, isPreferenceSet, accountLinkingOccurred, linkedProviders);
     }
 
     /**

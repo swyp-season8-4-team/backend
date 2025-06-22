@@ -9,6 +9,7 @@ import org.swyp.dessertbee.auth.dto.response.LoginResponse;
 import org.swyp.dessertbee.auth.enums.AuthProvider;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.auth.exception.OAuthExceptions.*;
+import java.util.List;
 
 /**
  * OAuth 인증 처리를 담당하는 공통 서비스
@@ -20,6 +21,7 @@ public class OAuthService {
 
     private final KakaoOAuthService kakaoOAuthService;
     private final AppleOAuthService appleOAuthService;
+    private final OAuthAccountLinkingService oAuthAccountLinkingService;
 
     /**
      * OAuth 로그인 처리 (웹: 인가 코드, 앱: 액세스 토큰)
@@ -110,5 +112,19 @@ public class OAuthService {
             log.error("Apple 로그인 처리 중 오류 발생 - 플랫폼: {}", isApp ? "APP" : "WEB", e);
             throw new OAuthAuthenticationException("Apple 로그인 처리 중 오류가 발생했습니다.");
         }
+    }
+
+    /**
+     * 사용자의 OAuth 제공자 목록 조회
+     */
+    public List<String> getOAuthProvidersByEmail(String email) {
+        return oAuthAccountLinkingService.getUserOAuthProviders(email);
+    }
+
+    /**
+     * 사용자의 OAuth 계정 수 조회
+     */
+    public long getOAuthProviderCount(String email) {
+        return oAuthAccountLinkingService.getOAuthProviderCount(email);
     }
 }
