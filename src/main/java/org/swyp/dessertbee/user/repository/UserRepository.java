@@ -80,4 +80,41 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     @Query("SELECT u FROM UserEntity u WHERE u.id = :userId") // deletedAt 조건 없음
     Optional<UserEntity> findByIdIncludingDeleted(@Param("userId") Long userId);
+
+    /**
+     * 이메일과 OAuth 제공자로 사용자 조회 (auth 테이블과 조인)
+     * 특정 OAuth 제공자로 가입한 사용자를 찾을 때 사용
+     *
+     * @param email 사용자 이메일
+     * @param provider OAuth 제공자 (apple, kakao 등)
+     * @return UserEntity
+     */
+    @Query("SELECT u FROM UserEntity u " +
+           "JOIN u.authEntities a " +
+           "WHERE u.email = :email AND a.provider = :provider AND u.deletedAt IS NULL")
+    Optional<UserEntity> findByEmailAndOAuthProvider(@Param("email") String email, @Param("provider") String provider);
+
+    /**
+     * 이메일로 가입된 모든 OAuth 제공자 조회
+     * 사용자가 어떤 OAuth 제공자로 가입했는지 확인할 때 사용
+     *
+     * @param email 사용자 이메일
+     * @return OAuth 제공자 목록
+     */
+    @Query("SELECT DISTINCT a.provider FROM UserEntity u " +
+           "JOIN u.authEntities a " +
+           "WHERE u.email = :email AND u.deletedAt IS NULL")
+    List<String> findOAuthProvidersByEmail(@Param("email") String email);
+
+    /**
+     * 이메일로 가입된 OAuth 계정 수 조회
+     * 사용자가 여러 OAuth 제공자로 가입했는지 확인할 때 사용
+     *
+     * @param email 사용자 이메일
+     * @return OAuth 계정 수
+     */
+    @Query("SELECT COUNT(DISTINCT a.provider) FROM UserEntity u " +
+           "JOIN u.authEntities a " +
+           "WHERE u.email = :email AND u.deletedAt IS NULL")
+    long countOAuthProvidersByEmail(@Param("email") String email);
 }
