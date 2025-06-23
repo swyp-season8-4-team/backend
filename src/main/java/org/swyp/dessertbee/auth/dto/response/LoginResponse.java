@@ -94,6 +94,22 @@ public class LoginResponse {
     private Boolean fromApp = false; // 앱에서 로그인 여부
 
     @Schema(
+            description = "OAuth 계정 자동 연결 발생 여부",
+            example = "true",
+            defaultValue = "false",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    )
+    @Builder.Default
+    private Boolean accountLinkingOccurred = false; // OAuth 계정 자동 연결 여부
+
+    @Schema(
+            description = "연결된 OAuth 제공자 목록",
+            example = "[\"apple\", \"kakao\"]",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    )
+    private java.util.List<String> linkedProviders; // 연결된 OAuth 제공자 목록
+
+    @Schema(
             description = "이미지 관련 오류 메시지 (이미지 업로드 실패 시에만 존재)",
             implementation = ErrorResponse.class,
             nullable = true,
@@ -135,6 +151,41 @@ public class LoginResponse {
                 .deviceId(deviceId)
                 .isPreferenceSet(isPreferenceSet)
                 .fromApp(false)
+                .accountLinkingOccurred(false)
+                .build();
+    }
+
+    /**
+     * 로그인 성공 응답 생성 (계정 연결 정보 포함)
+     * @param accessToken JWT 액세스 토큰
+     * @param refreshToken JWT 리프레시 토큰
+     * @param expiresIn 액세스 토큰 만료 시간
+     * @param user 사용자 엔티티
+     * @param profileImageUrl 프로필 이미지 URL
+     * @param deviceId 디바이스 식별자
+     * @param isPreferenceSet 선호도 설정 여부
+     * @param accountLinkingOccurred 계정 연결 발생 여부
+     * @param linkedProviders 연결된 OAuth 제공자 목록
+     * @return 로그인 응답 객체
+     */
+    public static LoginResponse success(String accessToken, String refreshToken, long expiresIn, long refreshExpiresIn,
+                                        UserEntity user, String profileImageUrl, String deviceId, boolean isPreferenceSet,
+                                        boolean accountLinkingOccurred, java.util.List<String> linkedProviders) {
+        return LoginResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType("Bearer")
+                .expiresIn(expiresIn)
+                .refreshExpiresIn(refreshExpiresIn)
+                .userUuid(user.getUserUuid())
+                .email(user.getEmail())
+                .nickname(user.getNickname())
+                .profileImageUrl(profileImageUrl)
+                .deviceId(deviceId)
+                .isPreferenceSet(isPreferenceSet)
+                .fromApp(false)
+                .accountLinkingOccurred(accountLinkingOccurred)
+                .linkedProviders(linkedProviders)
                 .build();
     }
 

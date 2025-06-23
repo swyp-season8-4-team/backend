@@ -59,6 +59,7 @@ public class AppleOAuthService {
     private final PreferenceService preferenceService;
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final OAuthAccountLinkingService oAuthAccountLinkingService;
 
     @Value("${APPLE_TEAM_ID}")
     private String teamId;
@@ -93,7 +94,7 @@ public class AppleOAuthService {
      */
     @Transactional
     public LoginResponse processAppleLogin(String code, String idToken, String state, AppleUserInfo userInfo,
-                                           String deviceId, boolean isApp) {
+                                        String deviceId, boolean isApp) {
         try {
             log.info("애플 로그인 처리 시작 - 앱: {}, ID 토큰 존재 여부: {}, 코드 존재 여부: {}",
                     isApp, idToken != null, code != null);
@@ -379,7 +380,7 @@ public class AppleOAuthService {
     }
 
     /**
-     * 사용자 로그인 또는 회원가입 처리
+     * 사용자 로그인 또는 회원가입 처리 (자동 계정 연결 포함)
      *
      * @param oauth2Response 표준화된 OAuth2Response 객체
      * @param deviceId 디바이스 식별자
@@ -387,6 +388,8 @@ public class AppleOAuthService {
      * @return 로그인 응답 객체
      */
     private LoginResponse processUserLogin(OAuth2Response oauth2Response, String deviceId, boolean isApp) {
+        log.info("애플 OAuth 로그인 처리 시작 - 이메일: {}, 제공자: {}", oauth2Response.getEmail(), oauth2Response.getProvider());
+        
         // 디바이스 ID가 없는 경우 생성
         String effectiveDeviceId = deviceId;
         if (effectiveDeviceId == null || effectiveDeviceId.isEmpty()) {
@@ -394,8 +397,23 @@ public class AppleOAuthService {
             log.debug("새 디바이스 ID 생성: {}, 앱: {}", effectiveDeviceId, isApp);
         }
 
-        UserEntity user = userRepository.findByEmail(oauth2Response.getEmail())
-                .orElseGet(() -> registerNewUser(oauth2Response, isApp));
+        // 1. OAuth 사용자 조회 (기존 사용자 또는 새로운 사용자)
+        UserEntity user = oAuthAccountLinkingService.findOrCreateUser(oauth2Response);
+        
+        // 2. 새로운 사용자인 경우 회원가입 처리
+        if (user.getId() == null) {
+            log.info("새로운 애플 사용자 회원가입 - 이메일: {}", oauth2Response.getEmail());
+            user = registerNewUser(oauth2Response, isApp);
+        } else {
+            // 3. 기존 사용자인 경우 계정 연결 필요 여부 확인 및 처리
+            log.info("기존 사용자 애플 로그인 - 사용자 ID: {}, 이메일: {}", user.getId(), user.getEmail());
+            
+            // 동일한 OAuth 제공자로 가입된 사용자가 아닌 경우 계정 연결 처리
+            if (!userRepository.findByEmailAndOAuthProvider(user.getEmail(), oauth2Response.getProvider()).isPresent()) {
+                log.info("기존 사용자에게 새로운 OAuth 제공자 연결 시작 - 이메일: {}, 제공자: {}", user.getEmail(), oauth2Response.getProvider());
+                user = oAuthAccountLinkingService.linkOAuthProviderToUser(user, oauth2Response, effectiveDeviceId, isApp);
+            }
+        }
 
         List<String> roles = user.getUserRoles().stream()
                 .map(userRole -> userRole.getRole().getName().getRoleName())
@@ -424,8 +442,12 @@ public class AppleOAuthService {
 
         boolean isPreferenceSet = preferenceService.isUserPreferenceSet(user);
 
+        // 계정 연결 정보 확인 (Repository 직접 사용)
+        boolean accountLinkingOccurred = user.getAuthEntities().size() > 1; // 여러 OAuth 제공자 연결된 경우
+        java.util.List<String> linkedProviders = userRepository.findOAuthProvidersByEmail(user.getEmail());
+
         return LoginResponse.success(accessToken, refreshToken, expiresIn, refreshExpiresIn,
-                user, profileImageUrl, usedDeviceId, isPreferenceSet);
+                user, profileImageUrl, usedDeviceId, isPreferenceSet, accountLinkingOccurred, linkedProviders);
     }
 
     /**
