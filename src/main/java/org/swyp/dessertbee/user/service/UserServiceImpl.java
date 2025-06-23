@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.auth.entity.AuthEntity;
-import org.swyp.dessertbee.auth.repository.AuthRepository;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
@@ -25,7 +24,6 @@ import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.MbtiRepository;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 /**

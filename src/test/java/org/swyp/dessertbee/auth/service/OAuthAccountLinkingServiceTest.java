@@ -10,12 +10,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.swyp.dessertbee.auth.entity.AuthEntity;
 import org.swyp.dessertbee.auth.oauth2.OAuth2Response;
 import org.swyp.dessertbee.auth.repository.AuthRepository;
-import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 /**
  * OAuthAccountLinkingService 단위 테스트
@@ -39,53 +36,15 @@ class OAuthAccountLinkingServiceTest {
     private AuthRepository authRepository;
 
     @InjectMocks
-    private OAuthAccountLinkingService oAuthAccountLinkingService;
+    private OAuthAccountLinkingServiceImpl oAuthAccountLinkingService;
 
+    private OAuth2Response oauth2Response;
     private UserEntity existingUser;
-    private OAuth2Response appleOAuthResponse;
-    private OAuth2Response kakaoOAuthResponse;
-    private AuthEntity appleAuth;
+    private AuthEntity existingAuth;
 
     @BeforeEach
     void setUp() {
-        // 기존 사용자 설정 (Apple로 가입된 사용자)
-        existingUser = UserEntity.builder()
-                .id(1L)
-                .userUuid(UUID.randomUUID())
-                .email("test@example.com")
-                .nickname("테스트사용자")
-                .build();
-
-        // Apple OAuth 응답
-        appleOAuthResponse = new OAuth2Response() {
-            @Override
-            public String getProvider() {
-                return "apple";
-            }
-
-            @Override
-            public String getProviderId() {
-                return "apple_123456";
-            }
-
-            @Override
-            public String getEmail() {
-                return "test@example.com";
-            }
-
-            @Override
-            public String getNickname() {
-                return "테스트사용자";
-            }
-
-            @Override
-            public String getImageUrl() {
-                return null;
-            }
-        };
-
-        // Kakao OAuth 응답
-        kakaoOAuthResponse = new OAuth2Response() {
+        oauth2Response = new OAuth2Response() {
             @Override
             public String getProvider() {
                 return "kakao";
@@ -93,7 +52,7 @@ class OAuthAccountLinkingServiceTest {
 
             @Override
             public String getProviderId() {
-                return "kakao_789012";
+                return "123456789";
             }
 
             @Override
@@ -103,235 +62,159 @@ class OAuthAccountLinkingServiceTest {
 
             @Override
             public String getNickname() {
-                return "테스트사용자";
+                return "테스트유저";
             }
 
             @Override
             public String getImageUrl() {
-                return null;
+                return "https://example.com/profile.jpg";
             }
         };
 
-        // Apple Auth 엔티티
-        appleAuth = AuthEntity.builder()
+        existingUser = UserEntity.builder()
+                .id(1L)
+                .email("test@example.com")
+                .nickname("기존유저")
+                .userUuid(UUID.randomUUID())
+                .build();
+
+        existingAuth = AuthEntity.builder()
                 .id(1)
-                .user(existingUser)
                 .provider("apple")
-                .providerId("apple_123456")
-                .deviceId("device_apple")
+                .providerId("987654321")
+                .user(existingUser)
                 .active(true)
                 .build();
 
-        existingUser.getAuthEntities().add(appleAuth);
+        existingUser.getAuthEntities().add(existingAuth);
     }
 
     @Test
-    @DisplayName("동일한 OAuth 제공자로 가입된 사용자 발견 시 기존 사용자 반환")
-    void shouldReturnExistingUserWhenSameProviderExists() {
+    @DisplayName("새로운 사용자 생성이 필요한 경우")
+    void shouldCreateNewUserWhenNoExistingUser() {
         // given
-        when(userRepository.findByEmailAndOAuthProvider("test@example.com", "apple"))
+        when(userRepository.findByEmailAndOAuthProvider(anyString(), anyString()))
+                .thenReturn(Optional.empty());
+        when(userRepository.findByEmail(anyString()))
+                .thenReturn(Optional.empty());
+
+        // when
+        UserEntity result = oAuthAccountLinkingService.findOrCreateUser(oauth2Response);
+
+        // then
+        assertThat(result.getEmail()).isEqualTo("test@example.com");
+        assertThat(result.getNickname()).isEqualTo("테스트유저");
+        assertThat(result.getId()).isNull(); // 새로운 사용자는 ID가 null
+    }
+
+    @Test
+    @DisplayName("동일한 OAuth 제공자로 가입된 사용자가 있는 경우")
+    void shouldReturnExistingUserWithSameProvider() {
+        // given
+        when(userRepository.findByEmailAndOAuthProvider(anyString(), anyString()))
                 .thenReturn(Optional.of(existingUser));
 
         // when
-        UserEntity result = oAuthAccountLinkingService.processOAuthUserLogin(appleOAuthResponse, "device_apple", true);
+        UserEntity result = oAuthAccountLinkingService.findOrCreateUser(oauth2Response);
 
         // then
         assertThat(result).isEqualTo(existingUser);
         assertThat(result.getId()).isEqualTo(1L);
-        verify(userRepository, times(1)).findByEmailAndOAuthProvider("test@example.com", "apple");
-        verify(userRepository, never()).findByEmail(anyString());
-        verify(authRepository, never()).save(any(AuthEntity.class));
     }
 
     @Test
-    @DisplayName("동일한 이메일로 다른 OAuth 제공자 가입 시 자동 계정 연결")
-    void shouldAutomaticallyLinkAccountWhenDifferentProviderExists() {
+    @DisplayName("동일한 이메일로 가입된 기존 사용자가 있는 경우")
+    void shouldReturnExistingUserWithSameEmail() {
         // given
-        when(userRepository.findByEmailAndOAuthProvider("test@example.com", "kakao"))
+        when(userRepository.findByEmailAndOAuthProvider(anyString(), anyString()))
                 .thenReturn(Optional.empty());
-        when(userRepository.findByEmail("test@example.com"))
+        when(userRepository.findByEmail(anyString()))
                 .thenReturn(Optional.of(existingUser));
-        when(userRepository.findOAuthProvidersByEmail("test@example.com"))
-                .thenReturn(Arrays.asList("apple"));
-        when(authRepository.findByProviderAndProviderId("kakao", "kakao_789012"))
+
+        // when
+        UserEntity result = oAuthAccountLinkingService.findOrCreateUser(oauth2Response);
+
+        // then
+        assertThat(result).isEqualTo(existingUser);
+        assertThat(result.getId()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("기존 사용자에게 새로운 OAuth 제공자 자동 연결")
+    void shouldLinkOAuthProviderToExistingUser() {
+        // given
+        when(authRepository.findByProviderAndProviderId(anyString(), anyString()))
                 .thenReturn(Optional.empty());
         when(authRepository.save(any(AuthEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
-        UserEntity result = oAuthAccountLinkingService.processOAuthUserLogin(kakaoOAuthResponse, "device_kakao", true);
+        UserEntity result = oAuthAccountLinkingService.linkOAuthProviderToUser(
+                existingUser, oauth2Response, "device123", false);
 
         // then
         assertThat(result).isEqualTo(existingUser);
         assertThat(result.getAuthEntities()).hasSize(2);
         assertThat(result.getAuthEntities()).anyMatch(auth -> 
-                auth.getProvider().equals("apple") && auth.getProviderId().equals("apple_123456"));
+                auth.getProvider().equals("apple") && auth.getProviderId().equals("987654321"));
         assertThat(result.getAuthEntities()).anyMatch(auth -> 
-                auth.getProvider().equals("kakao") && auth.getProviderId().equals("kakao_789012"));
-        
-        verify(authRepository, times(1)).save(any(AuthEntity.class));
-        assertThat(oAuthAccountLinkingService.isAccountLinkingOccurred()).isTrue();
+                auth.getProvider().equals("kakao") && auth.getProviderId().equals("123456789"));
     }
 
     @Test
-    @DisplayName("새로운 사용자 가입 시 ID가 null인 UserEntity 반환")
-    void shouldReturnNewUserWhenNoExistingUserFound() {
+    @DisplayName("이미 해당 OAuth 제공자로 연결된 계정이 있는 경우")
+    void shouldNotLinkWhenProviderAlreadyExists() {
         // given
-        when(userRepository.findByEmailAndOAuthProvider("new@example.com", "apple"))
-                .thenReturn(Optional.empty());
-        when(userRepository.findByEmail("new@example.com"))
-                .thenReturn(Optional.empty());
-
-        OAuth2Response newUserOAuthResponse = new OAuth2Response() {
-            @Override
-            public String getProvider() {
-                return "apple";
-            }
-
-            @Override
-            public String getProviderId() {
-                return "apple_new";
-            }
-
-            @Override
-            public String getEmail() {
-                return "new@example.com";
-            }
-
-            @Override
-            public String getNickname() {
-                return "새사용자";
-            }
-
-            @Override
-            public String getImageUrl() {
-                return null;
-            }
-        };
+        when(authRepository.findByProviderAndProviderId(anyString(), anyString()))
+                .thenReturn(Optional.of(existingAuth));
 
         // when
-        UserEntity result = oAuthAccountLinkingService.processOAuthUserLogin(newUserOAuthResponse, "device_new", true);
-
-        // then
-        assertThat(result.getId()).isNull();
-        assertThat(result.getEmail()).isEqualTo("new@example.com");
-        assertThat(result.getNickname()).isEqualTo("새사용자");
-        verify(authRepository, never()).save(any(AuthEntity.class));
-        assertThat(oAuthAccountLinkingService.isAccountLinkingOccurred()).isFalse();
-    }
-
-    @Test
-    @DisplayName("이미 연결된 OAuth 제공자인 경우 중복 연결 방지")
-    void shouldPreventDuplicateLinkingWhenProviderAlreadyExists() {
-        // given
-        when(userRepository.findByEmailAndOAuthProvider("test@example.com", "apple"))
-                .thenReturn(Optional.empty());
-        when(userRepository.findByEmail("test@example.com"))
-                .thenReturn(Optional.of(existingUser));
-        when(userRepository.findOAuthProvidersByEmail("test@example.com"))
-                .thenReturn(Arrays.asList("apple"));
-
-        // when
-        UserEntity result = oAuthAccountLinkingService.processOAuthUserLogin(appleOAuthResponse, "device_apple", true);
+        UserEntity result = oAuthAccountLinkingService.linkOAuthProviderToUser(
+                existingUser, oauth2Response, "device123", false);
 
         // then
         assertThat(result).isEqualTo(existingUser);
         assertThat(result.getAuthEntities()).hasSize(1); // 기존 Apple 계정만 존재
-        verify(authRepository, never()).save(any(AuthEntity.class));
-        assertThat(oAuthAccountLinkingService.isAccountLinkingOccurred()).isFalse();
+    }
+
+    @Test
+    @DisplayName("사용자가 이미 해당 OAuth 제공자로 가입되어 있는 경우")
+    void shouldNotLinkWhenUserAlreadyHasProvider() {
+        // given
+        AuthEntity kakaoAuth = AuthEntity.builder()
+                .id(2)
+                .provider("kakao")
+                .providerId("123456789")
+                .user(existingUser)
+                .active(true)
+                .build();
+        existingUser.getAuthEntities().add(kakaoAuth);
+
+        when(authRepository.findByProviderAndProviderId(anyString(), anyString()))
+                .thenReturn(Optional.empty());
+
+        // when
+        UserEntity result = oAuthAccountLinkingService.linkOAuthProviderToUser(
+                existingUser, oauth2Response, "device123", false);
+
+        // then
+        assertThat(result).isEqualTo(existingUser);
+        assertThat(result.getAuthEntities()).hasSize(2); // 기존 Apple, Kakao 계정만 존재
     }
 
     @Test
     @DisplayName("계정 연결 실패 시 예외 발생")
     void shouldThrowExceptionWhenAccountLinkingFails() {
         // given
-        when(userRepository.findByEmailAndOAuthProvider("test@example.com", "kakao"))
-                .thenReturn(Optional.empty());
-        when(userRepository.findByEmail("test@example.com"))
-                .thenReturn(Optional.of(existingUser));
-        when(userRepository.findOAuthProvidersByEmail("test@example.com"))
-                .thenReturn(Arrays.asList("apple"));
-        when(authRepository.findByProviderAndProviderId("kakao", "kakao_789012"))
+        when(authRepository.findByProviderAndProviderId(anyString(), anyString()))
                 .thenReturn(Optional.empty());
         when(authRepository.save(any(AuthEntity.class)))
                 .thenThrow(new RuntimeException("Database error"));
 
         // when & then
-        assertThatThrownBy(() -> 
-                oAuthAccountLinkingService.processOAuthUserLogin(kakaoOAuthResponse, "device_kakao", true))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", org.swyp.dessertbee.common.exception.ErrorCode.OAUTH_ACCOUNT_LINKING_FAILED);
-    }
-
-    @Test
-    @DisplayName("사용자의 OAuth 제공자 목록 조회")
-    void shouldGetUserOAuthProviders() {
-        // given
-        when(userRepository.findOAuthProvidersByEmail("test@example.com"))
-                .thenReturn(Arrays.asList("apple", "kakao"));
-
-        // when
-        List<String> providers = oAuthAccountLinkingService.getUserOAuthProviders("test@example.com");
-
-        // then
-        assertThat(providers).containsExactly("apple", "kakao");
-    }
-
-    @Test
-    @DisplayName("사용자의 OAuth 계정 수 조회")
-    void shouldGetOAuthProviderCount() {
-        // given
-        when(userRepository.countOAuthProvidersByEmail("test@example.com"))
-                .thenReturn(2L);
-
-        // when
-        long count = oAuthAccountLinkingService.getOAuthProviderCount("test@example.com");
-
-        // then
-        assertThat(count).isEqualTo(2L);
-    }
-
-    @Test
-    @DisplayName("계정 연결 상태 초기화")
-    void shouldResetAccountLinkingStatus() {
-        // given
-        when(userRepository.findByEmailAndOAuthProvider("test@example.com", "kakao"))
-                .thenReturn(Optional.empty());
-        when(userRepository.findByEmail("test@example.com"))
-                .thenReturn(Optional.of(existingUser));
-        when(userRepository.findOAuthProvidersByEmail("test@example.com"))
-                .thenReturn(Arrays.asList("apple"));
-        when(authRepository.findByProviderAndProviderId("kakao", "kakao_789012"))
-                .thenReturn(Optional.empty());
-        when(authRepository.save(any(AuthEntity.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-
-        // when
-        oAuthAccountLinkingService.processOAuthUserLogin(kakaoOAuthResponse, "device_kakao", true);
-        assertThat(oAuthAccountLinkingService.isAccountLinkingOccurred()).isTrue();
-        
-        oAuthAccountLinkingService.resetAccountLinkingStatus();
-        
-        // then
-        assertThat(oAuthAccountLinkingService.isAccountLinkingOccurred()).isFalse();
-    }
-
-    @Test
-    @DisplayName("계정 연결 정보 조회")
-    void shouldGetAccountLinkingInfo() {
-        // given
-        when(userRepository.findOAuthProvidersByEmail("test@example.com"))
-                .thenReturn(Arrays.asList("apple", "kakao"));
-        when(userRepository.countOAuthProvidersByEmail("test@example.com"))
-                .thenReturn(2L);
-
-        // when
-        var info = oAuthAccountLinkingService.getAccountLinkingInfo("test@example.com");
-
-        // then
-        assertThat(info.get("email")).isEqualTo("test@example.com");
-        assertThat((List<String>) info.get("providers")).containsExactly("apple", "kakao");
-        assertThat(info.get("providerCount")).isEqualTo(2L);
-        assertThat(info.get("hasMultipleProviders")).isEqualTo(true);
+        assertThatThrownBy(() -> oAuthAccountLinkingService.linkOAuthProviderToUser(
+                existingUser, oauth2Response, "device123", false))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Database error");
     }
 } 

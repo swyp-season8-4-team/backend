@@ -9,6 +9,7 @@ import org.swyp.dessertbee.auth.dto.response.LoginResponse;
 import org.swyp.dessertbee.auth.enums.AuthProvider;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.auth.exception.OAuthExceptions.*;
+import org.swyp.dessertbee.user.repository.UserRepository;
 import java.util.List;
 
 /**
@@ -22,6 +23,7 @@ public class OAuthService {
     private final KakaoOAuthService kakaoOAuthService;
     private final AppleOAuthService appleOAuthService;
     private final OAuthAccountLinkingService oAuthAccountLinkingService;
+    private final UserRepository userRepository;
 
     /**
      * OAuth 로그인 처리 (웹: 인가 코드, 앱: 액세스 토큰)
@@ -118,13 +120,13 @@ public class OAuthService {
      * 사용자의 OAuth 제공자 목록 조회
      */
     public List<String> getOAuthProvidersByEmail(String email) {
-        return oAuthAccountLinkingService.getUserOAuthProviders(email);
+        return userRepository.findOAuthProvidersByEmail(email);
     }
 
     /**
      * 사용자의 OAuth 계정 수 조회
      */
     public long getOAuthProviderCount(String email) {
-        return oAuthAccountLinkingService.getOAuthProviderCount(email);
+        return userRepository.countOAuthProvidersByEmail(email);
     }
 }

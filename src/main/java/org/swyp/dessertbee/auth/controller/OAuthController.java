@@ -43,10 +43,10 @@ public class OAuthController {
             description = """
                     OAuth로 새로운 사용자 등록 및 로그인.
                     
-                    **웹 환경**: OAuth 인가 코드를 code 필드에 전송
-                    **앱 환경**: SDK에서 획득한 액세스 토큰을 code 필드에 전송하고 Platform-Type 헤더를 'app'으로 설정
+                    웹 환경: OAuth 인가 코드를 code 필드에 전송
+                    앱 환경: SDK에서 획득한 액세스 토큰을 code 필드에 전송하고 Platform-Type 헤더를 'app'으로 설정
                     
-                    **자동 계정 연결**: 동일한 이메일로 다른 OAuth 제공자에서 가입할 경우 자동으로 기존 계정에 연결됩니다.
+                    자동 계정 연결: 동일한 이메일로 다른 OAuth 제공자에서 가입할 경우 자동으로 기존 계정에 연결됩니다.
                     
                     앱에서는 X-Device-ID 헤더를, 웹에서는 deviceId 쿠키를 사용하여 디바이스를 식별합니다.
                     """,

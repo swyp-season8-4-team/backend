@@ -25,7 +25,6 @@ import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.auth.exception.AuthExceptions.*;
 import org.swyp.dessertbee.auth.exception.OAuthExceptions.*;
-import org.swyp.dessertbee.auth.service.OAuthAccountLinkingService;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -156,15 +155,22 @@ public class KakaoOAuthService {
     private LoginResponse processUserLogin(OAuth2Response oauth2Response, String deviceId, boolean isApp) {
         log.info("카카오 OAuth 로그인 처리 시작 - 이메일: {}, 제공자: {}", oauth2Response.getEmail(), oauth2Response.getProvider());
         
-        // OAuth 자동 계정 통합 서비스를 사용하여 사용자 조회 및 계정 연결
-        UserEntity user = oAuthAccountLinkingService.processOAuthUserLogin(oauth2Response, deviceId, isApp);
+        // 1. OAuth 사용자 조회 (기존 사용자 또는 새로운 사용자)
+        UserEntity user = oAuthAccountLinkingService.findOrCreateUser(oauth2Response);
         
-        // 만약 새로운 사용자인 경우 회원가입 처리
+        // 2. 새로운 사용자인 경우 회원가입 처리
         if (user.getId() == null) {
             log.info("새로운 카카오 사용자 회원가입 - 이메일: {}", oauth2Response.getEmail());
             user = registerNewUser(oauth2Response);
         } else {
-            log.info("기존 사용자 카카오 로그인 성공 (자동 계정 연결 포함) - 사용자 ID: {}, 이메일: {}", user.getId(), user.getEmail());
+            // 3. 기존 사용자인 경우 계정 연결 필요 여부 확인 및 처리
+            log.info("기존 사용자 카카오 로그인 - 사용자 ID: {}, 이메일: {}", user.getId(), user.getEmail());
+            
+            // 동일한 OAuth 제공자로 가입된 사용자가 아닌 경우 계정 연결 처리
+            if (!userRepository.findByEmailAndOAuthProvider(user.getEmail(), oauth2Response.getProvider()).isPresent()) {
+                log.info("기존 사용자에게 새로운 OAuth 제공자 연결 시작 - 이메일: {}, 제공자: {}", user.getEmail(), oauth2Response.getProvider());
+                user = oAuthAccountLinkingService.linkOAuthProviderToUser(user, oauth2Response, deviceId, isApp);
+            }
         }
 
         // 정지 여부 확인
@@ -201,12 +207,9 @@ public class KakaoOAuthService {
 
         boolean isPreferenceSet = preferenceService.isUserPreferenceSet(user);
         
-        // 계정 연결 정보 확인
-        boolean accountLinkingOccurred = oAuthAccountLinkingService.isAccountLinkingOccurred();
-        java.util.List<String> linkedProviders = oAuthAccountLinkingService.getUserOAuthProviders(user.getEmail());
-        
-        // 계정 연결 상태 초기화
-        oAuthAccountLinkingService.resetAccountLinkingStatus();
+        // 계정 연결 정보 확인 (Repository 직접 사용)
+        boolean accountLinkingOccurred = user.getAuthEntities().size() > 1; // 여러 OAuth 제공자 연결된 경우
+        java.util.List<String> linkedProviders = userRepository.findOAuthProvidersByEmail(user.getEmail());
         
         return LoginResponse.success(accessToken, refreshToken, expiresIn, refreshExpiresIn,
                 user, profileImageUrl, usedDeviceId, isPreferenceSet, accountLinkingOccurred, linkedProviders);
