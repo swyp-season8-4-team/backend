@@ -133,8 +133,6 @@ public class ReviewService {
 
         eventPublisher.publishEvent(new CommunityReviewActionEvent(review.getStoreId(), review.getReviewId(), user.getUserUuid(), ReviewAction.CREATE));
 
-        //storeStatisticsRepository.increaseCommunityReviewCount(storeId);
-
         return getReviewDetail(review.getReviewUuid());
     }
 

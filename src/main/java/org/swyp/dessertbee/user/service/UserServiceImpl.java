@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.auth.entity.AuthEntity;
-import org.swyp.dessertbee.auth.repository.AuthRepository;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
@@ -25,7 +24,6 @@ import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.MbtiRepository;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -281,20 +279,11 @@ public class UserServiceImpl implements UserService {
 
         UserEntity user = getCurrentUser();
 
-        // 특정 이메일인 경우 완전히 삭제 (캐스케이드 적용) // TODO : 기능 개발 마무리 후 삭제해야함
-        if ("kjkksu2@naver.com".equals(user.getEmail())) {
-            log.info("테스트 계정 감지: {} - 완전 삭제 수행", user.getEmail());
-            // CascadeType.ALL과 orphanRemoval=true로 인해 관련된 모든 데이터가 삭제됨
-            userRepository.delete(user);
-            log.info("테스트 계정 완전 삭제 완료: {}", user.getEmail());
-            return;
-        }
-
         user.softDelete();
         userRepository.save(user);
 
         // 연관된 인증 정보도 비활성화
-        user.getAuths().forEach(AuthEntity::deactivate);
+        user.getAuthEntities().forEach(AuthEntity::deactivate);
 
         log.info("해당 유저의 계정이 비활성화 처리 되었습니다 : {}", user.getEmail());
     }

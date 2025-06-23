@@ -197,7 +197,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     /**
      * 배치 작업으로 오래된 데이터 정리
      */
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 5 0 * * *")
     @Transactional
     public void cleanupOldVerifications() {
         LocalDateTime threshold = LocalDateTime.now().minusDays(7);  // 7일 이상 지난 데이터

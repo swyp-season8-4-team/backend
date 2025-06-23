@@ -44,6 +44,7 @@ public class KakaoOAuthService {
     private final ImageService imageService;
     private final RestTemplate restTemplate = new RestTemplate();
     private final PreferenceService preferenceService;
+    private final OAuthAccountLinkingService oAuthAccountLinkingService;
 
     @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
     private String clientId;
@@ -58,7 +59,7 @@ public class KakaoOAuthService {
      * 인가 코드로 카카오 로그인 처리
      */
     @Transactional
-    public LoginResponse processKakaoLogin(String code, String deviceId) {
+    public LoginResponse processKakaoLogin(String code, String deviceId, boolean isApp) {
         try {
             log.info("카카오 로그인 처리 시작 - 인가 코드: {}", code);
 
@@ -70,7 +71,7 @@ public class KakaoOAuthService {
             OAuth2Response userInfo = getKakaoUserInfo(accessToken);
             log.info("카카오 사용자 정보 획득 성공 - 이메일: {}", userInfo.getEmail());
             // 3. 사용자 정보로 회원가입/로그인 처리
-            return processUserLogin(userInfo, deviceId);
+            return processUserLogin(userInfo, deviceId, isApp);
 
         } catch (Exception e) {
             log.error("카카오 로그인 처리 중 오류 발생", e);
@@ -149,12 +150,28 @@ public class KakaoOAuthService {
     }
 
     /**
-     * OAuth 사용자 정보로 로그인 처리 (회원가입 또는 로그인)
+     * OAuth 사용자 정보로 로그인 처리 (회원가입 또는 자동 계정 연결)
      */
-    private LoginResponse processUserLogin(OAuth2Response oauth2Response, String deviceId) {
-        // 이메일로 사용자 조회
-        UserEntity user = userRepository.findByEmail(oauth2Response.getEmail())
-                .orElseGet(() -> registerNewUser(oauth2Response));
+    private LoginResponse processUserLogin(OAuth2Response oauth2Response, String deviceId, boolean isApp) {
+        log.info("카카오 OAuth 로그인 처리 시작 - 이메일: {}, 제공자: {}", oauth2Response.getEmail(), oauth2Response.getProvider());
+        
+        // 1. OAuth 사용자 조회 (기존 사용자 또는 새로운 사용자)
+        UserEntity user = oAuthAccountLinkingService.findOrCreateUser(oauth2Response);
+        
+        // 2. 새로운 사용자인 경우 회원가입 처리
+        if (user.getId() == null) {
+            log.info("새로운 카카오 사용자 회원가입 - 이메일: {}", oauth2Response.getEmail());
+            user = registerNewUser(oauth2Response);
+        } else {
+            // 3. 기존 사용자인 경우 계정 연결 필요 여부 확인 및 처리
+            log.info("기존 사용자 카카오 로그인 - 사용자 ID: {}, 이메일: {}", user.getId(), user.getEmail());
+            
+            // 동일한 OAuth 제공자로 가입된 사용자가 아닌 경우 계정 연결 처리
+            if (!userRepository.findByEmailAndOAuthProvider(user.getEmail(), oauth2Response.getProvider()).isPresent()) {
+                log.info("기존 사용자에게 새로운 OAuth 제공자 연결 시작 - 이메일: {}, 제공자: {}", user.getEmail(), oauth2Response.getProvider());
+                user = oAuthAccountLinkingService.linkOAuthProviderToUser(user, oauth2Response, deviceId, isApp);
+            }
+        }
 
         // 정지 여부 확인
         if (user.isSuspended()) {
@@ -167,7 +184,7 @@ public class KakaoOAuthService {
                 .collect(Collectors.toList());
 
         // 토큰 발급
-        boolean keepLoggedIn = false; // 기본값
+        boolean keepLoggedIn = isApp; // 기본값
         String accessToken = jwtUtil.createAccessToken(user.getUserUuid(), roles);
         String refreshToken = jwtUtil.createRefreshToken(user.getUserUuid(), keepLoggedIn);
         long expiresIn = jwtUtil.getACCESS_TOKEN_EXPIRE();
@@ -189,8 +206,13 @@ public class KakaoOAuthService {
         String profileImageUrl = profileImages.isEmpty() ? null : profileImages.get(0);
 
         boolean isPreferenceSet = preferenceService.isUserPreferenceSet(user);
+        
+        // 계정 연결 정보 확인 (Repository 직접 사용)
+        boolean accountLinkingOccurred = user.getAuthEntities().size() > 1; // 여러 OAuth 제공자 연결된 경우
+        java.util.List<String> linkedProviders = userRepository.findOAuthProvidersByEmail(user.getEmail());
+        
         return LoginResponse.success(accessToken, refreshToken, expiresIn, refreshExpiresIn,
-                user, profileImageUrl, usedDeviceId, isPreferenceSet);
+                user, profileImageUrl, usedDeviceId, isPreferenceSet, accountLinkingOccurred, linkedProviders);
     }
 
     /**
@@ -251,6 +273,27 @@ public class KakaoOAuthService {
     private String generateRandomNumber() {
         // 4자리 난수 생성
         return String.format("%04d", new Random().nextInt(10000));
+    }
+
+    /**
+     * 카카오 액세스 토큰으로 직접 로그인 처리 (Flutter 앱용)
+     */
+    @Transactional
+    public LoginResponse processKakaoTokenLogin(String accessToken, String deviceId, boolean isApp) {
+        try {
+            log.info("카카오 액세스 토큰 직접 로그인 처리 시작");
+
+            // 1. 액세스 토큰으로 사용자 정보 요청
+            OAuth2Response userInfo = getKakaoUserInfo(accessToken);
+            log.info("카카오 사용자 정보 획득 성공 - 이메일: {}", userInfo.getEmail());
+
+            // 2. 사용자 정보로 회원가입/로그인 처리
+            return processUserLogin(userInfo, deviceId, isApp);
+
+        } catch (Exception e) {
+            log.error("카카오 액세스 토큰 로그인 처리 중 오류 발생", e);
+            throw new OAuthServiceException("카카오 액세스 토큰 로그인 처리 중 오류가 발생했습니다.");
+        }
     }
 
 }
