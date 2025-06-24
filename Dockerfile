@@ -34,8 +34,5 @@ RUN chown -R appuser:appgroup /app && \
 # 비root 사용자로 전환
 USER appuser
 
-# JVM 최적화 설정
-ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=40.0 -XX:+UseG1GC"
-
 EXPOSE 8080
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "java -jar app.jar"]
