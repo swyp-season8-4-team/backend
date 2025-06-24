@@ -27,22 +27,42 @@ renew_certificates() {
         return 1
     fi
 
-    # certbot으로 인증서 갱신 시도
-    log "certbot으로 인증서 갱신 확인 중..."
+    # nginx 컨테이너 상태 확인
+    cd "$COMPOSE_DIR"
+    if ! docker-compose ps nginx | grep -q "Up"; then
+        log "nginx 컨테이너가 실행 중이지 않습니다. nginx를 시작합니다."
+        docker-compose up -d nginx
+        sleep 10
+    fi
+
+    # webroot 디렉토리 확인 및 생성
+    WEBROOT_DIR="/var/www/certbot"
+    if [ ! -d "$WEBROOT_DIR" ]; then
+        log "webroot 디렉토리를 생성합니다: $WEBROOT_DIR"
+        sudo mkdir -p "$WEBROOT_DIR"
+        sudo chown -R ec2-user:ec2-user "$WEBROOT_DIR"
+    fi
 
     # 갱신 전 인증서 상태 확인
-    RENEWAL_NEEDED=false
+    log "갱신 전 인증서 상태 확인:"
+    sudo certbot certificates
 
     # 실제 갱신 실행 (30일 이내 만료 시에만 갱신됨)
-    if sudo certbot renew --webroot --webroot-path=/var/www/certbot --quiet --no-self-upgrade; then
+    log "certbot으로 인증서 갱신 확인 중..."
+    
+    # 갱신 전 로그 백업
+    sudo cp /var/log/letsencrypt/letsencrypt.log /var/log/letsencrypt/letsencrypt.log.backup 2>/dev/null || true
+    
+    if sudo certbot renew --webroot --webroot-path="$WEBROOT_DIR" --quiet --no-self-upgrade --agree-tos; then
         log "인증서 갱신 확인 완료"
 
-        # 갱신 여부 확인 (로그 파일 체크)
-        if sudo grep -q "renewed" /var/log/letsencrypt/letsencrypt.log 2>/dev/null; then
-            RENEWAL_NEEDED=true
+        # 갱신 여부 확인 (로그 파일 비교)
+        if sudo diff /var/log/letsencrypt/letsencrypt.log.backup /var/log/letsencrypt/letsencrypt.log 2>/dev/null | grep -q "renewed"; then
             log "새로운 인증서가 발급되었습니다"
+            RENEWAL_NEEDED=true
         else
             log "갱신이 필요한 인증서가 없습니다"
+            RENEWAL_NEEDED=false
         fi
     else
         log "인증서 갱신 실패"
@@ -53,21 +73,32 @@ renew_certificates() {
     if [ "$RENEWAL_NEEDED" = true ] || [ "$2" = "--force-restart" ]; then
         log "nginx 컨테이너 재시작 중..."
 
-        cd "$COMPOSE_DIR"
-        if docker-compose ps nginx | grep -q "Up"; then
-            # nginx만 재시작 (다른 서비스에 영향 없음)
-            if docker-compose restart nginx; then
-                log "nginx 재시작 완료 - 새 인증서가 적용되었습니다"
+        # nginx 설정 테스트
+        if docker-compose exec nginx nginx -t 2>/dev/null; then
+            log "nginx 설정이 유효합니다"
+        else
+            log "nginx 설정에 문제가 있습니다. 설정을 확인하세요."
+            return 1
+        fi
+
+        # nginx만 재시작 (다른 서비스에 영향 없음)
+        if docker-compose restart nginx; then
+            log "nginx 재시작 완료 - 새 인증서가 적용되었습니다"
+            
+            # 재시작 후 헬스체크
+            sleep 5
+            if docker-compose ps nginx | grep -q "Up"; then
+                log "nginx가 정상적으로 재시작되었습니다"
             else
-                log "nginx 재시작 실패"
+                log "nginx 재시작 후 상태가 비정상입니다"
                 return 1
             fi
         else
-            log "nginx 컨테이너가 실행 중이지 않습니다."
-            # nginx가 죽어있다면 전체 재시작
-            docker-compose up -d nginx
-            log "nginx 컨테이너 재시작 완료"
+            log "nginx 재시작 실패"
+            return 1
         fi
+    else
+        log "인증서 갱신이 없어 nginx 재시작을 건너뜁니다"
     fi
 
     log "SSL 인증서 갱신 프로세스 완료"
@@ -82,7 +113,11 @@ check_certificates() {
         sudo certbot certificates
 
         log "갱신 예정 확인 (dry-run):"
-        sudo certbot renew --dry-run
+        if sudo certbot renew --dry-run --webroot --webroot-path="/var/www/certbot" --quiet; then
+            log "dry-run 성공 - 갱신 프로세스가 정상입니다"
+        else
+            log "dry-run 실패 - 갱신 프로세스에 문제가 있습니다"
+        fi
 
         log "만료일 확인:"
         for cert_dir in /etc/letsencrypt/live/*/; do
@@ -91,6 +126,20 @@ check_certificates() {
                 if [ -f "$cert_dir/cert.pem" ]; then
                     expiry=$(sudo openssl x509 -enddate -noout -in "$cert_dir/cert.pem" | cut -d= -f2)
                     log "도메인 $domain 만료일: $expiry"
+                    
+                    # 만료일까지 남은 일수 계산
+                    expiry_epoch=$(date -d "$expiry" +%s 2>/dev/null || echo "0")
+                    current_epoch=$(date +%s)
+                    days_left=$(( (expiry_epoch - current_epoch) / 86400 ))
+                    
+                    if [ $days_left -gt 0 ]; then
+                        log "  남은 일수: $days_left일"
+                        if [ $days_left -lt 30 ]; then
+                            log "  ⚠️ 30일 이내 만료 - 갱신이 필요합니다"
+                        fi
+                    else
+                        log "  ⚠️ 인증서가 만료되었습니다!"
+                    fi
                 fi
             fi
         done
@@ -113,7 +162,7 @@ setup_cron() {
         log "기존 cron jobs:"
         crontab -l | grep "renew-ssl.sh" || true
 
-        # 기존 것을 제거하고 새로 설정할지 묻기
+        # 기존 것을 제거하고 새로 설정
         log "기존 설정을 업데이트합니다..."
         crontab -l 2>/dev/null | grep -v "renew-ssl.sh" | crontab -
     fi
