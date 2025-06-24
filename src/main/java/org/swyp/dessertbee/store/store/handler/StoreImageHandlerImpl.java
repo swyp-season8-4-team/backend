@@ -10,7 +10,9 @@ import org.swyp.dessertbee.common.service.ImageService;
 import org.swyp.dessertbee.store.store.dto.response.StoreImageResponse;
 import org.swyp.dessertbee.store.store.entity.Store;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -87,5 +89,35 @@ public class StoreImageHandlerImpl implements StoreImageHandler {
                 .filter(Objects::nonNull)
                 .map(id -> id instanceof Long ? id : Long.valueOf(id.toString()))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 여러 가게의 대표 이미지 배치 조회
+     */
+    public Map<Long, List<StoreImageResponse>> getStoreImagesBatch(List<Long> storeIds) {
+        if (storeIds == null || storeIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return imageService.getStoreImagesByIds(ImageType.STORE, storeIds);
+    }
+
+    /**
+     * 여러 가게의 업주 선택 이미지 배치 조회
+     */
+    public Map<Long, List<StoreImageResponse>> getOwnerPickImagesBatch(List<Long> storeIds) {
+        if (storeIds == null || storeIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return imageService.getStoreImagesByIds(ImageType.OWNERPICK, storeIds);
+    }
+
+    /**
+     * 가게 이미지 URL만 배치 조회
+     */
+    public Map<Long, List<String>> getStoreImageUrlsBatch(List<Long> storeIds) {
+        if (storeIds == null || storeIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return imageService.getImageUrlsByIds(ImageType.STORE, storeIds);
     }
 }
