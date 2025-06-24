@@ -60,10 +60,4 @@ sudo mkdir -p /var/www/certbot
 sudo chmod 755 /var/www/certbot
 sudo chown -R ec2-user:ec2-user /var/www/certbot
 
-# 로그 파일 권한 사전 설정 (권한 문제 해결)
-echo "로그 파일 권한 설정 중..."
-sudo touch /var/log/ssl-renewal.log /var/log/ssl-health-check.log
-sudo chown ec2-user:ec2-user /var/log/ssl-renewal.log /var/log/ssl-health-check.log
-sudo chmod 644 /var/log/ssl-renewal.log /var/log/ssl-health-check.log
-
 echo "=== 시스템 환경 설정 완료 ==="
