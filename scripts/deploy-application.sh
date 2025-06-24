@@ -38,9 +38,15 @@ echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 echo "Docker 이미지 다운로드 중..."
 docker pull "$DOCKERHUB_USERNAME/desserbee:latest"
 
-# 기존 컨테이너 중지 (Redis는 보존)
-echo "기존 컨테이너 중지 중..."
+# 기존 컨테이너 중지 및 제거 (Redis는 보존)
+echo "기존 컨테이너 중지 및 제거 중..."
 docker-compose stop app nginx || true
+docker-compose rm -f app nginx || true
+
+# Docker 리소스 정리
+echo "Docker 리소스 정리 중..."
+docker system prune -f --volumes
+docker image prune -f
 
 # 새 컨테이너 시작
 echo "새 컨테이너 시작 중..."
