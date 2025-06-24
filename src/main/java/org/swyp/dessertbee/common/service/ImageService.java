@@ -19,6 +19,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -80,21 +81,79 @@ public class ImageService {
     }
 
     /**
+     * 여러 refId에 해당하는 이미지 배치 조회 (성능 최적화)
+     */
+    public Map<Long, List<StoreImageResponse>> getStoreImagesByIds(ImageType type, List<Long> refIds) {
+        if (refIds == null || refIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<Image> images = imageRepository.findByRefTypeAndRefIdIn(type, refIds);
+
+        return images.stream()
+                .collect(Collectors.groupingBy(
+                        Image::getRefId,
+                        Collectors.mapping(
+                                image -> new StoreImageResponse(image.getId(), image.getUrl()),
+                                Collectors.toList()
+                        )
+                ));
+    }
+
+    /**
+     * 여러 refId에 해당하는 이미지 URL만 배치 조회
+     */
+    public Map<Long, List<String>> getImageUrlsByIds(ImageType type, List<Long> refIds) {
+        if (refIds == null || refIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<Image> images = imageRepository.findByRefTypeAndRefIdIn(type, refIds);
+
+        return images.stream()
+                .collect(Collectors.groupingBy(
+                        Image::getRefId,
+                        Collectors.mapping(Image::getUrl, Collectors.toList())
+                ));
+    }
+
+    /**
+     * 특정 ImageType의 모든 이미지를 미리 로드 (캐시용)
+     */
+    public Map<Long, List<StoreImageResponse>> preloadStoreImages(ImageType type) {
+        List<Image> allImages = imageRepository.findByRefType(type);
+
+        return allImages.stream()
+                .collect(Collectors.groupingBy(
+                        Image::getRefId,
+                        Collectors.mapping(
+                                image -> new StoreImageResponse(image.getId(), image.getUrl()),
+                                Collectors.toList()
+                        )
+                ));
+    }
+
+    /**
      * 단일 이미지 조회
      */
     public String getImageByTypeAndId(ImageType refType, Long refId) {
         if (refId == null) {
-            log.error("이미지 조회 실패 - refId가 null입니다. refType: {}", refType);
+            if (log.isDebugEnabled()) {
+                log.debug("이미지 조회 실패 - refId가 null입니다. refType: {}", refType);
+            }
             return "";
         }
 
         List<Image> images = imageRepository.findByRefTypeAndRefId(refType, refId);
 
-        // 로그 추가
-        log.info("조회된 이미지 개수: {}, refType: {}, refId: {}", images.size(), refType, refId);
+        if (log.isDebugEnabled()) {
+            log.debug("조회된 이미지 개수: {}, refType: {}, refId: {}", images.size(), refType, refId);
+        }
 
-        return images.stream().map(Image::getUrl).findFirst().orElse("");
-
+        return images.stream()
+                .map(Image::getUrl)
+                .findFirst()
+                .orElse("");
     }
 
     /**
@@ -102,16 +161,19 @@ public class ImageService {
      */
     public List<String> getImagesByTypeAndId(ImageType refType, Long refId) {
         if (refType == null || refId == null) {
-            log.error("이미지 조회 실패 - 유효하지 않은 참조 정보: refType: {}, refId: {}", refType, refId);
+            if (log.isDebugEnabled()) {
+                log.debug("이미지 조회 실패 - 유효하지 않은 참조 정보: refType: {}, refId: {}", refType, refId);
+            }
             throw new BusinessException(ErrorCode.IMAGE_REFERENCE_INVALID);
         }
 
         try {
             List<Image> images = imageRepository.findByRefTypeAndRefId(refType, refId);
-            // 로그 추가
-            log.info("조회된 이미지 개수: {}, refType: {}, refId: {}", images.size(), refType, refId);
 
-            // 조회된 이미지 리스트에서 URL만 추출
+            if (log.isDebugEnabled()) {
+                log.debug("조회된 이미지 개수: {}, refType: {}, refId: {}", images.size(), refType, refId);
+            }
+
             return images.stream()
                     .map(Image::getUrl)
                     .collect(Collectors.toList());
@@ -126,13 +188,18 @@ public class ImageService {
      */
     public List<StoreImageResponse> getStoreImagesWithIdByTypeAndId(ImageType refType, Long refId) {
         if (refType == null || refId == null) {
-            log.error("이미지 조회 실패 - 유효하지 않은 참조 정보: refType: {}, refId: {}", refType, refId);
+            if (log.isDebugEnabled()) {
+                log.debug("이미지 조회 실패 - 유효하지 않은 참조 정보: refType: {}, refId: {}", refType, refId);
+            }
             throw new BusinessException(ErrorCode.IMAGE_REFERENCE_INVALID);
         }
 
         try {
             List<Image> images = imageRepository.findByRefTypeAndRefId(refType, refId);
-            log.info("조회된 이미지 개수: {}, refType: {}, refId: {}", images.size(), refType, refId);
+
+            if (log.isDebugEnabled()) {
+                log.debug("조회된 이미지 개수: {}, refType: {}, refId: {}", images.size(), refType, refId);
+            }
 
             return images.stream()
                     .map(image -> new StoreImageResponse(image.getId(), image.getUrl()))
