@@ -39,6 +39,8 @@ import org.swyp.dessertbee.user.service.UserService;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 /**
  * StoreService 구현체
@@ -87,13 +89,37 @@ public class StoreServiceImpl implements StoreService {
     /** 반경 내 가게 조회 */
     @Override
     public List<StoreMapResponse> getStoresByLocation(Double lat, Double lng, Double radius) {
-        try{
+        try {
             List<Store> stores = storeRepository.findStoresByLocation(lat, lng, radius);
 
+            if (stores.isEmpty()) {
+                return Collections.emptyList();
+            }
+
+            // 가게 ID 리스트 추출
+            List<Long> storeIds = stores.stream()
+                    .map(Store::getStoreId)
+                    .collect(Collectors.toList());
+
+            // 모든 관련 데이터를 배치로 한 번에 조회
+            Map<Long, List<String>> storeImagesMap = storeImageHandler.getStoreImageUrlsBatch(storeIds);
+            Map<Long, List<OperatingHourResponse>> operatingHoursMap = storeScheduleService.getOperatingHoursBatch(storeIds);
+            Map<Long, List<HolidayResponse>> holidaysMap = storeScheduleService.getHolidaysBatch(storeIds);
+            Map<Long, Integer> reviewCountMap = storeReviewRepository.getReviewCountsBatch(storeIds);
+            Map<Long, List<String>> tagsMap = storeTagService.getTagNamesBatch(storeIds);
+
             return stores.stream()
-                    .map(this::convertToStoreMapResponse)
-                    .toList();
-        } catch (StoreMapReadException e){
+                    .map(store -> convertToStoreMapResponseOptimized(
+                            store,
+                            operatingHoursMap.getOrDefault(store.getStoreId(), Collections.emptyList()),
+                            holidaysMap.getOrDefault(store.getStoreId(), Collections.emptyList()),
+                            reviewCountMap.getOrDefault(store.getStoreId(), 0),
+                            tagsMap.getOrDefault(store.getStoreId(), Collections.emptyList()),
+                            storeImagesMap.getOrDefault(store.getStoreId(), Collections.emptyList())
+                    ))
+                    .collect(Collectors.toList());
+
+        } catch (StoreMapReadException e) {
             log.warn("반경 내 가게 조회 실패 - 사유: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
@@ -113,9 +139,7 @@ public class StoreServiceImpl implements StoreService {
             // 여러 태그 중 하나라도 매칭되는 가게를 조회
             List<Store> stores = storeRepository.findStoresByLocationAndTags(lat, lng, radius, preferenceTagIds);
 
-            return stores.stream()
-                    .map(this::convertToStoreMapResponse)
-                    .toList();
+            return convertStoresToMapResponses(stores);
         } catch (StoreMapReadException e){
             log.warn("반경 내 가게 조회 실패 - 사유: {}", e.getMessage());
             throw e;
@@ -132,9 +156,7 @@ public class StoreServiceImpl implements StoreService {
             String transformed = SearchUtil.toBooleanFulltextQuery(searchKeyword);
             List<Store> stores = storeRepository.findStoresByLocationAndKeyword(lat, lng, radius, transformed);
 
-            return stores.stream()
-                    .map(this::convertToStoreMapResponse)
-                    .toList();
+            return convertStoresToMapResponses(stores);
         } catch (StoreSearchFailedException e){
             log.warn("반경 내 가게 검색 실패 - 사유: {}", e.getMessage());
             throw e;
@@ -165,11 +187,9 @@ public class StoreServiceImpl implements StoreService {
             }
 
             // 사용자의 취향 태그 중 하나라도 매칭되는 가게 조회
-            List<Store> stores = storeRepository.findStoresByLocationAndTags(lng, lat, radius, preferenceTagIds);
+            List<Store> stores = storeRepository.findStoresByLocationAndTags(lat, lng, radius, preferenceTagIds);
 
-            return stores.stream()
-                    .map(this::convertToStoreMapResponse)
-                    .toList();
+            return convertStoresToMapResponses(stores);
         } catch (PreferenceStoreReadException e){
             log.warn("반경 내 사용자 취향 맞춤 가게 조회 실패 - 사유: {}", e.getMessage());
             throw e;
@@ -252,17 +272,53 @@ public class StoreServiceImpl implements StoreService {
 //        }
 //    }
 
-    /**
-     * Store 엔티티를 StoreMapResponse DTO로 변환
-     */
-    private StoreMapResponse convertToStoreMapResponse(Store store) {
-        List<OperatingHourResponse> operatingHours = storeScheduleService.getOperatingHoursResponse(store.getStoreId());
-        List<HolidayResponse> holidays = storeScheduleService.getHolidaysResponse(store.getStoreId());
-        int totalReviewCount = storeReviewRepository.countByStoreIdAndDeletedAtIsNull(store.getStoreId());
-        List<String> tags = storeTagService.getTagNames(store.getStoreId());
-        List<String> storeImages = imageService.getImagesByTypeAndId(ImageType.STORE, store.getStoreId());
+    private List<StoreMapResponse> convertStoresToMapResponses(List<Store> stores) {
+        if (stores.isEmpty()) {
+            return Collections.emptyList();
+        }
 
-        return StoreMapResponse.fromEntity(store, operatingHours, holidays, totalReviewCount, tags, storeImages);
+        // getStoresByLocation()에 있는 로직을 그대로 복사
+        List<Long> storeIds = stores.stream()
+                .map(Store::getStoreId)
+                .collect(Collectors.toList());
+
+        Map<Long, List<String>> storeImagesMap = storeImageHandler.getStoreImageUrlsBatch(storeIds);
+        Map<Long, List<OperatingHourResponse>> operatingHoursMap = storeScheduleService.getOperatingHoursBatch(storeIds);
+        Map<Long, List<HolidayResponse>> holidaysMap = storeScheduleService.getHolidaysBatch(storeIds);
+        Map<Long, Integer> reviewCountMap = storeReviewRepository.getReviewCountsBatch(storeIds);
+        Map<Long, List<String>> tagsMap = storeTagService.getTagNamesBatch(storeIds);
+
+        return stores.stream()
+                .map(store -> convertToStoreMapResponseOptimized(
+                        store,
+                        operatingHoursMap.getOrDefault(store.getStoreId(), Collections.emptyList()),
+                        holidaysMap.getOrDefault(store.getStoreId(), Collections.emptyList()),
+                        reviewCountMap.getOrDefault(store.getStoreId(), 0),
+                        tagsMap.getOrDefault(store.getStoreId(), Collections.emptyList()),
+                        storeImagesMap.getOrDefault(store.getStoreId(), Collections.emptyList())
+                ))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 최적화된 StoreMapResponse 변환 메서드
+     */
+    private StoreMapResponse convertToStoreMapResponseOptimized(
+            Store store,
+            List<OperatingHourResponse> operatingHours,
+            List<HolidayResponse> holidays,
+            Integer totalReviewCount,
+            List<String> tags,
+            List<String> storeImages) {
+
+        return StoreMapResponse.fromEntity(
+                store,
+                operatingHours,
+                holidays,
+                totalReviewCount,
+                tags,
+                storeImages
+        );
     }
 
     /** 가게 간략 정보 조회 */
@@ -312,7 +368,7 @@ public class StoreServiceImpl implements StoreService {
     /** 가게 상세 정보 조회 */
     @Override
     public StoreDetailResponse getStoreDetails(UUID storeUuid) {
-        try{
+        try {
             Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
             Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
                     .orElseThrow(() -> new StoreNotFoundException());
@@ -322,71 +378,46 @@ public class StoreServiceImpl implements StoreService {
             Long userId = (user != null) ? user.getId() : null;
             UUID userUuid = (user != null) ? user.getUserUuid() : null;
 
-            // 사용자의 가게 저장 정보 조회
+            // 비동기로 이미지 조회
+            CompletableFuture<List<StoreImageResponse>> storeImagesFuture =
+                    CompletableFuture.supplyAsync(() -> storeImageHandler.getStoreImages(storeId));
+
+            CompletableFuture<List<StoreImageResponse>> ownerPickImagesFuture =
+                    CompletableFuture.supplyAsync(() -> storeImageHandler.getOwnerPickImages(storeId));
+
+            // 사용자별 데이터 조회
             Pair<Boolean, Long> savedInfo = storeSupportService.getUserStoreSavedInfo(store, user);
             boolean saved = savedInfo.getLeft();
             Long savedListId = savedInfo.getRight();
 
-            // 가게 이미지 조회
-            List<StoreImageResponse> storeImages = storeImageHandler.getStoreImages(storeId);
-            List<StoreImageResponse> ownerPickImages = storeImageHandler.getOwnerPickImages(storeId);
-
-            // 태그 조회
             List<StoreTagResponse> tags = storeTagService.getTagResponses(storeId);
-
-            // 가게 링크 및 대표 링크 조회
             Pair<List<String>, String> linkInfo = storeLinkService.getStoreLinksAndPrimary(storeId);
-
-            // 운영 시간 조회
             List<OperatingHourResponse> operatingHourResponses = storeScheduleService.getOperatingHoursResponse(storeId);
-
-            // 휴무일 조회
             List<HolidayResponse> holidayResponses = storeScheduleService.getHolidaysResponse(storeId);
-
-            // 공지사항 조회
             List<StoreNoticeResponse> noticeResponses = storeNoticeService.getNoticesByStoreUuid(storeUuid);
-
-            // 가게 취향 태그 top3 조회
             List<TopPreferenceTagResponse> topPreferences = storeSupportService.getTop3Preferences(storeId);
-
-            // 메뉴 리스트 조회
             List<MenuResponse> menus = menuService.getMenusByStore(storeUuid);
-
-            // 한줄 리뷰 조회
             List<StoreReviewResponse> reviewResponses = storeSupportService.getStoreReviewResponses(storeId);
             int totalReviewCount = reviewResponses.size();
-
-            // 커뮤니티 리뷰 조회
             List<ReviewSummaryResponse> communityResponses = storeSupportService.getCommunityReviewResponses(storeId);
-
-            // 디저트 메이트 조회
             List<MateResponse> mateResponses = storeSupportService.getMateResponses(storeId, userId);
+
+            // 이미지 로딩 완료 대기
+            List<StoreImageResponse> storeImages = storeImagesFuture.join();
+            List<StoreImageResponse> ownerPickImages = ownerPickImagesFuture.join();
 
             // 조회수 증가
             eventPublisher.publishEvent(new StoreViewEvent(storeId, userUuid));
 
             return StoreDetailResponse.fromEntity(
-                    store,
-                    userId,
-                    userUuid,
-                    totalReviewCount,
-                    operatingHourResponses,
-                    holidayResponses,
-                    noticeResponses,
-                    menus,
-                    storeImages,
-                    ownerPickImages,
-                    topPreferences,
-                    reviewResponses,
-                    tags,
-                    linkInfo.getLeft(),
-                    linkInfo.getRight(),
-                    communityResponses,
-                    mateResponses,
-                    saved,
-                    savedListId
+                    store, userId, userUuid, totalReviewCount,
+                    operatingHourResponses, holidayResponses, noticeResponses,
+                    menus, storeImages, ownerPickImages, topPreferences,
+                    reviewResponses, tags, linkInfo.getLeft(), linkInfo.getRight(),
+                    communityResponses, mateResponses, saved, savedListId
             );
-        } catch (StoreInfoReadFailedException e){
+
+        } catch (StoreInfoReadFailedException e) {
             log.warn("가게 상세정보 조회 실패 - 사유: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
