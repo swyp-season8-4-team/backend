@@ -76,6 +76,8 @@ dependencies {
     // Java API Client (Elasticsearch)
     //implementation 'co.elastic.clients:elasticsearch-java:8.13.2'
 
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
 }
 
 tasks.named('test') {
