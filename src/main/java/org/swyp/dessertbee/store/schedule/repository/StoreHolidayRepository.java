@@ -20,4 +20,6 @@ public interface StoreHolidayRepository extends JpaRepository<StoreHoliday, Long
     @Modifying
     @Query("DELETE FROM StoreHoliday h WHERE h.storeId = :storeId")
     void deleteByStoreId(@Param("storeId") Long storeId);
+
+    List<StoreHoliday> findByStoreIdIn(List<Long> storeIds);
 }

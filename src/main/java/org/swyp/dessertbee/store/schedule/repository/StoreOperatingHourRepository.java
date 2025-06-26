@@ -26,4 +26,6 @@ public interface StoreOperatingHourRepository extends JpaRepository<StoreOperati
      */
     @Query("SELECT oh.id FROM StoreOperatingHour oh WHERE oh.storeId = :storeId")
     List<Long> findIdsByStoreId(@Param("storeId") Long storeId);
+
+    List<StoreOperatingHour> findByStoreIdIn(List<Long> storeIds);
 }

@@ -7,6 +7,7 @@ import org.swyp.dessertbee.store.store.entity.Store;
 import org.swyp.dessertbee.store.schedule.entity.StoreHoliday;
 
 import java.util.List;
+import java.util.Map;
 
 public interface StoreScheduleService {
     /**
@@ -25,4 +26,14 @@ public interface StoreScheduleService {
      * 휴무일 저장
      */
     List<StoreHoliday> saveHolidays(List<BaseStoreRequest.HolidayRequest> requests, Long storeId);
+
+    /**
+     * 여러 가게의 운영시간 배치 조회
+     */
+    Map<Long, List<OperatingHourResponse>> getOperatingHoursBatch(List<Long> storeIds);
+
+    /**
+     * 여러 가게의 휴무일 배치 조회
+     */
+    Map<Long, List<HolidayResponse>> getHolidaysBatch(List<Long> storeIds);
 }
