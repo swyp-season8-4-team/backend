@@ -98,7 +98,7 @@ public class JWTFilter extends OncePerRequestFilter {
         return path.startsWith("/api/auth/") ||
                 path.startsWith("/api/oauth2/") ||
                 path.startsWith("/api/public/") ||
-
+                path.startsWith("/actuator/") ||
                 // Swagger 관련 경로 예외 처리 추가
                 path.startsWith("/swagger-ui") ||
                 path.startsWith("/swagger-ui.html") ||
