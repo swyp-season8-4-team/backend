@@ -19,12 +19,11 @@ import org.swyp.dessertbee.store.schedule.repository.StoreHolidayRepository;
 import org.swyp.dessertbee.store.schedule.repository.StoreOperatingHourRepository;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -42,29 +41,20 @@ public class StoreScheduleServiceImpl implements StoreScheduleService {
     public List<OperatingHourResponse> getOperatingHoursResponse(Long storeId) {
         List<StoreOperatingHour> operatingHours = storeOperatingHourRepository.findByStoreId(storeId);
 
-        return operatingHours.stream()
-                .map(o -> {
-                    // 휴게시간 조회
-                    List<BreakTimeResponse> breakTimes = storeBreakTimeRepository.findByOperatingHourId(o.getId())
-                            .stream()
-                            .map(b -> BreakTimeResponse.builder()
-                                    .startTime(b.getStartTime())
-                                    .endTime(b.getEndTime())
-                                    .build())
-                            .toList();
+        // 해당 가게의 모든 휴게시간 조회
+        List<StoreBreakTime> breakTimes = storeBreakTimeRepository.findAllByStoreId(storeId);
+        Map<Long, List<BreakTimeResponse>> breakTimeMap = breakTimes.stream()
+                .collect(Collectors.groupingBy(
+                        StoreBreakTime::getOperatingHourId,
+                        Collectors.mapping(
+                                BreakTimeResponse::fromEntity,
+                                Collectors.toList()
+                        )
+                ));
 
-                    return OperatingHourResponse.builder()
-                            .dayOfWeek(o.getDayOfWeek())
-                            .openingTime(o.getOpeningTime())
-                            .closingTime(o.getClosingTime())
-                            .lastOrderTime(o.getLastOrderTime())
-                            .isClosed(o.getIsClosed())
-                            .regularClosureType(o.getRegularClosureType() != null ? o.getRegularClosureType().name() : null)
-                            .regularClosureWeeks(o.getRegularClosureWeeks())
-                            .breakTimes(breakTimes)
-                            .build();
-                })
-                .toList();
+        return operatingHours.stream()
+                .map(oh -> convertToOperatingHourResponse(oh, breakTimeMap.getOrDefault(oh.getId(), Collections.emptyList())))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -73,18 +63,9 @@ public class StoreScheduleServiceImpl implements StoreScheduleService {
     @Override
     public List<HolidayResponse> getHolidaysResponse(Long storeId) {
         List<StoreHoliday> holidays = storeHolidayRepository.findByStoreId(storeId);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
-
-        if (holidays.isEmpty()) return Collections.emptyList();
-
         return holidays.stream()
-                .sorted(Comparator.comparing(StoreHoliday::getStartDate))
-                .map(h -> HolidayResponse.builder()
-                        .startDate(h.getStartDate().format(formatter))
-                        .endDate(h.getEndDate().format(formatter))
-                        .reason(h.getReason())
-                        .build())
-                .toList();
+                .map(HolidayResponse::fromEntity)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -180,5 +161,82 @@ public class StoreScheduleServiceImpl implements StoreScheduleService {
         }
 
         return storeHolidayRepository.saveAll(holidays);
+    }
+
+    /**
+     * 여러 가게의 운영시간 배치 조회
+     */
+    public Map<Long, List<OperatingHourResponse>> getOperatingHoursBatch(List<Long> storeIds) {
+        if (storeIds == null || storeIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        // 1. 모든 가게의 운영시간 조회
+        List<StoreOperatingHour> allOperatingHours = storeOperatingHourRepository.findByStoreIdIn(storeIds);
+
+        // 2. 모든 가게의 휴게시간 조회
+        List<Object[]> breakTimeResults = storeBreakTimeRepository.findBreakTimesByStoreIds(storeIds);
+
+        // 3. 휴게시간을 operatingHourId별로 그룹핑
+        Map<Long, List<BreakTimeResponse>> breakTimeMap = new HashMap<>();
+        for (Object[] result : breakTimeResults) {
+            Long operatingHourId = (Long) result[1];
+            LocalTime startTime = (LocalTime) result[2];
+            LocalTime endTime = (LocalTime) result[3];
+
+            BreakTimeResponse breakTime = BreakTimeResponse.builder()
+                    .startTime(startTime)
+                    .endTime(endTime)
+                    .build();
+
+            breakTimeMap.computeIfAbsent(operatingHourId, k -> new ArrayList<>()).add(breakTime);
+        }
+
+        // 4. 가게별로 운영시간 응답 생성
+        return allOperatingHours.stream()
+                .collect(Collectors.groupingBy(
+                        StoreOperatingHour::getStoreId,
+                        Collectors.mapping(
+                                oh -> convertToOperatingHourResponse(oh, breakTimeMap.getOrDefault(oh.getId(), Collections.emptyList())),
+                                Collectors.toList()
+                        )
+                ));
+    }
+
+    /**
+     * 여러 가게의 휴무일 배치 조회
+     */
+    public Map<Long, List<HolidayResponse>> getHolidaysBatch(List<Long> storeIds) {
+        if (storeIds == null || storeIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<StoreHoliday> allHolidays = storeHolidayRepository.findByStoreIdIn(storeIds);
+
+        return allHolidays.stream()
+                .collect(Collectors.groupingBy(
+                        StoreHoliday::getStoreId,
+                        Collectors.mapping(
+                                HolidayResponse::fromEntity,
+                                Collectors.toList()
+                        )
+                ));
+    }
+
+    /**
+     * StoreOperatingHour → OperatingHourResponse 변환 메서드
+     */
+    private OperatingHourResponse convertToOperatingHourResponse(StoreOperatingHour operatingHour, List<BreakTimeResponse> breakTimes) {
+        return OperatingHourResponse.builder()
+                .dayOfWeek(operatingHour.getDayOfWeek())
+                .openingTime(operatingHour.getOpeningTime())
+                .closingTime(operatingHour.getClosingTime())
+                .lastOrderTime(operatingHour.getLastOrderTime())
+                .isClosed(operatingHour.getIsClosed())
+                .regularClosureType(operatingHour.getRegularClosureType() != null ?
+                        operatingHour.getRegularClosureType().toString() : null)
+                .regularClosureWeeks(operatingHour.getRegularClosureWeeks())
+                .breakTimes(breakTimes)
+                .build();
     }
 }

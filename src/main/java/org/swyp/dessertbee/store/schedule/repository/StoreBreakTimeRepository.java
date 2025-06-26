@@ -24,6 +24,15 @@ public interface StoreBreakTimeRepository extends JpaRepository<StoreBreakTime, 
     List<StoreBreakTime> findByOperatingHourIdIn(List<Long> operatingHourIds);
 
     /**
+     * 여러 가게의 휴게시간을 한 번에 조회
+     */
+    @Query("SELECT oh.storeId, bt.operatingHourId, bt.startTime, bt.endTime " +
+            "FROM StoreBreakTime bt " +
+            "JOIN StoreOperatingHour oh ON bt.operatingHourId = oh.id " +
+            "WHERE oh.storeId IN :storeIds")
+    List<Object[]> findBreakTimesByStoreIds(@Param("storeIds") List<Long> storeIds);
+
+    /**
      * 영업시간 ID로 휴게시간 데이터 삭제
      */
     @Modifying

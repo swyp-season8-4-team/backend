@@ -5,6 +5,9 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import org.swyp.dessertbee.store.schedule.entity.StoreHoliday;
+
+import java.time.format.DateTimeFormatter;
 
 @Data
 @Builder
@@ -20,4 +23,14 @@ public class HolidayResponse {
 
     @Schema(description = "휴무 사유", example = "신정", nullable = true)
     private String reason;
+
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+
+    public static HolidayResponse fromEntity(StoreHoliday holiday) {
+        return HolidayResponse.builder()
+                .startDate(holiday.getStartDate().format(DATE_FORMATTER))
+                .endDate(holiday.getEndDate().format(DATE_FORMATTER))
+                .reason(holiday.getReason())
+                .build();
+    }
 }

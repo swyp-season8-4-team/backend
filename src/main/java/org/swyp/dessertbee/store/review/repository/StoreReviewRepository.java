@@ -8,8 +8,10 @@ import org.swyp.dessertbee.store.review.entity.StoreReview;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Repository
 public interface StoreReviewRepository extends JpaRepository<StoreReview, Long> {
@@ -51,4 +53,24 @@ public interface StoreReviewRepository extends JpaRepository<StoreReview, Long> 
 
 
     Optional<StoreReview> findByReviewUuid(UUID reviewUuid);
+
+    /**
+     * 여러 가게의 리뷰 개수 배치 조회
+     */
+    @Query("SELECT sr.storeId, COUNT(sr) FROM StoreReview sr " +
+            "WHERE sr.storeId IN :storeIds AND sr.deletedAt IS NULL " +
+            "GROUP BY sr.storeId")
+    List<Object[]> findReviewCountsByStoreIds(@Param("storeIds") List<Long> storeIds);
+
+    /**
+     * Map으로 변환한 리뷰 개수 배치 조회
+     */
+    default Map<Long, Integer> getReviewCountsBatch(List<Long> storeIds) {
+        List<Object[]> results = findReviewCountsByStoreIds(storeIds);
+        return results.stream()
+                .collect(Collectors.toMap(
+                        result -> (Long) result[0],
+                        result -> ((Long) result[1]).intValue()
+                ));
+    }
 }

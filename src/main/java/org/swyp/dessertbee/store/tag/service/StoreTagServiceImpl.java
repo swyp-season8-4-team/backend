@@ -12,7 +12,8 @@ import org.swyp.dessertbee.store.store.exception.StoreExceptions;
 import org.swyp.dessertbee.store.tag.repository.StoreTagRelationRepository;
 import org.swyp.dessertbee.store.tag.repository.StoreTagRepository;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -78,5 +79,90 @@ public class StoreTagServiceImpl implements StoreTagService {
     @Override
     public List<String> getTagNames(Long storeId) {
         return storeTagRelationRepository.findTagNamesByStoreId(storeId);
+    }
+
+    /**
+     * 여러 가게의 태그명 배치 조회
+     */
+    public Map<Long, List<String>> getTagNamesBatch(List<Long> storeIds) {
+        if (storeIds == null || storeIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        // 한 번의 쿼리로 모든 가게의 태그명 조회
+        List<Object[]> results = storeTagRelationRepository.findTagNamesByStoreIds(storeIds);
+
+        Map<Long, List<String>> tagMap = new HashMap<>();
+        for (Object[] result : results) {
+            Long storeId = (Long) result[0];
+            String tagName = (String) result[1];
+
+            tagMap.computeIfAbsent(storeId, k -> new ArrayList<>()).add(tagName);
+        }
+
+        // 태그가 없는 가게들도 빈 리스트로 초기화
+        for (Long storeId : storeIds) {
+            tagMap.putIfAbsent(storeId, new ArrayList<>());
+        }
+
+        return tagMap;
+    }
+
+    /**
+     * 여러 가게의 태그 응답 배치 조회 (StoreTagResponse용)
+     */
+    public Map<Long, List<StoreTagResponse>> getTagResponsesBatch(List<Long> storeIds) {
+        if (storeIds == null || storeIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<Object[]> results = storeTagRelationRepository.findTagResponsesByStoreIds(storeIds);
+
+        Map<Long, List<StoreTagResponse>> responseMap = new HashMap<>();
+        for (Object[] result : results) {
+            Long storeId = (Long) result[0];
+            Long tagId = (Long) result[1];
+            String tagName = (String) result[2];
+            Long categoryId = (Long) result[3];
+            String categoryName = (String) result[4];
+
+            StoreTagResponse tagResponse = StoreTagResponse.builder()
+                    .id(tagId)
+                    .name(tagName)
+                    .category(StoreTagResponse.TagCategoryResponse.builder()
+                            .id(categoryId)
+                            .name(categoryName)
+                            .build())
+                    .build();
+
+            responseMap.computeIfAbsent(storeId, k -> new ArrayList<>()).add(tagResponse);
+        }
+
+        // 태그가 없는 가게들도 빈 리스트로 초기화
+        for (Long storeId : storeIds) {
+            responseMap.putIfAbsent(storeId, new ArrayList<>());
+        }
+
+        return responseMap;
+    }
+
+    /**
+     * Fetch Join 사용
+     */
+    public Map<Long, List<String>> getTagNamesBatchWithFetchJoin(List<Long> storeIds) {
+        if (storeIds == null || storeIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<StoreTagRelation> relations = storeTagRelationRepository.findByStoreIdInWithTagAndCategory(storeIds);
+
+        return relations.stream()
+                .collect(Collectors.groupingBy(
+                        relation -> relation.getStore().getStoreId(),
+                        Collectors.mapping(
+                                relation -> relation.getTag().getName(),
+                                Collectors.toList()
+                        )
+                ));
     }
 }

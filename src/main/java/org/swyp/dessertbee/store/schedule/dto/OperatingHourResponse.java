@@ -6,9 +6,11 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import org.swyp.dessertbee.store.schedule.entity.StoreOperatingHour;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.util.Collections;
 import java.util.List;
 
 @Data
@@ -46,4 +48,18 @@ public class OperatingHourResponse {
 
     @Schema(description = "휴게 시간 목록", nullable = true)
     private List<BreakTimeResponse> breakTimes;
+
+    public static OperatingHourResponse fromEntity(StoreOperatingHour operatingHour) {
+        return OperatingHourResponse.builder()
+                .dayOfWeek(operatingHour.getDayOfWeek())
+                .openingTime(operatingHour.getOpeningTime())
+                .closingTime(operatingHour.getClosingTime())
+                .lastOrderTime(operatingHour.getLastOrderTime())
+                .isClosed(operatingHour.getIsClosed())
+                .regularClosureType(operatingHour.getRegularClosureType() != null ?
+                        operatingHour.getRegularClosureType().name() : null)
+                .regularClosureWeeks(operatingHour.getRegularClosureWeeks())
+                .breakTimes(Collections.emptyList())
+                .build();
+    }
 }
