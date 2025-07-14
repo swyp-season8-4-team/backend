@@ -7,6 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.entity.Image;
 import org.swyp.dessertbee.common.entity.ImageType;
@@ -131,7 +133,15 @@ public class ReviewService {
 
         UserEntity user = userService.getCurrentUser();
 
-        eventPublisher.publishEvent(new CommunityReviewActionEvent(review.getStoreId(), review.getReviewId(), user.getUserUuid(), ReviewAction.CREATE));
+        // 트랜잭션 커밋 후 이벤트 발행
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        eventPublisher.publishEvent(new CommunityReviewActionEvent(review.getStoreId(), review.getReviewId(), user.getUserUuid(), ReviewAction.CREATE));
+                    }
+                }
+        );
 
         return getReviewDetail(review.getReviewUuid());
     }
@@ -307,7 +317,16 @@ public class ReviewService {
             imageService.deleteImagesByRefId(ImageType.REVIEW, review.getReviewId());
 
             UserEntity user = userService.getCurrentUser();
-            eventPublisher.publishEvent(new CommunityReviewActionEvent(review.getStoreId(), review.getReviewId(), user.getUserUuid(), ReviewAction.DELETE));
+
+            // 트랜잭션 커밋 후 이벤트 발행
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            eventPublisher.publishEvent(new CommunityReviewActionEvent(review.getStoreId(), review.getReviewId(), user.getUserUuid(), ReviewAction.DELETE));
+                        }
+                    }
+            );
 
             //storeStatisticsRepository.decreaseCommunityReviewCount(review.getStoreId());
         } catch (Exception e)

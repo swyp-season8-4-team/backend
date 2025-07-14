@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.dto.ReportRequest;
 import org.swyp.dessertbee.common.entity.ImageType;
@@ -112,13 +114,21 @@ public class StoreReviewServiceImpl implements StoreReviewService {
             // 리뷰 등록 후 평균 평점 업데이트
             storeService.updateAverageRating(storeId);
 
-            eventPublisher.publishEvent(
-                    new StoreReviewActionEvent(
-                            review.getStoreId(),
-                            review.getReviewId(),
-                            reviewer.getUserUuid(),
-                            ReviewAction.CREATE
-                    )
+            // 트랜잭션 커밋 후 이벤트 발행
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            eventPublisher.publishEvent(
+                                    new StoreReviewActionEvent(
+                                            review.getStoreId(),
+                                            review.getReviewId(),
+                                            reviewer.getUserUuid(),
+                                            ReviewAction.CREATE
+                                    )
+                            );
+                        }
+                    }
             );
 
             //storeStatisticsRepository.increaseStoreReviewCount(storeId);
@@ -231,13 +241,21 @@ public class StoreReviewServiceImpl implements StoreReviewService {
 
             storeService.updateAverageRating(storeId);
 
-            eventPublisher.publishEvent(
-                    new StoreReviewActionEvent(
-                            review.getStoreId(),
-                            review.getReviewId(),
-                            review.getUserUuid(),
-                            ReviewAction.DELETE
-                    )
+            // 트랜잭션 커밋 후 이벤트 발행
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            eventPublisher.publishEvent(
+                                    new StoreReviewActionEvent(
+                                            review.getStoreId(),
+                                            review.getReviewId(),
+                                            review.getUserUuid(),
+                                            ReviewAction.DELETE
+                                    )
+                            );
+                        }
+                    }
             );
 
             //storeStatisticsRepository.decreaseStoreReviewCount(storeId);

@@ -7,6 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.common.aop.CheckWriteRestriction;
 import org.swyp.dessertbee.common.entity.ImageType;
@@ -107,7 +109,15 @@ public class MateServiceImpl implements MateService {
             //디저트 메이트 mateId를 가진 member 데이터 생성
             mateMemberService.addCreatorAsMember(mate.getMateUuid(), user.getId());
 
-            eventPublisher.publishEvent(new MateActionEvent(storeId, mate.getMateId(), user.getUserUuid(), DessertMateAction.CREATE));
+            // 트랜잭션 커밋 후 이벤트 발행
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            eventPublisher.publishEvent(new MateActionEvent(storeId, mate.getMateId(), user.getUserUuid(), DessertMateAction.CREATE));
+                        }
+                    }
+            );
 
             return getMateDetail(mate.getMateUuid());
 
@@ -158,7 +168,15 @@ public class MateServiceImpl implements MateService {
             //디저트 메이트 mateId를 가진 member 데이터 생성
             mateMemberService.addCreatorAsMember(mate.getMateUuid(), user.getId());
 
-            eventPublisher.publishEvent(new MateActionEvent(storeId, mate.getMateId(), user.getUserUuid(), DessertMateAction.CREATE));
+            // 트랜잭션 커밋 후 이벤트 발행
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            eventPublisher.publishEvent(new MateActionEvent(storeId, mate.getMateId(), user.getUserUuid(), DessertMateAction.CREATE));
+                        }
+                    }
+            );
 
             return getMateDetail(mate.getMateUuid());
 
@@ -205,13 +223,21 @@ public class MateServiceImpl implements MateService {
 
             UserEntity user = userService.getCurrentUser();
 
-            eventPublisher.publishEvent(
-                    new MateActionEvent(
-                            mate.getStoreId(),
-                            mate.getMateId(),
-                            user.getUserUuid(),
-                            DessertMateAction.DELETE
-                    )
+            // 트랜잭션 커밋 후 이벤트 발행
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            eventPublisher.publishEvent(
+                                    new MateActionEvent(
+                                            mate.getStoreId(),
+                                            mate.getMateId(),
+                                            user.getUserUuid(),
+                                            DessertMateAction.DELETE
+                                    )
+                            );
+                        }
+                    }
             );
 
         } catch (Exception e) {
