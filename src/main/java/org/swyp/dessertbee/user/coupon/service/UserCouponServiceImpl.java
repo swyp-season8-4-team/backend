@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
 import org.swyp.dessertbee.statistics.store.event.CouponUseEvent;
@@ -159,8 +161,16 @@ public class UserCouponServiceImpl implements UserCouponService {
 
         userCoupon.use(); // 사용 처리
 
-        // 쿠폰 사용 로그 저장
-        eventPublisher.publishEvent(new CouponUseEvent(userCoupon.getCoupon().getStore().getStoreId(), user.getUserUuid(), userCoupon.getCoupon().getCouponUuid()));
+        // 트랜잭션 커밋 후 이벤트 발행
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        // 쿠폰 사용 로그 저장
+                        eventPublisher.publishEvent(new CouponUseEvent(userCoupon.getCoupon().getStore().getStoreId(), user.getUserUuid(), userCoupon.getCoupon().getCouponUuid()));
+                    }
+                }
+        );
 
         return new UsedCouponResponse(
                 userCoupon.getId(),

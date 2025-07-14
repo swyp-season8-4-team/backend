@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.swyp.dessertbee.common.util.SearchUtil;
 import org.swyp.dessertbee.preference.exception.PreferenceExceptions.*;
 import org.swyp.dessertbee.search.dto.StoreSearchResponse;
@@ -406,8 +408,15 @@ public class StoreServiceImpl implements StoreService {
             List<StoreImageResponse> storeImages = storeImagesFuture.join();
             List<StoreImageResponse> ownerPickImages = ownerPickImagesFuture.join();
 
-            // 조회수 증가
-            eventPublisher.publishEvent(new StoreViewEvent(storeId, userUuid));
+            // 트랜잭션 커밋 후 이벤트 발행
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            eventPublisher.publishEvent(new StoreViewEvent(storeId, userUuid));
+                        }
+                    }
+            );
 
             return StoreDetailResponse.fromEntity(
                     store, userId, userUuid, totalReviewCount,

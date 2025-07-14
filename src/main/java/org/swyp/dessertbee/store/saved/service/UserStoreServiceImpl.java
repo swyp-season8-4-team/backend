@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.preference.exception.PreferenceExceptions.*;
 import org.swyp.dessertbee.statistics.store.entity.enums.SaveAction;
@@ -26,10 +28,7 @@ import org.swyp.dessertbee.user.entity.UserEntity;
 import org.swyp.dessertbee.user.repository.UserRepository;
 import org.swyp.dessertbee.user.service.UserService;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -221,7 +220,15 @@ public class UserStoreServiceImpl implements UserStoreService {
                             .build()
             );
 
-            eventPublisher.publishEvent(new StoreSaveActionEvent(store.getStoreId(), userService.getCurrentUser().getUserUuid(), SaveAction.SAVE));
+            // 트랜잭션 커밋 후 이벤트 발행
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            eventPublisher.publishEvent(new StoreSaveActionEvent(store.getStoreId(), userService.getCurrentUser().getUserUuid(), SaveAction.SAVE));
+                        }
+                    }
+            );
 
             return new SavedStoreResponse(
                     list.getUser().getUserUuid(),
@@ -304,70 +311,80 @@ public class UserStoreServiceImpl implements UserStoreService {
             Store store = storeRepository.findById(storeId)
                     .orElseThrow(StoreNotFoundException::new);
 
-            // 현재 저장되어 있는 리스트들 조회
             List<SavedStore> currentSavedStores = savedStoreRepository.findByStoreAndUserId(store, currentUser.getId());
             List<Long> currentListIds = currentSavedStores.stream()
                     .map(savedStore -> savedStore.getUserStoreList().getId())
                     .toList();
 
-            // selectedLists가 null 또는 빈 리스트인 경우
+            // 이벤트 모아두는 곳
+            List<StoreSaveActionEvent> eventsToPublish = new ArrayList<>();
+
             if (selectedLists == null || selectedLists.isEmpty()) {
                 if (!currentSavedStores.isEmpty()) {
                     for (SavedStore savedStore : currentSavedStores) {
                         savedStoreRepository.delete(savedStore);
-                        eventPublisher.publishEvent(new StoreSaveActionEvent(store.getStoreId(), currentUser.getUserUuid(), SaveAction.UNSAVE));
+                        eventsToPublish.add(new StoreSaveActionEvent(store.getStoreId(), currentUser.getUserUuid(), SaveAction.UNSAVE));
                     }
                     log.info("selectedLists가 비어 있어 기존 저장 모두 삭제 완료. storeId={}, userId={}", store.getStoreId(), currentUser.getId());
                 }
-                return;
+
+            } else {
+                List<Long> selectedListIds = selectedLists.stream()
+                        .map(UpdateSavedStoreListsRequest.StoreListUpdateRequest::getListId)
+                        .toList();
+
+                List<UpdateSavedStoreListsRequest.StoreListUpdateRequest> listsToAdd = selectedLists.stream()
+                        .filter(req -> !currentListIds.contains(req.getListId()))
+                        .toList();
+
+                List<Long> listsToRemove = currentListIds.stream()
+                        .filter(id -> !selectedListIds.contains(id))
+                        .toList();
+
+                // 1. 추가
+                for (UpdateSavedStoreListsRequest.StoreListUpdateRequest addRequest : listsToAdd) {
+                    UserStoreList list = userStoreListRepository.findById(addRequest.getListId())
+                            .orElseThrow(StoreListNotFoundException::new);
+
+                    savedStoreRepository.save(SavedStore.builder()
+                            .userStoreList(list)
+                            .store(store)
+                            .userPreferences(addRequest.getUserPreferences())
+                            .build());
+
+                    eventsToPublish.add(new StoreSaveActionEvent(store.getStoreId(), currentUser.getUserUuid(), SaveAction.SAVE));
+                }
+
+                // 2. 삭제
+                for (Long listId : listsToRemove) {
+                    UserStoreList list = userStoreListRepository.findById(listId)
+                            .orElseThrow(StoreListNotFoundException::new);
+
+                    savedStoreRepository.deleteByUserStoreListAndStore(list, store);
+
+                    eventsToPublish.add(new StoreSaveActionEvent(store.getStoreId(), currentUser.getUserUuid(), SaveAction.UNSAVE));
+                }
+
+                // 3. 수정
+                for (SavedStore savedStore : currentSavedStores) {
+                    Long listId = savedStore.getUserStoreList().getId();
+                    selectedLists.stream()
+                            .filter(req -> req.getListId().equals(listId))
+                            .findFirst()
+                            .ifPresent(req -> savedStore.updateUserPreferences(req.getUserPreferences()));
+                }
             }
 
-            // selectedLists가 존재하는 경우
-            List<Long> selectedListIds = selectedLists.stream()
-                    .map(UpdateSavedStoreListsRequest.StoreListUpdateRequest::getListId)
-                    .toList();
-
-            // 추가해야 할 리스트
-            List<UpdateSavedStoreListsRequest.StoreListUpdateRequest> listsToAdd = selectedLists.stream()
-                    .filter(req -> !currentListIds.contains(req.getListId()))
-                    .toList();
-
-            // 삭제해야 할 리스트
-            List<Long> listsToRemove = currentListIds.stream()
-                    .filter(id -> !selectedListIds.contains(id))
-                    .toList();
-
-            // 1. 리스트 추가
-            for (UpdateSavedStoreListsRequest.StoreListUpdateRequest addRequest : listsToAdd) {
-                UserStoreList list = userStoreListRepository.findById(addRequest.getListId())
-                        .orElseThrow(StoreListNotFoundException::new);
-
-                savedStoreRepository.save(SavedStore.builder()
-                        .userStoreList(list)
-                        .store(store)
-                        .userPreferences(addRequest.getUserPreferences())
-                        .build());
-
-                eventPublisher.publishEvent(new StoreSaveActionEvent(store.getStoreId(), currentUser.getUserUuid(), SaveAction.SAVE));
-            }
-
-            // 2. 리스트 삭제
-            for (Long listId : listsToRemove) {
-                UserStoreList list = userStoreListRepository.findById(listId)
-                        .orElseThrow(StoreListNotFoundException::new);
-
-                savedStoreRepository.deleteByUserStoreListAndStore(list, store);
-
-                eventPublisher.publishEvent(new StoreSaveActionEvent(store.getStoreId(), currentUser.getUserUuid(), SaveAction.UNSAVE));
-            }
-
-            // 3. 리스트 수정 (userPreferences만 수정하는 경우도 고려하였음)
-            for (SavedStore savedStore : currentSavedStores) {
-                Long listId = savedStore.getUserStoreList().getId();
-                selectedLists.stream()
-                        .filter(req -> req.getListId().equals(listId))
-                        .findFirst()
-                        .ifPresent(req -> savedStore.updateUserPreferences(req.getUserPreferences()));
+            // 트랜잭션 커밋 이후 이벤트 발행
+            if (TransactionSynchronizationManager.isSynchronizationActive()) {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        for (StoreSaveActionEvent event : eventsToPublish) {
+                            eventPublisher.publishEvent(event);
+                        }
+                    }
+                });
             }
 
         } catch (Exception e) {
@@ -387,7 +404,16 @@ public class UserStoreServiceImpl implements UserStoreService {
             SavedStore savedStore = savedStoreRepository.findByUserStoreListAndStore(list, store)
                     .orElseThrow(SavedStoreNotFoundException::new);
 
-            eventPublisher.publishEvent(new StoreSaveActionEvent(store.getStoreId(), userService.getCurrentUser().getUserUuid(), SaveAction.UNSAVE));
+            // 트랜잭션 커밋 후 이벤트 발행
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            eventPublisher.publishEvent(new StoreSaveActionEvent(store.getStoreId(), userService.getCurrentUser().getUserUuid(), SaveAction.UNSAVE));
+                        }
+                    }
+            );
+
             savedStoreRepository.delete(savedStore);
         } catch (SavedStoreDeleteException e){
             log.warn("리스트에 가게 저장 취소 실패 - 사유: {}", e.getMessage());
