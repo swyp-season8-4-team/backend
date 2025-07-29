@@ -86,6 +86,8 @@ public class SecurityConfig {
                         .requestMatchers("/apple-oauth-test.html/**").permitAll()
                         .requestMatchers("/ko/oauth/callback/**").permitAll()
                         .requestMatchers("/api/health").permitAll()
+                        // Actuator 엔드포인트 허용
+                        .requestMatchers("/actuator/**").permitAll()
                         // 나머지 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
