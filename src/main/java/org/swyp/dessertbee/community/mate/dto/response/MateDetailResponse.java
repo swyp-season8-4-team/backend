@@ -57,11 +57,11 @@ public class MateDetailResponse {
     private Boolean recruitYn;
 
     @NotBlank
-    @Schema(description = "디저트메이트 이미지", example = " mateImage=: https://desserbee-bucket.s3.ap-northeast-2.amazonaws.com/mate/75/7edd7706-0bfa-46cf-a6c2-ad67f8a9a440-IMG_8828.jpeg")
+    @Schema(description = "디저트메이트 이미지", example = " mateImage=: https://desserbee-bucket-new.s3.ap-northeast-2.amazonaws.com/mate/75/7edd7706-0bfa-46cf-a6c2-ad67f8a9a440-IMG_8828.jpeg")
     private String mateImage;
 
     @NotBlank
-    @Schema(description = "디저트메이트 생성자 프로필 이미지", example = " mateImage=: https://desserbee-bucket.s3.ap-northeast-2.amazonaws.com/profile/75/7edd7706-0bfa-46cf-a6c2-ad67f8a9a440-IMG_8828.jpeg")
+    @Schema(description = "디저트메이트 생성자 프로필 이미지", example = " mateImage=: https://desserbee-bucket-new.s3.ap-northeast-2.amazonaws.com/profile/75/7edd7706-0bfa-46cf-a6c2-ad67f8a9a440-IMG_8828.jpeg")
     private String profileImage;
 
     @Schema(description = "디저트메이트 지정 장소", example = " placeName : 모코모코, address : 서울 마포구 와우산로29길 47 1층, latitude: 37.55564710, longitude : 126.92734908")

@@ -26,7 +26,7 @@ public class S3Service {
     @Value("${aws.s3.region}")
     private String region;
 
-    private static final String BASE_URL = "https://desserbee-bucket.s3.ap-northeast-2.amazonaws.com/";
+    private static final String BASE_URL = "https://desserbee-bucket-new.s3.ap-northeast-2.amazonaws.com/";
 
     /** S3에 파일 업로드 후 URL 반환 */
     public String uploadFile(MultipartFile file, String folder) {

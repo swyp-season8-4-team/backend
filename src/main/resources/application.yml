@@ -102,7 +102,7 @@ springdoc:
 
 aws:
   s3:
-    bucket-name: desserbee-bucket
+    bucket-name: desserbee-bucket-new
     region: ap-northeast-2
     access-key: ${S3_ACCESS_KEY}
     secret-key: ${S3_SECRET_KEY}

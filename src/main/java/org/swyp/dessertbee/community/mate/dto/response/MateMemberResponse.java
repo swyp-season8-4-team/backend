@@ -32,7 +32,7 @@ public class MateMemberResponse {
     private String grade;
 
     @NotBlank
-    @Schema(description = "디저트메이트 생성자 프로필 이미지", example = " mateImage=: https://desserbee-bucket.s3.ap-northeast-2.amazonaws.com/profile/75/7edd7706-0bfa-46cf-a6c2-ad67f8a9a440-IMG_8828.jpeg")
+    @Schema(description = "디저트메이트 생성자 프로필 이미지", example = " mateImage=: https://desserbee-bucket-new.s3.ap-northeast-2.amazonaws.com/profile/75/7edd7706-0bfa-46cf-a6c2-ad67f8a9a440-IMG_8828.jpeg")
     private String profileImage;
 
     @NotBlank

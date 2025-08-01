@@ -56,7 +56,7 @@ public class StoreMapResponse {
     @Schema(description = "태그 리스트", example = "[\"케이크\", \"구움과자\"]")
     private List<String> tags;
 
-    @Schema(description = "대표 이미지 URL (첫 번째 이미지)", example = "https://desserbee-bucket.s3.ap-northeast-2.amazonaws.com/store/9/3c862a8d-06cf-4516-acd1-68f46207a7d4-store.jpeg", nullable = true)
+    @Schema(description = "대표 이미지 URL (첫 번째 이미지)", example = "https://desserbee-bucket-new.s3.ap-northeast-2.amazonaws.com/store/9/3c862a8d-06cf-4516-acd1-68f46207a7d4-store.jpeg", nullable = true)
     private String storeImage;
 
     public static StoreMapResponse fromEntity(Store store, List<OperatingHourResponse> operatingHours, List<HolidayResponse> holidays, int shortReviewCount, List<String> tags, List<String> storeImages) {

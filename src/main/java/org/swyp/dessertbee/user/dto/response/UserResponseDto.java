@@ -38,7 +38,7 @@ public class UserResponseDto {
 
     @Schema(
             description = "프로필 이미지 URL (nullable)",
-            example = "https://desserbee-bucket.s3.ap-northeast-2.amazonaws.com/profile/56/d10eeb88-399c-4f6c-bd02-01ab7aa73eec-도너츠.jpeg",
+            example = "https://desserbee-bucket-new.s3.ap-northeast-2.amazonaws.com/profile/56/d10eeb88-399c-4f6c-bd02-01ab7aa73eec-도너츠.jpeg",
             nullable = true,
             requiredMode = RequiredMode.NOT_REQUIRED
     )
