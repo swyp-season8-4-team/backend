@@ -51,7 +51,7 @@ jobs:
           echo "${{ secrets.ENV_PROD }}" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
           echo "EC2_HOST_VALUE=${{ secrets.EC2_HOST }}" >> $GITHUB_ENV
-          echo "SERVER_NAME=api.desserbee.com" >> $GITHUB_ENV
+          echo "SERVER_NAME=desserbee.com" >> $GITHUB_ENV
 
       # 4. 파일 전송
       - name: Transfer files to EC2
