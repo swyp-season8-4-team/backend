@@ -21,54 +21,27 @@ log() {
 renew_certificates() {
     log "=== SSL 인증서 갱신 시작 ==="
 
-    # certbot 설치 확인
-    if ! command -v certbot &> /dev/null; then
-        log "certbot이 설치되어 있지 않습니다."
-        return 1
-    fi
+    # Nginx 중지
+    cd "$COMPOSE_DIR"
+    docker-compose stop nginx
+    log "Nginx 중지 완료"
 
-    # certbot으로 인증서 갱신 시도
-    log "certbot으로 인증서 갱신 확인 중..."
+    # standalone 방식으로 갱신
+    if sudo certbot renew --standalone --quiet; then
+        log "인증서 갱신 성공"
 
-    # 갱신 전 인증서 상태 확인
-    RENEWAL_NEEDED=false
+        # 심볼릭 링크 재생성
+        sudo ln -sf /etc/letsencrypt/live/desserbee.com /etc/letsencrypt/live/api.desserbee.com
+        log "심볼릭 링크 생성 완료"
 
-    # 실제 갱신 실행 (30일 이내 만료 시에만 갱신됨)
-    if sudo certbot renew --webroot --webroot-path=/var/www/certbot --quiet --no-self-upgrade; then
-        log "인증서 갱신 확인 완료"
-
-        # 갱신 여부 확인 (로그 파일 체크)
-        if sudo grep -q "renewed" /var/log/letsencrypt/letsencrypt.log 2>/dev/null; then
-            RENEWAL_NEEDED=true
-            log "새로운 인증서가 발급되었습니다"
-        else
-            log "갱신이 필요한 인증서가 없습니다"
-        fi
+        RENEWAL_NEEDED=true
     else
         log "인증서 갱신 실패"
-        return 1
     fi
 
-    # nginx 재시작 (새로운 인증서가 있는 경우 또는 강제 재시작)
-    if [ "$RENEWAL_NEEDED" = true ] || [ "$2" = "--force-restart" ]; then
-        log "nginx 컨테이너 재시작 중..."
-
-        cd "$COMPOSE_DIR"
-        if docker-compose ps nginx | grep -q "Up"; then
-            # nginx만 재시작 (다른 서비스에 영향 없음)
-            if docker-compose restart nginx; then
-                log "nginx 재시작 완료 - 새 인증서가 적용되었습니다"
-            else
-                log "nginx 재시작 실패"
-                return 1
-            fi
-        else
-            log "nginx 컨테이너가 실행 중이지 않습니다."
-            # nginx가 죽어있다면 전체 재시작
-            docker-compose up -d nginx
-            log "nginx 컨테이너 재시작 완료"
-        fi
-    fi
+    # Nginx 재시작
+    docker-compose start nginx
+    log "Nginx 재시작 완료"
 
     log "SSL 인증서 갱신 프로세스 완료"
 }
