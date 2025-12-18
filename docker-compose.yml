@@ -1,12 +1,14 @@
-version: '3.8'
+version: '2.4'
 
 services:
   app:
     image: ${DOCKERHUB_USERNAME}/desserbee:latest
     container_name: desserbee-app
+    mem_limit: 320m
     volumes:
       - /home/ec2-user/secrets/AuthKey_apple_login.p8:/app/resources/AuthKey_apple_login.p8
     environment:
+      - JAVA_TOOL_OPTIONS=-Xms128m -Xmx256m -XX:MaxMetaspaceSize=64m -XX:+UseSerialGC
       - APPLE_KEY_PATH=/app/resources/AuthKey_apple_login.p8
       - APPLE_KEY_ID=${APPLE_KEY_ID}
       - APPLE_TEAM_ID=${APPLE_TEAM_ID}
@@ -25,6 +27,7 @@ services:
   nginx:
     image: nginx:latest
     container_name: desserbee-nginx
+    mem_limit: 64m
     ports:
       - "80:80"
       - "443:443"
@@ -42,6 +45,7 @@ services:
   redis:
     image: redis:7.0
     container_name: desserbee-redis
+    mem_limit: 80m
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -52,7 +56,13 @@ services:
       - app-network
     volumes:
       - redis-data:/data
-    command: ["redis-server", "--appendonly", "yes"]
+    command:
+      [
+        "redis-server",
+        "--appendonly", "no",
+        "--maxmemory", "64mb",
+        "--maxmemory-policy", "allkeys-lru"
+      ]
 
 networks:
   app-network:

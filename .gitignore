@@ -50,3 +50,5 @@ src/test/resources/application-test.yml
 apple/*.p8
 src/main/resources/apple/*.p8
 src/main/resources/*.p8
+
+backup/
