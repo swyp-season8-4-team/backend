@@ -1,6 +1,30 @@
 version: '2.4'
 
 services:
+  mysql:
+    image: mysql:8.0
+    container_name: desserbee-mysql
+    mem_limit: 256m
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: dessertbee_prod
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --max_connections=100
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+    networks:
+      - app-network
+
   app:
     image: ${DOCKERHUB_USERNAME}/desserbee:latest
     container_name: desserbee-app
@@ -70,4 +94,4 @@ networks:
 
 volumes:
   redis-data:
-  es-data:
+  mysql-data:

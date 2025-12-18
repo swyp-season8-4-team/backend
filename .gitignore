@@ -52,3 +52,6 @@ src/main/resources/apple/*.p8
 src/main/resources/*.p8
 
 backup/
+*.sql
+*.sql.gz
+.db-restored

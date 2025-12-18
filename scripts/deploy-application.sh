@@ -75,6 +75,15 @@ fi
 echo "새 컨테이너 시작 중..."
 docker-compose up -d
 
+# MySQL 복원 (최초 1회만)
+if [ ! -f /home/ec2-user/app/.db-restored ]; then
+    echo "First time deployment - restoring database..."
+    /home/ec2-user/app/scripts/restore-db.sh
+    touch /home/ec2-user/app/.db-restored
+else
+    echo "Database already restored, skipping..."
+fi
+
 # 컨테이너 시작 대기 및 헬스체크
 echo "컨테이너 시작 대기 중..."
 sleep 15
