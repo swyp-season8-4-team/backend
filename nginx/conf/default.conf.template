@@ -11,7 +11,7 @@ map $http_authorization $auth_header {
 
 server {
     listen 443 ssl;
-    server_name ${SERVER_NAME};
+    server_name ${SERVER_NAME} api.${SERVER_NAME};
 
     # SSL 인증서 설정
     ssl_certificate /etc/letsencrypt/live/${SERVER_NAME}/fullchain.pem;
