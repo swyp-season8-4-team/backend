@@ -71,7 +71,8 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/api-docs/**",
                                 "/swagger-resources/**",
-                                "/webjars/**"
+                                "/webjars/**",
+                                "/favicon.ico"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/preferences/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/mbtis/**").permitAll()
