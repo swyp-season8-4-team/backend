@@ -32,7 +32,7 @@ services:
     volumes:
       - /home/ec2-user/secrets/AuthKey_apple_login.p8:/app/resources/AuthKey_apple_login.p8
     environment:
-      - JAVA_TOOL_OPTIONS=-Xms128m -Xmx256m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC
+      - JAVA_TOOL_OPTIONS=-Xms128m -Xmx256m -XX:MaxMetaspaceSize=256m -XX:+UseSerialGC
       - APPLE_KEY_PATH=/app/resources/AuthKey_apple_login.p8
       - APPLE_KEY_ID=${APPLE_KEY_ID}
       - APPLE_TEAM_ID=${APPLE_TEAM_ID}
