@@ -117,4 +117,13 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
            "JOIN u.authEntities a " +
            "WHERE u.email = :email AND u.deletedAt IS NULL")
     long countOAuthProvidersByEmail(@Param("email") String email);
+
+    /**
+     * 여러 userUuid로 사용자들 조회 (Batch Fetch)
+     *
+     * @param userUuids 사용자 UUID 목록
+     * @return UserEntity 리스트
+     */
+    @Query("SELECT u FROM UserEntity u WHERE u.userUuid IN :userUuids AND u.deletedAt IS NULL")
+    List<UserEntity> findByUserUuidIn(@Param("userUuids") java.util.Set<UUID> userUuids);
 }

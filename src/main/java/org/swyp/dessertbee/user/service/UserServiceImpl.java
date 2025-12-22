@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.swyp.dessertbee.auth.entity.AuthEntity;
+import org.swyp.dessertbee.common.context.UserContext;
 import org.swyp.dessertbee.common.entity.ImageType;
 import org.swyp.dessertbee.common.exception.BusinessException;
 import org.swyp.dessertbee.common.exception.ErrorCode;
@@ -21,7 +22,6 @@ import org.swyp.dessertbee.user.dto.request.UserUpdateRequestDto;
 import org.swyp.dessertbee.user.entity.MbtiEntity;
 import org.swyp.dessertbee.user.entity.NicknameValidationPurpose;
 import org.swyp.dessertbee.user.entity.UserEntity;
-import org.swyp.dessertbee.user.repository.MbtiRepository;
 import org.swyp.dessertbee.user.repository.UserRepository;
 
 import java.util.*;
@@ -36,23 +36,31 @@ import java.util.*;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final MbtiRepository mbtiRepository;
+    private final MbtiCacheService mbtiCacheService;
     private final ImageService imageService;
     private final PreferenceService preferenceService;
     private final UserRoleService userRoleService;
+    private final UserContext userContext;
 
 
 
     /**
      * Security Context에서 현재 인증된 사용자의 정보를 조회합니다.
      * 비로그인 상태인 경우 null 반환
+     * 요청 스코프 캐싱으로 동일 요청 내에서 중복 DB 조회 방지
      */
     public UserEntity getCurrentUser() {
+        // 이미 로드된 경우 캐시 반환
+        if (userContext.isLoaded()) {
+            return userContext.getUser();
+        }
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         log.debug("getCurrentUser() 호출 시 SecurityContext Authentication: {}", authentication);
         if (authentication == null || !authentication.isAuthenticated() ||
                 authentication instanceof AnonymousAuthenticationToken) {
             log.warn("SecurityContext에 인증 정보가 없습니다.");
+            userContext.setUser(null);
             return null;
         }
 
@@ -61,9 +69,12 @@ public class UserServiceImpl implements UserService {
 
         try {
             UUID userUuid = UUID.fromString(userUuidStr);
-            return userRepository.findByUserUuid(userUuid).orElse(null);
+            UserEntity user = userRepository.findByUserUuid(userUuid).orElse(null);
+            userContext.setUser(user);
+            return user;
         } catch (IllegalArgumentException e) {
             log.error("유효하지 않은 UUID 형식: {}", userUuidStr);
+            userContext.setUser(null);
             return null;
         }
     }
@@ -261,11 +272,7 @@ public class UserServiceImpl implements UserService {
             return;
         }
 
-        MbtiEntity mbti = mbtiRepository.findByMbtiType(mbtiType.toUpperCase())
-                .orElseThrow(() -> new BusinessException(
-                        ErrorCode.INVALID_INPUT_VALUE,
-                        "유효하지 않은 MBTI 타입입니다: " + mbtiType
-                ));
+        MbtiEntity mbti = mbtiCacheService.findByMbtiType(mbtiType.toUpperCase());
 
         user.updateMbti(mbti);
     }

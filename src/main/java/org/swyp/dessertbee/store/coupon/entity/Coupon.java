@@ -77,7 +77,7 @@ public class Coupon {
     private LocalTime conditionStartTime; // TIME_DAY 조건일 경우
     private LocalTime conditionEndTime;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "coupon_condition_days", joinColumns = @JoinColumn(name = "coupon_id"))
     @Column(name = "day_of_week")
     @Enumerated(EnumType.STRING)

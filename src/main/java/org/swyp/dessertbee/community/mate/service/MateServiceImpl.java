@@ -42,7 +42,7 @@ public class MateServiceImpl implements MateService {
 
     private final MateRepository mateRepository;
     private final MateMemberRepository mateMemberRepository;
-    private final MateCategoryRepository mateCategoryRepository;
+    private final MateCategoryCacheService mateCategoryCacheService;
     private final SavedMateRepository savedMateRepository;
     private final MateMemberServiceImpl mateMemberService;
     private final MateReportRepository mateReportRepository;
@@ -365,7 +365,7 @@ public class MateServiceImpl implements MateService {
         String mateImage = imageService.getImageByTypeAndId(ImageType.MATE, mate.getMateId());
 
         //mateCategoryId로 name 조회
-        String mateCategory = String.valueOf(mateCategoryRepository.findCategoryNameById( mate.getMateCategoryId()));
+        String mateCategory = String.valueOf(mateCategoryCacheService.findCategoryNameById(mate.getMateCategoryId()));
 
 
        //작성자 UUID 조회
