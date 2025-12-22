@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class UserStoreServiceImpl implements UserStoreService {
 
     private final UserStoreListRepository userStoreListRepository;
@@ -95,6 +95,7 @@ public class UserStoreServiceImpl implements UserStoreService {
 
     /** 저장 리스트 생성 */
     @Override
+    @Transactional
     public UserStoreListSummaryResponse createUserStoreList(UUID userUuid, String listName, Long iconColorId) {
         try{
             Long userId = userRepository.findIdByUserUuid(userUuid);
@@ -138,6 +139,7 @@ public class UserStoreServiceImpl implements UserStoreService {
 
     /** 저장 리스트 수정 */
     @Override
+    @Transactional
     public UserStoreListSummaryResponse updateUserStoreList(Long listId, String newName, Long newIconColorId) {
         try{
             UserStoreList list = userStoreListRepository.findById(listId)
@@ -165,6 +167,7 @@ public class UserStoreServiceImpl implements UserStoreService {
 
     /** 저장 리스트 삭제 */
     @Override
+    @Transactional
     public void deleteUserStoreList(Long listId) {
         try{
             UserStoreList list = userStoreListRepository.findById(listId)
@@ -202,6 +205,7 @@ public class UserStoreServiceImpl implements UserStoreService {
 
     /** 리스트에 가게 추가 */
     @Override
+    @Transactional
     public SavedStoreResponse addStoreToList(Long listId, UUID storeUuid, List<Long> userPreferences) {
         try{
             Pair<UserStoreList, Store> pair = findListAndStore(listId, storeUuid);
@@ -292,6 +296,7 @@ public class UserStoreServiceImpl implements UserStoreService {
 
     /** 저장된 가게 수정 */
     @Override
+    @Transactional
     public void updateSavedStoreLists(UUID storeUuid, List<UpdateSavedStoreListsRequest.StoreListUpdateRequest> selectedLists) {
         try {
             UserEntity currentUser = userService.getCurrentUser();
@@ -378,6 +383,7 @@ public class UserStoreServiceImpl implements UserStoreService {
 
     /** 리스트에서 가게 삭제 */
     @Override
+    @Transactional
     public void removeStoreFromList(Long listId, UUID storeUuid) {
         try{
             Pair<UserStoreList, Store> pair = findListAndStore(listId, storeUuid);
@@ -400,6 +406,7 @@ public class UserStoreServiceImpl implements UserStoreService {
 
     /** 특정 사용자의 모든 스토어 리스트 삭제 (Hard Delete용) */
     @Override
+    @Transactional
     public int deleteAllUserStoreLists(Long userId) {
         try {
             UserEntity user = userRepository.findById(userId)

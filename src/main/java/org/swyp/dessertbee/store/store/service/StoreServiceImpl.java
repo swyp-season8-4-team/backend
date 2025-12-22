@@ -46,7 +46,7 @@ import java.util.*;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class StoreServiceImpl implements StoreService {
 
     private final StoreRepository storeRepository;
@@ -397,6 +397,7 @@ public class StoreServiceImpl implements StoreService {
 
     /** 가게의 평균 평점 업데이트 (리뷰 등록,수정,삭제 시 호출) */
     @Override
+    @Transactional
     public void updateAverageRating(Long storeId) {
         try{
             BigDecimal newAverageRating = storeReviewRepository.findAverageRatingByStoreId(storeId);

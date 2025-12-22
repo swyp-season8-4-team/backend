@@ -35,11 +35,12 @@ import org.swyp.dessertbee.user.service.UserService;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.Objects;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class StoreReviewServiceImpl implements StoreReviewService {
 
     private final StoreReviewRepository storeReviewRepository;
@@ -72,6 +73,7 @@ public class StoreReviewServiceImpl implements StoreReviewService {
 
     /** 리뷰 등록 */
     @Override
+    @Transactional
     public StoreReviewResponse createReview(UUID storeUuid, StoreReviewCreateRequest request, List<MultipartFile> images) {
         try{
             Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
@@ -149,19 +151,49 @@ public class StoreReviewServiceImpl implements StoreReviewService {
                     : Collections.emptyList();
             List<StoreReview> reviews = storeReviewRepository.findByStoreIdAndDeletedAtIsNull(storeId);
 
+            if (reviews.isEmpty()) {
+                return Collections.emptyList();
+            }
+
+            // Batch Fetch: 필요한 데이터 한 번에 조회
+            Set<UUID> userUuids = reviews.stream()
+                    .map(StoreReview::getUserUuid)
+                    .filter(uuid -> !blockedUserUuids.contains(uuid))
+                    .collect(Collectors.toSet());
+
+            // UserEntity를 UUID로 한 번에 조회
+            Map<UUID, UserEntity> userMap = userRepository.findByUserUuidIn(userUuids)
+                    .stream()
+                    .collect(Collectors.toMap(UserEntity::getUserUuid, u -> u));
+
+            // 리뷰 이미지를 Batch 조회
+            List<Long> reviewIds = reviews.stream()
+                    .map(StoreReview::getReviewId)
+                    .collect(Collectors.toList());
+            Map<Long, List<String>> reviewImagesMap = imageService.getImagesByTypeAndIds(ImageType.SHORT, reviewIds);
+
+            // 프로필 이미지를 Batch 조회
+            List<Long> userIds = userMap.values().stream()
+                    .map(UserEntity::getId)
+                    .collect(Collectors.toList());
+            Map<Long, List<String>> profileImagesMap = imageService.getImagesByTypeAndIds(ImageType.PROFILE, userIds);
+
+            // Map에서 데이터 조회하여 응답 생성 (추가 쿼리 없음)
             return reviews.stream()
-                    .filter(review -> !blockedUserUuids.contains(review.getUserUuid())) // 내가 차단한 사용자 제외
+                    .filter(review -> !blockedUserUuids.contains(review.getUserUuid()))
                     .map(review -> {
-                        List<String> images = imageService.getImagesByTypeAndId(ImageType.SHORT, review.getReviewId());
+                        UserEntity reviewer = userMap.get(review.getUserUuid());
+                        if (reviewer == null) {
+                            return null; // 사용자 정보 없으면 스킵
+                        }
 
-                        Long userId = userRepository.findIdByUserUuid(review.getUserUuid());
-                        UserEntity reviewer = userRepository.findById(userId)
-                                .orElseThrow(() -> new UserNotFoundException());
-                        List<String> profileImage = imageService.getImagesByTypeAndId(ImageType.PROFILE, reviewer.getId());
+                        List<String> images = reviewImagesMap.getOrDefault(review.getReviewId(), Collections.emptyList());
+                        List<String> profileImages = profileImagesMap.getOrDefault(reviewer.getId(), Collections.emptyList());
+                        String profileImage = profileImages.isEmpty() ? null : profileImages.get(0);
 
-                        return StoreReviewResponse.fromEntity(review, reviewer,
-                                profileImage.isEmpty() ? null : profileImage.get(0), images);
+                        return StoreReviewResponse.fromEntity(review, reviewer, profileImage, images);
                     })
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toList());
         } catch (InvalidStoreUuidException | UserNotFoundException e) {
             throw e;
@@ -174,6 +206,7 @@ public class StoreReviewServiceImpl implements StoreReviewService {
 
     /** 리뷰 수정 */
     @Override
+    @Transactional
     public StoreReviewResponse updateReview(UUID storeUuid, UUID reviewUuid, StoreReviewUpdateRequest request, List<MultipartFile> newImages) {
         try{
             Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
@@ -216,6 +249,7 @@ public class StoreReviewServiceImpl implements StoreReviewService {
 
     /** 리뷰 삭제 */
     @Override
+    @Transactional
     public void deleteReview(UUID storeUuid, UUID reviewUuid) {
         try{
             Long storeId = storeRepository.findStoreIdByStoreUuid(storeUuid);
